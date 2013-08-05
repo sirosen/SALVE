@@ -1,4 +1,4 @@
-SALVCD
+SALVE
 ======
 
-Simple And Local Versioned Configuration Deployment
+Simple And Local Version Ecosystem
