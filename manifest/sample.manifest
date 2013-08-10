@@ -1,0 +1,9 @@
+x           scripts/myscript.sh
+execute     scripts/myscript2.sh
+
+f       644 sirosen admin       files/myconfig1             /etc/configuration_place/myconfig1
+file    711 sirosen rootusers   files/myconfig2             /usr/local/myconfig2
+file    442 sirosen rootusers   "files/config with space"   /usr/local/myconfig3
+
+m           submanifests/other.manifest
+manifest    submanifests/other2.manifest
