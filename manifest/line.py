@@ -69,7 +69,3 @@ def parse_line(s):
         pass
     except:
         raise ValueError('Invalid manifest line: %s' % s)
-
-# Decent test cases in here, just during building
-#l = parse_line('f 777 sirosen sirosen /etc/apache2/httpd.conf /etc/apache2/httpd.conf')
-#print(l.__dict__)
