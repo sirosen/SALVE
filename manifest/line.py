@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-from collections import namedtuple
 
 class Line(object):
     def __init__(self, rawline, filename=None):
@@ -65,7 +64,5 @@ def parse_line(s):
         args = ss[1:]
         # feed in the rest of the line, as an expanded list
         return ty(s,*args)
-    except SyntaxWarning:
-        pass
     except:
         raise ValueError('Invalid manifest line: %s' % s)
