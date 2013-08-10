@@ -1,7 +1,6 @@
 What is SALVE?
 ==============
-SALVE: A Cure For All Hurts is a simple configuration language for deploying versioned configuration files.
-More specifically, it is an architecture for taking versioned configuration and deploying it on a local machine.
+SALVE: A Cure For All Hurts is an architecture for deploying versioned configuration files locally.
 An implementation of SALVE consists of a parser and execution package for Manifest files.
 Manifests are lists of
  - Files with destinations, ugo permissions, owner, and group
@@ -43,9 +42,6 @@ The only necessary components for an implementation of SALVE are
    - This can be an ini parser or just an environment variable inspector, though using the ini files is strongly recommended
    - The configuration must be used to determine the behavior of the defined actions
  - An execution module, which performs a list of actions in the order in which they are listed
-
-The implementation of SALVE here is written entirely in python.
-There are alternative implementations of the system.
 
 SALVE Makes Few Assumptions
 ---------------------------
