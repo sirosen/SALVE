@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from os.path import join as pjoin
 
 class Line(object):
     def __init__(self, rawline, filename=None):
@@ -19,6 +20,14 @@ class Line(object):
                 from sys import stderr
                 print('Nonexistent file in manifest (we hope that you generate it before use): %s' % filename,file=stderr)
 
+    def set_dir(self, dirname):
+        """
+        Set the directory name for a line object.
+        This specifies the directory in which files with relative
+        paths can be found.
+        """
+        self.dirname = dirname
+
 class FileLine(Line):
     def __init__(self, rawline, permissions, owner, group, filename, destination):
         Line.__init__(self, rawline, filename)
@@ -28,6 +37,12 @@ class FileLine(Line):
         self.permissions = permissions
         self.owner = owner
         self.group = group
+        # the directory for the source file is unknown from a raw parse
+        self.dirname = None
+
+    def set_dir(self, dirname):
+        Line.set_dir(self, dirname)
+        self.filename = pjoin(dirname, self.filename)
 
 class CommandLine(Line):
     def __init__(self, rawline, cmd):
@@ -37,6 +52,10 @@ class CommandLine(Line):
 class ManifestLine(Line):
     def __init__(self, rawline, filename):
         Line.__init__(self, rawline, filename)
+
+    def set_dir(self, dirname):
+        Line.set_dir(self, dirname)
+        self.filename = pjoin(dirname, self.filename)
 
 class EmptyLine(Line):
     def __init__(self, rawline):
@@ -51,18 +70,20 @@ LINE_TYPES = {
         'manifest':ManifestLine
         }
 
-def parse_line(s):
+def parse_line(s,dirname):
     import shlex
     ss = shlex.split(s, comments=True)
     if len(ss) is 0:
         return EmptyLine(s)
     try:
-        # grab the type (line part 0), out of the typemap
-        ty = LINE_TYPES[ss[0]]
+        # grab the constructor (line part 0), out of the typemap
+        constr = LINE_TYPES[ss[0]]
         # feed in the rawline as the first argument to the constructor
-        # that the type maps to
+        # followed by the rest of the line, as an expanded list
         args = ss[1:]
-        # feed in the rest of the line, as an expanded list
-        return ty(s,*args)
+        line_obj = constr(s,*args)
+        # set all filenames in the line object to absolute paths
+        line_obj.set_dir(dirname)
+        return line_obj
     except:
         raise ValueError('Invalid manifest line: %s' % s)
