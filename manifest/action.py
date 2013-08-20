@@ -20,21 +20,45 @@ def Action(object):
                          'chmod %s "%s"' % (line_obj.permissions, line_obj.destination)
                         ]
      
-    def do(self):
+    def execute(self):
         import subprocess, shlex
         for cmd in self.cmds:
             process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-def ActionList(object):
+def ActionList(Action):
     def __init__(self, line_objs):
         self.actions = []
         for l in line_objs:
-            if isinstance(l, line.ManifestLine):
-                self.concat(ActionList(manifest_expand(l)))
-            elif isinstance(l, line.EmptyLine):
+            if isinstance(l, line.EmptyLine):
                 pass
             else:
-                self.actions.append(Action(l))
+                self.actions.append(line_to_action(l))
 
-    def concat(self, other):
-        self.actions = self.actions + other.actions
+    def execute(self):
+        for a in self.actions:
+            a.execute()
+
+def ParallelActionBag(Action):
+    def __init__(self, line_objs):
+        self.actions = set()
+        for l in line_objs:
+            if isinstance(l, line.ManifestLine):
+                self.actions.add(line_to_action(l))
+
+    def execute(self):
+        # stub, not implemented
+        # idea: create a thread pool, spin off a management
+        # thread for the thread pool which feeds it tasks
+        # from the bag
+        # meanwhile, the main thread of execution tries
+        # to down a binary semaphore
+        # when there are no more tasks and all threads in
+        # the pool are idling, the management thread
+        # ups the semaphore and does cleanup
+        pass
+
+def line_to_action(line_obj):
+    if isinstance(line_obj, line.ManifestLine):
+        return ActionList(line.manifest_expand(l))
+    else:
+        return Action(l)
