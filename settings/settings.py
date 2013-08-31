@@ -17,9 +17,12 @@ class SALVEConfigParser(ConfigParser):
     values.
     """
     def __init__(self):
-        ConfigParser.__init__(self)
-        self.read(DEFAULT_CONFIG_FILE)
-        self.read(RC_CONFIG_FILE)
+        ConfigParser.__init__(self, filename=None)
+        if not filename:
+            self.read(DEFAULT_CONFIG_FILE)
+            self.read(RC_CONFIG_FILE)
+        else:
+            self.read(filename)
 
 class SALVEConfig(object):
     """
@@ -32,9 +35,9 @@ class SALVEConfig(object):
     of guaranteeing that the configuration values are as desired
     without inspecting the files.
     """
-    def __init__(self):
+    def __init__(self, filename=None):
         from os import environ
-        conf = SALVEConfigParser()
+        conf = SALVEConfigParser(filename)
         sections = conf.sections()
         self.conf = {s:dict(conf.items(s)) for s in sections}
 
@@ -47,9 +50,9 @@ class SALVEConfig(object):
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
+        prefixes = {(SALVE_ENV_PREFIX + '_' + s.upper()):s
+                    for s in sections}
         for key in env:
-            prefixes = {''.join((SALVE_ENV_PREFIX,s.upper(),'_')):s
-                        for s in sections}
             for p in prefixes:
                 if key.startswith(p):
                     # pull out the dictionary of values in the matching
