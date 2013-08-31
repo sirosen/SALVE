@@ -3,7 +3,7 @@
 from ConfigParser import ConfigParser
 from os.path import expanduser
 
-DEFAULT_CONFIG_FILE = 'salve_basic.ini'
+DEFAULT_CONFIG_FILE = '/etc/salve-config/salve_basic.ini'
 RC_CONFIG_FILE = expanduser('~/.salverc')
 
 SALVE_ENV_PREFIX = 'SALVE_'
@@ -37,6 +37,7 @@ class SALVEConfig(object):
     """
     def __init__(self, filename=None):
         from os import environ
+        self.filename = filename
         conf = SALVEConfigParser(filename)
         sections = conf.sections()
         self.conf = {s:dict(conf.items(s)) for s in sections}
@@ -61,3 +62,11 @@ class SALVEConfig(object):
                     # environment vars are uppercase
                     subkey = key[len(p):].lower()
                     subdict[subkey] = env[key]
+
+        # preserve the order of the manifests in the file,
+        # as it may be important to semantics
+        self.manifests = []
+        man_file = self.conf['metadata']['known_manifests']
+        with open(man_file,'r') as f:
+            for line in f:
+                self.manifests.append(line.strip())
