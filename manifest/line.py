@@ -87,10 +87,3 @@ def parse_line(s,dirname):
         return line_obj
     except:
         raise ValueError('Invalid manifest line: %s' % s)
-
-def manifest_expand(line_obj):
-    ret = []
-    with open(line_obj.filename) as manifest:
-        for l in manifest:
-            ret.append(parse_line(l,line_obj.dirname))
-    return ret

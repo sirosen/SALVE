@@ -26,24 +26,19 @@ def Action(object):
             process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def ActionList(Action):
-    def __init__(self, line_objs):
-        self.actions = []
-        for l in line_objs:
-            if isinstance(l, line.EmptyLine):
-                pass
-            else:
-                self.actions.append(line_to_action(l))
+    def __init__(self, act_lst):
+        self.actions = act_lst
 
     def execute(self):
         for a in self.actions:
             a.execute()
 
+    def append(self, act):
+        self.actions.append(act)
+
 def ParallelActionBag(Action):
-    def __init__(self, line_objs):
-        self.actions = set()
-        for l in line_objs:
-            if isinstance(l, line.ManifestLine):
-                self.actions.add(line_to_action(l))
+    def __init__(self, act_lst):
+        self.actions = set(act_lst)
 
     def execute(self):
         # stub, not implemented
@@ -56,9 +51,3 @@ def ParallelActionBag(Action):
         # the pool are idling, the management thread
         # ups the semaphore and does cleanup
         pass
-
-def line_to_action(line_obj):
-    if isinstance(line_obj, line.ManifestLine):
-        return ActionList(line.manifest_expand(l))
-    else:
-        return Action(l)
