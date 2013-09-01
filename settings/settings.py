@@ -3,7 +3,7 @@
 from ConfigParser import ConfigParser
 from os.path import expanduser
 
-DEFAULT_CONFIG_FILE = 'salve_basic.ini'
+DEFAULT_CONFIG_FILE = '/etc/salve-config/salve_basic.ini'
 RC_CONFIG_FILE = expanduser('~/.salverc')
 
 SALVE_ENV_PREFIX = 'SALVE_'
@@ -17,9 +17,12 @@ class SALVEConfigParser(ConfigParser):
     values.
     """
     def __init__(self):
-        ConfigParser.__init__(self)
-        self.read(DEFAULT_CONFIG_FILE)
-        self.read(RC_CONFIG_FILE)
+        ConfigParser.__init__(self, filename=None)
+        if not filename:
+            self.read(DEFAULT_CONFIG_FILE)
+            self.read(RC_CONFIG_FILE)
+        else:
+            self.read(filename)
 
 class SALVEConfig(object):
     """
@@ -32,9 +35,10 @@ class SALVEConfig(object):
     of guaranteeing that the configuration values are as desired
     without inspecting the files.
     """
-    def __init__(self):
+    def __init__(self, filename=None):
         from os import environ
-        conf = SALVEConfigParser()
+        self.filename = filename
+        conf = SALVEConfigParser(filename)
         sections = conf.sections()
         self.conf = {s:dict(conf.items(s)) for s in sections}
 
@@ -47,9 +51,9 @@ class SALVEConfig(object):
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
+        prefixes = {(SALVE_ENV_PREFIX + '_' + s.upper()):s
+                    for s in sections}
         for key in env:
-            prefixes = {''.join((SALVE_ENV_PREFIX,s.upper(),'_')):s
-                        for s in sections}
             for p in prefixes:
                 if key.startswith(p):
                     # pull out the dictionary of values in the matching
@@ -58,3 +62,11 @@ class SALVEConfig(object):
                     # environment vars are uppercase
                     subkey = key[len(p):].lower()
                     subdict[subkey] = env[key]
+
+        # preserve the order of the manifests in the file,
+        # as it may be important to semantics
+        self.manifests = []
+        man_file = self.conf['metadata']['known_manifests']
+        with open(man_file,'r') as f:
+            for line in f:
+                self.manifests.append(line.strip())
