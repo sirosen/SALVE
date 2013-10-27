@@ -4,9 +4,6 @@ from __future__ import print_function
 import string, shlex
 from ..util.enum import Enum
 
-_token_types = Enum('IDENTIFIER', 'BLOCK_START'='{', 'BLOCK_END'='}',
-                   'TEMPLATE_STRING')
-
 class TokenizationException(ValueError):
     def __init__(self,value):
         self.value = value
@@ -16,52 +13,77 @@ class Token(object):
         self.value = value
         self.token_type = token_type
 
-def _is_block_delim(token):
-    return token == _token_types.BLOCK_START or \
-           token == _token_types.BLOCK_END
+def tokenize_stream(stream):
+    """
+    @stream is actually any file-like object that supports read() or
+    readlines(). We need one of these attributes in order to hand the
+    stream off to shlex for basic tokenization.
+    In addition to the shlex tokenization, we do some basic validation
+    that the token order is valid, and tag tokens with their types.
+    Produces a Token list.
+    """
+    def is_block_delim(token):
+        return token == '{' or token == '}'
 
-def _raise_unexpected_token(token,expected):
-    raise TokenizationException('Expected a ' + expected +
-            ' token, but found "' + token + '" instead!')
+    def unexpected_token(token,expected):
+        raise TokenizationException('Expected a ' + expected +
+                ' token, but found "' + token + '" instead!')
 
-# @stream is actually any file-like object that supports basic
-# line-by-line iteration
-def main(stream):
+    token_tys = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
+    states = Enum('FREE', 'IDENTIFIER_FOUND', 'BLOCK',
+                  'IDENTIFIER_FOUND_BLOCK')
+
     tokens = []
-    valid_identifier_chars = string.letters+string.digits+'_-'
-    states = Enum('NO_BLOCK', 'IDENTIFIER_FOUND_NO_BLOCK',
-                  'BLOCK', 'IDENTIFIER_FOUND_BLOCK')
-    state = states.NO_BLOCK
+    state = states.FREE
 
     tokenizer = shlex.shlex(stream,comments=True)
     # Basically, everything other than BLOCK_START or BLOCK_END
-    # is okay here, we'll let the os library handle it later
+    # is okay here, we'll let the os library handle it later wrt
+    # whether or not a path is valid
     tokenizer.wordchars = string.letters+string.digits +
                           '_-+=^&@`/\|~$()[].,<>*?!%#'
 
+    # The tokenizer acts as a state machine, reading tokens and making
+    # state transitions based on the token values
+    # get the first Maybe(Token)
     current = tokenizer.get_token()
     while current is not None:
-        if state == states.NO_BLOCK:
-            if _is_block_delim(current):
-                _raise_unexpected_token(current,'IDENTIFIER')
-            tokens.append(Token(current,_token_types.IDENTIFIER))
-            state = states.IDENTIFIER_FOUND_NO_BLOCK
-        elif state == states.IDENTIFIER_FOUND_NO_BLOCK:
-            if current != _token_types.BLOCK_START:
-                _raise_unexpected_token(current,'BLOCK_START')
-            tokens.append(Token(current,_token_types.BLOCK_START))
-        elif state == states.BLOCK:
-            if current == _token_types.BLOCK_START:
-                _raise_unexpected_token(current,
-                                        'IDENTIFIER or BLOCK_END')
-            elif current == _token_types.BLOCK_END:
-                tokens.append(Token(current,_token_types.BLOCK_END))
-                state = states.NO_BLOCK
+        # if we have not found a block, the expectation is that we will
+        # find a block identifier as the first token
+        if state is states.FREE:
+            if is_block_delim(current):
+                unexpected_token(current,token_tys.IDENTIFIER)
+            tokens.append(Token(current,token_tys.IDENTIFIER))
+            state = states.IDENTIFIER_FOUND
+
+        # if we have found a block identifier, the next token must be
+        # a block start, '{'
+        elif state is states.IDENTIFIER_FOUND:
+            if current != '{':
+                unexpected_token(current,'BLOCK_START')
+            tokens.append(Token(current,token_tys.BLOCK_START))
+            state = states.BLOCK
+
+        # if we are in a block, the next token is either a block end,
+        # '}', or an attribute identifier
+        elif state is states.BLOCK:
+            if current == token_tys.BLOCK_START:
+                unexpected_token(current, 'IDENTIFIER or BLOCK_END')
+            elif current == token_tys.BLOCK_END:
+                tokens.append(Token(current,token_tys.BLOCK_END))
+                state = states.FREE
             else:
-                tokens.append(Token(current,_token_types.IDENTIFIER))
+                tokens.append(Token(current,token_tys.IDENTIFIER))
                 state = states.IDENTIFIER_FOUND_BLOCK
-        elif state == states.IDENTIFIER_FOUND_BLOCK:
-            if _is_block_delim(current):
-                _raise_unexpected_token(current,'TEMPLATE_STRING')
-            tokens.append(Token(current,_token_types.TEMPLATE_STRING))
+
+        # if we are in a block and have found an attribute identifier,
+        # then the next token must be the template string for that
+        # attribute's value
+        elif state is states.IDENTIFIER_FOUND_BLOCK:
+            if is_block_delim(current):
+                unexpected_token(current,'TEMPLATE')
+            tokens.append(Token(current,token_tys.TEMPLATE))
+            state = states.BLOCK
+
+        # get the next Maybe(Token)
         current = tokenizer.get_token()
