@@ -13,6 +13,8 @@ class Token(object):
         self.value = value
         self.token_type = token_type
 
+token_tys = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
+
 def tokenize_stream(stream):
     """
     @stream is actually any file-like object that supports read() or
@@ -29,18 +31,17 @@ def tokenize_stream(stream):
         raise TokenizationException('Expected a ' + expected +
                 ' token, but found "' + token + '" instead!')
 
-    token_tys = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
     states = Enum('FREE', 'IDENTIFIER_FOUND', 'BLOCK',
                   'IDENTIFIER_FOUND_BLOCK')
 
     tokens = []
     state = states.FREE
 
-    tokenizer = shlex.shlex(stream,comments=True)
+    tokenizer = shlex.shlex(stream,posix=True)
     # Basically, everything other than BLOCK_START or BLOCK_END
     # is okay here, we'll let the os library handle it later wrt
     # whether or not a path is valid
-    tokenizer.wordchars = string.letters+string.digits +
+    tokenizer.wordchars = string.letters + string.digits + \
                           '_-+=^&@`/\|~$()[].,<>*?!%#'
 
     # The tokenizer acts as a state machine, reading tokens and making
@@ -67,9 +68,9 @@ def tokenize_stream(stream):
         # if we are in a block, the next token is either a block end,
         # '}', or an attribute identifier
         elif state is states.BLOCK:
-            if current == token_tys.BLOCK_START:
+            if current == '{':
                 unexpected_token(current, 'IDENTIFIER or BLOCK_END')
-            elif current == token_tys.BLOCK_END:
+            elif current == '}':
                 tokens.append(Token(current,token_tys.BLOCK_END))
                 state = states.FREE
             else:
@@ -87,3 +88,9 @@ def tokenize_stream(stream):
 
         # get the next Maybe(Token)
         current = tokenizer.get_token()
+
+    if state is not states.FREE:
+        raise TokenizationException('Tokenizer ended in state ' + \
+                                     state)
+
+    return tokens
