@@ -1,0 +1,4 @@
+# unclosed block
+file { }
+
+file {

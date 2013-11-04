@@ -1,24 +1,10 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-import line
 
 def Action(object):
-    def __init__(self, line_obj):
-        self.line = line_obj
-        self.cmds = []
-        if isinstance(line_obj, line.EmptyLine):
-            pass
-        elif isinstance(line_obj, line.ManifestLine):
-            raise ValueError('Cannot create an Action from a ManifestLine' +\
-                             '-- manifests must be expanded before conversion.')
-        elif isinstance(line_obj, line.CommandLine):
-            self.cmds = [line_obj.cmd]
-        elif isinstance(line_obj, line.FileLine):
-            self.cmds = ['cp "%s" "%s"' % (line_obj.filename, line_obj.destination),
-                         'chown %s:%s "%s"' % (line_obj.owner, line_obj.group, line_obj.destination),
-                         'chmod %s "%s"' % (line_obj.permissions, line_obj.destination)
-                        ]
+    def __init__(self, command_list):
+        self.cmds = command_list
      
     def execute(self):
         import subprocess, shlex
