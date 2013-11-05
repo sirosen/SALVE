@@ -10,9 +10,9 @@ class TokenizationException(ValueError):
 
 class Token(object):
     types = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
-    def __init__(self,value,token_type):
+    def __init__(self,value,ty):
         self.value = value
-        self.token_type = token_type
+        self.ty = ty
 
 def tokenize_stream(stream):
     """

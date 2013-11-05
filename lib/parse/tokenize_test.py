@@ -53,6 +53,6 @@ def empty_manifest():
 def empty_block():
     tokens = tokenize_filename('valid2.manifest')
     assert len(tokens) == 3
-    assert tokens[0].token_type == tokenize.Token.types.IDENTIFIER
-    assert tokens[1].token_type == tokenize.Token.types.BLOCK_START
-    assert tokens[2].token_type == tokenize.Token.types.BLOCK_END
+    assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[1].ty == tokenize.Token.types.BLOCK_START
+    assert tokens[2].ty == tokenize.Token.types.BLOCK_END

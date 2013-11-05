@@ -11,7 +11,7 @@ class ParsingException(ValueError):
     def __init__(self,value):
         self.value = value
 
-class Block(Object):
+class Block(object):
     """
     A block is the basic unit of configuration.
     Typically, blocks describe files, SALVE manifests, patches, etc
@@ -49,17 +49,17 @@ def block_from_identifier(id_token):
     Fails if the identifier is unknown, or the token given is
     not an identifier.
     """
-    assert id_token.token_type == Token.types.IDENTIFIER
+    assert id_token.ty == Token.types.IDENTIFIER
     # maps valid identifiers to block constructors
     block_constructor_map = {
         'file': FileBlock,
         'manifest': ManifestBlock
     }
     val = id_token.value.lower()
-    for key in _block_constructor_map:
+    for key in block_constructor_map:
         if val == key:
-            return _block_constructor_map[key]()
-    raise ParsingException('Unknonw block identifier ' + val)
+            return block_constructor_map[key]()
+    raise ParsingException('Unknown block identifier ' + val)
 
 def parse_tokens(tokens):
     """
@@ -73,8 +73,8 @@ def parse_tokens(tokens):
                                'Expected a token of types ' + \
                                str(expected_types) + \
                                ' but got token ' + \
-                               token.value ' of type ' +
-                               token.token_type ' instead.')
+                               token.value + ' of type ' +
+                               token.ty + ' instead.')
     # track the expected next token(s)
     expected_token_types = [ Token.types.IDENTIFIER ]
     # the current_block and current_attr are used to build blocks
@@ -83,8 +83,8 @@ def parse_tokens(tokens):
     current_attr = None
     for token in tokens:
         # if the token is unexpected, throw an exception and fail
-        if token.token_type not in expected_token_types:
-            unexpected_token(token,expected_token_type)
+        if token.ty not in expected_token_types:
+            unexpected_token(token,expected_token_types)
         # if there is no current block, the incoming token must
         # be an identifier, so we can use it to construct a new block
         elif not current_block:
@@ -92,22 +92,22 @@ def parse_tokens(tokens):
             expected_token_types = [ Token.types.BLOCK_START ]
         else:
             # if the token is a block start, do nothing
-            if token.token_type == Token.types.BLOCK_START:
+            if token.ty == Token.types.BLOCK_START:
                 expected_token_types = [ Token.types.BLOCK_END,
                                          Token.types.IDENTIFIER ]
             # if the token is a block end, add the current block to the
             # list and set current_block to None
-            elif token.token_type == Token.types.BLOCK_END:
+            elif token.ty == Token.types.BLOCK_END:
                 blocks.append(current_block)
                 current_block = None
                 expected_token_types = [ Token.types.IDENTIFIER ]
             # if the token is an identifier, it is the name of an attr
-            elif token.token_type == Token.types.IDENTIFIER:
+            elif token.ty == Token.types.IDENTIFIER:
                 current_attr = token.value.lower()
                 expected_token_types = [ Token.types.TEMPLATE ]
             # if the token is a template string, assign it to the
             # current attr
-            elif token.token_type == Token.types.TEMPLATE:
+            elif token.ty == Token.types.TEMPLATE:
                 current_block.add_attribute(current_attr,token.value)
                 expected_token_types = [ Token.types.BLOCK_END,
                                          Token.types.IDENTIFIER ]
