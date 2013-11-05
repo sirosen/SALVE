@@ -9,11 +9,10 @@ class TokenizationException(ValueError):
         self.value = value
 
 class Token(object):
-    def __init__(self,value,token_type):
+    types = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
+    def __init__(self,value,ty):
         self.value = value
-        self.token_type = token_type
-
-token_tys = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
+        self.ty = ty
 
 def tokenize_stream(stream):
     """
@@ -53,8 +52,8 @@ def tokenize_stream(stream):
         # find a block identifier as the first token
         if state is states.FREE:
             if is_block_delim(current):
-                unexpected_token(current,token_tys.IDENTIFIER)
-            tokens.append(Token(current,token_tys.IDENTIFIER))
+                unexpected_token(current,Token.types.IDENTIFIER)
+            tokens.append(Token(current,Token.types.IDENTIFIER))
             state = states.IDENTIFIER_FOUND
 
         # if we have found a block identifier, the next token must be
@@ -62,7 +61,7 @@ def tokenize_stream(stream):
         elif state is states.IDENTIFIER_FOUND:
             if current != '{':
                 unexpected_token(current,'BLOCK_START')
-            tokens.append(Token(current,token_tys.BLOCK_START))
+            tokens.append(Token(current,Token.types.BLOCK_START))
             state = states.BLOCK
 
         # if we are in a block, the next token is either a block end,
@@ -71,10 +70,10 @@ def tokenize_stream(stream):
             if current == '{':
                 unexpected_token(current, 'IDENTIFIER or BLOCK_END')
             elif current == '}':
-                tokens.append(Token(current,token_tys.BLOCK_END))
+                tokens.append(Token(current,Token.types.BLOCK_END))
                 state = states.FREE
             else:
-                tokens.append(Token(current,token_tys.IDENTIFIER))
+                tokens.append(Token(current,Token.types.IDENTIFIER))
                 state = states.IDENTIFIER_FOUND_BLOCK
 
         # if we are in a block and have found an attribute identifier,
@@ -83,7 +82,7 @@ def tokenize_stream(stream):
         elif state is states.IDENTIFIER_FOUND_BLOCK:
             if is_block_delim(current):
                 unexpected_token(current,'TEMPLATE')
-            tokens.append(Token(current,token_tys.TEMPLATE))
+            tokens.append(Token(current,Token.types.TEMPLATE))
             state = states.BLOCK
 
         # get the next Maybe(Token)
