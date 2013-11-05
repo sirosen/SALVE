@@ -1,0 +1,9 @@
+# invalid block identifier
+
+file {
+    source  /a/b/c
+}
+
+invalid_block_id {
+
+}

@@ -56,3 +56,15 @@ def empty_block():
     assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
     assert tokens[1].ty == tokenize.Token.types.BLOCK_START
     assert tokens[2].ty == tokenize.Token.types.BLOCK_END
+
+@istest
+def attribute_with_spaces():
+    tokens = tokenize_filename('valid3.manifest')
+    assert len(tokens) == 7
+    assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[1].ty == tokenize.Token.types.BLOCK_START
+    assert tokens[2].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[3].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[4].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[5].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[6].ty == tokenize.Token.types.BLOCK_END

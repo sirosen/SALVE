@@ -44,6 +44,15 @@ def invalid_block_id():
         assert False
 
 @istest
+def invalid_block_id_from_file():
+    try:
+        parse_filename('invalid6.manifest')
+    except parse.ParsingException:
+        pass
+    else:
+        assert False
+
+@istest
 def empty_token_list():
     assert len(parse.parse_tokens([])) == 0
 
@@ -109,3 +118,22 @@ def multiple_attr_block():
     assert len(blocks[0].attrs) == 2
     assert blocks[0].attrs['source'] == '/tmp/txt'
     assert blocks[0].attrs['target'] == '/tmp/txt2'
+
+@istest
+def empty_manifest():
+    blocks = parse_filename('valid1.manifest')
+    assert len(blocks) == 0
+
+@istest
+def empty_block():
+    blocks = parse_filename('valid2.manifest')
+    assert len(blocks) == 1
+    assert isinstance(blocks[0],parse.FileBlock)
+    assert len(blocks[0].attrs) == 0
+
+@istest
+def attribute_with_spaces():
+    blocks = parse_filename('valid3.manifest')
+    assert len(blocks) == 1
+    assert isinstance(blocks[0],parse.FileBlock)
+    assert len(blocks[0].attrs) == 2
