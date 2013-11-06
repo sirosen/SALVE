@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from ConfigParser import ConfigParser
-from os import environ
+import os
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -15,7 +15,7 @@ class SALVEConfigParser(ConfigParser):
     """
     def __init__(self, userhome, filename):
         # create a config parser
-        ConfigParser.__init__(self, filename=None)
+        ConfigParser.__init__(self)
 
         # either read the user's rc file, if not given a filename
         if not filename:
@@ -37,19 +37,18 @@ class SALVEConfig(object):
     without inspecting the files.
     """
     def __init__(self, filename=None):
-        from os.path import expanduser
         # get the user that we're running as, even if invoked with sudo
-        user = environ['USER']
-        if 'SUDO_USER' in environ:
-            user = environ['SUDO_USER']
-        userhome = expanduser('~' + user)
+        user = os.environ['USER']
+        if 'SUDO_USER' in os.environ:
+            user = os.environ['SUDO_USER']
+        userhome = os.path.expanduser('~' + user)
 
         # copy the environ to a dictionary, because we don't want to
         # modify the environment just to track things like USER and
         # HOME when working around invocation with sudo
         self.env = {}
-        for k in environ:
-            self.env[k] = environ[k]
+        for k in os.environ:
+            self.env[k] = os.environ[k]
         # in self.env, reset USER and HOME to the desired values
         self.env['USER'] = user
         self.env['HOME'] = userhome
@@ -68,7 +67,7 @@ class SALVEConfig(object):
         # Grab all of the mappings from the environment that
         # start with the SALVE prefix and are uppercase
         # prevents XYz=a and XYZ=b from being ambiguous
-        salve_env = {k:environ[k] for k in environ
+        salve_env = {k:os.environ[k] for k in os.environ
                      if k.startswith(SALVE_ENV_PREFIX)
                         and k.isupper()}
 
