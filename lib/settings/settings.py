@@ -1,10 +1,7 @@
 #!/usr/bin/python
 
 from ConfigParser import ConfigParser
-from os.path import expanduser
-
-DEFAULT_CONFIG_FILE = '/etc/salve-config/salve_basic.ini'
-RC_CONFIG_FILE = expanduser('~/.salverc')
+from os import environ
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -16,11 +13,15 @@ class SALVEConfigParser(ConfigParser):
     the current user's rc file for overwrites to those
     values.
     """
-    def __init__(self):
+    def __init__(self, userhome, filename):
+        # create a config parser
         ConfigParser.__init__(self, filename=None)
+
+        # either read the user's rc file, if not given a filename
         if not filename:
-            self.read(DEFAULT_CONFIG_FILE)
-            self.read(RC_CONFIG_FILE)
+            rc_file = userhome+'/.salverc'
+            self.read(rc_file)
+        # or read the given file
         else:
             self.read(filename)
 
@@ -36,24 +37,46 @@ class SALVEConfig(object):
     without inspecting the files.
     """
     def __init__(self, filename=None):
-        from os import environ
+        from os.path import expanduser
+        # get the user that we're running as, even if invoked with sudo
+        user = environ['USER']
+        if 'SUDO_USER' in environ:
+            user = environ['SUDO_USER']
+        userhome = expanduser('~' + user)
+
+        # copy the environ to a dictionary, because we don't want to
+        # modify the environment just to track things like USER and
+        # HOME when working around invocation with sudo
+        self.env = {}
+        for k in environ:
+            self.env[k] = environ[k]
+        # in self.env, reset USER and HOME to the desired values
+        self.env['USER'] = user
+        self.env['HOME'] = userhome
+
+        # track the filename that's being used, for error out
         self.filename = filename
-        conf = SALVEConfigParser(filename)
+
+        # read the configuration, taking ~userhome/.salverc if there is
+        # no file
+        conf = SALVEConfigParser(userhome,filename)
         sections = conf.sections()
+        # the loaded configuration is stored in the config object as a
+        # dict mapping section names to a dict of (key,value) items
         self.conf = {s:dict(conf.items(s)) for s in sections}
 
         # Grab all of the mappings from the environment that
         # start with the SALVE prefix and are uppercase
         # prevents XYz=a and XYZ=b from being ambiguous
-        env = {k:environ[k] for k in environ
-               if k.startswith(SALVE_ENV_PREFIX)
-                  and k.isupper()}
+        salve_env = {k:environ[k] for k in environ
+                     if k.startswith(SALVE_ENV_PREFIX)
+                        and k.isupper()}
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
         prefixes = {(SALVE_ENV_PREFIX + '_' + s.upper()):s
                     for s in sections}
-        for key in env:
+        for key in salve_env:
             for p in prefixes:
                 if key.startswith(p):
                     # pull out the dictionary of values in the matching
@@ -61,12 +84,4 @@ class SALVEConfig(object):
                     subdict = self.conf[prefixes[p]]
                     # environment vars are uppercase
                     subkey = key[len(p):].lower()
-                    subdict[subkey] = env[key]
-
-        # preserve the order of the manifests in the file,
-        # as it may be important to semantics
-        self.manifests = []
-        man_file = self.conf['metadata']['known_manifests']
-        with open(man_file,'r') as f:
-            for line in f:
-                self.manifests.append(line.strip())
+                    subdict[subkey] = salve_env[key]
