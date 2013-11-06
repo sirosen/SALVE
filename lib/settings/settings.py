@@ -19,7 +19,7 @@ class SALVEConfigParser(ConfigParser):
 
         # either read the user's rc file, if not given a filename
         if not filename:
-            rc_file = userhome+'/.salverc'
+            rc_file = os.path.join(userhome,'.salverc')
             self.read(rc_file)
         # or read the given file
         else:
@@ -62,7 +62,7 @@ class SALVEConfig(object):
         sections = conf.sections()
         # the loaded configuration is stored in the config object as a
         # dict mapping section names to a dict of (key,value) items
-        self.conf = {s:dict(conf.items(s)) for s in sections}
+        self.attributes = {s:dict(conf.items(s)) for s in sections}
 
         # Grab all of the mappings from the environment that
         # start with the SALVE prefix and are uppercase
@@ -73,14 +73,14 @@ class SALVEConfig(object):
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
-        prefixes = {(SALVE_ENV_PREFIX + '_' + s.upper()):s
+        prefixes = {(SALVE_ENV_PREFIX + s.upper()):s
                     for s in sections}
         for key in salve_env:
             for p in prefixes:
                 if key.startswith(p):
                     # pull out the dictionary of values in the matching
                     # section
-                    subdict = self.conf[prefixes[p]]
+                    subdict = self.attributes[prefixes[p]]
                     # environment vars are uppercase
-                    subkey = key[len(p):].lower()
+                    subkey = key[len(p)+1:].lower()
                     subdict[subkey] = salve_env[key]
