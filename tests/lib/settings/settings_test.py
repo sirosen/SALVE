@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-import settings
+import lib.settings.settings as settings
 
 from nose.tools import istest, with_setup
 from mock import patch, Mock
