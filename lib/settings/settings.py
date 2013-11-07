@@ -17,13 +17,14 @@ class SALVEConfigParser(ConfigParser):
         # create a config parser
         ConfigParser.__init__(self)
 
+        # first read the defaults
         # either read the user's rc file, if not given a filename
-        if not filename:
-            rc_file = os.path.join(userhome,'.salverc')
-            self.read(rc_file)
         # or read the given file
-        else:
-            self.read(filename)
+        filenames = [os.path.join(os.path.dirname(__file__),
+                                  'default_settings.ini'),
+                     os.path.join(userhome,'.salverc'),
+                     filename]
+        self.read(f for f in filenames if f is not None)
 
 class SALVEConfig(object):
     """
