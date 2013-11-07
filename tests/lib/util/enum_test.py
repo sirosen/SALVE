@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import enum
+import lib.util.enum as enum
 from nose.tools import istest
 
 @istest

@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-import parse
-from tokenize import Token
+import lib.parse.parse as parse
+from lib.parse.tokenize import Token
 from nose.tools import istest
 
 from os.path import dirname, join as pjoin
-_testfile_dir = pjoin(dirname(__file__),'testfiles')
+_testfile_dir = pjoin(dirname(__file__),'files')
 
 
 def parse_filename(filename):
