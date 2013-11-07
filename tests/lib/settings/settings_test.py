@@ -81,6 +81,11 @@ def setup_os3():
 @istest
 @with_setup(setup_os1,teardown_patches)
 def sudo_user_replace():
+    """
+    Checks that invocations with sudo correctly set the value
+    of USER inside of the configuration object, but don't effect
+    os.environ
+    """
     orig_user = os.environ['USER']
     conf = settings.SALVEConfig()
     assert conf.env['USER'] == 'user1'
@@ -89,32 +94,88 @@ def sudo_user_replace():
 @istest
 @with_setup(setup_os1,teardown_patches)
 def sudo_homedir_resolution():
-    orig_home = os.environ['USER']
+    """
+    Checks that invocations with sudo correctly set the value
+    of HOME inside of the configuration object, but don't effect
+    os.environ
+    """
+    orig_home = os.environ['HOME']
     conf = settings.SALVEConfig()
     assert conf.env['HOME'] == pjoin(_homes_dir,'user1')
-    assert os.environ['USER'] == orig_home
+    assert os.environ['HOME'] == orig_home
 
 @istest
 @with_setup(setup_os1,teardown_patches)
 def valid_config1():
+    """
+    Checks that a valid ini file is parsed and stored correctly.
+    """
     conf = settings.SALVEConfig(pjoin(_testfile_dir,'valid1.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
 
 @istest
 @with_setup(setup_os1,teardown_patches)
 def load_rc_file():
+    """
+    Checks that in the absence of an explicit config file, we still
+    load the user's ~/.salverc file.
+    """
     conf = settings.SALVEConfig()
     assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
 
 @istest
 @with_setup(setup_os2,teardown_patches)
 def overload_from_env():
+    """
+    Checks that environment variables can be used to overload values
+    loaded from config.
+    """
     conf = settings.SALVEConfig(pjoin(_testfile_dir,'valid1.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/meta/'
 
 @istest
 @with_setup(setup_os3,teardown_patches)
 def multiple_env_overload():
+    """
+    Checks that a single environment variable overloads _all_ matching
+    attributes, not just the first one.
+    """
     conf = settings.SALVEConfig(pjoin(_testfile_dir,'valid2.ini'))
     assert conf.attributes['meta_data']['path'] == '/etc/meta/'
     assert conf.attributes['meta']['data_path'] == '/etc/meta/'
+
+@istest
+@with_setup(setup_os1,teardown_patches)
+def missing_config():
+    """
+    Checks that a missing config file does not raise any errors.
+    """
+    settings.SALVEConfig(pjoin(_testfile_dir,'NONEXISTENT_FILE'))
+
+@istest
+@with_setup(setup_os1,teardown_patches)
+def template_sub_keyerror():
+    """
+    Checks that an unknown identifier in a template string triggers a
+    KeyError.
+    """
+    conf = settings.SALVEConfig()
+    try:
+        conf.template('$NONEXISTENT_VAR')
+        assert False
+    except KeyError:
+        pass
+    else:
+        assert False
+
+@istest
+@with_setup(setup_os1,teardown_patches)
+def template_sub():
+    """
+    Checks that template string substitutions on strings with known,
+    valid identifiers work correctly.
+    """
+    conf = settings.SALVEConfig()
+    assert conf.template('$USER') == 'user1'
+    assert conf.template('$HOME') == pjoin(_homes_dir,'user1')
+    assert conf.template('$HOME/bin/program') == pjoin(_homes_dir,'user1','bin/program')

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from ConfigParser import ConfigParser
-import os
+import os, string
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -84,3 +84,14 @@ class SALVEConfig(object):
                     # environment vars are uppercase
                     subkey = key[len(p)+1:].lower()
                     subdict[subkey] = salve_env[key]
+
+    def template(self, template_string):
+        """
+        Given a @template_string, takes the environment stored in the
+        SALVE configuration object and uses it to replace placeholders
+
+        Returns a new string in which placeholders have been replaced,
+        or raises a KeyError if they are not found.
+        """
+        temp = string.Template(template_string)
+        return temp.substitute(self.env)
