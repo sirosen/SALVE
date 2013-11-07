@@ -62,14 +62,14 @@ class SALVEConfig(object):
         sections = conf.sections()
         # the loaded configuration is stored in the config object as a
         # dict mapping section names to a dict of (key,value) items
-        self.attributes = {s:dict(conf.items(s)) for s in sections}
+        self.attributes = dict((s,dict(conf.items(s))) for s in sections)
 
         # Grab all of the mappings from the environment that
         # start with the SALVE prefix and are uppercase
         # prevents XYz=a and XYZ=b from being ambiguous
-        salve_env = {k:os.environ[k] for k in os.environ
-                     if k.startswith(SALVE_ENV_PREFIX)
-                        and k.isupper()}
+        salve_env = dict((k,os.environ[k]) for k in os.environ
+                          if k.startswith(SALVE_ENV_PREFIX)
+                             and k.isupper())
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
