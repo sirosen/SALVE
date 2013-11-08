@@ -6,7 +6,7 @@ from nose.tools import istest, with_setup
 from mock import patch, Mock
 
 import os
-from os.path import dirname, join as pjoin
+from os.path import dirname, abspath, join as pjoin
 
 _testfile_dir = pjoin(dirname(__file__),'files')
 _homes_dir = pjoin(dirname(__file__),'homes')
@@ -46,6 +46,7 @@ def setup_os1():
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
     mock_path.dirname = dirname
+    mock_path.abspath = abspath
 
     setup_patches(patch.dict('os.environ',mock_env),
                   patch('os.path',mock_path))
@@ -61,6 +62,7 @@ def setup_os2():
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
     mock_path.dirname = dirname
+    mock_path.abspath = abspath
 
     setup_patches(patch.dict('os.environ',mock_env),
                   patch('os.path',mock_path))
@@ -76,6 +78,7 @@ def setup_os3():
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
     mock_path.dirname = dirname
+    mock_path.abspath = abspath
 
     setup_patches(patch.dict('os.environ',mock_env),
                   patch('os.path',mock_path))

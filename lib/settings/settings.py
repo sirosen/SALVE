@@ -2,6 +2,7 @@
 
 from ConfigParser import ConfigParser
 import os, string
+import lib.util.locations as locations
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -20,8 +21,7 @@ class SALVEConfigParser(ConfigParser):
         # first read the defaults
         # either read the user's rc file, if not given a filename
         # or read the given file
-        filenames = [os.path.join(os.path.dirname(__file__),
-                                  'default_settings.ini'),
+        filenames = [locations.get_default_config(),
                      os.path.join(userhome,'.salverc'),
                      filename]
         self.read(f for f in filenames if f is not None)
