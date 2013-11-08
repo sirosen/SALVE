@@ -63,7 +63,12 @@ class SALVEConfig(object):
         sections = conf.sections()
         # the loaded configuration is stored in the config object as a
         # dict mapping section names to a dict of (key,value) items
-        self.attributes = dict((s,dict(conf.items(s))) for s in sections)
+        # all keys are converted the lowercase for uniformity
+        self.attributes = dict((s.lower(),
+                                dict((k.lower(),v)
+                                     for (k,v)
+                                     in conf.items(s)))
+                               for s in sections)
 
         # Grab all of the mappings from the environment that
         # start with the SALVE prefix and are uppercase
@@ -96,3 +101,15 @@ class SALVEConfig(object):
         """
         temp = string.Template(template_string)
         return temp.substitute(self.env)
+
+    def apply_to_block(self, block):
+        """
+        Given a @block produced by the parser, takes any settings which
+        describe defaults and uses them to populate any missing attrs
+        of the block.
+        """
+        ty = block.block_type.lower()
+        relevant_attrs = self.attributes[ty]
+        for key in relevant_attrs:
+            if key not in block.attrs:
+                block.attrs[key] = relevant_attrs[key]
