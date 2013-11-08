@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-import abc
+import abc, subprocess, shlex
 
 class ActionException(Exception):
     """
@@ -22,7 +22,6 @@ class ShellAction(Action):
         self.cmds = command_list
      
     def execute(self):
-        import subprocess, shlex
         for cmd in self.cmds:
             process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
