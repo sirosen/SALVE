@@ -1,8 +1,23 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+import abc
 
-def Action(object):
+class ActionException(Exception):
+    """
+    A barebones specialized exception for Action creation and execution
+    errors.
+    """
+    def __init__(self,value):
+        self.value = value
+
+class Action(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def execute(self): pass
+
+class ShellAction(Action):
     def __init__(self, command_list):
         self.cmds = command_list
      
@@ -11,7 +26,7 @@ def Action(object):
         for cmd in self.cmds:
             process = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-def ActionList(Action):
+class ActionList(Action):
     def __init__(self, act_lst):
         self.actions = act_lst
 
@@ -22,7 +37,7 @@ def ActionList(Action):
     def append(self, act):
         self.actions.append(act)
 
-def ParallelActionBag(Action):
+class ParallelActionBag(Action):
     def __init__(self, act_lst):
         self.actions = set(act_lst)
 

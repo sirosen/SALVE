@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-from ..util.enum import Enum
+from lib.execute.block import block_from_identifier
 from tokenize import Token, tokenize_stream
 
 class ParsingException(ValueError):
@@ -11,55 +11,6 @@ class ParsingException(ValueError):
     def __init__(self,value):
         self.value = value
 
-class Block(object):
-    """
-    A block is the basic unit of configuration.
-    Typically, blocks describe files, SALVE manifests, patches, etc
-    """
-    types = Enum('FILE','MANIFEST')
-    def __init__(self,ty):
-        self.block_type = ty
-        self.attrs = {}
-
-    def add_attribute(self,attribute_name,value):
-        self.attrs[attribute_name] = value
-
-class FileBlock(Block):
-    """
-    A file block describes an action performed on a file.
-    This includes creation, deletion, and string append.
-    """
-    def __init__(self):
-        Block.__init__(self,Block.types.FILE)
-
-class ManifestBlock(Block):
-    """
-    A manifest block describes another manifest to be expanded and
-    executed. It may also specify properties of that manifest's
-    execution. For example, if a manifest's blocks can be executed
-    in parallel, or if its execution is conditional on a file existing.
-    """
-    def __init__(self):
-        Block.__init__(self,Block.types.MANIFEST)
-
-def block_from_identifier(id_token):
-    """
-    Given an identifier, constructs a block of the appropriate
-    type and returns it.
-    Fails if the identifier is unknown, or the token given is
-    not an identifier.
-    """
-    assert id_token.ty == Token.types.IDENTIFIER
-    # maps valid identifiers to block constructors
-    block_constructor_map = {
-        'file': FileBlock,
-        'manifest': ManifestBlock
-    }
-    val = id_token.value.lower()
-    for key in block_constructor_map:
-        if val == key:
-            return block_constructor_map[key]()
-    raise ParsingException('Unknown block identifier ' + val)
 
 def parse_tokens(tokens):
     """
@@ -88,7 +39,10 @@ def parse_tokens(tokens):
         # if there is no current block, the incoming token must
         # be an identifier, so we can use it to construct a new block
         elif not current_block:
-            current_block = block_from_identifier(token)
+            try:
+                current_block = block_from_identifier(token)
+            except:
+                raise ParsingException('Invalid block id ' + token.value)
             expected_token_types = [ Token.types.BLOCK_START ]
         else:
             # if the token is a block start, do nothing
