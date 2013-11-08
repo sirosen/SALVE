@@ -4,6 +4,7 @@ import abc
 
 from lib.util.enum import Enum
 from lib.parse.tokenize import Token
+import lib.parse.parse
 import lib.execute.action as action
 
 class Block(object):
@@ -46,7 +47,10 @@ class ManifestBlock(Block):
         Block.__init__(self,Block.types.MANIFEST)
 
     def to_action(self):
-        raise action.ActionException('TODO')
+        filename = self.attrs['source']
+        with open(filename) as man:
+            blocks = lib.parse.parse.parse_stream(man)
+            return action.ActionList([b.to_action() for b in blocks])
 
 # maps valid identifiers to block constructors
 Block.identifier_map = {

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-from lib.execute.block import block_from_identifier
+import lib.execute.block
 from tokenize import Token, tokenize_stream
 
 class ParsingException(ValueError):
@@ -40,7 +40,8 @@ def parse_tokens(tokens):
         # be an identifier, so we can use it to construct a new block
         elif not current_block:
             try:
-                current_block = block_from_identifier(token)
+                b_from_id = lib.execute.block.block_from_identifier
+                current_block = b_from_id(token)
             except:
                 raise ParsingException('Invalid block id ' + token.value)
             expected_token_types = [ Token.types.BLOCK_START ]
