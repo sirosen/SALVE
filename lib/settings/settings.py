@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 from ConfigParser import ConfigParser
-import os
+import os, string
+import lib.util.locations as locations
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -17,13 +18,13 @@ class SALVEConfigParser(ConfigParser):
         # create a config parser
         ConfigParser.__init__(self)
 
+        # first read the defaults
         # either read the user's rc file, if not given a filename
-        if not filename:
-            rc_file = os.path.join(userhome,'.salverc')
-            self.read(rc_file)
         # or read the given file
-        else:
-            self.read(filename)
+        filenames = [locations.get_default_config(),
+                     os.path.join(userhome,'.salverc'),
+                     filename]
+        self.read(f for f in filenames if f is not None)
 
 class SALVEConfig(object):
     """
@@ -62,14 +63,19 @@ class SALVEConfig(object):
         sections = conf.sections()
         # the loaded configuration is stored in the config object as a
         # dict mapping section names to a dict of (key,value) items
-        self.attributes = {s:dict(conf.items(s)) for s in sections}
+        # all keys are converted the lowercase for uniformity
+        self.attributes = dict((s.lower(),
+                                dict((k.lower(),v)
+                                     for (k,v)
+                                     in conf.items(s)))
+                               for s in sections)
 
         # Grab all of the mappings from the environment that
         # start with the SALVE prefix and are uppercase
         # prevents XYz=a and XYZ=b from being ambiguous
-        salve_env = {k:os.environ[k] for k in os.environ
-                     if k.startswith(SALVE_ENV_PREFIX)
-                        and k.isupper()}
+        salve_env = dict((k,os.environ[k]) for k in os.environ
+                          if k.startswith(SALVE_ENV_PREFIX)
+                             and k.isupper())
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
@@ -84,3 +90,26 @@ class SALVEConfig(object):
                     # environment vars are uppercase
                     subkey = key[len(p)+1:].lower()
                     subdict[subkey] = salve_env[key]
+
+    def template(self, template_string):
+        """
+        Given a @template_string, takes the environment stored in the
+        SALVE configuration object and uses it to replace placeholders
+
+        Returns a new string in which placeholders have been replaced,
+        or raises a KeyError if they are not found.
+        """
+        temp = string.Template(template_string)
+        return temp.substitute(self.env)
+
+    def apply_to_block(self, block):
+        """
+        Given a @block produced by the parser, takes any settings which
+        describe defaults and uses them to populate any missing attrs
+        of the block.
+        """
+        ty = block.block_type.lower()
+        relevant_attrs = self.attributes[ty]
+        for key in relevant_attrs:
+            if key not in block.attrs:
+                block.attrs[key] = relevant_attrs[key]

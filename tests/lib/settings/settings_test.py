@@ -6,7 +6,7 @@ from nose.tools import istest, with_setup
 from mock import patch, Mock
 
 import os
-from os.path import dirname, join as pjoin
+from os.path import dirname, abspath, join as pjoin
 
 _testfile_dir = pjoin(dirname(__file__),'files')
 _homes_dir = pjoin(dirname(__file__),'homes')
@@ -45,6 +45,8 @@ def setup_os1():
     mock_path = Mock()
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
+    mock_path.dirname = dirname
+    mock_path.abspath = abspath
 
     setup_patches(patch.dict('os.environ',mock_env),
                   patch('os.path',mock_path))
@@ -59,6 +61,8 @@ def setup_os2():
     mock_path = Mock()
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
+    mock_path.dirname = dirname
+    mock_path.abspath = abspath
 
     setup_patches(patch.dict('os.environ',mock_env),
                   patch('os.path',mock_path))
@@ -73,6 +77,8 @@ def setup_os3():
     mock_path = Mock()
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
+    mock_path.dirname = dirname
+    mock_path.abspath = abspath
 
     setup_patches(patch.dict('os.environ',mock_env),
                   patch('os.path',mock_path))
@@ -89,10 +95,10 @@ def sudo_user_replace():
 @istest
 @with_setup(setup_os1,teardown_patches)
 def sudo_homedir_resolution():
-    orig_home = os.environ['USER']
+    orig_home = os.environ['HOME']
     conf = settings.SALVEConfig()
     assert conf.env['HOME'] == pjoin(_homes_dir,'user1')
-    assert os.environ['USER'] == orig_home
+    assert os.environ['HOME'] == orig_home
 
 @istest
 @with_setup(setup_os1,teardown_patches)
@@ -118,3 +124,29 @@ def multiple_env_overload():
     conf = settings.SALVEConfig(pjoin(_testfile_dir,'valid2.ini'))
     assert conf.attributes['meta_data']['path'] == '/etc/meta/'
     assert conf.attributes['meta']['data_path'] == '/etc/meta/'
+
+@istest
+@with_setup(setup_os1,teardown_patches)
+def missing_config():
+    conf = settings.SALVEConfig(pjoin(_testfile_dir,'NONEXISTENT_FILE'))
+    assert conf.attributes['file']['action'] == 'create'
+
+@istest
+@with_setup(setup_os1,teardown_patches)
+def template_sub_keyerror():
+    conf = settings.SALVEConfig()
+    try:
+        conf.template('$NONEXISTENT_VAR')
+        assert False
+    except KeyError:
+        pass
+    else:
+        assert False
+
+@istest
+@with_setup(setup_os1,teardown_patches)
+def template_sub():
+    conf = settings.SALVEConfig()
+    assert conf.template('$USER') == 'user1'
+    assert conf.template('$HOME') == pjoin(_homes_dir,'user1')
+    assert conf.template('$HOME/bin/program') == pjoin(_homes_dir,'user1','bin/program')
