@@ -18,18 +18,6 @@ def block_is_abstract():
         assert False
 
 @istest
-def file_block_from_id():
-    file_id = Token('file',Token.types.IDENTIFIER)
-    b = block.block_from_identifier(file_id)
-    assert isinstance(b,block.FileBlock)
-
-@istest
-def manifest_block_from_id():
-    manifest_id = Token('manifest',Token.types.IDENTIFIER)
-    b = block.block_from_identifier(manifest_id)
-    assert isinstance(b,block.ManifestBlock)
-
-@istest
 def invalid_block_id():
     invalid_id = Token('invalid_block_id',Token.types.IDENTIFIER)
     try:

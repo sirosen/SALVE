@@ -10,9 +10,18 @@ class TokenizationException(ValueError):
 
 class Token(object):
     types = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
-    def __init__(self,value,ty):
+    def __init__(self,value,ty,lineno=-1,in_file=None):
         self.value = value
         self.ty = ty
+        self.lineno = lineno
+        self.in_file = in_file
+
+    def __str__(self):
+        attrs = ['value='+self.value,'ty='+self.ty,
+                 'lineno='+self.lineno]
+        if self.in_file:
+            attrs.append('in_file='+self.in_file)
+        return 'Token('+','.join(attrs)+')'
 
 def tokenize_stream(stream):
     """
@@ -26,12 +35,19 @@ def tokenize_stream(stream):
     def is_block_delim(token):
         return token == '{' or token == '}'
 
-    def unexpected_token(token,expected):
-        raise TokenizationException('Expected a ' + expected +
-                ' token, but found "' + token + '" instead!')
+    def unexpected_token(token_str,lineno,filename,expected):
+        loc_str = 'line ' + str(lineno)
+        if filename:
+            loc_str = filename + ' : ' + loc_str
+        raise TokenizationException('Unexpected token: ' + token_str +\
+            ' Expected ' + str(expected) + ' instead. ' + loc_str)
 
     states = Enum('FREE', 'IDENTIFIER_FOUND', 'BLOCK',
                   'IDENTIFIER_FOUND_BLOCK')
+
+    filename = None
+    if hasattr(stream,'name'):
+        filename = stream.name
 
     tokens = []
     state = states.FREE
@@ -43,6 +59,9 @@ def tokenize_stream(stream):
     tokenizer.wordchars = string.letters + string.digits + \
                           '_-+=^&@`/\|~$()[].,<>*?!%#'
 
+    def add_token(tok,ty,lineno):
+        tokens.append(Token(tok,ty,lineno,in_file=filename))
+
     # The tokenizer acts as a state machine, reading tokens and making
     # state transitions based on the token values
     # get the first Maybe(Token)
@@ -52,28 +71,32 @@ def tokenize_stream(stream):
         # find a block identifier as the first token
         if state is states.FREE:
             if is_block_delim(current):
-                unexpected_token(current,Token.types.IDENTIFIER)
-            tokens.append(Token(current,Token.types.IDENTIFIER))
+                unexpected_token(current,tokenizer.lineno,
+                                 filename,Token.types.IDENTIFIER)
+            add_token(current,Token.types.IDENTIFIER,tokenizer.lineno)
             state = states.IDENTIFIER_FOUND
 
         # if we have found a block identifier, the next token must be
         # a block start, '{'
         elif state is states.IDENTIFIER_FOUND:
             if current != '{':
-                unexpected_token(current,'BLOCK_START')
-            tokens.append(Token(current,Token.types.BLOCK_START))
+                unexpected_token(current,tokenizer.lineno,
+                                 filename,Token.types.BLOCK_START)
+            add_token(current,Token.types.BLOCK_START,tokenizer.lineno)
             state = states.BLOCK
 
         # if we are in a block, the next token is either a block end,
         # '}', or an attribute identifier
         elif state is states.BLOCK:
             if current == '{':
-                unexpected_token(current, 'IDENTIFIER or BLOCK_END')
+                unexpected_token(current,tokenizer.lineno,filename,
+                    [Token.types.BLOCK_END,Token.types.IDENTIFIER])
             elif current == '}':
-                tokens.append(Token(current,Token.types.BLOCK_END))
+                add_token(current,Token.types.BLOCK_END,tokenizer.lineno)
                 state = states.FREE
             else:
-                tokens.append(Token(current,Token.types.IDENTIFIER))
+                add_token(current,Token.types.IDENTIFIER,
+                          tokenizer.lineno)
                 state = states.IDENTIFIER_FOUND_BLOCK
 
         # if we are in a block and have found an attribute identifier,
@@ -81,8 +104,9 @@ def tokenize_stream(stream):
         # attribute's value
         elif state is states.IDENTIFIER_FOUND_BLOCK:
             if is_block_delim(current):
-                unexpected_token(current,'TEMPLATE')
-            tokens.append(Token(current,Token.types.TEMPLATE))
+                unexpected_token(current,tokenizer.lineno,
+                                 filename,Token.types.TEMPLATE)
+            add_token(current,Token.types.TEMPLATE,tokenizer.lineno)
             state = states.BLOCK
 
         # get the next Maybe(Token)
