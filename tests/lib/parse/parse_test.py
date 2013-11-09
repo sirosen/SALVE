@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import lib.parse.parse as parse
+import lib.execute.block as block
 from lib.parse.tokenize import Token
 from nose.tools import istest
 
@@ -21,27 +22,9 @@ def ensure_ParsingException(tokens):
         assert False
 
 @istest
-def file_block_from_id():
-    file_id = Token('file',Token.types.IDENTIFIER)
-    b = parse.block_from_identifier(file_id)
-    assert isinstance(b,parse.FileBlock)
-
-@istest
-def manifest_block_from_id():
-    manifest_id = Token('manifest',Token.types.IDENTIFIER)
-    b = parse.block_from_identifier(manifest_id)
-    assert isinstance(b,parse.ManifestBlock)
-
-@istest
 def invalid_block_id():
     invalid_id = Token('invalid_block_id',Token.types.IDENTIFIER)
-    try:
-        parse.block_from_identifier(invalid_id)
-        assert False
-    except parse.ParsingException:
-        pass
-    else:
-        assert False
+    ensure_ParsingException([invalid_id])
 
 @istest
 def invalid_block_id_from_file():
@@ -128,12 +111,12 @@ def empty_manifest():
 def empty_block():
     blocks = parse_filename('valid2.manifest')
     assert len(blocks) == 1
-    assert isinstance(blocks[0],parse.FileBlock)
+    assert isinstance(blocks[0],block.FileBlock)
     assert len(blocks[0].attrs) == 0
 
 @istest
 def attribute_with_spaces():
     blocks = parse_filename('valid3.manifest')
     assert len(blocks) == 1
-    assert isinstance(blocks[0],parse.FileBlock)
+    assert isinstance(blocks[0],block.FileBlock)
     assert len(blocks[0].attrs) == 2
