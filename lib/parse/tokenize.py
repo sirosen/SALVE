@@ -6,9 +6,10 @@ from lib.util.enum import Enum
 from lib.util.streams import get_filename
 
 class TokenizationException(ValueError):
-    def __init__(self,msg):
+    def __init__(self,msg,filename=None):
         ValueError.__init__(self,msg)
         self.message = msg
+        self.filename = filename
 
 class Token(object):
     types = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
@@ -42,7 +43,8 @@ def tokenize_stream(stream):
         if filename:
             loc_str = filename + ' : ' + loc_str
         raise TokenizationException('Unexpected token: ' + token_str +\
-            ' Expected ' + str(expected) + ' instead. ' + loc_str)
+            ' Expected ' + str(expected) + ' instead. ' + loc_str,
+            filename=filename)
 
     """
     State definitions
@@ -123,6 +125,6 @@ def tokenize_stream(stream):
 
     if state is not states.FREE:
         raise TokenizationException('Tokenizer ended in state ' + \
-                                     state)
+                                     state,filename=filename)
 
     return tokens
