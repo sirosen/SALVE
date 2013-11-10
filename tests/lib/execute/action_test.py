@@ -5,6 +5,12 @@ from mock import patch
 
 import lib.execute.action as action
 
+class MockProcess(object):
+    def __init__(self):
+        self.returncode = 0
+    def wait(self):
+        pass
+
 @istest
 def action_is_abstract():
     try:
@@ -39,15 +45,15 @@ def shell_action_basic():
     # commands passed in
     # instead, commands are stored in the done_commands list
     done_commands = []
-    def mock_Popen(commands, stdout=None, stderr=None):
+    def mock_Popen(commands, stdout=None, stderr=None, shell=None):
         done_commands.append(commands)
+        return MockProcess()
 
     with patch('subprocess.Popen',mock_Popen):
         a = action.ShellAction(['mkdir /a/b'])
         a.execute()
 
-    assert done_commands[0][0] == 'mkdir'
-    assert done_commands[0][1] == '/a/b'
+    assert done_commands[0] == 'mkdir /a/b'
 
 @istest
 def action_list_inorder():
@@ -63,8 +69,9 @@ def action_list_inorder():
     # commands passed in
     # instead, commands are stored in the done_commands list
     done_commands = []
-    def mock_Popen(commands, stdout=None, stderr=None):
+    def mock_Popen(commands, stdout=None, stderr=None, shell=None):
         done_commands.append(commands)
+        return MockProcess()
 
     with patch('lib.execute.action.ShellAction.execute',mock_execute):
         with patch('subprocess.Popen',mock_Popen):
@@ -76,8 +83,26 @@ def action_list_inorder():
     assert done_actions[0] == a
     assert done_actions[1] == b
 
-    assert done_commands[0][0] == 'a'
-    assert done_commands[0][1] == 'b'
-    assert done_commands[1][0] == 'p'
-    assert done_commands[1][1] == 'q'
-    assert done_commands[1][2] == 'r'
+    assert done_commands[0] == 'a b'
+    assert done_commands[1] == 'p q r'
+
+@istest
+def failed_shell_action():
+    def mock_Popen(commands, stdout=None, stderr=None, shell=None):
+        """
+        Produces a dummy failure process. We don't bother about the
+        done_commands list here because it is not relevant.
+        """
+        p = MockProcess()
+        p.returncode = 1
+        return p
+
+    with patch('subprocess.Popen',mock_Popen):
+        a = action.ShellAction(['touch /a/b'])
+        try:
+            a.execute()
+            assert False
+        except action.ActionException:
+            pass
+        else:
+            assert False
