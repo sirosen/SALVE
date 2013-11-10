@@ -7,16 +7,21 @@ from os.path import dirname, join as pjoin
 _testfile_dir = pjoin(dirname(__file__),'files')
 
 def tokenize_filename(filename):
-    with open(pjoin(_testfile_dir,filename)) as f:
+    with open(filename) as f:
         return tokenize.tokenize_stream(f)
 
+def get_full_path(filename):
+    return pjoin(_testfile_dir,filename)
+
 def ensure_TokenizationException(filename):
+    full_path = get_full_path(filename)
     try:
-        tokenize_filename(filename)
+        tokenize_filename(full_path)
         # Should never reach this, we are trying a bad file
         assert False
-    except tokenize.TokenizationException:
-        pass
+    except tokenize.TokenizationException as e:
+        assert e.filename is None or \
+               e.filename == full_path
     else:
         assert False
 
@@ -46,12 +51,12 @@ def missing_attribute_value():
 
 @istest
 def empty_manifest():
-    tokens = tokenize_filename('valid1.manifest')
+    tokens = tokenize_filename(get_full_path('valid1.manifest'))
     assert len(tokens) == 0
 
 @istest
 def empty_block():
-    tokens = tokenize_filename('valid2.manifest')
+    tokens = tokenize_filename(get_full_path('valid2.manifest'))
     assert len(tokens) == 3
     assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
     assert tokens[1].ty == tokenize.Token.types.BLOCK_START
@@ -59,7 +64,7 @@ def empty_block():
 
 @istest
 def attribute_with_spaces():
-    tokens = tokenize_filename('valid3.manifest')
+    tokens = tokenize_filename(get_full_path('valid3.manifest'))
     assert len(tokens) == 7
     assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
     assert tokens[1].ty == tokenize.Token.types.BLOCK_START

@@ -2,17 +2,24 @@
 
 from __future__ import print_function
 import lib.execute.block
-from tokenize import Token, tokenize_stream
+from lib.util.streams import get_filename
+from lib.parse.tokenize import Token, tokenize_stream
 
 class ParsingException(ValueError):
     """
-    A barebones specialized exception for parsing errors.
+    A specialized exception for parsing errors.
+    A ParsingException (PE) can carry the token and filename that
+    tripped the exception. In that way, any error handling code that
+    gets a PE can directly inspect the objects/attributes that tripped
+    it.
     """
-    def __init__(self,value):
-        self.value = value
+    def __init__(self,msg,token=None,filename=None):
+        ValueError.__init__(self,msg)
+        self.message = msg
+        self.token = token
+        self.filename = filename
 
-
-def parse_tokens(tokens):
+def parse_tokens(tokens,filename=None):
     """
     Converts a token list to a block list.
     This is not entirely stateless, but unlike the tokenizer,
@@ -20,12 +27,11 @@ def parse_tokens(tokens):
     """
     blocks = []
     def unexpected_token(token,expected_types):
-        raise ParsingException('Invalid token in sequence. ' + \
-                               'Expected a token of types ' + \
-                               str(expected_types) + \
-                               ' but got token ' + \
-                               token.value + ' of type ' +
-                               token.ty + ' instead.')
+        raise ParsingException('Invalid token.' +\
+            'Expected a token of types ' + str(expected_types) +\
+            ' but got token ' + token.value + ' of type ' + token.ty +\
+            ' instead.',token=token,filename=filename)
+
     # track the expected next token(s)
     expected_token_types = [ Token.types.IDENTIFIER ]
     # the current_block and current_attr are used to build blocks
@@ -43,7 +49,8 @@ def parse_tokens(tokens):
                 b_from_id = lib.execute.block.block_from_identifier
                 current_block = b_from_id(token)
             except:
-                raise ParsingException('Invalid block id ' + token.value)
+                raise ParsingException('Invalid block id ' +\
+                    token.value,token=token,filename=filename)
             expected_token_types = [ Token.types.BLOCK_START ]
         else:
             # if the token is a block start, do nothing
@@ -66,12 +73,16 @@ def parse_tokens(tokens):
                 current_block.add_attribute(current_attr,token.value)
                 expected_token_types = [ Token.types.BLOCK_END,
                                          Token.types.IDENTIFIER ]
-            # no else because token types must be valid, as per
-            # the earlier check for valid token type
+            # no meaningful else because token types must be valid, as
+            # per the earlier check for valid token type
+            else: raise ValueError('SALVE Internal Error!')
     # if the token list terminates and there is still a block in
     # progress, it means that the block was not teminated
     if current_block is not None:
-        raise ParsingException('Incomplete block in token stream!')
+        # this PE carries no token because it is the absence of a token
+        # that triggers it
+        raise ParsingException('Incomplete block in token stream!',
+            filename=filename)
 
     return blocks
 
@@ -81,4 +92,5 @@ def parse_stream(stream):
     Parsing a stream is just tokenizing it, and then handing those
     tokens to the parser.
     """
-    return parse_tokens(tokenize_stream(stream))
+    filename = get_filename(stream)
+    return parse_tokens(tokenize_stream(stream),filename=filename)
