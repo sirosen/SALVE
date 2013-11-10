@@ -2,11 +2,13 @@
 
 from __future__ import print_function
 import string, shlex
-from ..util.enum import Enum
+from lib.util.enum import Enum
+from lib.util.streams import get_filename
 
 class TokenizationException(ValueError):
-    def __init__(self,value):
-        self.value = value
+    def __init__(self,msg):
+        ValueError.__init__(self,msg)
+        self.message = msg
 
 class Token(object):
     types = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
@@ -42,12 +44,19 @@ def tokenize_stream(stream):
         raise TokenizationException('Unexpected token: ' + token_str +\
             ' Expected ' + str(expected) + ' instead. ' + loc_str)
 
+    """
+    State definitions
+        FREE: Waiting for a block identifier
+        IDENTIFIER_FOUND: Got a block identifier, waiting for a {
+        BLOCK: Inside of a block, waiting for an attribute identifier
+            or }
+        IDENTIFIER_FOUND_BLOCK: Inside of a block, got an attribute
+            identifier, waiting for a template string value
+    """
     states = Enum('FREE', 'IDENTIFIER_FOUND', 'BLOCK',
                   'IDENTIFIER_FOUND_BLOCK')
 
-    filename = None
-    if hasattr(stream,'name'):
-        filename = stream.name
+    filename = get_filename(stream)
 
     tokens = []
     state = states.FREE
