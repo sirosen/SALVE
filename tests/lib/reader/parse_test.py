@@ -1,11 +1,12 @@
 #!/usr/bin/python
 
-import lib.parse.parse as parse
 import lib.execute.block as block
-from lib.parse.tokenize import Token
-from nose.tools import istest
+import lib.reader.parse as parse
+from lib.reader.tokenize import Token
 
+from nose.tools import istest
 from os.path import dirname, join as pjoin
+
 _testfile_dir = pjoin(dirname(__file__),'files')
 
 

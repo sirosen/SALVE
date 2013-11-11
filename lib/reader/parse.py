@@ -1,9 +1,8 @@
 #!/usr/bin/python
 
-from __future__ import print_function
 import lib.execute.block
 from lib.util.streams import get_filename
-from lib.parse.tokenize import Token, tokenize_stream
+from lib.reader.tokenize import Token, tokenize_stream
 
 class ParsingException(ValueError):
     """

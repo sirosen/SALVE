@@ -3,7 +3,7 @@
 from nose.tools import istest
 import mock
 
-from lib.parse.tokenize import Token
+from lib.reader.tokenize import Token
 import lib.execute.action as action
 import lib.execute.block as block
 

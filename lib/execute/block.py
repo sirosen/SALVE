@@ -3,8 +3,8 @@
 import abc
 
 from lib.util.enum import Enum
-from lib.parse.tokenize import Token
-import lib.parse.parse
+from lib.reader.tokenize import Token
+import lib.reader.parse
 import lib.execute.action as action
 
 class Block(object):
