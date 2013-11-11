@@ -50,3 +50,18 @@ def empty_manifest_to_action_error():
         pass
     else:
         assert False
+
+@istest
+def file_block_create_to_action():
+    b = block.FileBlock()
+    b.attrs = {'action':'create',
+               'source':'/a/b/c',
+               'target':'/p/q/r',
+               'user':'user1',
+               'group':'nogroup',
+               'mode':'0600'}
+    act = b.to_action()
+    assert isinstance(act,action.ShellAction)
+    assert act.cmds[0] == 'cp /a/b/c /p/q/r'
+    assert 'chown user1:nogroup /p/q/r' in act.cmds
+    assert 'chmod 0600 /p/q/r' in act.cmds

@@ -34,7 +34,30 @@ class FileBlock(Block):
         Block.__init__(self,Block.types.FILE)
 
     def to_action(self):
-        raise action.ActionException('TODO')
+        if self.attrs['action'] == 'create':
+            # TODO: replace asserts with a check & exception,
+            # preferably wrapped in a function of some kind
+            assert 'source' in self.attrs
+            assert 'target' in self.attrs
+            assert 'user' in self.attrs
+            assert 'group' in self.attrs
+            assert 'mode' in self.attrs
+            copy_file = ' '.join(['cp',
+                                  self.attrs['source'],
+                                  self.attrs['target']
+                                 ])
+            chown_file = ' '.join(['chown',
+                                   self.attrs['user']+':'+\
+                                   self.attrs['group'],
+                                   self.attrs['target']
+                                  ])
+            chmod_file = ' '.join(['chmod',
+                                   self.attrs['mode'],
+                                   self.attrs['target']
+                                  ])
+            return action.ShellAction([copy_file,chown_file,chmod_file])
+        else:
+            raise action.ActionException('Unsupported file block action.')
 
 class ManifestBlock(Block):
     """
