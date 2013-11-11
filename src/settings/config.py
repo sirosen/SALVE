@@ -3,6 +3,7 @@
 from ConfigParser import ConfigParser
 import os, string
 
+import src.execute.block
 import src.util.locations as locations
 
 SALVE_ENV_PREFIX = 'SALVE_'
@@ -54,6 +55,7 @@ class SALVEConfig(object):
         # in self.env, reset USER and HOME to the desired values
         self.env['USER'] = user
         self.env['HOME'] = userhome
+        self.env['SALVE_ROOT'] = locations.get_salve_root()
 
         # track the filename that's being used, for error out
         self.filename = filename
@@ -111,6 +113,11 @@ class SALVEConfig(object):
         """
         ty = block.block_type.lower()
         relevant_attrs = self.attributes[ty]
-        for key in relevant_attrs:
-            if key not in block.attrs:
+        for key in block.attrs:
+            if key in relevant_attrs:
                 block.attrs[key] = relevant_attrs[key]
+            block.attrs[key] = self.template(block.attrs[key])
+        if isinstance(block,src.execute.block.ManifestBlock) and \
+            block.sub_blocks is not None:
+            for b in block.sub_blocks:
+                self.apply_to_block(b)
