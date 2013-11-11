@@ -2,8 +2,8 @@
 
 from __future__ import print_function
 import string, shlex
-from lib.util.enum import Enum
-from lib.util.streams import get_filename
+from src.util.enum import Enum
+from src.util.streams import get_filename
 
 class TokenizationException(ValueError):
     def __init__(self,msg,filename=None):

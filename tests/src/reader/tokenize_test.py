@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import lib.reader.tokenize as tokenize
+import src.reader.tokenize as tokenize
 
 from nose.tools import istest
 from os.path import dirname, join as pjoin

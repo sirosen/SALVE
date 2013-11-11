@@ -3,9 +3,9 @@
 from nose.tools import istest
 import mock
 
-from lib.reader.tokenize import Token
-import lib.execute.action as action
-import lib.execute.block as block
+from src.reader.tokenize import Token
+import src.execute.action as action
+import src.execute.block as block
 
 @istest
 def block_is_abstract():

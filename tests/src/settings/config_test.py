@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import lib.settings.config as config
+import src.settings.config as config
 
 from nose.tools import istest, with_setup
 from mock import patch, Mock

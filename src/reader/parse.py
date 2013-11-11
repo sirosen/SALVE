@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-import lib.execute.block
-from lib.util.streams import get_filename
-from lib.reader.tokenize import Token, tokenize_stream
+import src.execute.block
+from src.util.streams import get_filename
+from src.reader.tokenize import Token, tokenize_stream
 
 class ParsingException(ValueError):
     """
@@ -45,7 +45,7 @@ def parse_tokens(tokens,filename=None):
         # be an identifier, so we can use it to construct a new block
         elif not current_block:
             try:
-                b_from_id = lib.execute.block.block_from_identifier
+                b_from_id = src.execute.block.block_from_identifier
                 current_block = b_from_id(token)
             except:
                 raise ParsingException('Invalid block id ' +\

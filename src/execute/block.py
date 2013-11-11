@@ -2,10 +2,10 @@
 
 import abc
 
-from lib.util.enum import Enum
-from lib.reader.tokenize import Token
-import lib.reader.parse
-import lib.execute.action as action
+from src.util.enum import Enum
+from src.reader.tokenize import Token
+import src.reader.parse
+import src.execute.action as action
 
 class Block(object):
     """
@@ -72,7 +72,7 @@ class ManifestBlock(Block):
     def to_action(self):
         filename = self.attrs['source']
         with open(filename) as man:
-            blocks = lib.parse.parse.parse_stream(man)
+            blocks = src.parse.parse.parse_stream(man)
             return action.ActionList([b.to_action() for b in blocks])
 
 # maps valid identifiers to block constructors

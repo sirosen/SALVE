@@ -2,7 +2,8 @@
 
 from ConfigParser import ConfigParser
 import os, string
-import lib.util.locations as locations
+
+import src.util.locations as locations
 
 SALVE_ENV_PREFIX = 'SALVE_'
 

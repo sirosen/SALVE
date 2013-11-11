@@ -3,7 +3,7 @@
 from nose.tools import istest
 from mock import patch
 
-import lib.execute.action as action
+import src.execute.action as action
 
 class MockProcess(object):
     def __init__(self):
@@ -28,7 +28,7 @@ def empty_action_list():
         done_actions.append(self)
 
     # Just ensuring that an empty action list is valid
-    with patch('lib.execute.action.Action.execute',mock_execute):
+    with patch('src.execute.action.Action.execute',mock_execute):
         actions = action.ActionList([])
         actions.execute()
 
@@ -73,7 +73,7 @@ def action_list_inorder():
         done_commands.append(commands)
         return MockProcess()
 
-    with patch('lib.execute.action.ShellAction.execute',mock_execute):
+    with patch('src.execute.action.ShellAction.execute',mock_execute):
         with patch('subprocess.Popen',mock_Popen):
             a = action.ShellAction(['a b'])
             b = action.ShellAction(['p q r'])

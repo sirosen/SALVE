@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-import lib.execute.block as block
-import lib.reader.parse as parse
-from lib.reader.tokenize import Token
+import src.execute.block as block
+import src.reader.parse as parse
+from src.reader.tokenize import Token
 
 from nose.tools import istest
 from os.path import dirname, join as pjoin
