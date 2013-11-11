@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
-import lib.parse.tokenize as tokenize
-from nose.tools import istest
+import lib.reader.tokenize as tokenize
 
+from nose.tools import istest
 from os.path import dirname, join as pjoin
+
 _testfile_dir = pjoin(dirname(__file__),'files')
 
 def tokenize_filename(filename):
