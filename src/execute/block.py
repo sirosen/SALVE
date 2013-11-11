@@ -1,11 +1,13 @@
 #!/usr/bin/python
 
-import abc
+import abc, os
 
 from src.util.enum import Enum
 from src.reader.tokenize import Token
-import src.reader.parse
+
+import src.reader.parse as parse
 import src.execute.action as action
+import src.util.locations as locations
 
 class BlockException(StandardError):
     """
@@ -33,6 +35,9 @@ class Block(object):
     @abc.abstractmethod
     def to_action(self): return
 
+    @abc.abstractmethod
+    def expand_file_paths(self, root_dir=None): return
+
 class FileBlock(Block):
     """
     A file block describes an action performed on a file.
@@ -41,7 +46,27 @@ class FileBlock(Block):
     def __init__(self):
         Block.__init__(self,Block.types.FILE)
 
+    def expand_file_paths(self,root_dir=None):
+        """
+        Expand relative paths in source and target to be absolute paths
+        beginning with the SALVE_ROOT.
+        """
+        if 'source' not in self.attrs or 'target' not in self.attrs:
+            # TODO: replace with a more informative exception
+            raise BlockException('FileBlock missing source and target')
+
+        if not root_dir: root_dir = locations.get_salve_root()
+        if not locations.is_abs_or_var(self.attrs['source']):
+            self.attrs['source'] = os.path.join(root_dir,
+                                                self.attrs['source'])
+        if not locations.is_abs_or_var(self.attrs['target']):
+            self.attrs['target'] = os.path.join(root_dir,
+                                                self.attrs['target'])
+
     def to_action(self):
+        # is a no-op if it has already been done
+        # otherwise, it ensures that everything will work
+        self.expand_file_paths()
         if self.attrs['action'] == 'create':
             # TODO: replace asserts with a check & exception,
             # preferably wrapped in a function of some kind
@@ -80,7 +105,7 @@ class ManifestBlock(Block):
         if source:
             self.attrs['source'] = source
 
-    def expand_blocks(self,config,recursive=True,ancestors=None):
+    def expand_blocks(self,config,recursive=True,ancestors=None,root_dir=None):
         assert 'source' in self.attrs
         if not ancestors:
             ancestors = set()
@@ -92,11 +117,20 @@ class ManifestBlock(Block):
 
         ancestors.add(filename)
         with open(filename) as man:
-            self.sub_blocks = src.reader.parse.parse_stream(man)
+            self.sub_blocks = parse.parse_stream(man)
         for b in self.sub_blocks:
+            b.expand_file_paths(root_dir=root_dir)
             config.apply_to_block(b)
             if recursive and isinstance(b,ManifestBlock):
-                b.expand_blocks(config,ancestors=ancestors)
+                b.expand_blocks(config,ancestors=ancestors,root_dir=root_dir)
+
+    def expand_file_paths(self,root_dir=None):
+        assert 'source' in self.attrs
+
+        if not locations.is_abs_or_var(self.attrs['source']):
+            if not root_dir: root_dir = locations.get_salve_root()
+            self.attrs['source'] = os.path.join(root_dir,
+                                                self.attrs['source'])
 
     def to_action(self):
         assert self.sub_blocks is not None

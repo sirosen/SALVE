@@ -7,6 +7,7 @@ import mock
 from src.reader.tokenize import Token
 import src.execute.action as action
 import src.execute.block as block
+import src.util.locations as locations
 import src.settings.config
 
 
@@ -105,3 +106,29 @@ def recursive_manifest_error():
         assert False
     except block.BlockException: pass
     else: assert False
+
+@istest
+def file_path_expand():
+    f = block.FileBlock()
+    f.add_attribute('source','p/q/r/s')
+    f.add_attribute('target','t/u/v/w/x/y/z/1/2/3/../3')
+    f.expand_file_paths()
+    source_loc = os.path.join(locations.get_salve_root(),'p/q/r/s')
+    assert f.attrs['source'] == source_loc
+    target_loc = os.path.join(locations.get_salve_root(),
+                              't/u/v/w/x/y/z/1/2/3/../3')
+    assert f.attrs['target'] == target_loc
+
+@istest
+def sub_block_expand():
+    b = block.ManifestBlock(source=get_full_path('valid2.manifest'))
+    b.expand_blocks(_dummy_conf)
+    assert len(b.sub_blocks) == 2
+    man_block = b.sub_blocks[0]
+    file_block = b.sub_blocks[1]
+    assert isinstance(man_block,block.ManifestBlock)
+    assert isinstance(file_block,block.FileBlock)
+    assert man_block.attrs['source'] == get_full_path('valid1.manifest')
+    assert file_block.attrs['source'] == get_full_path('valid1.manifest')
+    target_loc = os.path.join(locations.get_salve_root(),'a/b/c')
+    assert file_block.attrs['target'] == target_loc

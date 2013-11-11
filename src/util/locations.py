@@ -5,7 +5,7 @@
 # and any globally important directories like the metadata directory
 # and the file cache
 
-import os
+import os, re
 
 def containing_dir(path,depth=1):
     d = os.path.abspath(path)
@@ -18,3 +18,9 @@ def get_salve_root():
 
 def get_default_config():
     return os.path.join(get_salve_root(),'default_settings.ini')
+
+def is_abs_or_var(path):
+    if os.path.isabs(path): return True
+    # matches: [begin string][even number of $][end string or non-$]
+    if re.match('^(\\$\\$)*\\$([^$]|$)',path): return True
+    return False
