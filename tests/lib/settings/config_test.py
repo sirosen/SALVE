@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import lib.settings.settings as settings
+import lib.settings.config as config
 
 from nose.tools import istest, with_setup
 from mock import patch, Mock
@@ -88,7 +88,7 @@ def setup_os3():
 @with_setup(setup_os1,teardown_patches)
 def sudo_user_replace():
     orig_user = os.environ['USER']
-    conf = settings.SALVEConfig()
+    conf = config.SALVEConfig()
     assert conf.env['USER'] == 'user1'
     assert os.environ['USER'] == orig_user
 
@@ -96,45 +96,45 @@ def sudo_user_replace():
 @with_setup(setup_os1,teardown_patches)
 def sudo_homedir_resolution():
     orig_home = os.environ['HOME']
-    conf = settings.SALVEConfig()
+    conf = config.SALVEConfig()
     assert conf.env['HOME'] == pjoin(_homes_dir,'user1')
     assert os.environ['HOME'] == orig_home
 
 @istest
 @with_setup(setup_os1,teardown_patches)
 def valid_config1():
-    conf = settings.SALVEConfig(pjoin(_testfile_dir,'valid1.ini'))
+    conf = config.SALVEConfig(pjoin(_testfile_dir,'valid1.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
 
 @istest
 @with_setup(setup_os1,teardown_patches)
 def load_rc_file():
-    conf = settings.SALVEConfig()
+    conf = config.SALVEConfig()
     assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
 
 @istest
 @with_setup(setup_os2,teardown_patches)
 def overload_from_env():
-    conf = settings.SALVEConfig(pjoin(_testfile_dir,'valid1.ini'))
+    conf = config.SALVEConfig(pjoin(_testfile_dir,'valid1.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/meta/'
 
 @istest
 @with_setup(setup_os3,teardown_patches)
 def multiple_env_overload():
-    conf = settings.SALVEConfig(pjoin(_testfile_dir,'valid2.ini'))
+    conf = config.SALVEConfig(pjoin(_testfile_dir,'valid2.ini'))
     assert conf.attributes['meta_data']['path'] == '/etc/meta/'
     assert conf.attributes['meta']['data_path'] == '/etc/meta/'
 
 @istest
 @with_setup(setup_os1,teardown_patches)
 def missing_config():
-    conf = settings.SALVEConfig(pjoin(_testfile_dir,'NONEXISTENT_FILE'))
+    conf = config.SALVEConfig(pjoin(_testfile_dir,'NONEXISTENT_FILE'))
     assert conf.attributes['file']['action'] == 'create'
 
 @istest
 @with_setup(setup_os1,teardown_patches)
 def template_sub_keyerror():
-    conf = settings.SALVEConfig()
+    conf = config.SALVEConfig()
     try:
         conf.template('$NONEXISTENT_VAR')
         assert False
@@ -146,7 +146,7 @@ def template_sub_keyerror():
 @istest
 @with_setup(setup_os1,teardown_patches)
 def template_sub():
-    conf = settings.SALVEConfig()
+    conf = config.SALVEConfig()
     assert conf.template('$USER') == 'user1'
     assert conf.template('$HOME') == pjoin(_homes_dir,'user1')
     assert conf.template('$HOME/bin/program') == pjoin(_homes_dir,'user1','bin/program')
