@@ -7,6 +7,14 @@ from src.reader.tokenize import Token
 import src.reader.parse
 import src.execute.action as action
 
+class BlockException(StandardError):
+    """
+    An exception specialized for blocks.
+    """
+    def __init__(self,msg):
+        StandardError.__init__(self,msg)
+        self.message = msg
+
 class Block(object):
     """
     A block is the basic unit of configuration.
@@ -66,14 +74,34 @@ class ManifestBlock(Block):
     execution. For example, if a manifest's blocks can be executed
     in parallel, or if its execution is conditional on a file existing.
     """
-    def __init__(self):
+    def __init__(self,source=None):
         Block.__init__(self,Block.types.MANIFEST)
+        self.sub_blocks = None
+        if source:
+            self.attrs['source'] = source
+
+    def expand_blocks(self,config,recursive=True,ancestors=None):
+        assert 'source' in self.attrs
+        if not ancestors:
+            ancestors = set()
+        filename = self.attrs['source']
+
+        if filename in ancestors:
+            raise BlockException('Manifest ' + filename +\
+                                 ' includes itself')
+
+        ancestors.add(filename)
+        with open(filename) as man:
+            self.sub_blocks = src.reader.parse.parse_stream(man)
+        for b in self.sub_blocks:
+            config.apply_to_block(b)
+            if recursive and isinstance(b,ManifestBlock):
+                b.expand_blocks(config,ancestors=ancestors)
 
     def to_action(self):
-        filename = self.attrs['source']
-        with open(filename) as man:
-            blocks = src.parse.parse.parse_stream(man)
-            return action.ActionList([b.to_action() for b in blocks])
+        assert self.sub_blocks is not None
+        return action.ActionList([b.to_action()
+                                  for b in self.sub_blocks])
 
 # maps valid identifiers to block constructors
 Block.identifier_map = {

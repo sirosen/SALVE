@@ -5,6 +5,7 @@ import os, optparse, sys
 
 import src.util.locations as locations
 import src.execute.block as block
+from src.settings.config import SALVEConfig
 
 def get_option_parser():
     option_parser = optparse.OptionParser()
@@ -15,10 +16,9 @@ def get_option_parser():
                              'containing a root.manifest in HEAD.')
     option_parser.add_option('-c','--config-file',dest='configfile',
                              help='A SALVE config file.')
+    return option_parser
 
 if __name__ == '__main__':
-    os.environ['SALVE_ROOT'] = locations.get_salve_root()
-
     option_parser = get_option_parser()
     (opts,args) = option_parser.parse_args()
 
@@ -38,10 +38,11 @@ if __name__ == '__main__':
 
     root_manifest = None
     if opts.manifest:
-        root_manifest = opts.root_manifest
+        root_manifest = opts.manifest
     elif opts.gitrepo:
         raise StandardError('TODO: clone git repo; set root_manifest')
 
     root_block = block.ManifestBlock(source=root_manifest)
+    root_block.expand_blocks(conf)
     root_action = root_block.to_action()
     root_action.execute()

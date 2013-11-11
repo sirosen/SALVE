@@ -27,7 +27,6 @@ def teardown_patches():
 
 def make_mock_expanduser(env,user_to_home):
     def mock_expanduser(string):
-        import sys
         for user in user_to_home:
             string = string.replace('~'+user,user_to_home[user])
         if string[0] == '~':
