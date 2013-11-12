@@ -69,7 +69,7 @@ def parse_tokens(tokens,filename=None):
             # if the token is a template string, assign it to the
             # current attr
             elif token.ty == Token.types.TEMPLATE:
-                current_block.add_attribute(current_attr,token.value)
+                current_block.set(current_attr,token.value)
                 expected_token_types = [ Token.types.BLOCK_END,
                                          Token.types.IDENTIFIER ]
             # no meaningful else because token types must be valid, as

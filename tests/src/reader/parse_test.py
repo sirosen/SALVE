@@ -89,7 +89,7 @@ def single_attr_block():
                                  be_tok])
     assert len(blocks) == 1
     assert len(blocks[0].attrs) == 1
-    assert blocks[0].attrs['source'] == '/tmp/txt'
+    assert blocks[0].get('source') == '/tmp/txt'
 
 @istest
 def multiple_attr_block():
@@ -106,8 +106,8 @@ def multiple_attr_block():
                                  be_tok])
     assert len(blocks) == 1
     assert len(blocks[0].attrs) == 2
-    assert blocks[0].attrs['source'] == '/tmp/txt'
-    assert blocks[0].attrs['target'] == '/tmp/txt2'
+    assert blocks[0].get('source') == '/tmp/txt'
+    assert blocks[0].get('target') == '/tmp/txt2'
 
 @istest
 def empty_manifest():

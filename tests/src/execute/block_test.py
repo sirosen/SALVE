@@ -71,12 +71,12 @@ def sourceless_manifest_to_action_error():
 @istest
 def file_block_create_to_action():
     b = block.FileBlock()
-    b.attrs = {'action':'create',
-               'source':'/a/b/c',
-               'target':'/p/q/r',
-               'user':'user1',
-               'group':'nogroup',
-               'mode':'0600'}
+    b.set('action','create')
+    b.set('source','/a/b/c')
+    b.set('target','/p/q/r')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','0600')
     act = b.to_action()
     assert isinstance(act,action.ShellAction)
     assert act.cmds[0] == 'cp /a/b/c /p/q/r'
@@ -110,14 +110,14 @@ def recursive_manifest_error():
 @istest
 def file_path_expand():
     f = block.FileBlock()
-    f.add_attribute('source','p/q/r/s')
-    f.add_attribute('target','t/u/v/w/x/y/z/1/2/3/../3')
+    f.set('source','p/q/r/s')
+    f.set('target','t/u/v/w/x/y/z/1/2/3/../3')
     f.expand_file_paths()
     source_loc = os.path.join(locations.get_salve_root(),'p/q/r/s')
-    assert f.attrs['source'] == source_loc
+    assert f.get('source') == source_loc
     target_loc = os.path.join(locations.get_salve_root(),
                               't/u/v/w/x/y/z/1/2/3/../3')
-    assert f.attrs['target'] == target_loc
+    assert f.get('target') == target_loc
 
 @istest
 def sub_block_expand():
@@ -128,7 +128,7 @@ def sub_block_expand():
     file_block = b.sub_blocks[1]
     assert isinstance(man_block,block.ManifestBlock)
     assert isinstance(file_block,block.FileBlock)
-    assert man_block.attrs['source'] == get_full_path('valid1.manifest')
-    assert file_block.attrs['source'] == get_full_path('valid1.manifest')
+    assert man_block.get('source') == get_full_path('valid1.manifest')
+    assert file_block.get('source') == get_full_path('valid1.manifest')
     target_loc = os.path.join(locations.get_salve_root(),'a/b/c')
-    assert file_block.attrs['target'] == target_loc
+    assert file_block.get('target') == target_loc

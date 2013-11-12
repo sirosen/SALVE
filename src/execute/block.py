@@ -29,8 +29,11 @@ class Block(object):
         self.block_type = ty
         self.attrs = {}
 
-    def add_attribute(self,attribute_name,value):
+    def set(self,attribute_name,value):
         self.attrs[attribute_name] = value
+
+    def get(self,attribute_name):
+        return self.attrs[attribute_name]
 
     @abc.abstractmethod
     def to_action(self): return
@@ -56,18 +59,18 @@ class FileBlock(Block):
             raise BlockException('FileBlock missing source and target')
 
         if not root_dir: root_dir = locations.get_salve_root()
-        if not locations.is_abs_or_var(self.attrs['source']):
-            self.attrs['source'] = os.path.join(root_dir,
-                                                self.attrs['source'])
-        if not locations.is_abs_or_var(self.attrs['target']):
-            self.attrs['target'] = os.path.join(root_dir,
-                                                self.attrs['target'])
+        if not locations.is_abs_or_var(self.get('source')):
+            self.set('source', os.path.join(root_dir,
+                                            self.get('source')))
+        if not locations.is_abs_or_var(self.get('target')):
+            self.set('target', os.path.join(root_dir,
+                                            self.get('target')))
 
     def to_action(self):
         # is a no-op if it has already been done
         # otherwise, it ensures that everything will work
         self.expand_file_paths()
-        if self.attrs['action'] == 'create':
+        if self.get('action') == 'create':
             # TODO: replace asserts with a check & exception,
             # preferably wrapped in a function of some kind
             assert 'source' in self.attrs
@@ -76,17 +79,17 @@ class FileBlock(Block):
             assert 'group' in self.attrs
             assert 'mode' in self.attrs
             copy_file = ' '.join(['cp',
-                                  self.attrs['source'],
-                                  self.attrs['target']
+                                  self.get('source'),
+                                  self.get('target')
                                  ])
             chown_file = ' '.join(['chown',
-                                   self.attrs['user']+':'+\
-                                   self.attrs['group'],
-                                   self.attrs['target']
+                                   self.get('user')+':'+\
+                                   self.get('group'),
+                                   self.get('target')
                                   ])
             chmod_file = ' '.join(['chmod',
-                                   self.attrs['mode'],
-                                   self.attrs['target']
+                                   self.get('mode'),
+                                   self.get('target')
                                   ])
             return action.ShellAction([copy_file,chown_file,chmod_file])
         else:
@@ -103,13 +106,13 @@ class ManifestBlock(Block):
         Block.__init__(self,Block.types.MANIFEST)
         self.sub_blocks = None
         if source:
-            self.attrs['source'] = source
+            self.set('source',source)
 
     def expand_blocks(self,config,recursive=True,ancestors=None,root_dir=None):
         assert 'source' in self.attrs
         if not ancestors:
             ancestors = set()
-        filename = self.attrs['source']
+        filename = self.get('source')
 
         if filename in ancestors:
             raise BlockException('Manifest ' + filename +\
@@ -127,10 +130,10 @@ class ManifestBlock(Block):
     def expand_file_paths(self,root_dir=None):
         assert 'source' in self.attrs
 
-        if not locations.is_abs_or_var(self.attrs['source']):
+        if not locations.is_abs_or_var(self.get('source')):
             if not root_dir: root_dir = locations.get_salve_root()
-            self.attrs['source'] = os.path.join(root_dir,
-                                                self.attrs['source'])
+            self.set('source',os.path.join(root_dir,
+                                           self.get('source')))
 
     def to_action(self):
         assert self.sub_blocks is not None
