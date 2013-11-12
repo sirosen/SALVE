@@ -2,6 +2,8 @@
 
 import src.settings.config as config
 
+from tests.utils.exceptions import ensure_except
+
 from nose.tools import istest, with_setup
 from mock import patch, Mock
 
@@ -134,13 +136,7 @@ def missing_config():
 @with_setup(setup_os1,teardown_patches)
 def template_sub_keyerror():
     conf = config.SALVEConfig()
-    try:
-        conf.template('$NONEXISTENT_VAR')
-        assert False
-    except KeyError:
-        pass
-    else:
-        assert False
+    ensure_except(KeyError,conf.template,'$NONEXISTENT_VAR')
 
 @istest
 @with_setup(setup_os1,teardown_patches)
