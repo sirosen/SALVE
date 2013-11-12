@@ -35,6 +35,12 @@ class Block(object):
     def get(self,attribute_name):
         return self.attrs[attribute_name]
 
+    def ensure_has_attrs(self,*args):
+        for attr in args:
+            if attr not in self.attrs:
+                raise BlockException('Block(ty='+self.block_type+') '+\
+                                     'missing attr "'+attr+'"')
+
     @abc.abstractmethod
     def to_action(self): return
 
@@ -56,7 +62,7 @@ class FileBlock(Block):
         """
         if 'source' not in self.attrs or 'target' not in self.attrs:
             # TODO: replace with a more informative exception
-            raise BlockException('FileBlock missing source and target')
+            raise BlockException('FileBlock missing source or target')
 
         if not root_dir: root_dir = locations.get_salve_root()
         if not locations.is_abs_or_var(self.get('source')):
@@ -71,13 +77,8 @@ class FileBlock(Block):
         # otherwise, it ensures that everything will work
         self.expand_file_paths()
         if self.get('action') == 'create':
-            # TODO: replace asserts with a check & exception,
-            # preferably wrapped in a function of some kind
-            assert 'source' in self.attrs
-            assert 'target' in self.attrs
-            assert 'user' in self.attrs
-            assert 'group' in self.attrs
-            assert 'mode' in self.attrs
+            self.ensure_has_attrs('source','target','user','group',
+                                   'mode')
             copy_file = ' '.join(['cp',
                                   self.get('source'),
                                   self.get('target')
@@ -93,7 +94,7 @@ class FileBlock(Block):
                                   ])
             return action.ShellAction([copy_file,chown_file,chmod_file])
         else:
-            raise action.ActionException('Unsupported file block action.')
+            raise block.BlockException('Unsupported file block action.')
 
 class ManifestBlock(Block):
     """
@@ -109,26 +110,54 @@ class ManifestBlock(Block):
             self.set('source',source)
 
     def expand_blocks(self,config,recursive=True,ancestors=None,root_dir=None):
-        assert 'source' in self.attrs
-        if not ancestors:
-            ancestors = set()
+        """
+        Expands a manifest block by reading its source, parsing it into
+        blocks, and assigning those to be the sub_blocks of the manifest
+        block, forming a block tree. This is, in a certain sense, part
+        of the parser.
+        The @config is used to fill in any variable values in the
+        blocks' template string attributes.
+        When @recursive=False, this does not recurse, but in the general
+        case, @recursive=True. This means that any manifest blocks in
+        the sub_blocks are expanded as well.
+        @ancestors is the set of containing manifests. It is passed
+        through invocations in order to ensure that there are no
+        manifest loops.
+        @root_dir is the root of all relative paths in the manifest and
+        its descendants. Typically, this is left unset and defaults to
+        the SALVE_ROOT.
+        """
+        self.ensure_has_attrs('source')
         filename = self.get('source')
 
+        # We don't default ancestors=set() because that is only
+        # evaluated once, which would cause strange problems with
+        # multiple independent invocations of expand_blocks
+        if not ancestors: ancestors = set()
         if filename in ancestors:
             raise BlockException('Manifest ' + filename +\
                                  ' includes itself')
-
         ancestors.add(filename)
+
+        # parse the manifest source
         with open(filename) as man:
             self.sub_blocks = parse.parse_stream(man)
         for b in self.sub_blocks:
+            # expand any relative paths and substitute for any vars
             b.expand_file_paths(root_dir=root_dir)
             config.apply_to_block(b)
+            # if set, recursively apply to manifest blocks
             if recursive and isinstance(b,ManifestBlock):
-                b.expand_blocks(config,ancestors=ancestors,root_dir=root_dir)
+                b.expand_blocks(config,
+                                ancestors=ancestors,
+                                root_dir=root_dir)
 
     def expand_file_paths(self,root_dir=None):
-        assert 'source' in self.attrs
+        """
+        Expand relative paths in source and target to be absolute paths
+        beginning with the SALVE_ROOT.
+        """
+        self.ensure_has_attrs('source')
 
         if not locations.is_abs_or_var(self.get('source')):
             if not root_dir: root_dir = locations.get_salve_root()
@@ -136,7 +165,9 @@ class ManifestBlock(Block):
                                            self.get('source')))
 
     def to_action(self):
-        assert self.sub_blocks is not None
+        if self.sub_blocks is None:
+            raise BlockException('Attempted to convert unexpanded '+\
+                                 'manifest to action.')
         return action.ActionList([b.to_action()
                                   for b in self.sub_blocks])
 
@@ -153,7 +184,8 @@ def block_from_identifier(id_token):
     Fails if the identifier is unknown, or the token given is
     not an identifier.
     """
-    assert id_token.ty == Token.types.IDENTIFIER
+    if id_token.ty != Token.types.IDENTIFIER:
+        raise BlockException('Unknown block identifier '+str(id_token))
     val = id_token.value.lower()
     try:
         return Block.identifier_map[val]()

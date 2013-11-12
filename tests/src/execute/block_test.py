@@ -65,7 +65,7 @@ def sourceless_manifest_to_action_error():
         b = block.ManifestBlock()
         al = b.to_action()
         assert False
-    except AssertionError: pass
+    except block.BlockException: pass
     else: assert False
 
 @istest
@@ -89,7 +89,7 @@ def sourceless_manifest_expand_error():
         b = block.ManifestBlock()
         b.expand_blocks(_dummy_conf)
         assert False
-    except AssertionError: pass
+    except block.BlockException: pass
     else: assert False
 
 @istest
