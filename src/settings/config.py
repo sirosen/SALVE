@@ -115,8 +115,8 @@ class SALVEConfig(object):
         relevant_attrs = self.attributes[ty]
         for key in block.attrs:
             if key in relevant_attrs:
-                block.attrs[key] = relevant_attrs[key]
-            block.attrs[key] = self.template(block.attrs[key])
+                block.set(key,relevant_attrs[key])
+            block.set(key,self.template(block.get(key)))
         if isinstance(block,src.execute.block.ManifestBlock) and \
             block.sub_blocks is not None:
             for b in block.sub_blocks:

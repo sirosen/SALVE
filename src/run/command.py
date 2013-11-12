@@ -20,6 +20,9 @@ def get_option_parser():
     option_parser.add_option('--git-repo',dest='gitrepo',
                              help='A SALVE git repo, '+\
                              'containing a root.manifest in HEAD.')
+    option_parser.add_option('--file-root',dest='fileroot',
+                             help='The directory to which relative'+\
+                             'paths in manifests refer.')
     option_parser.add_option('-c','--config-file',dest='configfile',
                              help='A SALVE config file.')
     return option_parser
@@ -57,6 +60,7 @@ def run_on_manifest(root_manifest,opts):
 
     root_block = block.ManifestBlock(source=root_manifest)
     root_block.expand_blocks(conf)
+    root_block.expand_file_paths(root_dir=opts.fileroot)
     root_action = root_block.to_action()
     root_action.execute()
 
