@@ -3,7 +3,7 @@
 from ConfigParser import ConfigParser
 import os, string
 
-import src.execute.block
+import src.block.manifest_block
 import src.util.locations as locations
 
 SALVE_ENV_PREFIX = 'SALVE_'
@@ -117,7 +117,7 @@ class SALVEConfig(object):
             if key in relevant_attrs:
                 block.set(key,relevant_attrs[key])
             block.set(key,self.template(block.get(key)))
-        if isinstance(block,src.execute.block.ManifestBlock) and \
+        if isinstance(block,src.block.manifest_block.ManifestBlock) and \
             block.sub_blocks is not None:
             for b in block.sub_blocks:
                 self.apply_to_block(b)

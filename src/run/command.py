@@ -4,7 +4,7 @@ from __future__ import print_function
 import os, optparse, sys
 
 import src.util.locations as locations
-import src.execute.block as block
+import src.block.manifest_block
 from src.settings.config import SALVEConfig
 
 def get_option_parser():
@@ -58,7 +58,7 @@ def run_on_manifest(root_manifest,opts):
         cfg_file = opts.configfile
     conf = SALVEConfig(filename=cfg_file)
 
-    root_block = block.ManifestBlock(source=root_manifest)
+    root_block = src.block.manifest_block.ManifestBlock(source=root_manifest)
     root_block.expand_blocks(conf)
     root_block.expand_file_paths(root_dir=opts.fileroot)
     root_action = root_block.to_action()
