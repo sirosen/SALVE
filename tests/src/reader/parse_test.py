@@ -4,6 +4,8 @@ import src.execute.block as block
 import src.reader.parse as parse
 from src.reader.tokenize import Token
 
+from tests.utils.exceptions import ensure_except
+
 from nose.tools import istest
 from os.path import dirname, join as pjoin
 
@@ -21,17 +23,22 @@ def ensure_ParsingException(tokens=None,filename=None):
     if tokens and filename:
         raise ValueError('Invalid test: uses both tokens list and ' +\
                          'filename in ensure_ParsingException()')
-    try:
-        if tokens: parse.parse_tokens(tokens)
-        elif filename: parse_filename(get_full_path(filename))
-    except parse.ParsingException as e:
-        assert tokens is None or \
-               e.token is None or \
-               e.token in tokens
-        assert filename is None or \
-               e.filename == get_full_path(filename)
+    e = None
+    if tokens:
+        e = ensure_except(parse.ParsingException,
+                          parse.parse_tokens,
+                          tokens)
+    elif filename:
+        e = ensure_except(parse.ParsingException,
+                          parse_filename,
+                          get_full_path(filename))
     else:
         assert False
+    assert tokens is None or \
+           e.token is None or \
+           e.token in tokens
+    assert filename is None or \
+           e.filename == get_full_path(filename)
 
 @istest
 def invalid_block_id():

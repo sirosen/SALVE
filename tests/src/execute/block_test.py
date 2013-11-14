@@ -4,6 +4,8 @@ from nose.tools import istest
 import os
 import mock
 
+from tests.utils.exceptions import ensure_except
+
 from src.reader.tokenize import Token
 import src.execute.action as action
 import src.execute.block as block
@@ -28,24 +30,12 @@ with mock.patch('os.path.expanduser',mock_expanduser):
 
 @istest
 def block_is_abstract():
-    try:
-        block.Block()
-        assert False
-    except TypeError:
-        pass
-    else:
-        assert False
+    ensure_except(TypeError,block.Block)
 
 @istest
 def invalid_block_id():
     invalid_id = Token('invalid_block_id',Token.types.IDENTIFIER)
-    try:
-        block.block_from_identifier(invalid_id)
-        assert False
-    except ValueError:
-        pass
-    else:
-        assert False
+    ensure_except(ValueError,block.block_from_identifier,invalid_id)
 
 @istest
 def valid_file_id():
@@ -61,12 +51,8 @@ def valid_manifest_id():
 
 @istest
 def sourceless_manifest_to_action_error():
-    try:
-        b = block.ManifestBlock()
-        al = b.to_action()
-        assert False
-    except block.BlockException: pass
-    else: assert False
+    b = block.ManifestBlock()
+    ensure_except(block.BlockException,b.to_action)
 
 @istest
 def file_block_create_to_action():
@@ -85,12 +71,8 @@ def file_block_create_to_action():
 
 @istest
 def sourceless_manifest_expand_error():
-    try:
-        b = block.ManifestBlock()
-        b.expand_blocks(_dummy_conf)
-        assert False
-    except block.BlockException: pass
-    else: assert False
+    b = block.ManifestBlock()
+    ensure_except(block.BlockException,b.expand_blocks,_dummy_conf)
 
 @istest
 def empty_manifest_expand():
@@ -101,11 +83,7 @@ def empty_manifest_expand():
 @istest
 def recursive_manifest_error():
     b = block.ManifestBlock(source=get_full_path('invalid1.manifest'))
-    try:
-        b.expand_blocks(_dummy_conf)
-        assert False
-    except block.BlockException: pass
-    else: assert False
+    ensure_except(block.BlockException,b.expand_blocks,_dummy_conf)
 
 @istest
 def file_path_expand():
