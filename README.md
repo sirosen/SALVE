@@ -80,6 +80,14 @@ SALVE does not rely on external tools like Debian's dpkg or OSX's MacPorts.
 Ultimately, all that's required is a compiler or interpreter for the implementation, a working shell, and permissions to perform the operations requested in the Manifests.
 At present, these actions are restricted to those that are predefined, as we do not yet support arbitrary shell commands.
 
+SALVE Tries to Keep Your Safe
+=============================
+Although SALVE is, technically, an interpreted language, the parser, variable expansion, and safety checks prior to execution attempt to do thorough safety checking.
+The ultimate goal is to ensure, as much as possible, that the requested actions can be executed successfully.
+This includes validating acceptable values, and ensuring the effective UID grants sufficient permissions to perform actions.
+
+Ultimately, the burden is on you to ensure that your configuration is correct, but SALVE will do its best to detect and abort on errors pertaining to botched specifications prior to any part of the execution beginning.
+
 The SALVE Language
 ==================
 What does a SALVE manifest actually look like?
@@ -88,7 +96,7 @@ Here we describe the basic format of a manifest file.
 The Grammar
 -----------
 
-A manifest is a file containing expressions, _e,_ in the following basic grammar
+A manifest is a file containing expressions, _e,_ in the following basic grammar. Some liberties have been taken with the use of backslash escapes and quoting below.
 ```
 e := Empty String
    | name { attrs } e
@@ -105,10 +113,11 @@ namechar := alpha
 
 value := valuechar value
        | valuechar
-       | " quotedvalue "
+       | '"' quotedvalue '"'
+       | "'" quotedvalue "'"
 
 quotedvalue := quotedchar quotedvalue
-             | quotedvalue
+             | quotedchar
 
 quotedchar := valuechar | " "
 
@@ -124,6 +133,21 @@ valuechar := namechar
            | "#"
 ```
 
+Variables & Relative Paths
+--------------------------
+
+SALVE supports the use of environment variables in templates.
+These values will be pulled out of the executing shell's environment, and used to expand the attribute values of blocks in manifests.
+
+There are a small number of exceptions to this.
+'$SUDO_USER' is inspected, and if set, used in place of '$USER'.
+At present, there is no way to specify the real value of '$USER', but this is in progress.
+'$SALVE_ROOT' always refers to the root directory of the SALVE repo.
+
+Relative paths are also supported, so that it is not necessary to rely on values like '$SALVE_ROOT' and '$PWD'.
+Relative paths are always interpreted relative to the root manifest's location.
+One item on the docket is to make this an available override behavior via the fileroot commandline option, but to specify relative paths with respect to the dirname of the manifest that contains the block in question.
+
 Example Manifest
 ----------------
 
@@ -133,7 +157,6 @@ file {
     target  /home/$USER/.bashrc
     mode    0600
     user    $USER
-    group   nogroup
 }
 
 file {
@@ -146,5 +169,24 @@ file {
 
 manifest {
     source  files/vim.manifest
+}
+```
+
+Sensible Defaults
+-----------------
+
+As much as possible, SALVE attempts to define all behavior on underspecified blocks.
+These are our set of "sensible defaults", specified in the format of a manifest.
+A small class of values, when unspecified, result in errors.
+Those are omitted here.
+
+```
+file {
+    mode    0600
+    user    $USER
+    group   nogroup
+}
+
+manifest {
 }
 ```
