@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
-import src.execute.block as block
+import src.block.file_block
 import src.reader.parse as parse
 from src.reader.tokenize import Token
+
+from tests.utils.exceptions import ensure_except
 
 from nose.tools import istest
 from os.path import dirname, join as pjoin
@@ -21,17 +23,22 @@ def ensure_ParsingException(tokens=None,filename=None):
     if tokens and filename:
         raise ValueError('Invalid test: uses both tokens list and ' +\
                          'filename in ensure_ParsingException()')
-    try:
-        if tokens: parse.parse_tokens(tokens)
-        elif filename: parse_filename(get_full_path(filename))
-    except parse.ParsingException as e:
-        assert tokens is None or \
-               e.token is None or \
-               e.token in tokens
-        assert filename is None or \
-               e.filename == get_full_path(filename)
+    e = None
+    if tokens:
+        e = ensure_except(parse.ParsingException,
+                          parse.parse_tokens,
+                          tokens)
+    elif filename:
+        e = ensure_except(parse.ParsingException,
+                          parse_filename,
+                          get_full_path(filename))
     else:
         assert False
+    assert tokens is None or \
+           e.token is None or \
+           e.token in tokens
+    assert filename is None or \
+           e.filename == get_full_path(filename)
 
 @istest
 def invalid_block_id():
@@ -89,7 +96,7 @@ def single_attr_block():
                                  be_tok])
     assert len(blocks) == 1
     assert len(blocks[0].attrs) == 1
-    assert blocks[0].attrs['source'] == '/tmp/txt'
+    assert blocks[0].get('source') == '/tmp/txt'
 
 @istest
 def multiple_attr_block():
@@ -106,8 +113,8 @@ def multiple_attr_block():
                                  be_tok])
     assert len(blocks) == 1
     assert len(blocks[0].attrs) == 2
-    assert blocks[0].attrs['source'] == '/tmp/txt'
-    assert blocks[0].attrs['target'] == '/tmp/txt2'
+    assert blocks[0].get('source') == '/tmp/txt'
+    assert blocks[0].get('target') == '/tmp/txt2'
 
 @istest
 def empty_manifest():
@@ -118,12 +125,12 @@ def empty_manifest():
 def empty_block():
     blocks = parse_filename(get_full_path('valid2.manifest'))
     assert len(blocks) == 1
-    assert isinstance(blocks[0],block.FileBlock)
+    assert isinstance(blocks[0],src.block.file_block.FileBlock)
     assert len(blocks[0].attrs) == 0
 
 @istest
 def attribute_with_spaces():
     blocks = parse_filename(get_full_path('valid3.manifest'))
     assert len(blocks) == 1
-    assert isinstance(blocks[0],block.FileBlock)
+    assert isinstance(blocks[0],src.block.file_block.FileBlock)
     assert len(blocks[0].attrs) == 2

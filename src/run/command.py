@@ -4,7 +4,7 @@ from __future__ import print_function
 import os, optparse, sys
 
 import src.util.locations as locations
-import src.execute.block as block
+import src.block.manifest_block
 from src.settings.config import SALVEConfig
 
 def get_option_parser():
@@ -20,6 +20,9 @@ def get_option_parser():
     option_parser.add_option('--git-repo',dest='gitrepo',
                              help='A SALVE git repo, '+\
                              'containing a root.manifest in HEAD.')
+    option_parser.add_option('--file-root',dest='fileroot',
+                             help='The directory to which relative'+\
+                             'paths in manifests refer.')
     option_parser.add_option('-c','--config-file',dest='configfile',
                              help='A SALVE config file.')
     return option_parser
@@ -55,8 +58,12 @@ def run_on_manifest(root_manifest,opts):
         cfg_file = opts.configfile
     conf = SALVEConfig(filename=cfg_file)
 
-    root_block = block.ManifestBlock(source=root_manifest)
+    root_block = src.block.manifest_block.ManifestBlock(source=root_manifest)
     root_block.expand_blocks(conf)
+
+    root_dir = os.path.dirname(root_manifest)
+    if opts.fileroot: root_dir = opts.fileroot
+    root_block.expand_file_paths(root_dir)
     root_action = root_block.to_action()
     root_action.execute()
 

@@ -2,6 +2,8 @@
 
 import src.reader.tokenize as tokenize
 
+from tests.utils.exceptions import ensure_except
+
 from nose.tools import istest
 from os.path import dirname, join as pjoin
 
@@ -16,15 +18,11 @@ def get_full_path(filename):
 
 def ensure_TokenizationException(filename):
     full_path = get_full_path(filename)
-    try:
-        tokenize_filename(full_path)
-        # Should never reach this, we are trying a bad file
-        assert False
-    except tokenize.TokenizationException as e:
-        assert e.filename is None or \
-               e.filename == full_path
-    else:
-        assert False
+    e = ensure_except(tokenize.TokenizationException,
+                      tokenize_filename,
+                      full_path)
+    assert e.filename is None or \
+           e.filename == full_path
 
 #failure tests
 

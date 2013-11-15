@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import src.execute.block
+import src.block.identifier
 from src.util.streams import get_filename
 from src.reader.tokenize import Token, tokenize_stream
 
@@ -45,7 +45,7 @@ def parse_tokens(tokens,filename=None):
         # be an identifier, so we can use it to construct a new block
         elif not current_block:
             try:
-                b_from_id = src.execute.block.block_from_identifier
+                b_from_id = src.block.identifier.block_from_identifier
                 current_block = b_from_id(token)
             except:
                 raise ParsingException('Invalid block id ' +\
@@ -69,7 +69,7 @@ def parse_tokens(tokens,filename=None):
             # if the token is a template string, assign it to the
             # current attr
             elif token.ty == Token.types.TEMPLATE:
-                current_block.add_attribute(current_attr,token.value)
+                current_block.set(current_attr,token.value)
                 expected_token_types = [ Token.types.BLOCK_END,
                                          Token.types.IDENTIFIER ]
             # no meaningful else because token types must be valid, as

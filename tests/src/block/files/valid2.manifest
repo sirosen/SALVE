@@ -1,0 +1,11 @@
+# a valid manifest containing a manifest block and file block
+# with relative paths (relative to SALVE_ROOT)
+
+manifest {
+    source tests/src/block/files/valid1.manifest
+}
+
+file {
+    source tests/src/block/files/valid1.manifest
+    target a/b/c
+}

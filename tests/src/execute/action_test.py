@@ -3,6 +3,8 @@
 from nose.tools import istest
 from mock import patch
 
+from tests.utils.exceptions import ensure_except
+
 import src.execute.action as action
 
 class MockProcess(object):
@@ -13,13 +15,7 @@ class MockProcess(object):
 
 @istest
 def action_is_abstract():
-    try:
-        action.Action()
-        assert False
-    except TypeError:
-        pass
-    else:
-        assert False
+    ensure_except(TypeError,action.Action)
 
 @istest
 def empty_action_list():
@@ -99,10 +95,4 @@ def failed_shell_action():
 
     with patch('subprocess.Popen',mock_Popen):
         a = action.ShellAction(['touch /a/b'])
-        try:
-            a.execute()
-            assert False
-        except action.ActionException:
-            pass
-        else:
-            assert False
+        ensure_except(action.ActionException,a.execute)
