@@ -40,4 +40,4 @@ class Block(object):
     def to_action(self): return
 
     @abc.abstractmethod
-    def expand_file_paths(self, root_dir=None): return
+    def expand_file_paths(self, root_dir): return

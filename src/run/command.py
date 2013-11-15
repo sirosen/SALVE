@@ -60,7 +60,10 @@ def run_on_manifest(root_manifest,opts):
 
     root_block = src.block.manifest_block.ManifestBlock(source=root_manifest)
     root_block.expand_blocks(conf)
-    root_block.expand_file_paths(root_dir=opts.fileroot)
+
+    root_dir = os.path.dirname(root_manifest)
+    if opts.fileroot: root_dir = opts.fileroot
+    root_block.expand_file_paths(root_dir)
     root_action = root_block.to_action()
     root_action.execute()
 

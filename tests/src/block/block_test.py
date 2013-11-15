@@ -76,35 +76,41 @@ def file_block_create_to_action():
 @istest
 def sourceless_manifest_expand_error():
     b = src.block.manifest_block.ManifestBlock()
-    ensure_except(src.block.base_block.BlockException,b.expand_blocks,_dummy_conf)
+    ensure_except(src.block.base_block.BlockException,
+                  b.expand_blocks,
+                  locations.get_salve_root(),
+                  _dummy_conf)
 
 @istest
 def empty_manifest_expand():
     b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid1.manifest'))
-    b.expand_blocks(_dummy_conf)
+    b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 0
 
 @istest
 def recursive_manifest_error():
     b = src.block.manifest_block.ManifestBlock(source=get_full_path('invalid1.manifest'))
-    ensure_except(src.block.base_block.BlockException,b.expand_blocks,_dummy_conf)
+    ensure_except(src.block.base_block.BlockException,
+                  b.expand_blocks,
+                  locations.get_salve_root(),
+                  _dummy_conf)
 
 @istest
 def file_path_expand():
     f = src.block.file_block.FileBlock()
     f.set('source','p/q/r/s')
     f.set('target','t/u/v/w/x/y/z/1/2/3/../3')
-    f.expand_file_paths()
-    source_loc = os.path.join(locations.get_salve_root(),'p/q/r/s')
+    root_dir = 'file/root/directory'
+    f.expand_file_paths(root_dir)
+    source_loc = os.path.join(root_dir,'p/q/r/s')
     assert f.get('source') == source_loc
-    target_loc = os.path.join(locations.get_salve_root(),
-                              't/u/v/w/x/y/z/1/2/3/../3')
+    target_loc = os.path.join(root_dir,'t/u/v/w/x/y/z/1/2/3/../3')
     assert f.get('target') == target_loc
 
 @istest
 def sub_block_expand():
     b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid2.manifest'))
-    b.expand_blocks(_dummy_conf)
+    b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 2
     man_block = b.sub_blocks[0]
     file_block = b.sub_blocks[1]

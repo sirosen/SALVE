@@ -15,7 +15,7 @@ class FileBlock(Block):
     def __init__(self):
         Block.__init__(self,Block.types.FILE)
 
-    def expand_file_paths(self,root_dir=None):
+    def expand_file_paths(self,root_dir):
         """
         Expand relative paths in source and target to be absolute paths
         beginning with the SALVE_ROOT.
@@ -24,7 +24,6 @@ class FileBlock(Block):
             # TODO: replace with a more informative exception
             raise BlockException('FileBlock missing source or target')
 
-        if not root_dir: root_dir = locations.get_salve_root()
         if not locations.is_abs_or_var(self.get('source')):
             self.set('source', os.path.join(root_dir,
                                             self.get('source')))
@@ -35,7 +34,8 @@ class FileBlock(Block):
     def to_action(self):
         # is a no-op if it has already been done
         # otherwise, it ensures that everything will work
-        self.expand_file_paths()
+        assert os.path.isabs(self.get('source'))
+        assert os.path.isabs(self.get('target'))
         if self.get('action') == 'create':
             self.ensure_has_attrs('source','target','user','group',
                                    'mode')

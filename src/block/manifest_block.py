@@ -20,7 +20,7 @@ class ManifestBlock(Block):
         self.sub_blocks = None
         if source: self.set('source',source)
 
-    def expand_blocks(self,config,recursive=True,ancestors=None,root_dir=None):
+    def expand_blocks(self,root_dir,config,recursive=True,ancestors=None):
         """
         Expands a manifest block by reading its source, parsing it into
         blocks, and assigning those to be the sub_blocks of the manifest
@@ -55,15 +55,15 @@ class ManifestBlock(Block):
             self.sub_blocks = parse.parse_stream(man)
         for b in self.sub_blocks:
             # expand any relative paths and substitute for any vars
-            b.expand_file_paths(root_dir=root_dir)
+            b.expand_file_paths(root_dir)
             config.apply_to_block(b)
             # if set, recursively apply to manifest blocks
             if recursive and isinstance(b,ManifestBlock):
-                b.expand_blocks(config,
-                                ancestors=ancestors,
-                                root_dir=root_dir)
+                b.expand_blocks(root_dir,
+                                config,
+                                ancestors=ancestors)
 
-    def expand_file_paths(self,root_dir=None):
+    def expand_file_paths(self,root_dir):
         """
         Expand relative paths in source and target to be absolute paths
         beginning with the SALVE_ROOT.
@@ -71,7 +71,6 @@ class ManifestBlock(Block):
         self.ensure_has_attrs('source')
 
         if not locations.is_abs_or_var(self.get('source')):
-            if not root_dir: root_dir = locations.get_salve_root()
             self.set('source',os.path.join(root_dir,
                                            self.get('source')))
 
