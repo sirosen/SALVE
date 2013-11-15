@@ -8,7 +8,9 @@ from tests.utils.exceptions import ensure_except
 
 from src.reader.tokenize import Token
 import src.execute.action as action
-import src.execute.block as block
+import src.block.base_block
+import src.block.identifier
+import src.block.manifest_block
 import src.util.locations as locations
 import src.settings.config
 
@@ -30,33 +32,35 @@ with mock.patch('os.path.expanduser',mock_expanduser):
 
 @istest
 def block_is_abstract():
-    ensure_except(TypeError,block.Block)
+    ensure_except(TypeError,src.block.base_block.Block)
 
 @istest
 def invalid_block_id():
     invalid_id = Token('invalid_block_id',Token.types.IDENTIFIER)
-    ensure_except(ValueError,block.block_from_identifier,invalid_id)
+    ensure_except(ValueError,
+                  src.block.identifier.block_from_identifier,
+                  invalid_id)
 
 @istest
 def valid_file_id():
     file_id = Token('file',Token.types.IDENTIFIER)
-    file_block = block.block_from_identifier(file_id)
-    assert isinstance(file_block,block.FileBlock)
+    file_block = src.block.identifier.block_from_identifier(file_id)
+    assert isinstance(file_block,src.block.file_block.FileBlock)
 
 @istest
 def valid_manifest_id():
     manifest_id = Token('manifest',Token.types.IDENTIFIER)
-    manifest_block = block.block_from_identifier(manifest_id)
-    assert isinstance(manifest_block,block.ManifestBlock)
+    manifest_block = src.block.identifier.block_from_identifier(manifest_id)
+    assert isinstance(manifest_block,src.block.manifest_block.ManifestBlock)
 
 @istest
 def sourceless_manifest_to_action_error():
-    b = block.ManifestBlock()
-    ensure_except(block.BlockException,b.to_action)
+    b = src.block.manifest_block.ManifestBlock()
+    ensure_except(src.block.base_block.BlockException,b.to_action)
 
 @istest
 def file_block_create_to_action():
-    b = block.FileBlock()
+    b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('source','/a/b/c')
     b.set('target','/p/q/r')
@@ -71,41 +75,47 @@ def file_block_create_to_action():
 
 @istest
 def sourceless_manifest_expand_error():
-    b = block.ManifestBlock()
-    ensure_except(block.BlockException,b.expand_blocks,_dummy_conf)
+    b = src.block.manifest_block.ManifestBlock()
+    ensure_except(src.block.base_block.BlockException,
+                  b.expand_blocks,
+                  locations.get_salve_root(),
+                  _dummy_conf)
 
 @istest
 def empty_manifest_expand():
-    b = block.ManifestBlock(source=get_full_path('valid1.manifest'))
-    b.expand_blocks(_dummy_conf)
+    b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid1.manifest'))
+    b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 0
 
 @istest
 def recursive_manifest_error():
-    b = block.ManifestBlock(source=get_full_path('invalid1.manifest'))
-    ensure_except(block.BlockException,b.expand_blocks,_dummy_conf)
+    b = src.block.manifest_block.ManifestBlock(source=get_full_path('invalid1.manifest'))
+    ensure_except(src.block.base_block.BlockException,
+                  b.expand_blocks,
+                  locations.get_salve_root(),
+                  _dummy_conf)
 
 @istest
 def file_path_expand():
-    f = block.FileBlock()
+    f = src.block.file_block.FileBlock()
     f.set('source','p/q/r/s')
     f.set('target','t/u/v/w/x/y/z/1/2/3/../3')
-    f.expand_file_paths()
-    source_loc = os.path.join(locations.get_salve_root(),'p/q/r/s')
+    root_dir = 'file/root/directory'
+    f.expand_file_paths(root_dir)
+    source_loc = os.path.join(root_dir,'p/q/r/s')
     assert f.get('source') == source_loc
-    target_loc = os.path.join(locations.get_salve_root(),
-                              't/u/v/w/x/y/z/1/2/3/../3')
+    target_loc = os.path.join(root_dir,'t/u/v/w/x/y/z/1/2/3/../3')
     assert f.get('target') == target_loc
 
 @istest
 def sub_block_expand():
-    b = block.ManifestBlock(source=get_full_path('valid2.manifest'))
-    b.expand_blocks(_dummy_conf)
+    b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid2.manifest'))
+    b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 2
     man_block = b.sub_blocks[0]
     file_block = b.sub_blocks[1]
-    assert isinstance(man_block,block.ManifestBlock)
-    assert isinstance(file_block,block.FileBlock)
+    assert isinstance(man_block,src.block.manifest_block.ManifestBlock)
+    assert isinstance(file_block,src.block.file_block.FileBlock)
     assert man_block.get('source') == get_full_path('valid1.manifest')
     assert file_block.get('source') == get_full_path('valid1.manifest')
     target_loc = os.path.join(locations.get_salve_root(),'a/b/c')

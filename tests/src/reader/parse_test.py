@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import src.execute.block as block
+import src.block.file_block
 import src.reader.parse as parse
 from src.reader.tokenize import Token
 
@@ -125,12 +125,12 @@ def empty_manifest():
 def empty_block():
     blocks = parse_filename(get_full_path('valid2.manifest'))
     assert len(blocks) == 1
-    assert isinstance(blocks[0],block.FileBlock)
+    assert isinstance(blocks[0],src.block.file_block.FileBlock)
     assert len(blocks[0].attrs) == 0
 
 @istest
 def attribute_with_spaces():
     blocks = parse_filename(get_full_path('valid3.manifest'))
     assert len(blocks) == 1
-    assert isinstance(blocks[0],block.FileBlock)
+    assert isinstance(blocks[0],src.block.file_block.FileBlock)
     assert len(blocks[0].attrs) == 2
