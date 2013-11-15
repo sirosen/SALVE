@@ -20,7 +20,7 @@ class ManifestBlock(Block):
         self.sub_blocks = None
         if source: self.set('source',source)
 
-    def expand_blocks(self,root_dir,config,recursive=True,ancestors=None):
+    def expand_blocks(self,root_dir,config,ancestors=None):
         """
         Expands a manifest block by reading its source, parsing it into
         blocks, and assigning those to be the sub_blocks of the manifest
@@ -28,9 +28,6 @@ class ManifestBlock(Block):
         of the parser.
         The @config is used to fill in any variable values in the
         blocks' template string attributes.
-        When @recursive=False, this does not recurse, but in the general
-        case, @recursive=True. This means that any manifest blocks in
-        the sub_blocks are expanded as well.
         @ancestors is the set of containing manifests. It is passed
         through invocations in order to ensure that there are no
         manifest loops.
@@ -38,6 +35,10 @@ class ManifestBlock(Block):
         its descendants. Typically, this is left unset and defaults to
         the SALVE_ROOT.
         """
+        # ensure that this block has config applied and paths expanded
+        # this guarantees that 'source' is accurate
+        config.apply_to_block(self)
+        self.expand_file_paths(root_dir)
         self.ensure_has_attrs('source')
         filename = self.get('source')
 
@@ -54,14 +55,17 @@ class ManifestBlock(Block):
         with open(filename) as man:
             self.sub_blocks = parse.parse_stream(man)
         for b in self.sub_blocks:
-            # expand any relative paths and substitute for any vars
-            b.expand_file_paths(root_dir)
-            config.apply_to_block(b)
-            # if set, recursively apply to manifest blocks
-            if recursive and isinstance(b,ManifestBlock):
+            # recursively apply to manifest blocks
+            if isinstance(b,ManifestBlock):
                 b.expand_blocks(root_dir,
                                 config,
                                 ancestors=ancestors)
+            # expand any relative paths and substitute for any vars
+            # must be in order so that a variable which expands to a
+            # relative path works correctly
+            else:
+                config.apply_to_block(b)
+                b.expand_file_paths(root_dir)
 
     def expand_file_paths(self,root_dir):
         """
