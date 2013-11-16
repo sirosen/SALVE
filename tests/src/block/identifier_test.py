@@ -5,6 +5,9 @@ import os, mock
 from tests.utils.exceptions import ensure_except
 
 from src.reader.tokenize import Token
+import src.block.file_block
+import src.block.manifest_block
+import src.block.directory_block
 import src.block.identifier
 
 @istest
@@ -25,3 +28,9 @@ def valid_manifest_id():
     manifest_id = Token('manifest',Token.types.IDENTIFIER)
     manifest_block = src.block.identifier.block_from_identifier(manifest_id)
     assert isinstance(manifest_block,src.block.manifest_block.ManifestBlock)
+
+@istest
+def valid_directory_id():
+    manifest_id = Token('directory',Token.types.IDENTIFIER)
+    dir_block = src.block.identifier.block_from_identifier(manifest_id)
+    assert isinstance(dir_block,src.block.directory_block.DirBlock)
