@@ -30,9 +30,12 @@ class Block(object):
     def get(self,attribute_name):
         return self.attrs[attribute_name]
 
+    def has(self,attribute_name):
+        return attribute_name in self.attrs
+
     def ensure_has_attrs(self,*args):
         for attr in args:
-            if attr not in self.attrs:
+            if not self.has(attr):
                 raise BlockException('Block(ty='+self.block_type+') '+\
                                      'missing attr "'+attr+'"')
 

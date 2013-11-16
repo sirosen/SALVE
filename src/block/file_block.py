@@ -20,7 +20,7 @@ class FileBlock(Block):
         Expand relative paths in source and target to be absolute paths
         beginning with the SALVE_ROOT.
         """
-        if 'source' not in self.attrs or 'target' not in self.attrs:
+        if not self.has('source') or not self.has('target'):
             # TODO: replace with a more informative exception
             raise BlockException('FileBlock missing source or target')
 
@@ -54,4 +54,4 @@ class FileBlock(Block):
                                   ])
             return action.ShellAction([copy_file,chown_file,chmod_file])
         else:
-            raise block.BlockException('Unsupported file block action.')
+            raise BlockException('Unsupported file block action.')
