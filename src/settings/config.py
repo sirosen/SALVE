@@ -113,8 +113,8 @@ class SALVEConfig(object):
         """
         ty = block.block_type.lower()
         relevant_attrs = self.attributes[ty]
-        for key in block.attrs:
-            if key in relevant_attrs:
+        for key in relevant_attrs:
+            if key not in block.attrs:
                 block.set(key,relevant_attrs[key])
             block.set(key,self.template(block.get(key)))
         if isinstance(block,src.block.manifest_block.ManifestBlock) and \

@@ -19,7 +19,7 @@ class Block(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    types = Enum('FILE','MANIFEST')
+    types = Enum('FILE','MANIFEST','DIRECTORY')
     def __init__(self,ty):
         self.block_type = ty
         self.attrs = {}

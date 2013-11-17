@@ -14,7 +14,7 @@ class DirBlock(Block):
     This includes creation, deletion, and copying from source.
     """
     def __init__(self):
-        Block.__init__(self,Block.types.FILE)
+        Block.__init__(self,Block.types.DIRECTORY)
 
     def expand_file_paths(self,root_dir):
         """
