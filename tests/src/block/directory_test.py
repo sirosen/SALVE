@@ -17,7 +17,7 @@ def dir_block_create_to_action():
     act = b.to_action()
     assert isinstance(act,action.ShellAction)
     assert act.cmds[0] == 'mkdir -p -m 0600 /p/q/r'
-    assert act.cmds[1] == 'chown user1:nogroup /p/q/r'
+    assert len(act.cmds) == 1
 
 @istest
 def dir_block_copy_to_action():
@@ -32,7 +32,7 @@ def dir_block_copy_to_action():
     assert isinstance(act,action.ShellAction)
     assert act.cmds[0] == 'mkdir -p -m 0644 /p/q/r'
     assert act.cmds[1] == 'cp -r /a/b/c /p/q/r'
-    assert act.cmds[2] == 'chown -R user1:nogroup /p/q/r'
+    assert len(act.cmds) == 2
 
 @istest
 def dir_path_expand():
