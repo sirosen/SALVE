@@ -37,7 +37,10 @@ class DirBlock(Block):
         """
         Create a directory. Used by creation and dir copy.
         """
-        self.ensure_has_attrs('target','user','group','mode')
+        self.ensure_has_attrs('target','user','mode')
+        if not self.has('group'):
+            self.set('group',
+                     ugo.get_group_from_username(self.get('user')))
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
         mkdir = ' '.join(['mkdir -p -m',self.get('mode'),
@@ -54,8 +57,10 @@ class DirBlock(Block):
         """
         Copy a directory.
         """
-        self.ensure_has_attrs('source','target','user','group',
-                              'mode')
+        self.ensure_has_attrs('source','target','user','mode')
+        if not self.has('group'):
+            self.set('group',
+                     ugo.get_group_from_username(self.get('user')))
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
         assert os.path.isabs(self.get('source'))
