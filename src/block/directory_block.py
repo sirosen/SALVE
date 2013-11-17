@@ -4,6 +4,7 @@ import os
 
 import src.execute.action as action
 import src.util.locations as locations
+import src.util.ugo as ugo
 
 from src.block.base_block import Block, BlockException
 
@@ -45,7 +46,9 @@ class DirBlock(Block):
         chown_dir = ' '.join(['chown',self.get('user')+':'+\
                               self.get('group'),self.get('target')
                              ])
-        return [mkdir,chown_dir]
+        commands = [mkdir]
+        if ugo.is_root(): commands.append(chown_dir)
+        return commands
 
     def copy_commands(self):
         """
@@ -66,7 +69,9 @@ class DirBlock(Block):
         chown_dir = ' '.join(['chown -R',self.get('user')+':'+\
                               self.get('group'),self.get('target')
                              ])
-        return [mkdir,copy_dir,chown_dir]
+        commands = [mkdir,copy_dir]
+        if ugo.is_root(): commands.append(chown_dir)
+        return commands
 
     def to_action(self):
         commands = []

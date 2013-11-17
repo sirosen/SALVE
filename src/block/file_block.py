@@ -4,6 +4,7 @@ import os
 
 import src.execute.action as action
 import src.util.locations as locations
+import src.util.ugo as ugo
 
 from src.block.base_block import Block, BlockException
 
@@ -21,7 +22,6 @@ class FileBlock(Block):
         beginning with the SALVE_ROOT.
         """
         if not self.has('source') or not self.has('target'):
-            # TODO: replace with a more informative exception
             raise BlockException('FileBlock missing source or target')
 
         if not locations.is_abs_or_var(self.get('source')):
@@ -32,13 +32,13 @@ class FileBlock(Block):
                                             self.get('target')))
 
     def to_action(self):
-        # is a no-op if it has already been done
-        # otherwise, it ensures that everything will work
         assert os.path.isabs(self.get('source'))
         assert os.path.isabs(self.get('target'))
         if self.get('action') == 'create':
-            self.ensure_has_attrs('source','target','user','group',
-                                   'mode')
+            self.ensure_has_attrs('source','target','user','mode')
+            if not self.has('group'):
+                self.set('group',
+                         ugo.get_group_from_username(self.get('user')))
             copy_file = ' '.join(['cp',
                                   self.get('source'),
                                   self.get('target')
@@ -52,6 +52,8 @@ class FileBlock(Block):
                                    self.get('mode'),
                                    self.get('target')
                                   ])
-            return action.ShellAction([copy_file,chown_file,chmod_file])
+            commands = [copy_file,chmod_file]
+            if ugo.is_root(): commands.append(chown_file)
+            return action.ShellAction(commands)
         else:
             raise BlockException('Unsupported file block action.')

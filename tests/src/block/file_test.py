@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from nose.tools import istest
-import os
+import os, mock
 
 import src.execute.action as action
 import src.block.file_block
@@ -18,8 +18,24 @@ def file_block_create_to_action():
     act = b.to_action()
     assert isinstance(act,action.ShellAction)
     assert act.cmds[0] == 'cp /a/b/c /p/q/r'
-    assert 'chown user1:nogroup /p/q/r' in act.cmds
     assert 'chmod 0600 /p/q/r' in act.cmds
+    assert 'chown user1:nogroup /p/q/r' not in act.cmds
+
+@istest
+def file_block_to_action_chmod_as_root():
+    b = src.block.file_block.FileBlock()
+    b.set('action','create')
+    b.set('source','/a/b/c')
+    b.set('target','/p/q/r')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','0600')
+    with mock.patch('os.geteuid',lambda:0):
+        act = b.to_action()
+        assert isinstance(act,action.ShellAction)
+        assert act.cmds[0] == 'cp /a/b/c /p/q/r'
+        assert 'chmod 0600 /p/q/r' in act.cmds
+        assert 'chown user1:nogroup /p/q/r' in act.cmds
 
 @istest
 def file_path_expand():
