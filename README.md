@@ -3,7 +3,7 @@ SALVE
 
 Author: Stephen Rosen
 
-Version: 0.0.2
+Version: 0.1.0
 
 What is SALVE?
 ==============
@@ -96,7 +96,8 @@ Here we describe the basic format of a manifest file.
 The Grammar
 -----------
 
-A manifest is a file containing expressions, _e,_ in the following basic grammar. Some liberties have been taken with the use of backslash escapes and quoting below.
+A manifest is a file containing expressions, _e,_ in the following basic grammar.
+Some liberties have been taken with notation below.
 ```
 e := Empty String
    | name { attrs } e
@@ -133,18 +134,21 @@ valuechar := namechar
            | "#"
 ```
 
-Variables & Relative Paths
---------------------------
+Variables
+---------
 
 SALVE supports the use of environment variables in templates.
 These values will be pulled out of the executing shell's environment, and used to expand the attribute values of blocks in manifests.
 
 There are a small number of exceptions to this.
-'$SUDO_USER' is inspected, and if set, used in place of '$USER'.
-At present, there is no way to specify the real value of '$USER', but this is in progress.
-'$SALVE_ROOT' always refers to the root directory of the SALVE repo.
+```$SUDO_USER``` is inspected, and if set, used in place of ```$USER```.
+At present, there is no way to specify the real value of ```$USER```, regardless of 'sudo' invocation, but this is in progress.
+```$SALVE_ROOT``` always refers to the root directory of the SALVE repo.
 
-Relative paths are also supported, so that it is not necessary to rely on values like '$SALVE_ROOT' and '$PWD'.
+Relative Paths
+--------------
+
+Relative paths are also supported, so that it is not necessary to rely on values like ```$SALVE_ROOT``` and ```$PWD```.
 Relative paths are always interpreted relative to the root manifest's location.
 One item on the docket is to make this an available override behavior via the fileroot commandline option, but to specify relative paths with respect to the dirname of the manifest that contains the block in question.
 
@@ -153,40 +157,100 @@ Example Manifest
 
 ```
 file {
-    source  files/myfile
-    target  /home/$USER/.bashrc
-    mode    0600
-    user    $USER
+    source  files/bash/bashrc
+    target  $HOME/.bashrc
+    mode    600
+}
+
+directory {
+    source  dirs/dircolors
+    target  $HOME/dircolors
+    action  copy
 }
 
 file {
-    source  $PWD/localfile
-    target  /etc/myotherfile
+    source  /etc/passwd
+    target  /opt/myprog/passwd-clone
     mode    0440
     user    admin
     group   root
 }
 
 manifest {
-    source  files/vim.manifest
+    source  manifests/vim.manifest
 }
 ```
+
+Definitions
+-----------
+
+Each attribute of a block has a specific meaning, and many of the values themselves are keywords referring to specific actions.
+Knowing these meanings is key to reading and understanding a manifest.
+Below are the definitions of each manifest action, given in a subscript notation.
+For example, ```file[action]``` specifies the 'action' attribute of 'file' blocks.
+
+### file[action] ###
+> 'file[action]=create' -- The create action copies 'file[source]' to 'file[target]'
+
+### file[mode] ###
+> 'file[mode]' -- This is the umask for UGO permissions on the created file
+
+### file[user],file[group] ###
+> 'file[user]' -- The owner of the created file
+> 'file[group]' -- The owning group of the created file
+Note that these attributes are ignored when salve is not run as root, since chowns cannot necessarily be applied.
+
+### file[source], file[target] ###
+> 'file[source]' -- The path to the file to be used, typically versioned in the configuration repo
+> 'file[target]' -- The path to the file to which an action will be applied, or which will be created or destroyed
+
+
+### manifest[source] ###
+> 'manifest[source]' -- The path to the manifest to be expanded and executed at this location in the manifest tree
+
+
+### directory[action] ###
+> 'directory[action]=create' -- Create the directory at 'directory[target]', and any required ancestors
+> 'directory[action]=copy' -- Create the directory at 'directory[target]', and then recursively copy contents from 'directory[source]' to 'directory[target]'
+
+### directory[mode] ###
+> 'directory[mode]' -- This is the umask for UGO permissions on the created directory
+
+### directory[user],directory[group] ###
+> 'directory[user]' -- The owner of the created directory
+> 'directory[group]' -- The owning group of the created directory
+Note that these attributes are ignored when salve is not run as root, since chowns cannot necessarily be applied.
+
+### directory[source], directory[target] ###
+> 'directory[source]' -- The path to the directory to be used, typically versioned in the configuration repo
+> 'directory[target]' -- The path to the directory to which an action will be applied, or which will be created or destroyed
 
 Sensible Defaults
 -----------------
 
 As much as possible, SALVE attempts to define all behavior on underspecified blocks.
-These are our set of "sensible defaults", specified in the format of a manifest.
-A small class of values, when unspecified, result in errors.
-Those are omitted here.
+These are our set of "sensible defaults", specified below in the format of a manifest.
+A small class of values, when unspecified, result in errors or special behaviors.
 
 ```
 file {
-    mode    0600
+    mode    600
     user    $USER
-    group   nogroup
+    action  create
+}
+
+directory {
+    mode    755
+    user    $USER
+    action  copy
 }
 
 manifest {
 }
+```
+
+The special cases are
+```
+'file[group]' -- when unspecified, this is the primary group of the $USER
+'directory[group]' -- when unspecified, this is the primary group of the $USER
 ```
