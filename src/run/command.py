@@ -58,12 +58,12 @@ def run_on_manifest(root_manifest,opts):
         cfg_file = opts.configfile
     conf = SALVEConfig(filename=cfg_file)
 
-    root_block = src.block.manifest_block.ManifestBlock(source=root_manifest)
-    root_block.expand_blocks(conf)
+    root_dir = os.path.abspath(os.path.dirname(root_manifest))
+    if opts.fileroot: root_dir = os.path.abspath(opts.fileroot)
 
-    root_dir = os.path.dirname(root_manifest)
-    if opts.fileroot: root_dir = opts.fileroot
-    root_block.expand_file_paths(root_dir)
+    root_block = src.block.manifest_block.ManifestBlock(source=root_manifest)
+    root_block.expand_blocks(root_dir,conf)
+
     root_action = root_block.to_action()
     root_action.execute()
 

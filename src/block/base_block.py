@@ -19,7 +19,7 @@ class Block(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    types = Enum('FILE','MANIFEST')
+    types = Enum('FILE','MANIFEST','DIRECTORY')
     def __init__(self,ty):
         self.block_type = ty
         self.attrs = {}
@@ -30,9 +30,12 @@ class Block(object):
     def get(self,attribute_name):
         return self.attrs[attribute_name]
 
+    def has(self,attribute_name):
+        return attribute_name in self.attrs
+
     def ensure_has_attrs(self,*args):
         for attr in args:
-            if attr not in self.attrs:
+            if not self.has(attr):
                 raise BlockException('Block(ty='+self.block_type+') '+\
                                      'missing attr "'+attr+'"')
 

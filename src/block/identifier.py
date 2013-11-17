@@ -5,11 +5,13 @@ from src.reader.tokenize import Token
 from src.block.base_block import BlockException
 import src.block.file_block
 import src.block.manifest_block
+import src.block.directory_block
 
 # maps valid identifiers to block constructors
 identifier_map = {
     'file':src.block.file_block.FileBlock,
-    'manifest':src.block.manifest_block.ManifestBlock
+    'manifest':src.block.manifest_block.ManifestBlock,
+    'directory':src.block.directory_block.DirBlock
 }
 
 def block_from_identifier(id_token):

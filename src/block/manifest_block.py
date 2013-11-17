@@ -4,7 +4,6 @@ import os
 
 import src.execute.action as action
 import src.util.locations as locations
-import src.reader.parse as parse
 
 from src.block.base_block import Block, BlockException
 
@@ -35,6 +34,10 @@ class ManifestBlock(Block):
         its descendants. Typically, this is left unset and defaults to
         the SALVE_ROOT.
         """
+        # This import must take place inside of the function because
+        # there is a circular dependency between ManifestBlocks and the
+        # parser
+        import src.reader.parse as parse
         # ensure that this block has config applied and paths expanded
         # this guarantees that 'source' is accurate
         config.apply_to_block(self)
