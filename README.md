@@ -141,9 +141,12 @@ SALVE supports the use of environment variables in templates.
 These values will be pulled out of the executing shell's environment, and used to expand the attribute values of blocks in manifests.
 
 There are a small number of exceptions to this.
+
 ```$SUDO_USER``` is inspected, and if set, used in place of ```$USER```.
 At present, there is no way to specify the real value of ```$USER```, regardless of 'sudo' invocation, but this is in progress.
+
 ```$SALVE_ROOT``` always refers to the root directory of the SALVE repo.
+
 ```$SALVE_USER_PRIMARY_GROUP``` always refers to the primary group of ```$USER```.
 
 Relative Paths
@@ -191,40 +194,55 @@ Below are the definitions of each manifest action, given in a subscript notation
 For example, ```file[action]``` specifies the 'action' attribute of 'file' blocks.
 
 ### file[action] ###
+
 > 'file[action]=copy' -- The copy action copies 'file[source]' to 'file[target]'
+
 > 'file[action]=create' -- The create action touches 'file[target]'
 
 ### file[mode] ###
+
 > 'file[mode]' -- This is the umask for UGO permissions on the created file
 
 ### file[user], file[group] ###
+
 > 'file[user]' -- The owner of the created file
+
 > 'file[group]' -- The owning group of the created file
 Note that these attributes are ignored when salve is not run as root, since chowns cannot necessarily be applied.
 
 ### file[source], file[target] ###
+
 > 'file[source]' -- The path to the file to be used, typically versioned in the configuration repo
+
 > 'file[target]' -- The path to the file to which an action will be applied, or which will be created or destroyed
 
 
 ### manifest[source] ###
+
 > 'manifest[source]' -- The path to the manifest to be expanded and executed at this location in the manifest tree
 
 
 ### directory[action] ###
+
 > 'directory[action]=create' -- Create the directory at 'directory[target]', and any required ancestors
+
 > 'directory[action]=copy' -- Create the directory at 'directory[target]', and then recursively copy contents from 'directory[source]' to 'directory[target]'
 
 ### directory[mode] ###
+
 > 'directory[mode]' -- This is the umask for UGO permissions on the created directory
 
 ### directory[user], directory[group] ###
+
 > 'directory[user]' -- The owner of the created directory
+
 > 'directory[group]' -- The owning group of the created directory
 Note that these attributes are ignored when salve is not run as root, since chowns cannot necessarily be applied.
 
 ### directory[source], directory[target] ###
+
 > 'directory[source]' -- The path to the directory to be used, typically versioned in the configuration repo
+
 > 'directory[target]' -- The path to the directory to which an action will be applied, or which will be created or destroyed
 
 Sensible Defaults
