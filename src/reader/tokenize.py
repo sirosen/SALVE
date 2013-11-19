@@ -21,7 +21,7 @@ class Token(object):
 
     def __str__(self):
         attrs = ['value='+self.value,'ty='+self.ty,
-                 'lineno='+self.lineno]
+                 'lineno='+str(self.lineno)]
         if self.in_file:
             attrs.append('in_file='+self.in_file)
         return 'Token('+','.join(attrs)+')'

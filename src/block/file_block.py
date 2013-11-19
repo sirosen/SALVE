@@ -21,6 +21,7 @@ class FileBlock(Block):
         Expand relative paths in source and target to be absolute paths
         beginning with the SALVE_ROOT.
         """
+        # there must be a target for both copy and create actions
         if not self.has('target'):
             raise BlockException('FileBlock missing target')
 
