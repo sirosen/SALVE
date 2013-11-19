@@ -54,6 +54,7 @@ class SALVEConfig(object):
         for k in os.environ:
             self.env[k] = os.environ[k]
         # in self.env, reset USER and HOME to the desired values
+        # along with SALVE_USER_PRIMARY_GROUP
         self.env['USER'] = user
         self.env['HOME'] = userhome
         self.env['SALVE_ROOT'] = locations.get_salve_root()
