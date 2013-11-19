@@ -100,7 +100,11 @@ A manifest is a file containing expressions, _e,_ in the following basic grammar
 Some liberties have been taken with notation below.
 ```
 e := Empty String
-   | name { attrs } e
+   | block_id { attrs } e
+
+block_id := "file"
+          | "directory"
+          | "manifest"
 
 attrs := Empty String
        | name value attrs
@@ -133,6 +137,12 @@ valuechar := namechar
            | "?" | "!" | "%"
            | "#"
 ```
+
+Note that this only defines the grammar of acceptable SALVE expressions
+for the parser.
+There are further constraints upon what keywords are valid and carry
+meaning.
+Those are defined below.
 
 Variables
 ---------
