@@ -21,8 +21,8 @@ class FileBlock(Block):
         Expand relative paths in source and target to be absolute paths
         beginning with the SALVE_ROOT.
         """
-        if not self.has('source') or not self.has('target'):
-            raise BlockException('FileBlock missing source or target')
+        if not self.has('target'):
+            raise BlockException('FileBlock missing target')
 
         if not locations.is_abs_or_var(self.get('source')):
             self.set('source', os.path.join(root_dir,
@@ -72,6 +72,4 @@ class FileBlock(Block):
                                   ])
             commands = [touch_file,chmod_file]
             if ugo.is_root(): commands.append(chown_file)
-        else:
-            raise BlockException('Unsupported file block action.')
         return action.ShellAction(commands)

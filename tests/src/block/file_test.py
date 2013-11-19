@@ -165,3 +165,14 @@ def file_path_expand():
     assert f.get('source') == source_loc
     target_loc = os.path.join(root_dir,'t/u/v/w/x/y/z/1/2/3/../3')
     assert f.get('target') == target_loc
+
+@istest
+def file_path_expand_fail_notarget():
+    b = src.block.directory_block.DirBlock()
+    b.set('action','create')
+    b.set('source','p/q/r/s')
+    b.set('user','user1')
+    b.set('group','user1')
+    b.set('mode','644')
+    root_dir = 'file/root/directory'
+    ensure_except(BlockException,b.expand_file_paths,root_dir)
