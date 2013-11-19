@@ -190,12 +190,13 @@ Below are the definitions of each manifest action, given in a subscript notation
 For example, ```file[action]``` specifies the 'action' attribute of 'file' blocks.
 
 ### file[action] ###
-> 'file[action]=create' -- The create action copies 'file[source]' to 'file[target]'
+> 'file[action]=copy' -- The copy action copies 'file[source]' to 'file[target]'
+> 'file[action]=create' -- The create action touches 'file[target]'
 
 ### file[mode] ###
 > 'file[mode]' -- This is the umask for UGO permissions on the created file
 
-### file[user],file[group] ###
+### file[user], file[group] ###
 > 'file[user]' -- The owner of the created file
 > 'file[group]' -- The owning group of the created file
 Note that these attributes are ignored when salve is not run as root, since chowns cannot necessarily be applied.
@@ -216,7 +217,7 @@ Note that these attributes are ignored when salve is not run as root, since chow
 ### directory[mode] ###
 > 'directory[mode]' -- This is the umask for UGO permissions on the created directory
 
-### directory[user],directory[group] ###
+### directory[user], directory[group] ###
 > 'directory[user]' -- The owner of the created directory
 > 'directory[group]' -- The owning group of the created directory
 Note that these attributes are ignored when salve is not run as root, since chowns cannot necessarily be applied.
@@ -236,7 +237,7 @@ A small class of values, when unspecified, result in errors or special behaviors
 file {
     mode    600
     user    $USER
-    action  create
+    action  copy
 }
 
 directory {
