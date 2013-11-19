@@ -22,9 +22,9 @@ def block_from_identifier(id_token):
     not an identifier.
     """
     if id_token.ty != Token.types.IDENTIFIER:
-        raise BlockException('Unknown block identifier '+str(id_token))
+        raise BlockException('Cannot create block from non-identifier: '+str(id_token))
     val = id_token.value.lower()
     try:
         return identifier_map[val]()
     except KeyError:
-        raise ValueError('Unknown block identifier ' + val)
+        raise BlockException('Unknown block identifier ' + val)

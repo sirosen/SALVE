@@ -21,8 +21,9 @@ class FileBlock(Block):
         Expand relative paths in source and target to be absolute paths
         beginning with the SALVE_ROOT.
         """
-        if not self.has('source') or not self.has('target'):
-            raise BlockException('FileBlock missing source or target')
+        # there must be a target for both copy and create actions
+        if not self.has('target'):
+            raise BlockException('FileBlock missing target')
 
         if not locations.is_abs_or_var(self.get('source')):
             self.set('source', os.path.join(root_dir,
@@ -38,7 +39,7 @@ class FileBlock(Block):
                 assert os.path.isabs(self.get(arg))
         commands = []
         if self.get('action') == 'copy':
-            self.ensure_has_attrs('user','mode')
+            self.ensure_has_attrs('user','group','mode')
             ensure_abspath_attrs('source','target')
             copy_file = ' '.join(['cp',
                                   self.get('source'),
@@ -56,7 +57,7 @@ class FileBlock(Block):
             commands = [copy_file,chmod_file]
             if ugo.is_root(): commands.append(chown_file)
         elif self.get('action') == 'create':
-            self.ensure_has_attrs('user','mode')
+            self.ensure_has_attrs('user','group','mode')
             ensure_abspath_attrs('target')
             touch_file = ' '.join(['touch',
                                    self.get('target'),
@@ -72,6 +73,4 @@ class FileBlock(Block):
                                   ])
             commands = [touch_file,chmod_file]
             if ugo.is_root(): commands.append(chown_file)
-        else:
-            raise BlockException('Unsupported file block action.')
         return action.ShellAction(commands)

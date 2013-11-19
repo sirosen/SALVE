@@ -16,7 +16,7 @@ class Action(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def execute(self): pass
+    def execute(self): pass #pragma: no cover
 
 class ShellAction(Action):
     def __init__(self, command_list):
@@ -45,12 +45,9 @@ class ActionList(Action):
         for a in self.actions:
             a.execute()
 
-    def append(self, act):
-        self.actions.append(act)
-
 class ParallelActionBag(Action):
     def __init__(self, act_lst):
-        self.actions = set(act_lst)
+        self.actions = set(act_lst) #pragma: no cover
 
     def execute(self):
         # stub, not implemented
@@ -62,4 +59,4 @@ class ParallelActionBag(Action):
         # when there are no more tasks and all threads in
         # the pool are idling, the management thread
         # ups the semaphore and does cleanup
-        pass
+        pass #pragma: no cover
