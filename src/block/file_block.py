@@ -38,7 +38,7 @@ class FileBlock(Block):
                 assert os.path.isabs(self.get(arg))
         commands = []
         if self.get('action') == 'copy':
-            self.ensure_has_attrs('user','mode')
+            self.ensure_has_attrs('user','group','mode')
             ensure_abspath_attrs('source','target')
             copy_file = ' '.join(['cp',
                                   self.get('source'),
@@ -56,7 +56,7 @@ class FileBlock(Block):
             commands = [copy_file,chmod_file]
             if ugo.is_root(): commands.append(chown_file)
         elif self.get('action') == 'create':
-            self.ensure_has_attrs('user','mode')
+            self.ensure_has_attrs('user','group','mode')
             ensure_abspath_attrs('target')
             touch_file = ' '.join(['touch',
                                    self.get('target'),
