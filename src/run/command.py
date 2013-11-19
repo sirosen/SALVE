@@ -54,8 +54,7 @@ def run_on_manifest(root_manifest,opts):
     root manifest, then executes the actions defined by that manifest.
     """
     cfg_file = None
-    if opts.configfile:
-        cfg_file = opts.configfile
+    if opts.configfile: cfg_file = opts.configfile
     conf = SALVEConfig(filename=cfg_file)
 
     root_dir = os.path.abspath(os.path.dirname(root_manifest))
