@@ -74,7 +74,7 @@ def parse_tokens(tokens,filename=None):
                                          Token.types.IDENTIFIER ]
             # no meaningful else because token types must be valid, as
             # per the earlier check for valid token type
-            else: raise ValueError('SALVE Internal Error!')
+            else: raise ValueError('SALVE Internal Error!') #pragma: no cover
     # if the token list terminates and there is still a block in
     # progress, it means that the block was not teminated
     if current_block is not None:

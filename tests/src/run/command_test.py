@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os
+import os, StringIO
 
 from nose.tools import istest
 from unittest import SkipTest
@@ -66,12 +66,45 @@ def get_root_given_manifest():
 
 @istest
 def get_root_given_gitrepo():
-    # skip for now, not implemented
-    raise SkipTest
     mock_opts = Mock()
     mock_opts.manifest = None
     mock_opts.gitrepo = 'https://github.com/sirosen/SALVE'
 
-    root = command.get_root_manifest(mock_opts)
-    assert root == os.path.join(locations.get_salve_root(),
-                                'root.manifest')
+    ensure_except(StandardError,command.get_root_manifest,mock_opts)
+
+@istest
+def commandline_gitrepo_manifest_conflict():
+    fake_argv = ['.salve.py','--git-repo',
+                 'git@githubcom:sirosen/SALVE.git',
+                 '--manifest','root.manifest']
+    fake_stderr = StringIO.StringIO()
+    with patch('sys.argv',fake_argv):
+        with patch('sys.stderr',fake_stderr):
+            command.read_commandline()
+            stderr_out = fake_stderr.getvalue()
+            assert stderr_out == 'Ambiguous arguments: given a git '+\
+                'repo and a manifest and therefore choosing the '+\
+                'manifest.\n'
+
+@istest
+def commandline_main():
+    fake_argv = ['.salve.py','--manifest','root.manifest']
+    have_run = {
+        'action_execute': False,
+        'expand_blocks': False
+    }
+    class MockAction(object):
+        def __init__(self): pass
+        def execute(self): have_run['action_execute'] = True
+
+    class MockManifest(object):
+        def __init__(self,source=None): assert source == 'root.manifest'
+        def expand_blocks(self,x,y): have_run['expand_blocks'] = True
+        def to_action(self): return MockAction()
+
+    with patch('src.block.manifest_block.ManifestBlock',MockManifest):
+        with patch('sys.argv',fake_argv):
+            command.main()
+
+    assert have_run['action_execute']
+    assert have_run['expand_blocks']

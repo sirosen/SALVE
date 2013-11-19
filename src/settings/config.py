@@ -5,6 +5,7 @@ import os, string
 
 import src.block.manifest_block
 import src.util.locations as locations
+import src.util.ugo as ugo
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -53,9 +54,11 @@ class SALVEConfig(object):
         for k in os.environ:
             self.env[k] = os.environ[k]
         # in self.env, reset USER and HOME to the desired values
+        # along with SALVE_USER_PRIMARY_GROUP
         self.env['USER'] = user
         self.env['HOME'] = userhome
         self.env['SALVE_ROOT'] = locations.get_salve_root()
+        self.env['SALVE_USER_PRIMARY_GROUP'] = ugo.get_group_from_username(user)
 
         # track the filename that's being used, for error out
         self.filename = filename
@@ -118,7 +121,3 @@ class SALVEConfig(object):
                 block.set(key,relevant_attrs[key])
         for key in block.attrs:
             block.set(key,self.template(block.get(key)))
-        if isinstance(block,src.block.manifest_block.ManifestBlock) and \
-            block.sub_blocks is not None:
-            for b in block.sub_blocks:
-                self.apply_to_block(b)

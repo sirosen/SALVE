@@ -3,7 +3,7 @@ SALVE
 
 Author: Stephen Rosen
 
-Version: 0.1.0
+Version: 0.2.0
 
 What is SALVE?
 ==============
@@ -100,7 +100,11 @@ A manifest is a file containing expressions, _e,_ in the following basic grammar
 Some liberties have been taken with notation below.
 ```
 e := Empty String
-   | name { attrs } e
+   | block_id { attrs } e
+
+block_id := "file"
+          | "directory"
+          | "manifest"
 
 attrs := Empty String
        | name value attrs
@@ -134,6 +138,12 @@ valuechar := namechar
            | "#"
 ```
 
+Note that this only defines the grammar of acceptable SALVE expressions
+for the parser.
+There are further constraints upon what keywords are valid and carry
+meaning.
+Those are defined below.
+
 Variables
 ---------
 
@@ -141,9 +151,13 @@ SALVE supports the use of environment variables in templates.
 These values will be pulled out of the executing shell's environment, and used to expand the attribute values of blocks in manifests.
 
 There are a small number of exceptions to this.
+
 ```$SUDO_USER``` is inspected, and if set, used in place of ```$USER```.
 At present, there is no way to specify the real value of ```$USER```, regardless of 'sudo' invocation, but this is in progress.
+
 ```$SALVE_ROOT``` always refers to the root directory of the SALVE repo.
+
+```$SALVE_USER_PRIMARY_GROUP``` always refers to the primary group of ```$USER```.
 
 Relative Paths
 --------------
@@ -190,39 +204,55 @@ Below are the definitions of each manifest action, given in a subscript notation
 For example, ```file[action]``` specifies the 'action' attribute of 'file' blocks.
 
 ### file[action] ###
-> 'file[action]=create' -- The create action copies 'file[source]' to 'file[target]'
+
+> 'file[action]=copy' -- The copy action copies 'file[source]' to 'file[target]'
+
+> 'file[action]=create' -- The create action touches 'file[target]'
 
 ### file[mode] ###
+
 > 'file[mode]' -- This is the umask for UGO permissions on the created file
 
-### file[user],file[group] ###
+### file[user], file[group] ###
+
 > 'file[user]' -- The owner of the created file
+
 > 'file[group]' -- The owning group of the created file
 Note that these attributes are ignored when salve is not run as root, since chowns cannot necessarily be applied.
 
 ### file[source], file[target] ###
+
 > 'file[source]' -- The path to the file to be used, typically versioned in the configuration repo
+
 > 'file[target]' -- The path to the file to which an action will be applied, or which will be created or destroyed
 
 
 ### manifest[source] ###
+
 > 'manifest[source]' -- The path to the manifest to be expanded and executed at this location in the manifest tree
 
 
 ### directory[action] ###
+
 > 'directory[action]=create' -- Create the directory at 'directory[target]', and any required ancestors
+
 > 'directory[action]=copy' -- Create the directory at 'directory[target]', and then recursively copy contents from 'directory[source]' to 'directory[target]'
 
 ### directory[mode] ###
+
 > 'directory[mode]' -- This is the umask for UGO permissions on the created directory
 
-### directory[user],directory[group] ###
+### directory[user], directory[group] ###
+
 > 'directory[user]' -- The owner of the created directory
+
 > 'directory[group]' -- The owning group of the created directory
 Note that these attributes are ignored when salve is not run as root, since chowns cannot necessarily be applied.
 
 ### directory[source], directory[target] ###
+
 > 'directory[source]' -- The path to the directory to be used, typically versioned in the configuration repo
+
 > 'directory[target]' -- The path to the directory to which an action will be applied, or which will be created or destroyed
 
 Sensible Defaults
@@ -230,27 +260,24 @@ Sensible Defaults
 
 As much as possible, SALVE attempts to define all behavior on underspecified blocks.
 These are our set of "sensible defaults", specified below in the format of a manifest.
-A small class of values, when unspecified, result in errors or special behaviors.
+A small class of values, when unspecified, result in errors.
+These are generally the variables that refer to paths.
 
 ```
 file {
     mode    600
     user    $USER
-    action  create
+    group   $SALVE_USER_PRIMARY_GROUP
+    action  copy
 }
 
 directory {
     mode    755
     user    $USER
+    group   $SALVE_USER_PRIMARY_GROUP
     action  copy
 }
 
 manifest {
 }
-```
-
-The special cases are
-```
-'file[group]' -- when unspecified, this is the primary group of the $USER
-'directory[group]' -- when unspecified, this is the primary group of the $USER
 ```

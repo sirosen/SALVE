@@ -40,7 +40,7 @@ class Block(object):
                                      'missing attr "'+attr+'"')
 
     @abc.abstractmethod
-    def to_action(self): return
+    def to_action(self): return #pragma: no cover
 
     @abc.abstractmethod
-    def expand_file_paths(self, root_dir): return
+    def expand_file_paths(self, root_dir): return #pragma: no cover
