@@ -3,7 +3,7 @@ SALVE
 
 Author: Stephen Rosen
 
-Version: 0.1.0
+Version: 0.2.0
 
 What is SALVE?
 ==============
@@ -144,6 +144,7 @@ There are a small number of exceptions to this.
 ```$SUDO_USER``` is inspected, and if set, used in place of ```$USER```.
 At present, there is no way to specify the real value of ```$USER```, regardless of 'sudo' invocation, but this is in progress.
 ```$SALVE_ROOT``` always refers to the root directory of the SALVE repo.
+```$SALVE_USER_PRIMARY_GROUP``` always refers to the primary group of ```$USER```.
 
 Relative Paths
 --------------
@@ -231,27 +232,24 @@ Sensible Defaults
 
 As much as possible, SALVE attempts to define all behavior on underspecified blocks.
 These are our set of "sensible defaults", specified below in the format of a manifest.
-A small class of values, when unspecified, result in errors or special behaviors.
+A small class of values, when unspecified, result in errors.
+These are generally the variables that refer to paths.
 
 ```
 file {
     mode    600
     user    $USER
+    group   $SALVE_USER_PRIMARY_GROUP
     action  copy
 }
 
 directory {
     mode    755
     user    $USER
+    group   $SALVE_USER_PRIMARY_GROUP
     action  copy
 }
 
 manifest {
 }
-```
-
-The special cases are
-```
-'file[group]' -- when unspecified, this is the primary group of the $USER
-'directory[group]' -- when unspecified, this is the primary group of the $USER
 ```

@@ -36,9 +36,6 @@ class FileBlock(Block):
             self.ensure_has_attrs(*args)
             for arg in args:
                 assert os.path.isabs(self.get(arg))
-        if not self.has('group'):
-            self.set('group',
-                     ugo.get_group_from_username(self.get('user')))
         commands = []
         if self.get('action') == 'copy':
             self.ensure_has_attrs('user','mode')
