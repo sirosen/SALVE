@@ -43,14 +43,20 @@ def setup_os1():
     mock_env= {'SUDO_USER': 'user1',
                'USER': 'root',
                'HOME': home_map['user1']}
+
     mock_path = Mock()
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
     mock_path.dirname = dirname
     mock_path.abspath = abspath
 
+    mock_get_group = lambda x: 'nogroup'
+    group_patch = patch('src.util.ugo.get_group_from_username',
+                        mock_get_group)
+
     setup_patches(patch.dict('os.environ',mock_env),
-                  patch('os.path',mock_path))
+                  patch('os.path',mock_path),
+                  group_patch)
 
 def setup_os2():
     home_map = {'root': '/var/root',
@@ -65,8 +71,13 @@ def setup_os2():
     mock_path.dirname = dirname
     mock_path.abspath = abspath
 
+    mock_get_group = lambda x: 'nogroup'
+    group_patch = patch('src.util.ugo.get_group_from_username',
+                        mock_get_group)
+
     setup_patches(patch.dict('os.environ',mock_env),
-                  patch('os.path',mock_path))
+                  patch('os.path',mock_path),
+                  group_patch)
 
 def setup_os3():
     home_map = {'root': '/var/root',
@@ -81,8 +92,13 @@ def setup_os3():
     mock_path.dirname = dirname
     mock_path.abspath = abspath
 
+    mock_get_group = lambda x: 'nogroup'
+    group_patch = patch('src.util.ugo.get_group_from_username',
+                        mock_get_group)
+
     setup_patches(patch.dict('os.environ',mock_env),
-                  patch('os.path',mock_path))
+                  patch('os.path',mock_path),
+                  group_patch)
 
 
 @istest
