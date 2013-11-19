@@ -130,7 +130,14 @@ def multiple_env_overload():
 @with_setup(setup_os1,teardown_patches)
 def missing_config():
     conf = config.SALVEConfig(pjoin(_testfile_dir,'NONEXISTENT_FILE'))
-    assert conf.attributes['file']['action'] == 'create'
+
+    assert conf.attributes['file']['action'] == 'copy'
+    assert conf.attributes['file']['mode'] == '600'
+    assert conf.attributes['file']['user'] == '$USER'
+
+    assert conf.attributes['directory']['action'] == 'copy'
+    assert conf.attributes['directory']['mode'] == '755'
+    assert conf.attributes['directory']['user'] == '$USER'
 
 @istest
 @with_setup(setup_os1,teardown_patches)

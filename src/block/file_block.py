@@ -32,13 +32,17 @@ class FileBlock(Block):
                                             self.get('target')))
 
     def to_action(self):
-        assert os.path.isabs(self.get('source'))
-        assert os.path.isabs(self.get('target'))
-        if self.get('action') == 'create':
-            self.ensure_has_attrs('source','target','user','mode')
-            if not self.has('group'):
-                self.set('group',
-                         ugo.get_group_from_username(self.get('user')))
+        def ensure_abspath_attrs(*args):
+            self.ensure_has_attrs(*args)
+            for arg in args:
+                assert os.path.isabs(self.get(arg))
+        if not self.has('group'):
+            self.set('group',
+                     ugo.get_group_from_username(self.get('user')))
+        commands = []
+        if self.get('action') == 'copy':
+            self.ensure_has_attrs('user','mode')
+            ensure_abspath_attrs('source','target')
             copy_file = ' '.join(['cp',
                                   self.get('source'),
                                   self.get('target')
@@ -54,6 +58,23 @@ class FileBlock(Block):
                                   ])
             commands = [copy_file,chmod_file]
             if ugo.is_root(): commands.append(chown_file)
-            return action.ShellAction(commands)
+        elif self.get('action') == 'create':
+            self.ensure_has_attrs('user','mode')
+            ensure_abspath_attrs('target')
+            touch_file = ' '.join(['touch',
+                                   self.get('target'),
+                                  ])
+            chmod_file = ' '.join(['chmod',
+                                   self.get('mode'),
+                                   self.get('target')
+                                  ])
+            chown_file = ' '.join(['chown',
+                                   self.get('user')+':'+\
+                                   self.get('group'),
+                                   self.get('target')
+                                  ])
+            commands = [touch_file,chmod_file]
+            if ugo.is_root(): commands.append(chown_file)
         else:
             raise BlockException('Unsupported file block action.')
+        return action.ShellAction(commands)
