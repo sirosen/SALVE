@@ -12,6 +12,8 @@ class MockProcess(object):
         self.returncode = 0
     def wait(self):
         pass
+    def communicate(self):
+        return None,None
 
 @istest
 def action_is_abstract():
