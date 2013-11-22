@@ -16,7 +16,7 @@ class FileBackupAction(BackupAction):
     def __init__(self, src, backup_dir):
         BackupAction.__init__(self,src,backup_dir)
 
-    def execute():
+    def execute(self):
         target_name = None
         with open(self.src) as f:
             target_name = src.util.streams.sha_512(f)

@@ -3,6 +3,7 @@
 import os
 
 import src.execute.action as action
+import src.execute.backup as backup
 import src.util.locations as locations
 import src.util.ugo as ugo
 
@@ -24,13 +25,24 @@ class FileBlock(Block):
         # there must be a target for both copy and create actions
         if not self.has('target'):
             raise BlockException('FileBlock missing target')
+        if not self.has('backup_dir'):
+            raise BlockException('FileBlock missing backup_dir')
 
-        if not locations.is_abs_or_var(self.get('source')):
-            self.set('source', os.path.join(root_dir,
-                                            self.get('source')))
+        # no source for create actions
+        if self.has('source'):
+            if not locations.is_abs_or_var(self.get('source')):
+                self.set('source', os.path.join(root_dir,
+                                                self.get('source')))
+
+        # always have a target
         if not locations.is_abs_or_var(self.get('target')):
             self.set('target', os.path.join(root_dir,
                                             self.get('target')))
+
+        # always have a backup_dir
+        if not locations.is_abs_or_var(self.get('backup_dir')):
+            self.set('backup_dir', os.path.join(root_dir,
+                                                self.get('backup_dir')))
 
     def to_action(self):
         def ensure_abspath_attrs(*args):
@@ -73,4 +85,7 @@ class FileBlock(Block):
                                   ])
             commands = [touch_file,chmod_file]
             if ugo.is_root(): commands.append(chown_file)
-        return action.ShellAction(commands)
+        file_action = action.ShellAction(commands)
+        backup_action = backup.FileBackupAction(self.get('target'),
+                                                self.get('backup_dir'))
+        return action.ActionList([backup_action,file_action])
