@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import src.util.locations
-from nose.tools import istest, eq_
+from nose.tools import istest
 from mock import patch
 
 @istest

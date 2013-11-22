@@ -70,6 +70,16 @@ def file_create_chmod_as_root():
         assert 'chown user1:nogroup /p/q/r' in act.cmds
 
 @istest
+def file_expandpaths_fails_notarget():
+    b = src.block.file_block.FileBlock()
+    b.set('action','copy')
+    b.set('source','/a/b/c')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','0600')
+    ensure_except(BlockException,b.expand_file_paths,'/')
+
+@istest
 def file_copy_fails_nosource():
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
