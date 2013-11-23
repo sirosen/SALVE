@@ -28,6 +28,9 @@ class DirBlock(Block):
         if not self.has('backup_dir'):
             raise BlockException('DirBlock missing backup_dir')
 
+        if not self.has('backup_log'):
+            raise BlockException('DirBlock missing backup_log')
+
         if self.has('source') and \
            not locations.is_abs_or_var(self.get('source')):
             self.set('source', os.path.join(root_dir,
@@ -36,6 +39,9 @@ class DirBlock(Block):
         if not locations.is_abs_or_var(self.get('backup_dir')):
             self.set('backup_dir', os.path.join(root_dir,
                                                 self.get('backup_dir')))
+        if not locations.is_abs_or_var(self.get('backup_log')):
+            self.set('backup_log', os.path.join(root_dir,
+                                                self.get('backup_log')))
         if not locations.is_abs_or_var(self.get('target')):
             self.set('target', os.path.join(root_dir,
                                             self.get('target')))

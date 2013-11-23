@@ -44,6 +44,11 @@ class FileBlock(Block):
             self.set('backup_dir', os.path.join(root_dir,
                                                 self.get('backup_dir')))
 
+        # always have a backup_log
+        if not locations.is_abs_or_var(self.get('backup_log')):
+            self.set('backup_log', os.path.join(root_dir,
+                                                self.get('backup_log')))
+
     def to_action(self):
         def ensure_abspath_attrs(*args):
             self.ensure_has_attrs(*args)

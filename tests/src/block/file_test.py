@@ -36,6 +36,25 @@ def file_copy_to_action():
     assert 'chown user1:nogroup /p/q/r' not in shell_act.cmds
 
 @istest
+def file_copy_to_action_nobackup():
+    b = src.block.file_block.FileBlock()
+    b.set('action','copy')
+    b.set('source','/a/b/c')
+    b.set('target','/p/q/r')
+    b.set('backup_dir','/m/n')
+    b.set('backup_log','/m/n.log')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','0600')
+    with mock.patch('os.path.exists', lambda f: False):
+        shell_act = b.to_action()
+
+    assert isinstance(shell_act,action.ShellAction)
+    assert shell_act.cmds[0] == 'cp /a/b/c /p/q/r'
+    assert 'chmod 0600 /p/q/r' in shell_act.cmds
+    assert 'chown user1:nogroup /p/q/r' not in shell_act.cmds
+
+@istest
 def file_copy_chmod_as_root():
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
@@ -86,6 +105,25 @@ def file_create_to_action():
     assert 'chown user1:nogroup /p/q/r' not in shell_act.cmds
 
 @istest
+def file_create_to_action_nobackup():
+    b = src.block.file_block.FileBlock()
+    b.set('action','create')
+    b.set('target','/p/q/r')
+    b.set('backup_dir','/m/n')
+    b.set('backup_log','/m/n.log')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','0600')
+    with mock.patch('os.path.exists', lambda f: False):
+        shell_act = b.to_action()
+
+    assert isinstance(shell_act,action.ShellAction)
+
+    assert shell_act.cmds[0] == 'touch /p/q/r'
+    assert 'chmod 0600 /p/q/r' in shell_act.cmds
+    assert 'chown user1:nogroup /p/q/r' not in shell_act.cmds
+
+@istest
 def file_create_chmod_as_root():
     b = src.block.file_block.FileBlock()
     b.set('action','create')
@@ -109,18 +147,6 @@ def file_create_chmod_as_root():
     assert shell_act.cmds[0] == 'touch /p/q/r'
     assert 'chmod 0600 /p/q/r' in shell_act.cmds
     assert 'chown user1:nogroup /p/q/r' in shell_act.cmds
-
-@istest
-def file_expandpaths_fails_notarget():
-    b = src.block.file_block.FileBlock()
-    b.set('action','copy')
-    b.set('source','/a/b/c')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    b.set('mode','0600')
-    ensure_except(BlockException,b.expand_file_paths,'/')
 
 @istest
 def file_copy_fails_nosource():
@@ -230,14 +256,18 @@ def file_path_expand():
     b = src.block.file_block.FileBlock()
     b.set('source','p/q/r/s')
     b.set('target','t/u/v/w/x/y/z/1/2/3/../3')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
+    b.set('backup_dir','m/n')
+    b.set('backup_log','m/n.log')
     root_dir = 'file/root/directory'
     b.expand_file_paths(root_dir)
     source_loc = os.path.join(root_dir,'p/q/r/s')
     assert b.get('source') == source_loc
     target_loc = os.path.join(root_dir,'t/u/v/w/x/y/z/1/2/3/../3')
     assert b.get('target') == target_loc
+    backup_dir_loc = os.path.join(root_dir,'m/n')
+    assert b.get('backup_dir') == backup_dir_loc
+    backup_log_loc = os.path.join(root_dir,'m/n.log')
+    assert b.get('backup_log') == backup_log_loc
 
 @istest
 def file_path_expand_fail_notarget():
