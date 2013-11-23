@@ -6,6 +6,7 @@ from mock import patch
 
 from tests.utils.exceptions import ensure_except
 
+import src.execute.action as action
 import src.execute.backup as backup
 
 _testfile_dir = os.path.join(os.path.dirname(__file__),'files')
@@ -90,3 +91,38 @@ def file_symlink_target_name():
                               os.path.join(act.dst,
                               '55ae75d991c770d8f3ef07cbfde124ffce9c4'+\
                               '20da5db6203afab700b27e10cf9'))
+
+@istest
+def dir_expand():
+    dirname = get_full_path('dir1')
+    act = backup.DirBackupAction(dirname,'/etc/salve/backup')
+
+    # must be a valid ActionList
+    assert isinstance(act,action.ActionList)
+    assert hasattr(act,'actions')
+    seen_files = set()
+    for subact in act.actions:
+        assert isinstance(subact,backup.FileBackupAction)
+        seen_files.add(subact.src)
+    assert get_full_path('dir1/a') in seen_files
+    assert get_full_path('dir1/b') in seen_files
+    assert get_full_path('dir1/inner_dir1/.abc') in seen_files
+
+@istest
+def dir_execute():
+    dirname = get_full_path('dir1')
+    act = backup.DirBackupAction(dirname,'/etc/salve/backup')
+    # check this here so that we abort the test if this condition is
+    # unsatisfied, rather than starting to actually perform actions
+    for subact in act.actions:
+        assert isinstance(subact,backup.FileBackupAction)
+    seen_files = set()
+    mock_execute = lambda self: seen_files.add(self.src)
+
+    with patch('src.execute.backup.FileBackupAction.execute',
+               mock_execute):
+        act.execute()
+
+    assert get_full_path('dir1/a') in seen_files
+    assert get_full_path('dir1/b') in seen_files
+    assert get_full_path('dir1/inner_dir1/.abc') in seen_files
