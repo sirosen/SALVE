@@ -1,17 +1,28 @@
 SALVE
 =====
 
-Author: Stephen Rosen
+Authors: Stephen Rosen
 
-Version: 0.2.0
+Version: 1.0.0
+
+My Thanks for Design Input From
+-------------------------------
+ * Bryce Allen
+ * Jeremy Archer
+ * Bryce Lanham
+ * Minke Zhang
 
 What is SALVE?
 ==============
-SALVE is a language for deploying versioned configuration files.
-An implementation of SALVE consists of a parser and execution package for Manifest files.
+SALVE is a language for deploying configuration files.
+It's purpose is to make it simple to keep configuration versioned in a VCS, then deploy it in a UNIX filesystem.
+
+A SALVE repository holds the full source for SALVE, any configuration files, and a set of Manifest files.
 Manifests are lists of
- - Files with destinations, ugo permissions, owner, and group
- - Other manifests, excluding the current manifest's ancestors (i.e. no loops allowed)
+ * Files and directories with destinations, ugo permissions, owner, and group
+ * Other manifests, excluding the current manifest and its ancestors (i.e. no loops allowed)
+
+Typically, a SALVE repository also holds one root manifest, which lists all of the other manifests to be used.
 
 What Does "SALVE" Stand For?
 ============================
@@ -29,69 +40,100 @@ Ecosystem, because it is designed to manage configuration for any purpose on you
 Why SALVE?
 ==========
 SALVE is designed to make your life easier, not harder, your configuration simpler, not more complicated, and to let you do it YOUR way, no matter how right or wrong your way might be.
-The primary motivation is a confluence of two major factors:
-  * Versioned configuration is good.
-  * Configuration management systems are too complicated.
+The primary motivation is a confluence of two major factors: versioned configuration is good and configuration management systems are too complicated.
 
-The issue is not whether or not Chef, Puppet, and Salt are good pieces of software, but they solve a different class of problem.
-Existing configuration management software works around the notion of a configuration management server which polls and modifies nodes.
-This complicates the core task of managing versioned configuration on an individual machine with logic and configuration relating to the interaction between the server and the managed nodes.
-For a number of use cases -- a web developer who just wants to version control her personal webserver's configuration, or a programmer working in a VM who wants one .vimrc -- this is far beyond overkill.
-SALVE aims to solve this problem in the simplest and most direct way possible.
+The Server-Node Architecture is Sometimes Overcomplicated
+---------------------------------------------------------
+Most configuration management software works around the notion of a configuration management server which polls and modifies nodes.
+This complicates the core task of managing configuration on an individual machine with logic relating to the interaction between the server and the managed nodes.
 
+Furthermore, with Puppet, Chef, and similar tools, the capacity for node introspection makes knowing what will hppen on deployment very hard.
+Machines can ask questions "Am I listed as a 'web-server'? Am I in the 'nagios-monitored' group?" and dispatch on the answers.
+
+With SALVE, you instead keep a version controlled directory of configuration, and manage it as you see fit.
+It is recommended to do this using one of the large free git server providers like GitHub.
+When you want to deploy on a node, all you need to do to know how a deployment will run is ensure that the local repository is up-to-date.
+This dramatically simplified approach is much more suitable to personal configuration, and may even be appropriate for some small-scale Ops.
+
+Goal-Oriented Systems are Hard to Understand
+--------------------------------------------
+Furthermore, almost all of the server-node based systems are "goal oriented".
+Rather than listing a set of commands, they try to describe the desired state of the system, and then put it in that state.
+This makes it hard to understand the flow of execution, especially in the presence of errors.
+
+By contrast, SALVE execution is purely sequential, meaning that it should be possible to read manifests top to bottom and know what will be executed.
+This should hold regardless of the machine state.
+
+One of the main advantages of goal-oriented configuration is that it guarantees that multiple runs are idempotent.
+SALVE aims to solve this problem in the simplest and most direct way possible, by using a DSL which only supports descriptions of idempotent actions.
+
+Simplicity is Elegance
+----------------------
 The core philosophy is not disimilar to the common UNIX perspective on command line tools.
 Rather than a few large, complicated tools that do everything, UNIX is built out of a large set of specialized tools that do their jobs well.
 So too with SALVE, we have a tool that is not designed to fully satisfy every use case.
 Instead, it is designed to solve a single problem well, and therefore to be possible to integrate with other tools.
 
-Simplicity is Elegance
-----------------------
 One of the central design principles of this project is that an elegant system is a simple system.
-The configuration language is extremely limited in its syntax, but does not encode very much of its semantics in the syntax.
+The configuration language is extremely limited in its syntax, but does not encode very much of its semantics in the grammar.
 Because the semantics are derived almost entirely from the choice of keywords, SALVE can be extended to support new uses almost trivially.
 
-SALVE is Platform and Implementaiton Independent
-================================================
+Minimal Dependencies and Assumptions
+====================================
 
 Although Windows is not presently a target, the design is portable, and could be made to work with some, admittedly significant, effort.
-
-SALVE is a Language, Not a Specific Implementation of that Language
--------------------------------------------------------------------
-SALVE is a system for managing configuration, not an implementation of that system.
-Although this version of the SALVE interpreter is written in python, it can equally well be described using Ruby, C, or even Pascal.
-The only necessary components for an implementation of SALVE are
- - A manifest reader, which expands manifests into lists of actions
-   - This is a tokenizer and parser, combined with an execution library that expands the resulting parse tree
- - A SALVE configuration loader
-   - This can be an ini parser or just an environment variable inspector, though using the ini files is strongly recommended
-   - The configuration is used to determine defaults, modify actions, and even tweak the interpreter itself
- - An execution module, which performs a list of actions in the order in which they are described in the manifests
-
-SALVE Makes Few Assumptions
----------------------------
-An implementation of SALVE should aim, as this one does, to have as few assumptions about the underlying OS as possible.
-In theory, the same set of manifests should be runnable on any machine with a SALVE implementation in place.
-In practice, restricting a set of manifests to run on Linux, Mac OSX, or other UNIX-like operating systems is a helpful simplifying assumption.
-As of yet, the only universal assumption of which we are aware is that the underlying system is UNIX based.
 
 SALVE Only Depends on What the Manifests Use
 --------------------------------------------
 SALVE does not rely on external tools like Debian's dpkg or OSX's MacPorts.
-Ultimately, all that's required is a compiler or interpreter for the implementation, a working shell, and permissions to perform the operations requested in the Manifests.
+Ultimately, all that's required is python2.7+, a working shell, and permissions to perform the operations requested in the Manifests.
 At present, these actions are restricted to those that are predefined, as we do not yet support arbitrary shell commands.
 
 SALVE Tries to Keep Your Safe
-=============================
-Although SALVE is, technically, an interpreted language, the parser, variable expansion, and safety checks prior to execution attempt to do thorough safety checking.
+-----------------------------
+SALVE does not assume that you can actually perform all of the actions you requested.
+The system may have broken permissions for some directories, or you may have made mistakes in your specification of manifests.
+Although SALVE is, technically, an interpreted language, the parser, variable expansion, and safety checks prior to execution attempt to be thorough in preventing calamities.
+
 The ultimate goal is to ensure, as much as possible, that the requested actions can be executed successfully.
 This includes validating acceptable values, and ensuring the effective UID grants sufficient permissions to perform actions.
-
 Ultimately, the burden is on you to ensure that your configuration is correct, but SALVE will do its best to detect and abort on errors pertaining to botched specifications prior to any part of the execution beginning.
 
 The SALVE Language
 ==================
 What does a SALVE manifest actually look like?
 Here we describe the basic format of a manifest file.
+
+Example Manifest
+----------------
+We begin with an example, which will be broken down and explained in the sections below.
+
+```
+file {
+    source  files/bash/bashrc
+    target  $HOME/.bashrc
+    mode    600
+}
+
+directory {
+    source  dirs/dircolors
+    target  $HOME/dircolors
+    action  copy
+}
+
+file {
+    source  /etc/passwd
+    target  /opt/myprog/passwd-clone
+    mode    0440
+    user    admin
+    group   root
+}
+
+manifest {
+    source  manifests/vim.manifest
+}
+```
+
 
 The Grammar
 -----------
@@ -152,12 +194,30 @@ These values will be pulled out of the executing shell's environment, and used t
 
 There are a small number of exceptions to this.
 
-```$SUDO_USER``` is inspected, and if set, used in place of ```$USER```.
-At present, there is no way to specify the real value of ```$USER```, regardless of 'sudo' invocation, but this is in progress.
+```SUDO_USER``` is inspected, and if set, used in place of ```USER```.
+At present, there is no way to specify the real value of ```USER```, regardless of 'sudo' invocation, but this is in progress.
 
-```$SALVE_ROOT``` always refers to the root directory of the SALVE repo.
+```SALVE_ROOT``` always refers to the root directory of the SALVE repo.
 
-```$SALVE_USER_PRIMARY_GROUP``` always refers to the primary group of ```$USER```.
+```SALVE_USER_PRIMARY_GROUP``` always refers to the primary group of ```USER```, after ```SUDO_USER``` substitution.
+
+```HOME``` always refers to the home directory of ```USER``` after ```SUDO_USER``` substitution.
+This ensures that ```HOME``` always refers to the invoking user's homedir, even if sudo is set to reset the ```HOME``` environment variable.
+
+At present, ```~```, ```*```, or any other special characters for globbing, path expansion, and so forth.
+
+### Example ###
+Given the block below
+```
+file {
+    source  files/bash/bashrc
+    target  $HOME/.bashrc
+    mode    600
+}
+```
+When SALVE is invoked by a user, "user1", with home directory "/home/user1",
+the value of "target" after expansion is "/home/user1/.bashrc"
+This holds even when "user1" invokes SALVE with sudo.
 
 Relative Paths
 --------------
@@ -166,34 +226,17 @@ Relative paths are also supported, so that it is not necessary to rely on values
 Relative paths are always interpreted relative to the root manifest's location.
 One item on the docket is to make this an available override behavior via the fileroot commandline option, but to specify relative paths with respect to the dirname of the manifest that contains the block in question.
 
-Example Manifest
-----------------
-
+### Example ###
+Given the block below
 ```
 file {
     source  files/bash/bashrc
     target  $HOME/.bashrc
     mode    600
 }
-
-directory {
-    source  dirs/dircolors
-    target  $HOME/dircolors
-    action  copy
-}
-
-file {
-    source  /etc/passwd
-    target  /opt/myprog/passwd-clone
-    mode    0440
-    user    admin
-    group   root
-}
-
-manifest {
-    source  manifests/vim.manifest
-}
 ```
+if SALVE is invoked as ```python salve.py -m /tmp/myconf/root.manifest```,
+then the value of "source" after expansion is "/tmp/myconf/files/bash/bashrc"
 
 Definitions
 -----------
