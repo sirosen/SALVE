@@ -91,6 +91,7 @@ class DirBlock(Block):
 
         dir_act = action.ShellAction(commands)
         backup_act = backup.DirBackupAction(self.get('target'),
-                                            self.get('backup_dir'))
+                                            self.get('backup_dir'),
+                                            self.get('backup_log'))
 
         return action.ActionList([backup_act,dir_act])

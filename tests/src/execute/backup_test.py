@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os
+import os, mock
 from nose.tools import istest
 from mock import patch
 
@@ -20,7 +20,7 @@ def backupaction_is_abstract():
 @istest
 def file_dst_dir():
     filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup')
+    act = backup.FileBackupAction(filename,'/etc/salve/backup','/etc/salve/backup.log')
     assert act.dst == os.path.join('/etc/salve/backup',
                                    filename.lstrip('/'))
 
@@ -39,13 +39,14 @@ def file_target_name():
         func_log['cp'] = (src,dst)
 
     filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup')
+    act = backup.FileBackupAction(filename,'/etc/salve/backup','/etc/salve/backup.log')
 
-    with patch('os.makedirs',mock_makedirs):
-        with patch('os.path.exists',mock_exists):
-            with patch('os.path.islink',mock_islink):
-                with patch('shutil.copyfile',mock_cp):
-                    act.execute()
+    with patch('src.execute.backup.FileBackupAction.write_log',lambda self: None):
+        with patch('os.makedirs',mock_makedirs):
+            with patch('os.path.exists',mock_exists):
+                with patch('os.path.islink',mock_islink):
+                    with patch('shutil.copyfile',mock_cp):
+                        act.execute()
 
     assert 'makedirs' in func_log
     assert func_log['makedirs'] == act.dst
@@ -74,13 +75,14 @@ def file_symlink_target_name():
         func_log['ln'] = (src,dst)
 
     filename = get_full_path('file_link1')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup')
+    act = backup.FileBackupAction(filename,'/etc/salve/backup','/etc/salve/backup.log')
 
-    with patch('os.makedirs',mock_makedirs):
-        with patch('os.path.exists',mock_exists):
-            with patch('os.path.islink',mock_islink):
-                with patch('os.symlink',mock_link):
-                    act.execute()
+    with patch('src.execute.backup.FileBackupAction.write_log',lambda self: None):
+        with patch('os.makedirs',mock_makedirs):
+            with patch('os.path.exists',mock_exists):
+                with patch('os.path.islink',mock_islink):
+                    with patch('os.symlink',mock_link):
+                        act.execute()
 
     assert 'makedirs' in func_log
     assert func_log['makedirs'] == act.dst
@@ -93,9 +95,25 @@ def file_symlink_target_name():
                               '20da5db6203afab700b27e10cf9'))
 
 @istest
+def file_write_log():
+    filename = get_full_path('file1.txt')
+    act = backup.FileBackupAction(filename,'/etc/salve/backup','/etc/salve/backup.log')
+    act.hash_val = 'abc'
+
+    mo = mock.mock_open()
+    mm = mock.MagicMock()
+    with patch('src.execute.backup.open',mo,create=True):
+        with patch('src.execute.backup.print',mm,create=True):
+            with patch('time.strftime',lambda s: 'NOW'):
+                act.write_log()
+
+    mo.assert_called_once_with('/etc/salve/backup.log','a')
+    assert mm.call_args[0][0] == ('NOW abc ' + filename)
+
+@istest
 def dir_expand():
     dirname = get_full_path('dir1')
-    act = backup.DirBackupAction(dirname,'/etc/salve/backup')
+    act = backup.DirBackupAction(dirname,'/etc/salve/backup','/etc/salve/backup.log')
 
     # must be a valid ActionList
     assert isinstance(act,action.ActionList)
@@ -111,7 +129,7 @@ def dir_expand():
 @istest
 def dir_execute():
     dirname = get_full_path('dir1')
-    act = backup.DirBackupAction(dirname,'/etc/salve/backup')
+    act = backup.DirBackupAction(dirname,'/etc/salve/backup','/etc/salve/backup.log')
     # check this here so that we abort the test if this condition is
     # unsatisfied, rather than starting to actually perform actions
     for subact in act.actions:

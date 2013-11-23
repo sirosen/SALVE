@@ -87,5 +87,6 @@ class FileBlock(Block):
             if ugo.is_root(): commands.append(chown_file)
         file_action = action.ShellAction(commands)
         backup_action = backup.FileBackupAction(self.get('target'),
-                                                self.get('backup_dir'))
+                                                self.get('backup_dir'),
+                                                self.get('backup_log'))
         return action.ActionList([backup_action,file_action])
