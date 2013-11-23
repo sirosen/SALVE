@@ -35,6 +35,24 @@ def dir_create_to_action():
     assert dir_act.cmds[0] == 'mkdir -p -m 755 /p/q/r'
 
 @istest
+def dir_create_to_action_nobackup():
+    b = src.block.directory_block.DirBlock()
+    b.set('action','create')
+    b.set('target','/p/q/r')
+    b.set('backup_dir','/m/n')
+    b.set('backup_log','/m/n.log')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','755')
+
+    with mock.patch('os.path.exists',lambda f: False):
+        dir_act = b.to_action()
+
+    assert isinstance(dir_act,action.ShellAction)
+    assert len(dir_act.cmds) == 1
+    assert dir_act.cmds[0] == 'mkdir -p -m 755 /p/q/r'
+
+@istest
 def dir_create_chmod_as_root():
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
@@ -78,6 +96,26 @@ def dir_copy_to_action():
     backup_act = act.actions[0]
     dir_act = act.actions[1]
     assert isinstance(backup_act,backup.DirBackupAction)
+    assert isinstance(dir_act,action.ShellAction)
+
+    assert len(dir_act.cmds) == 2
+    assert dir_act.cmds[0] == 'mkdir -p -m 744 /p/q/r'
+    assert dir_act.cmds[1] == 'cp -r /a/b/c/. /p/q/r'
+
+@istest
+def dir_copy_to_action_nobackup():
+    b = src.block.directory_block.DirBlock()
+    b.set('action','copy')
+    b.set('source','/a/b/c')
+    b.set('target','/p/q/r')
+    b.set('backup_dir','/m/n')
+    b.set('backup_log','/m/n.log')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','744')
+    with mock.patch('os.path.exists',lambda f: False):
+        dir_act = b.to_action()
+
     assert isinstance(dir_act,action.ShellAction)
 
     assert len(dir_act.cmds) == 2
@@ -221,7 +259,7 @@ def dir_path_expand():
     b.set('source','p/q/r/s')
     b.set('target','t/u/v/w/x/y/z/1/2/3/../3')
     b.set('backup_dir','m/n')
-    b.set('backup_log','/m/n.log')
+    b.set('backup_log','m/n.log')
     root_dir = 'file/root/directory'
     b.expand_file_paths(root_dir)
     source_loc = os.path.join(root_dir,'p/q/r/s')
@@ -230,12 +268,51 @@ def dir_path_expand():
     assert b.get('target') == target_loc
     backup_loc = os.path.join(root_dir,'m/n')
     assert b.get('backup_dir') == backup_loc
+    backup_log_loc = os.path.join(root_dir,'m/n.log')
+    assert b.get('backup_log') == backup_log_loc
 
 @istest
 def dir_path_expand_fail_notarget():
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('user','user1')
+    b.set('backup_dir','/m/n')
+    b.set('backup_log','/m/n.log')
+    b.set('group','user1')
+    b.set('mode','755')
+    root_dir = 'file/root/directory'
+    ensure_except(BlockException,b.expand_file_paths,root_dir)
+
+@istest
+def dir_path_expand_fail_nobackupdir():
+    b = src.block.directory_block.DirBlock()
+    b.set('action','create')
+    b.set('user','user1')
+    b.set('target','t/u/v/w/x/y/z/1/2/3/../3')
+    b.set('backup_log','/m/n.log')
+    b.set('group','user1')
+    b.set('mode','755')
+    root_dir = 'file/root/directory'
+    ensure_except(BlockException,b.expand_file_paths,root_dir)
+
+@istest
+def dir_path_expand_fail_nobackupdir():
+    b = src.block.directory_block.DirBlock()
+    b.set('action','create')
+    b.set('user','user1')
+    b.set('target','t/u/v/w/x/y/z/1/2/3/../3')
+    b.set('backup_log','/m/n.log')
+    b.set('group','user1')
+    b.set('mode','755')
+    root_dir = 'file/root/directory'
+    ensure_except(BlockException,b.expand_file_paths,root_dir)
+
+@istest
+def dir_path_expand_fail_nobackuplog():
+    b = src.block.directory_block.DirBlock()
+    b.set('action','create')
+    b.set('user','user1')
+    b.set('target','t/u/v/w/x/y/z/1/2/3/../3')
     b.set('backup_dir','/m/n')
     b.set('group','user1')
     b.set('mode','755')
@@ -248,6 +325,7 @@ def dir_to_action_fail_noaction():
     b.set('source','/a/b/c')
     b.set('target','/p/q/r')
     b.set('backup_dir','/m/n')
+    b.set('backup_log','/m/n.log')
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','755')
@@ -260,6 +338,7 @@ def dir_to_action_fail_unknown_action():
     b.set('source','/a/b/c')
     b.set('target','/p/q/r')
     b.set('backup_dir','/m/n')
+    b.set('backup_log','/m/n.log')
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','755')
