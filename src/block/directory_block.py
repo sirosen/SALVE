@@ -90,8 +90,11 @@ class DirBlock(Block):
             raise BlockException('Unsupported directory block action.')
 
         dir_act = action.ShellAction(commands)
-        backup_act = backup.DirBackupAction(self.get('target'),
-                                            self.get('backup_dir'),
-                                            self.get('backup_log'))
+        if os.path.exists(self.get('target')):
+            backup_act = backup.DirBackupAction(self.get('target'),
+                                                self.get('backup_dir'),
+                                                self.get('backup_log'))
 
-        return action.ActionList([backup_act,dir_act])
+            return action.ActionList([backup_act,dir_act])
+        else:
+            return dir_act

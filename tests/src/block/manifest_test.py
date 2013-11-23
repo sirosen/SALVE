@@ -66,7 +66,8 @@ def sub_block_to_action():
     assert file_block.get('source') == get_full_path('valid1.manifest')
     target_loc = os.path.join(locations.get_salve_root(),'a/b/c')
     assert file_block.get('target') == target_loc
-    act = b.to_action()
+    with mock.patch('os.path.exists', lambda f: True):
+        act = b.to_action()
     assert isinstance(act,src.execute.action.ActionList)
     assert len(act.actions) == 2
     assert isinstance(act.actions[0],src.execute.action.ActionList)
