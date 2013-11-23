@@ -1,4 +1,4 @@
 # first invalid manifest file
 manifest {
-    source  $SALVE_ROOT/tests/src/execute/files/invalid1.manifest
+    source  $SALVE_ROOT/tests/src/block/files/invalid1.manifest
 }

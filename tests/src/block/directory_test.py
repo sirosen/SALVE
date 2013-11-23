@@ -202,13 +202,15 @@ def dir_path_expand():
     b = src.block.directory_block.DirBlock()
     b.set('source','p/q/r/s')
     b.set('target','t/u/v/w/x/y/z/1/2/3/../3')
-    b.set('backup_dir','/m/n')
+    b.set('backup_dir','m/n')
     root_dir = 'file/root/directory'
     b.expand_file_paths(root_dir)
     source_loc = os.path.join(root_dir,'p/q/r/s')
     assert b.get('source') == source_loc
     target_loc = os.path.join(root_dir,'t/u/v/w/x/y/z/1/2/3/../3')
     assert b.get('target') == target_loc
+    backup_loc = os.path.join(root_dir,'m/n')
+    assert b.get('backup_dir') == backup_loc
 
 @istest
 def dir_path_expand_fail_notarget():
