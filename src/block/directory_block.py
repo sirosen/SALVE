@@ -3,6 +3,7 @@
 import os
 
 import src.execute.action as action
+import src.execute.backup as backup
 import src.util.locations as locations
 import src.util.ugo as ugo
 
@@ -24,11 +25,17 @@ class DirBlock(Block):
         if not self.has('target'):
             raise BlockException('DirBlock missing target')
 
+        if not self.has('backup_dir'):
+            raise BlockException('DirBlock missing backup_dir')
+
         if self.has('source') and \
            not locations.is_abs_or_var(self.get('source')):
             self.set('source', os.path.join(root_dir,
                                             self.get('source')))
 
+        if not locations.is_abs_or_var(self.get('backup_dir')):
+            self.set('backup_dir', os.path.join(root_dir,
+                                                self.get('backup_dir')))
         if not locations.is_abs_or_var(self.get('target')):
             self.set('target', os.path.join(root_dir,
                                             self.get('target')))
@@ -62,7 +69,7 @@ class DirBlock(Block):
                           self.get('target')
                          ])
         copy_dir = ' '.join(['cp -r',
-                              self.get('source'),
+                              os.path.join(self.get('source'),'.'),
                               self.get('target')
                              ])
         chown_dir = ' '.join(['chown -R',self.get('user')+':'+\
@@ -82,4 +89,8 @@ class DirBlock(Block):
         else:
             raise BlockException('Unsupported directory block action.')
 
-        return action.ShellAction(commands)
+        dir_act = action.ShellAction(commands)
+        backup_act = backup.DirBackupAction(self.get('target'),
+                                            self.get('backup_dir'))
+
+        return action.ActionList([backup_act,dir_act])
