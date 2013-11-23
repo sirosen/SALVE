@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
 import abc, subprocess
 
 class ActionException(StandardError):
@@ -26,6 +25,7 @@ class ShellAction(Action):
         return 'ShellAction(['+str(self.cmds)+'])'
      
     def execute(self):
+        stdouts,stderrs = [],[]
         for cmd in self.cmds:
             process = subprocess.Popen(cmd,
                                        stdout=subprocess.PIPE,
@@ -36,6 +36,10 @@ class ShellAction(Action):
                 raise ActionException(str(self)+\
                     ' failed with exit code '+str(process.returncode)+\
                     ' on command "' + cmd + '"')
+            out,err = process.communicate()
+            stdouts.append(out)
+            stderrs.append(err)
+        return (stdouts,stderrs)
 
 class ActionList(Action):
     def __init__(self, act_lst):

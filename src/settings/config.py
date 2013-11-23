@@ -97,6 +97,11 @@ class SALVEConfig(object):
                     subkey = key[len(p)+1:].lower()
                     subdict[subkey] = salve_env[key]
 
+        # expand any common settings by templating
+        common_attrs = self.attributes['common']
+        for key in common_attrs:
+            common_attrs[key] = self.template(common_attrs[key])
+
     def template(self, template_string):
         """
         Given a @template_string, takes the environment stored in the
@@ -121,3 +126,6 @@ class SALVEConfig(object):
                 block.set(key,relevant_attrs[key])
         for key in block.attrs:
             block.set(key,self.template(block.get(key)))
+        for key in self.attributes['common']:
+            if not block.has(key):
+                block.set(key,self.attributes['common'][key])

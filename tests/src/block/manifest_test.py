@@ -5,6 +5,7 @@ import os, mock
 from tests.utils.exceptions import ensure_except
 
 import src.execute.action
+import src.execute.backup
 import src.block.manifest_block
 import src.block.base_block
 import src.util.locations as locations
@@ -65,9 +66,15 @@ def sub_block_to_action():
     assert file_block.get('source') == get_full_path('valid1.manifest')
     target_loc = os.path.join(locations.get_salve_root(),'a/b/c')
     assert file_block.get('target') == target_loc
-    act = b.to_action()
+    with mock.patch('os.path.exists', lambda f: True):
+        act = b.to_action()
     assert isinstance(act,src.execute.action.ActionList)
     assert len(act.actions) == 2
     assert isinstance(act.actions[0],src.execute.action.ActionList)
     assert len(act.actions[0].actions) == 0
-    assert isinstance(act.actions[1],src.execute.action.ShellAction)
+    file_act = act.actions[1]
+    assert isinstance(file_act,src.execute.action.ActionList)
+    assert isinstance(file_act.actions[0],
+                      src.execute.backup.FileBackupAction)
+    assert isinstance(file_act.actions[1],
+                      src.execute.action.ShellAction)
