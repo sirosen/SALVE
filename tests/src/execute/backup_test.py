@@ -88,7 +88,5 @@ def file_symlink_target_name():
     assert 'ln' in func_log
     assert func_log['ln'] == (os.readlink(filename),
                               os.path.join(act.dst,
-                              '9bfabef5ffd7f5df84171393643e7ceeba916'+\
-                              'e64876ace612ca8d20ad0ffd69e0ecd284ca7'+\
-                              '899f4bab6805c06f881296d20f619e714befb'+\
-                              '255e23fdf09ef0eed'))
+                              '55ae75d991c770d8f3ef07cbfde124ffce9c4'+\
+                              '20da5db6203afab700b27e10cf9'))

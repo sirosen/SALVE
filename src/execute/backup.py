@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import abc, os, shutil
+import abc, os, shutil, hashlib
 
 import src.execute.action as action
 import src.util.streams
@@ -17,17 +17,25 @@ class FileBackupAction(BackupAction):
         BackupAction.__init__(self,src,backup_dir)
 
     def execute(self):
-        target_name = None
-        with open(self.src) as f:
-            target_name = src.util.streams.sha_512(f)
-        target_name = os.path.join(self.dst,target_name)
-
         # this has a race condition, but it will only be tripped if
         # another program is writing to the backup dir
+        # also, there's no problem with extra invocations of makedirs
         if not os.path.exists(self.dst): os.makedirs(self.dst)
+
+        target_name = None
+        # unusued unless the file is a link
+        link_contents = None
+        if os.path.islink(self.src):
+            link_contents = os.readlink(self.src)
+            target_name = hashlib.sha256(link_contents).hexdigest()
+        else:
+            with open(self.src) as f:
+                target_name = src.util.streams.sha_512(f)
+        target_name = os.path.join(self.dst,target_name)
+
         if not os.path.exists(target_name):
             if os.path.islink(self.src):
-                os.symlink(os.readlink(self.src),target_name)
+                os.symlink(link_contents,target_name)
             else:
                 shutil.copyfile(self.src,target_name)
 
