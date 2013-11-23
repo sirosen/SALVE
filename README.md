@@ -269,6 +269,12 @@ Note that these attributes are ignored when salve is not run as root, since chow
 
 > 'file[target]' -- The path to the file to which an action will be applied, or which will be created or destroyed
 
+### file[backup\_dir], file[backup\_log] ###
+
+> 'file[backup\_dir]' -- The path to the directory in which file backups are stored
+
+> 'file[backup\_log]' -- The path to the file to which backup actions are logged (date, hash, full path to file)
+
 
 ### manifest[source] ###
 
@@ -298,6 +304,13 @@ Note that these attributes are ignored when salve is not run as root, since chow
 
 > 'directory[target]' -- The path to the directory to which an action will be applied, or which will be created or destroyed
 
+### directory[backup\_dir], directory[backup\_log] ###
+
+> 'directory[backup\_dir]' -- The path to the directory in which file backups are stored
+
+> 'directory[backup\_log]' -- The path to the file to which backup actions are logged (date, hash, full path to file)
+
+
 Sensible Defaults
 -----------------
 
@@ -306,7 +319,16 @@ These are our set of "sensible defaults", specified below in the format of a man
 A small class of values, when unspecified, result in errors.
 These are generally the variables that refer to paths.
 
+There is a special set of attributes, specified as "common" in the default settings, which describe values shared by all blocks unless explicitly overridden.
+
+
 ```
+common {
+    backup_dir  $HOME/.salve/backups
+    backup_log  $HOME/.salve/backup.log
+    backup_log
+}
+
 file {
     mode    600
     user    $USER
