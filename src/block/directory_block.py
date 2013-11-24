@@ -23,13 +23,13 @@ class DirBlock(Block):
         beginning with the root directory.
         """
         if not self.has('target'):
-            raise BlockException('DirBlock missing target')
+            raise self.make_exception('DirBlock missing target')
 
         if not self.has('backup_dir'):
-            raise BlockException('DirBlock missing backup_dir')
+            raise self.make_exception('DirBlock missing backup_dir')
 
         if not self.has('backup_log'):
-            raise BlockException('DirBlock missing backup_log')
+            raise self.make_exception('DirBlock missing backup_log')
 
         if self.has('source') and \
            not locations.is_abs_or_var(self.get('source')):
@@ -93,7 +93,7 @@ class DirBlock(Block):
         elif self.get('action') == 'copy':
             commands = self.copy_commands()
         else:
-            raise BlockException('Unsupported directory block action.')
+            raise self.make_exception('Unsupported directory block action.')
 
         dir_act = action.ShellAction(commands)
         if os.path.exists(self.get('target')):

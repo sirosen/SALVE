@@ -5,7 +5,7 @@ import os
 import src.execute.action as action
 import src.util.locations as locations
 
-from src.block.base_block import Block, BlockException
+from src.block.base_block import Block
 
 class ManifestBlock(Block):
     """
@@ -50,8 +50,8 @@ class ManifestBlock(Block):
         # multiple independent invocations of expand_blocks
         if not ancestors: ancestors = set()
         if filename in ancestors:
-            raise BlockException('Manifest ' + filename +\
-                                 ' includes itself')
+            raise self.make_exception('Manifest ' + filename +\
+                                      ' includes itself')
         ancestors.add(filename)
 
         # parse the manifest source
@@ -83,7 +83,7 @@ class ManifestBlock(Block):
 
     def to_action(self):
         if self.sub_blocks is None:
-            raise BlockException('Attempted to convert unexpanded '+\
-                                 'manifest to action.')
+            raise self.make_exception('Attempted to convert unexpanded '+\
+                                      'manifest to action.')
         return action.ActionList([b.to_action()
                                   for b in self.sub_blocks])

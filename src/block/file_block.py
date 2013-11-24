@@ -24,9 +24,9 @@ class FileBlock(Block):
         """
         # there must be a target for both copy and create actions
         if not self.has('target'):
-            raise BlockException('FileBlock missing target')
+            raise self.make_exception('FileBlock missing target')
         if not self.has('backup_dir'):
-            raise BlockException('FileBlock missing backup_dir')
+            raise self.make_exception('FileBlock missing backup_dir')
 
         # no source for create actions
         if self.has('source'):

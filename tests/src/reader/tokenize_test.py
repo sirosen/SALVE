@@ -5,9 +5,12 @@ from os.path import dirname, join as pjoin
 
 from tests.utils.exceptions import ensure_except
 
+from src.util.error import StreamContext
 import src.reader.tokenize as tokenize
 
 _testfile_dir = pjoin(dirname(__file__),'files')
+
+dummy_context = StreamContext('no such file',-1)
 
 def tokenize_filename(filename):
     with open(filename) as f:
@@ -21,8 +24,7 @@ def ensure_TokenizationException(filename):
     e = ensure_except(tokenize.TokenizationException,
                       tokenize_filename,
                       full_path)
-    assert e.filename is None or \
-           e.filename == full_path
+    assert e.context.filename == full_path
 
 #failure tests
 
@@ -91,18 +93,8 @@ def attribute_with_spaces():
     assert tokens[6].ty == tokenize.Token.types.BLOCK_END
 
 @istest
-def token_to_string1():
-    file_tok = tokenize.Token('file',tokenize.Token.types.IDENTIFIER)
-    assert str(file_tok) == 'Token(value=file,ty=IDENTIFIER,lineno=-1)'
-
-@istest
-def token_to_string2():
+def token_to_string():
+    ctx = StreamContext('a/b/c',2)
     file_tok = tokenize.Token('file',tokenize.Token.types.IDENTIFIER,
-                              lineno=2)
-    assert str(file_tok) == 'Token(value=file,ty=IDENTIFIER,lineno=2)'
-
-@istest
-def token_to_string3():
-    file_tok = tokenize.Token('file',tokenize.Token.types.IDENTIFIER,
-                              lineno=2,in_file='a/b/c')
-    assert str(file_tok) == 'Token(value=file,ty=IDENTIFIER,lineno=2,in_file=a/b/c)'
+                              ctx)
+    assert str(file_tok) == 'Token(value=file,ty=IDENTIFIER,lineno=2,filename=a/b/c)'
