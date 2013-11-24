@@ -4,6 +4,7 @@ from nose.tools import istest
 from mock import patch
 
 from tests.utils.exceptions import ensure_except
+from src.util.error import StreamContext
 
 import src.execute.action as action
 
@@ -14,6 +15,8 @@ class MockProcess(object):
         pass
     def communicate(self):
         return None,None
+
+dummy_context = StreamContext('no such file',-1)
 
 @istest
 def action_is_abstract():
@@ -27,7 +30,7 @@ def empty_action_list():
 
     # Just ensuring that an empty action list is valid
     with patch('src.execute.action.Action.execute',mock_execute):
-        actions = action.ActionList([])
+        actions = action.ActionList([],dummy_context)
         actions.execute()
 
     assert len(done_actions) == 0
@@ -35,7 +38,7 @@ def empty_action_list():
 @istest
 def empty_shell_action():
     # ensures that empty shell actions are valid (but silly)
-    a = action.ShellAction([])
+    a = action.ShellAction([],dummy_context)
 
 @istest
 def shell_action_basic():
@@ -48,7 +51,7 @@ def shell_action_basic():
         return MockProcess()
 
     with patch('subprocess.Popen',mock_Popen):
-        a = action.ShellAction(['mkdir /a/b'])
+        a = action.ShellAction(['mkdir /a/b'],dummy_context)
         a.execute()
 
     assert done_commands[0] == 'mkdir /a/b'
@@ -73,9 +76,9 @@ def action_list_inorder():
 
     with patch('src.execute.action.ShellAction.execute',mock_execute):
         with patch('subprocess.Popen',mock_Popen):
-            a = action.ShellAction(['a b'])
-            b = action.ShellAction(['p q r'])
-            al = action.ActionList([a,b])
+            a = action.ShellAction(['a b'],dummy_context)
+            b = action.ShellAction(['p q r'],dummy_context)
+            al = action.ActionList([a,b],dummy_context)
             al.execute()
 
     assert done_actions[0] == a
@@ -96,5 +99,5 @@ def failed_shell_action():
         return p
 
     with patch('subprocess.Popen',mock_Popen):
-        a = action.ShellAction(['touch /a/b'])
+        a = action.ShellAction(['touch /a/b'],dummy_context)
         ensure_except(action.ActionException,a.execute)

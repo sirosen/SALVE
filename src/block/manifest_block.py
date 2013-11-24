@@ -50,7 +50,7 @@ class ManifestBlock(Block):
         # multiple independent invocations of expand_blocks
         if not ancestors: ancestors = set()
         if filename in ancestors:
-            raise self.make_exception('Manifest ' + filename +\
+            raise self.mk_except('Manifest ' + filename +\
                                       ' includes itself')
         ancestors.add(filename)
 
@@ -83,7 +83,8 @@ class ManifestBlock(Block):
 
     def to_action(self):
         if self.sub_blocks is None:
-            raise self.make_exception('Attempted to convert unexpanded '+\
-                                      'manifest to action.')
+            raise self.mk_except('Attempted to convert unexpanded '+\
+                                 'manifest to action.')
         return action.ActionList([b.to_action()
-                                  for b in self.sub_blocks])
+                                  for b in self.sub_blocks],
+                                 self.context)

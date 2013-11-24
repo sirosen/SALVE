@@ -37,10 +37,10 @@ class Block(object):
     def ensure_has_attrs(self,*args):
         for attr in args:
             if not self.has(attr):
-                raise self.make_exception('Block(ty='+self.block_type+') '+\
+                raise self.mk_except('Block(ty='+self.block_type+') '+\
                                           'missing attr "'+attr+'"')
 
-    def make_exception(self,msg):
+    def mk_except(self,msg):
         exc = BlockException(msg,self.context)
         return exc
 
