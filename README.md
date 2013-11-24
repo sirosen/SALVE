@@ -5,13 +5,6 @@ Authors: Stephen Rosen
 
 Version: 1.0.0
 
-My Thanks for Design Input From
--------------------------------
- * Bryce Allen
- * Jeremy Archer
- * Bryce Lanham
- * Minke Zhang
-
 What is SALVE?
 ==============
 SALVE is a language for deploying configuration files.
@@ -88,6 +81,9 @@ SALVE Only Depends on What the Manifests Use
 SALVE does not rely on external tools like Debian's dpkg or OSX's MacPorts.
 Ultimately, all that's required is python2.7+, a working shell, and permissions to perform the operations requested in the Manifests.
 At present, these actions are restricted to those that are predefined, as we do not yet support arbitrary shell commands.
+
+SALVE does not use any python eggs or other packages, and attempts to depend more on python's extensive set of builtins than shell commands.
+For example, hashing is done with python's hashlib, rather than sha512sum, md5sum, and so forth.
 
 SALVE Tries to Keep Your Safe
 -----------------------------
@@ -203,8 +199,6 @@ At present, there is no way to specify the real value of ```USER```, regardless 
 
 ```HOME``` always refers to the home directory of ```USER``` after ```SUDO_USER``` substitution.
 This ensures that ```HOME``` always refers to the invoking user's homedir, even if sudo is set to reset the ```HOME``` environment variable.
-
-At present, ```~```, ```*```, or any other special characters for globbing, path expansion, and so forth.
 
 ### Example ###
 Given the block below
@@ -346,3 +340,18 @@ directory {
 manifest {
 }
 ```
+
+Notes
+=====
+ * At present, path specifications do not support ```~```, ```*```, or any other special characters for globbing, path expansion, and so forth.
+ * The precedence order for values is naturally Specific Block > Block Defaults > Common Attributes, but this should be more clearly documented
+ * Current variable expansion does not support vars which expand to other vars. This should be changed.
+ * Screwing with the directory mode can create messy problems when writing to that dir. Recommend keeping mode umask for user as 7 for now.
+ * When overwriting a file, SALVE needs read access in order to hash it and back it up.
+
+My Thanks for Design Input From
+-------------------------------
+ * Bryce Allen
+ * Jeremy Archer
+ * Bryce Lanham
+ * Minke Zhang
