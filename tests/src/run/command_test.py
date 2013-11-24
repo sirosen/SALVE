@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os, StringIO
+import os, StringIO, sys
 
 from nose.tools import istest
 from unittest import SkipTest
@@ -9,6 +9,9 @@ from tests.utils.exceptions import ensure_except
 
 import src.run.command as command
 import src.util.locations as locations
+from src.util.error import SALVEException, StreamContext
+
+dummy_context = StreamContext('no such file',-1)
 
 @istest
 def no_manifest_error():
@@ -108,3 +111,190 @@ def commandline_main():
 
     assert have_run['action_execute']
     assert have_run['expand_blocks']
+
+@istest
+def commandline_salve_exception():
+    log = {
+        'exit': None
+    }
+    def mock_get_root_manifest(opts):
+        return None
+    def mock_run(root_manifest,opts):
+        raise SALVEException('message string',dummy_context)
+
+    real_exit = sys.exit
+    def mock_exit(n):
+        log['exit'] = n
+        real_exit(n)
+
+    fake_stderr = StringIO.StringIO()
+
+    with patch('src.run.command.read_commandline',lambda: (None,None)):
+        with patch('src.run.command.get_root_manifest',
+                   mock_get_root_manifest):
+            with patch('src.run.command.run_on_manifest',mock_run):
+                with patch('sys.stderr',fake_stderr):
+                    with patch('sys.exit',mock_exit):
+                        try:
+                            command.main()
+                        except SystemExit as e:
+                            assert log['exit'] is not None and \
+                                   log['exit'] == 1
+
+    stderr_out = fake_stderr.getvalue()
+    assert stderr_out == 'Encountered a SALVE Exception of type '+\
+        'SALVEException\noriginating at no such file: -1\ncarrying '+\
+        'a message message string\n'
+
+@istest
+def commandline_block_exception():
+    from src.block.base_block import BlockException
+    log = {
+        'exit': None
+    }
+    def mock_get_root_manifest(opts):
+        return None
+    def mock_run(root_manifest,opts):
+        raise BlockException('message string',dummy_context)
+
+    real_exit = sys.exit
+    def mock_exit(n):
+        log['exit'] = n
+        real_exit(n)
+
+    fake_stderr = StringIO.StringIO()
+
+    with patch('src.run.command.read_commandline',lambda: (None,None)):
+        with patch('src.run.command.get_root_manifest',
+                   mock_get_root_manifest):
+            with patch('src.run.command.run_on_manifest',mock_run):
+                with patch('sys.stderr',fake_stderr):
+                    with patch('sys.exit',mock_exit):
+                        try:
+                            command.main()
+                        except SystemExit as e:
+                            assert log['exit'] is not None and \
+                                   log['exit'] == 1
+
+    stderr_out = fake_stderr.getvalue()
+    assert stderr_out == 'Encountered a SALVE Exception of type '+\
+        'BlockException\noriginating at no such file: -1\ncarrying '+\
+        'a message message string\n'
+
+@istest
+def commandline_action_exception():
+    from src.execute.action import ActionException
+    log = {
+        'exit': None
+    }
+    def mock_get_root_manifest(opts):
+        return None
+    def mock_run(root_manifest,opts):
+        raise ActionException('message string',dummy_context)
+
+    real_exit = sys.exit
+    def mock_exit(n):
+        log['exit'] = n
+        real_exit(n)
+
+    fake_stderr = StringIO.StringIO()
+
+    with patch('src.run.command.read_commandline',lambda: (None,None)):
+        with patch('src.run.command.get_root_manifest',
+                   mock_get_root_manifest):
+            with patch('src.run.command.run_on_manifest',mock_run):
+                with patch('sys.stderr',fake_stderr):
+                    with patch('sys.exit',mock_exit):
+                        try:
+                            command.main()
+                        except SystemExit as e:
+                            assert log['exit'] is not None and \
+                                   log['exit'] == 1
+
+    stderr_out = fake_stderr.getvalue()
+    assert stderr_out == 'Encountered a SALVE Exception of type '+\
+        'ActionException\noriginating at no such file: -1\ncarrying '+\
+        'a message message string\n'
+
+@istest
+def commandline_tokenization_exception():
+    from src.reader.tokenize import TokenizationException
+    log = {
+        'exit': None
+    }
+    def mock_get_root_manifest(opts):
+        return None
+    def mock_run(root_manifest,opts):
+        raise TokenizationException('message string',dummy_context)
+
+    real_exit = sys.exit
+    def mock_exit(n):
+        log['exit'] = n
+        real_exit(n)
+
+    fake_stderr = StringIO.StringIO()
+
+    with patch('src.run.command.read_commandline',lambda: (None,None)):
+        with patch('src.run.command.get_root_manifest',
+                   mock_get_root_manifest):
+            with patch('src.run.command.run_on_manifest',mock_run):
+                with patch('sys.stderr',fake_stderr):
+                    with patch('sys.exit',mock_exit):
+                        try:
+                            command.main()
+                        except SystemExit as e:
+                            assert log['exit'] is not None and \
+                                   log['exit'] == 1
+
+    stderr_out = fake_stderr.getvalue()
+    assert stderr_out == 'Encountered a SALVE Exception of type '+\
+        'TokenizationException\noriginating at no such file: -1\n'+\
+        'carrying a message message string\n'
+
+@istest
+def commandline_parsing_exception():
+    from src.reader.parse import ParsingException
+    log = {
+        'exit': None
+    }
+    def mock_get_root_manifest(opts):
+        return None
+    def mock_run(root_manifest,opts):
+        raise ParsingException('message string',dummy_context)
+
+    real_exit = sys.exit
+    def mock_exit(n):
+        log['exit'] = n
+        real_exit(n)
+
+    fake_stderr = StringIO.StringIO()
+
+    with patch('src.run.command.read_commandline',lambda: (None,None)):
+        with patch('src.run.command.get_root_manifest',
+                   mock_get_root_manifest):
+            with patch('src.run.command.run_on_manifest',mock_run):
+                with patch('sys.stderr',fake_stderr):
+                    with patch('sys.exit',mock_exit):
+                        try:
+                            command.main()
+                        except SystemExit as e:
+                            assert log['exit'] is not None and \
+                                   log['exit'] == 1
+
+    stderr_out = fake_stderr.getvalue()
+    assert stderr_out == 'Encountered a SALVE Exception of type '+\
+        'ParsingException\noriginating at no such file: -1\n'+\
+        'carrying a message message string\n'
+
+@istest
+def commandline_unexpected_exception():
+    def mock_get_root_manifest(opts):
+        return None
+    def mock_run(root_manifest,opts):
+        raise StandardError()
+
+    with patch('src.run.command.read_commandline',lambda: (None,None)):
+        with patch('src.run.command.get_root_manifest',
+                   mock_get_root_manifest):
+            with patch('src.run.command.run_on_manifest',mock_run):
+                ensure_except(StandardError,command.main)

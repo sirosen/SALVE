@@ -6,6 +6,7 @@ import os, optparse, sys
 import src.util.locations as locations
 import src.block.manifest_block
 from src.settings.config import SALVEConfig
+from src.util.error import SALVEException
 
 def get_option_parser():
     """
@@ -85,4 +86,12 @@ def main():
     """
     opts,args = read_commandline()
 
-    run_on_manifest(get_root_manifest(opts),opts)
+    try:
+        run_on_manifest(get_root_manifest(opts),opts)
+    except SALVEException as e:
+        print(e.to_message(),file=sys.stderr)
+        # Normally, sys.exit() is to be avoided, but main() is only
+        # invoked if salve is running as a script, and we want to give
+        # the right exit status for commandline usage
+        sys.exit(1)
+    except: raise

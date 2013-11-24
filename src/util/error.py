@@ -14,3 +14,10 @@ class SALVEException(StandardError):
         StandardError.__init__(self,message)
         self.message = message
         self.context = context
+
+    def to_message(self):
+        locstr = str(self.context)
+        return 'Encountered a SALVE Exception of type ' +\
+               self.__class__.__name__+ '\n'+\
+               'originating at ' + locstr + '\n' +\
+               'carrying a message ' + self.message
