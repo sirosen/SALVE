@@ -14,8 +14,8 @@ class DirBlock(Block):
     A directory block describes an action performed on a directory.
     This includes creation, deletion, and copying from source.
     """
-    def __init__(self):
-        Block.__init__(self,Block.types.DIRECTORY)
+    def __init__(self,exception_context=None):
+        Block.__init__(self,Block.types.DIRECTORY,exception_context)
 
     def expand_file_paths(self,root_dir):
         """

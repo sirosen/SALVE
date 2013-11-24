@@ -14,8 +14,8 @@ class ManifestBlock(Block):
     execution. For example, if a manifest's blocks can be executed
     in parallel, or if its execution is conditional on a file existing.
     """
-    def __init__(self,source=None):
-        Block.__init__(self,Block.types.MANIFEST)
+    def __init__(self,exception_context=None,source=None):
+        Block.__init__(self,Block.types.MANIFEST,exception_context)
         self.sub_blocks = None
         if source: self.set('source',source)
 

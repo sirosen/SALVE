@@ -7,6 +7,14 @@
 
 import os, re
 
+class StreamContext(object):
+    def __init__(self,filename,lineno):
+        self.filename = filename
+        self.lineno = lineno
+
+    def __str__(self):
+        return str(self.filename) + ': ' + str(self.lineno)
+
 def containing_dir(path,depth=1):
     d = os.path.abspath(path)
     for i in xrange(depth):

@@ -3,6 +3,7 @@
 from __future__ import print_function
 import string, shlex
 from src.util.enum import Enum
+from src.util.locations import StreamContext
 from src.util.streams import get_filename
 
 class TokenizationException(ValueError):
@@ -16,14 +17,13 @@ class Token(object):
     def __init__(self,value,ty,lineno=-1,in_file=None):
         self.value = value
         self.ty = ty
-        self.lineno = lineno
-        self.in_file = in_file
+        self.context = StreamContext(in_file,lineno)
 
     def __str__(self):
         attrs = ['value='+self.value,'ty='+self.ty,
-                 'lineno='+str(self.lineno)]
-        if self.in_file:
-            attrs.append('in_file='+self.in_file)
+                 'lineno='+str(self.context.lineno)]
+        if self.context.filename:
+            attrs.append('in_file='+self.context.filename)
         return 'Token('+','.join(attrs)+')'
 
 def tokenize_stream(stream):

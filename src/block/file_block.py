@@ -14,8 +14,8 @@ class FileBlock(Block):
     A file block describes an action performed on a file.
     This includes creation, deletion, and string append.
     """
-    def __init__(self):
-        Block.__init__(self,Block.types.FILE)
+    def __init__(self,exception_context=None):
+        Block.__init__(self,Block.types.FILE,exception_context)
 
     def expand_file_paths(self,root_dir):
         """

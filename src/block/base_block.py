@@ -20,8 +20,9 @@ class Block(object):
     __metaclass__ = abc.ABCMeta
 
     types = Enum('FILE','MANIFEST','DIRECTORY')
-    def __init__(self,ty):
+    def __init__(self,ty,exception_context=None):
         self.block_type = ty
+        self.exception_context = exception_context
         self.attrs = {}
 
     def set(self,attribute_name,value):
