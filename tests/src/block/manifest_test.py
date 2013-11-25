@@ -14,11 +14,21 @@ from tests.src.block.block_test import _dummy_conf, get_full_path
 
 @istest
 def sourceless_manifest_to_action_error():
+    """
+    Manifest Block To Action Fails Without Action
+    Verifies that a Manifest block raises a BlockException when
+    converted to an action if the action attribute is unspecified.
+    """
     b = src.block.manifest_block.ManifestBlock()
     ensure_except(src.block.base_block.BlockException,b.to_action)
 
 @istest
 def sourceless_manifest_expand_error():
+    """
+    Manifest Block Path Expand Fails Without Source
+    Verifies that a Manifest block raises a BlockException when paths
+    are expanded if the source attribute is unspecified.
+    """
     b = src.block.manifest_block.ManifestBlock()
     ensure_except(src.block.base_block.BlockException,
                   b.expand_blocks,
@@ -27,12 +37,22 @@ def sourceless_manifest_expand_error():
 
 @istest
 def empty_manifest_expand():
+    """
+    Manifest Block SubBlock Expand Empty List
+    Verifies that a Manifest block with no sub-blocks expands without
+    errors.
+    """
     b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid1.manifest'))
     b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 0
 
 @istest
 def recursive_manifest_error():
+    """
+    Manifest Block Self-Inclusion Error
+    Verifies that a Manifest block which includes itself raises a
+    BlockException when expanded.
+    """
     b = src.block.manifest_block.ManifestBlock(source=get_full_path('invalid1.manifest'))
     ensure_except(src.block.base_block.BlockException,
                   b.expand_blocks,
@@ -41,6 +61,10 @@ def recursive_manifest_error():
 
 @istest
 def sub_block_expand():
+    """
+    Manifest Block SubBlock Expand
+    Verifies that Manifest block expansion works normally.
+    """
     b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid2.manifest'))
     b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 2
@@ -55,6 +79,11 @@ def sub_block_expand():
 
 @istest
 def sub_block_to_action():
+    """
+    Manifest Block SubBlock To Action
+    Verifies that Manifest block expansion followed by action
+    conversion works normally.
+    """
     b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid2.manifest'))
     b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 2

@@ -12,6 +12,10 @@ import src.block.directory_block
 
 @istest
 def dir_create_to_action():
+    """
+    Directory Block Create To Action
+    Verifies the result of converting a Dir Block to an Action.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -36,6 +40,10 @@ def dir_create_to_action():
 
 @istest
 def dir_create_to_action_nobackup():
+    """
+    Directory Block Create To Action (No Backup)
+    Verifies the result of converting a Dir Block to an Action.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -54,6 +62,10 @@ def dir_create_to_action_nobackup():
 
 @istest
 def dir_create_chmod_as_root():
+    """
+    Directory Block Create To Action (As Root)
+    Verifies the result of converting a Dir Block to an Action.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -79,6 +91,10 @@ def dir_create_chmod_as_root():
 
 @istest
 def dir_copy_to_action():
+    """
+    Directory Block Copy To Action
+    Verifies the result of converting a Dir Block to an Action.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -104,6 +120,10 @@ def dir_copy_to_action():
 
 @istest
 def dir_copy_to_action_nobackup():
+    """
+    Directory Block Copy To Action (No Backup)
+    Verifies the result of converting a Dir Block to an Action.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -124,6 +144,10 @@ def dir_copy_to_action_nobackup():
 
 @istest
 def dir_copy_chmod_as_root():
+    """
+    Directory Block Copy To Action (As Root)
+    Verifies the result of converting a Dir Block to an Action.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -151,6 +175,11 @@ def dir_copy_chmod_as_root():
 
 @istest
 def dir_copy_fails_nosource():
+    """
+    Directory Block Copy Fails Without Source
+    Verifies that converting a Dir Block to an Action raises a
+    BlockException.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','copy')
     b.set('target','/p/q/r')
@@ -163,6 +192,11 @@ def dir_copy_fails_nosource():
 
 @istest
 def dir_copy_fails_notarget():
+    """
+    Directory Block Copy Fails Without Target
+    Verifies that converting a Dir Block to an Action raises a
+    BlockException.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -175,6 +209,11 @@ def dir_copy_fails_notarget():
 
 @istest
 def dir_create_fails_notarget():
+    """
+    Directory Block Create Fails Without Target
+    Verifies that converting a Dir Block to an Action raises a
+    BlockException.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('backup_dir','/m/n')
@@ -186,6 +225,11 @@ def dir_create_fails_notarget():
 
 @istest
 def dir_copy_fails_nouser():
+    """
+    Directory Block Copy Fails Without User
+    Verifies that converting a Dir Block to an Action raises a
+    BlockException.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -198,6 +242,11 @@ def dir_copy_fails_nouser():
 
 @istest
 def dir_create_fails_nouser():
+    """
+    Directory Block Create Fails Without User
+    Verifies that converting a Dir Block to an Action raises a
+    BlockException.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -209,6 +258,11 @@ def dir_create_fails_nouser():
 
 @istest
 def dir_copy_fails_nomode():
+    """
+    Directory Block Copy Fails Without Mode
+    Verifies that converting a Dir Block to an Action raises a
+    BlockException.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -221,6 +275,11 @@ def dir_copy_fails_nomode():
 
 @istest
 def dir_create_fails_nomode():
+    """
+    Directory Block Create Fails Without Mode
+    Verifies that converting a Dir Block to an Action raises a
+    BlockException.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -232,6 +291,11 @@ def dir_create_fails_nomode():
 
 @istest
 def dir_copy_fails_nogroup():
+    """
+    Directory Block Copy Fails Without Group
+    Verifies that converting a Dir Block to an Action raises a
+    BlockException.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -244,6 +308,11 @@ def dir_copy_fails_nogroup():
 
 @istest
 def dir_create_fails_nogroup():
+    """
+    Directory Block Create Fails Without Group
+    Verifies that converting a Dir Block to an Action raises a
+    BlockException.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -255,6 +324,10 @@ def dir_create_fails_nogroup():
 
 @istest
 def dir_path_expand():
+    """
+    Directory Block Path Expand
+    Verifies the results of path expansion in a Dir block.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('source','p/q/r/s')
     b.set('target','t/u/v/w/x/y/z/1/2/3/../3')
@@ -273,6 +346,11 @@ def dir_path_expand():
 
 @istest
 def dir_path_expand_fail_notarget():
+    """
+    Directory Block Path Expand Fails Without Target
+    Verifies that path expansion fails when there is no "target"
+    attribute.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('user','user1')
@@ -285,18 +363,11 @@ def dir_path_expand_fail_notarget():
 
 @istest
 def dir_path_expand_fail_nobackupdir():
-    b = src.block.directory_block.DirBlock()
-    b.set('action','create')
-    b.set('user','user1')
-    b.set('target','t/u/v/w/x/y/z/1/2/3/../3')
-    b.set('backup_log','/m/n.log')
-    b.set('group','user1')
-    b.set('mode','755')
-    root_dir = 'file/root/directory'
-    ensure_except(BlockException,b.expand_file_paths,root_dir)
-
-@istest
-def dir_path_expand_fail_nobackupdir():
+    """
+    Directory Block Path Expand Fails Without Backup Dir
+    Verifies that path expansion fails when there is no "backup_dir"
+    attribute.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('user','user1')
@@ -309,6 +380,11 @@ def dir_path_expand_fail_nobackupdir():
 
 @istest
 def dir_path_expand_fail_nobackuplog():
+    """
+    Directory Block Path Expand Fails Without Backup Log
+    Verifies that path expansion fails when there is no "backup_log"
+    attribute.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
     b.set('user','user1')
@@ -321,6 +397,11 @@ def dir_path_expand_fail_nobackuplog():
 
 @istest
 def dir_to_action_fail_noaction():
+    """
+    Directory Block To Action Fails Without Action
+    Verifies that block to action conversion fails when there is no
+    "action" attribute.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('source','/a/b/c')
     b.set('target','/p/q/r')
@@ -333,6 +414,11 @@ def dir_to_action_fail_noaction():
 
 @istest
 def dir_to_action_fail_unknown_action():
+    """
+    Directory Block To Action Fails Unknown Action
+    Verifies that block to action conversion fails when the "action"
+    attribute has an unrecognized value.
+    """
     b = src.block.directory_block.DirBlock()
     b.set('action','UNDEFINED_ACTION')
     b.set('source','/a/b/c')

@@ -24,4 +24,8 @@ with mock.patch('os.path.expanduser',mock_expanduser):
 
 @istest
 def block_is_abstract():
+    """
+    Block Base Class Is Abstract
+    Ensures that a Block cannot be instantiated.
+    """
     ensure_except(TypeError,src.block.base_block.Block)
