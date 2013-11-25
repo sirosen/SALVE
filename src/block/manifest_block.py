@@ -5,7 +5,7 @@ import os
 import src.execute.action as action
 import src.util.locations as locations
 
-from src.block.base_block import Block, BlockException
+from src.block.base_block import Block
 
 class ManifestBlock(Block):
     """
@@ -14,8 +14,8 @@ class ManifestBlock(Block):
     execution. For example, if a manifest's blocks can be executed
     in parallel, or if its execution is conditional on a file existing.
     """
-    def __init__(self,source=None):
-        Block.__init__(self,Block.types.MANIFEST)
+    def __init__(self,exception_context=None,source=None):
+        Block.__init__(self,Block.types.MANIFEST,exception_context)
         self.sub_blocks = None
         if source: self.set('source',source)
 
@@ -50,8 +50,8 @@ class ManifestBlock(Block):
         # multiple independent invocations of expand_blocks
         if not ancestors: ancestors = set()
         if filename in ancestors:
-            raise BlockException('Manifest ' + filename +\
-                                 ' includes itself')
+            raise self.mk_except('Manifest ' + filename +\
+                                      ' includes itself')
         ancestors.add(filename)
 
         # parse the manifest source
@@ -83,7 +83,8 @@ class ManifestBlock(Block):
 
     def to_action(self):
         if self.sub_blocks is None:
-            raise BlockException('Attempted to convert unexpanded '+\
+            raise self.mk_except('Attempted to convert unexpanded '+\
                                  'manifest to action.')
         return action.ActionList([b.to_action()
-                                  for b in self.sub_blocks])
+                                  for b in self.sub_blocks],
+                                 self.context)

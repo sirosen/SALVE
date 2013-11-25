@@ -5,6 +5,7 @@ from nose.tools import istest
 from mock import patch
 
 from tests.utils.exceptions import ensure_except
+from src.util.error import StreamContext
 
 import src.execute.action as action
 import src.execute.backup as backup
@@ -13,6 +14,8 @@ _testfile_dir = os.path.join(os.path.dirname(__file__),'files')
 def get_full_path(filename):
     return os.path.join(_testfile_dir,filename)
 
+dummy_context = StreamContext('no such file',-1)
+
 @istest
 def backupaction_is_abstract():
     ensure_except(TypeError,backup.BackupAction)
@@ -20,7 +23,8 @@ def backupaction_is_abstract():
 @istest
 def file_dst_dir():
     filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup','/etc/salve/backup.log')
+    act = backup.FileBackupAction(filename,'/etc/salve/backup',
+                                  '/etc/salve/backup.log',dummy_context)
     assert act.dst == os.path.join('/etc/salve/backup',
                                    filename.lstrip('/'))
 
@@ -39,7 +43,8 @@ def file_target_name():
         func_log['cp'] = (src,dst)
 
     filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup','/etc/salve/backup.log')
+    act = backup.FileBackupAction(filename,'/etc/salve/backup',
+                                  '/etc/salve/backup.log',dummy_context)
 
     with patch('src.execute.backup.FileBackupAction.write_log',lambda self: None):
         with patch('os.makedirs',mock_makedirs):
@@ -75,7 +80,8 @@ def file_symlink_target_name():
         func_log['ln'] = (src,dst)
 
     filename = get_full_path('file_link1')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup','/etc/salve/backup.log')
+    act = backup.FileBackupAction(filename,'/etc/salve/backup',
+                                  '/etc/salve/backup.log',dummy_context)
 
     with patch('src.execute.backup.FileBackupAction.write_log',lambda self: None):
         with patch('os.makedirs',mock_makedirs):
@@ -97,7 +103,8 @@ def file_symlink_target_name():
 @istest
 def file_write_log():
     filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup','/etc/salve/backup.log')
+    act = backup.FileBackupAction(filename,'/etc/salve/backup',
+                                  '/etc/salve/backup.log',dummy_context)
     act.hash_val = 'abc'
 
     mo = mock.mock_open()
@@ -113,7 +120,8 @@ def file_write_log():
 @istest
 def dir_expand():
     dirname = get_full_path('dir1')
-    act = backup.DirBackupAction(dirname,'/etc/salve/backup','/etc/salve/backup.log')
+    act = backup.DirBackupAction(dirname,'/etc/salve/backup',
+                                 '/etc/salve/backup.log',dummy_context)
 
     # must be a valid ActionList
     assert isinstance(act,action.ActionList)
@@ -129,7 +137,8 @@ def dir_expand():
 @istest
 def dir_execute():
     dirname = get_full_path('dir1')
-    act = backup.DirBackupAction(dirname,'/etc/salve/backup','/etc/salve/backup.log')
+    act = backup.DirBackupAction(dirname,'/etc/salve/backup',
+                                 '/etc/salve/backup.log',dummy_context)
     # check this here so that we abort the test if this condition is
     # unsatisfied, rather than starting to actually perform actions
     for subact in act.actions:

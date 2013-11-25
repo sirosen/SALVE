@@ -2,9 +2,10 @@
 
 import src.block.identifier
 from src.util.streams import get_filename
+from src.util.error import SALVEException, StreamContext
 from src.reader.tokenize import Token, tokenize_stream
 
-class ParsingException(ValueError):
+class ParsingException(SALVEException):
     """
     A specialized exception for parsing errors.
     A ParsingException (PE) can carry the token and filename that
@@ -12,11 +13,8 @@ class ParsingException(ValueError):
     gets a PE can directly inspect the objects/attributes that tripped
     it.
     """
-    def __init__(self,msg,token=None,filename=None):
-        ValueError.__init__(self,msg)
-        self.message = msg
-        self.token = token
-        self.filename = filename
+    def __init__(self,msg,context):
+        SALVEException.__init__(self,msg,context)
 
 def parse_tokens(tokens,filename=None):
     """
@@ -29,7 +27,7 @@ def parse_tokens(tokens,filename=None):
         raise ParsingException('Invalid token.' +\
             'Expected a token of types ' + str(expected_types) +\
             ' but got token ' + token.value + ' of type ' + token.ty +\
-            ' instead.',token=token,filename=filename)
+            ' instead.',token.context)
 
     # track the expected next token(s)
     expected_token_types = [ Token.types.IDENTIFIER ]
@@ -49,7 +47,7 @@ def parse_tokens(tokens,filename=None):
                 current_block = b_from_id(token)
             except:
                 raise ParsingException('Invalid block id ' +\
-                    token.value,token=token,filename=filename)
+                    token.value,token.context)
             expected_token_types = [ Token.types.BLOCK_START ]
         else:
             # if the token is a block start, do nothing
@@ -81,7 +79,7 @@ def parse_tokens(tokens,filename=None):
         # this PE carries no token because it is the absence of a token
         # that triggers it
         raise ParsingException('Incomplete block in token stream!',
-            filename=filename)
+            current_block.context)
 
     return blocks
 

@@ -3,14 +3,14 @@
 import abc
 
 from src.util.enum import Enum
+from src.util.error import SALVEException
 
-class BlockException(StandardError):
+class BlockException(SALVEException):
     """
     An exception specialized for blocks.
     """
-    def __init__(self,msg):
-        StandardError.__init__(self,msg)
-        self.message = msg
+    def __init__(self,msg,context):
+        SALVEException.__init__(self,msg,context)
 
 class Block(object):
     """
@@ -20,8 +20,9 @@ class Block(object):
     __metaclass__ = abc.ABCMeta
 
     types = Enum('FILE','MANIFEST','DIRECTORY')
-    def __init__(self,ty):
+    def __init__(self,ty,exception_context):
         self.block_type = ty
+        self.context = exception_context
         self.attrs = {}
 
     def set(self,attribute_name,value):
@@ -36,8 +37,12 @@ class Block(object):
     def ensure_has_attrs(self,*args):
         for attr in args:
             if not self.has(attr):
-                raise BlockException('Block(ty='+self.block_type+') '+\
-                                     'missing attr "'+attr+'"')
+                raise self.mk_except('Block(ty='+self.block_type+') '+\
+                                          'missing attr "'+attr+'"')
+
+    def mk_except(self,msg):
+        exc = BlockException(msg,self.context)
+        return exc
 
     @abc.abstractmethod
     def to_action(self): return #pragma: no cover

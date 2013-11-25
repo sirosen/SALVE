@@ -9,14 +9,15 @@ import src.util.streams
 class BackupAction(action.Action):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, src, backup_dir, backup_log):
+    def __init__(self, src, backup_dir, backup_log, context):
+        action.Action.__init__(self,context)
         self.src = src
         self.dst = os.path.join(backup_dir,src.lstrip('/'))
         self.log = backup_log
 
 class FileBackupAction(BackupAction):
-    def __init__(self, src, backup_dir, backup_log):
-        BackupAction.__init__(self,src,backup_dir,backup_log)
+    def __init__(self, src, backup_dir, backup_log, context):
+        BackupAction.__init__(self,src,backup_dir,backup_log,context)
 
     def execute(self):
         # this has a race condition, but it will only be tripped if
@@ -51,17 +52,17 @@ class FileBackupAction(BackupAction):
             print(logval,file=f)
 
 class DirBackupAction(action.ActionList,BackupAction):
-    def __init__(self, src, backup_dir, backup_log):
-        BackupAction.__init__(self,src,backup_dir,backup_log)
+    def __init__(self, src, backup_dir, backup_log, context):
+        BackupAction.__init__(self,src,backup_dir,backup_log,context)
 
         subactions = []
         # for now, to keep it super-simple, we ignore empty dirs
         for dirname,subdirs,files in os.walk(src):
             for f in files:
                 filename = os.path.join(dirname,f)
-                subactions.append(FileBackupAction(filename,backup_dir,backup_log))
+                subactions.append(FileBackupAction(filename,backup_dir,backup_log,context))
 
-        action.ActionList.__init__(self,subactions)
+        action.ActionList.__init__(self,subactions,context)
 
     def execute(self):
         action.ActionList.execute(self)

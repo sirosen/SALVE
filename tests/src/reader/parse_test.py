@@ -1,16 +1,17 @@
 #!/usr/bin/python
 
-import src.block.file_block
-import src.reader.parse as parse
-from src.reader.tokenize import Token
-
-from tests.utils.exceptions import ensure_except
-
 from nose.tools import istest
 from os.path import dirname, join as pjoin
 
-_testfile_dir = pjoin(dirname(__file__),'files')
+import src.block.file_block
+import src.reader.parse as parse
+from src.reader.tokenize import Token
+from src.util.error import StreamContext
 
+from tests.utils.exceptions import ensure_except
+
+_testfile_dir = pjoin(dirname(__file__),'files')
+dummy_context = StreamContext('no such file',-1)
 
 def parse_filename(filename):
     with open(filename) as f:
@@ -34,15 +35,13 @@ def ensure_ParsingException(tokens=None,filename=None):
                           get_full_path(filename))
     else:
         assert False
-    assert tokens is None or \
-           e.token is None or \
-           e.token in tokens
     assert filename is None or \
-           e.filename == get_full_path(filename)
+           e.context.filename == get_full_path(filename)
 
 @istest
 def invalid_block_id():
-    invalid_id = Token('invalid_block_id',Token.types.IDENTIFIER)
+    invalid_id = Token('invalid_block_id',Token.types.IDENTIFIER,
+                       dummy_context)
     ensure_ParsingException(tokens=[invalid_id])
 
 @istest
@@ -55,42 +54,42 @@ def empty_token_list():
 
 @istest
 def unexpected_token():
-    bs_tok = Token('{',Token.types.BLOCK_START)
+    bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
     ensure_ParsingException(tokens=[bs_tok])
 
 @istest
 def unclosed_block1():
-    file_id = Token('file',Token.types.IDENTIFIER)
+    file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
     ensure_ParsingException(tokens=[file_id])
 
 @istest
 def unclosed_block2():
-    file_id = Token('file',Token.types.IDENTIFIER)
-    bs_tok = Token('{',Token.types.BLOCK_START)
+    file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
+    bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
     ensure_ParsingException(tokens=[file_id,bs_tok])
 
 @istest
 def unassigned_attr():
-    file_id = Token('file',Token.types.IDENTIFIER)
-    bs_tok = Token('{',Token.types.BLOCK_START)
-    attr_id = Token('source',Token.types.IDENTIFIER)
-    be_tok = Token('}',Token.types.BLOCK_END)
+    file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
+    bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
+    attr_id = Token('source',Token.types.IDENTIFIER,dummy_context)
+    be_tok = Token('}',Token.types.BLOCK_END,dummy_context)
     ensure_ParsingException(tokens=[file_id,bs_tok,attr_id,be_tok])
 
 @istest
 def empty_block():
-    file_id = Token('file',Token.types.IDENTIFIER)
-    bs_tok = Token('{',Token.types.BLOCK_START)
-    be_tok = Token('}',Token.types.BLOCK_END)
+    file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
+    bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
+    be_tok = Token('}',Token.types.BLOCK_END,dummy_context)
     parse.parse_tokens([file_id,bs_tok,be_tok])
 
 @istest
 def single_attr_block():
-    file_id = Token('file',Token.types.IDENTIFIER)
-    bs_tok = Token('{',Token.types.BLOCK_START)
-    attr_id = Token('source',Token.types.IDENTIFIER)
-    attr_val = Token('/tmp/txt',Token.types.TEMPLATE)
-    be_tok = Token('}',Token.types.BLOCK_END)
+    file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
+    bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
+    attr_id = Token('source',Token.types.IDENTIFIER,dummy_context)
+    attr_val = Token('/tmp/txt',Token.types.TEMPLATE,dummy_context)
+    be_tok = Token('}',Token.types.BLOCK_END,dummy_context)
     blocks = parse.parse_tokens([file_id,bs_tok,
                                  attr_id,attr_val,
                                  be_tok])
@@ -100,13 +99,13 @@ def single_attr_block():
 
 @istest
 def multiple_attr_block():
-    file_id = Token('file',Token.types.IDENTIFIER)
-    bs_tok = Token('{',Token.types.BLOCK_START)
-    attr_id1 = Token('source',Token.types.IDENTIFIER)
-    attr_val1 = Token('/tmp/txt',Token.types.TEMPLATE)
-    attr_id2 = Token('target',Token.types.IDENTIFIER)
-    attr_val2 = Token('/tmp/txt2',Token.types.TEMPLATE)
-    be_tok = Token('}',Token.types.BLOCK_END)
+    file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
+    bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
+    attr_id1 = Token('source',Token.types.IDENTIFIER,dummy_context)
+    attr_val1 = Token('/tmp/txt',Token.types.TEMPLATE,dummy_context)
+    attr_id2 = Token('target',Token.types.IDENTIFIER,dummy_context)
+    attr_val2 = Token('/tmp/txt2',Token.types.TEMPLATE,dummy_context)
+    be_tok = Token('}',Token.types.BLOCK_END,dummy_context)
     blocks = parse.parse_tokens([file_id,bs_tok,
                                  attr_id1,attr_val1,
                                  attr_id2,attr_val2,

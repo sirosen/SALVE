@@ -2,23 +2,28 @@
 
 import abc, subprocess
 
-class ActionException(StandardError):
+from src.util.error import SALVEException
+
+class ActionException(SALVEException):
     """
     A barebones specialized exception for Action creation and execution
     errors.
     """
-    def __init__(self,msg):
-        StandardError.__init__(self,msg)
-        self.message = msg 
+    def __init__(self,msg,ctx):
+        SALVEException.__init__(self,msg,ctx)
 
 class Action(object):
     __metaclass__ = abc.ABCMeta
+
+    def __init__(self,context):
+        self.context = context
 
     @abc.abstractmethod
     def execute(self): pass #pragma: no cover
 
 class ShellAction(Action):
-    def __init__(self, command_list):
+    def __init__(self, command_list, context):
+        Action.__init__(self,context)
         self.cmds = command_list
 
     def __str__(self):
@@ -35,32 +40,18 @@ class ShellAction(Action):
             if process.returncode != 0:
                 raise ActionException(str(self)+\
                     ' failed with exit code '+str(process.returncode)+\
-                    ' on command "' + cmd + '"')
+                    ' on command "' + cmd + '"',
+                    self.context)
             out,err = process.communicate()
             stdouts.append(out)
             stderrs.append(err)
         return (stdouts,stderrs)
 
 class ActionList(Action):
-    def __init__(self, act_lst):
+    def __init__(self, act_lst, context):
+        Action.__init__(self,context)
         self.actions = act_lst
 
     def execute(self):
         for a in self.actions:
             a.execute()
-
-class ParallelActionBag(Action):
-    def __init__(self, act_lst):
-        self.actions = set(act_lst) #pragma: no cover
-
-    def execute(self):
-        # stub, not implemented
-        # idea: create a thread pool, spin off a management
-        # thread for the thread pool which feeds it tasks
-        # from the bag
-        # meanwhile, the main thread of execution tries
-        # to down a binary semaphore
-        # when there are no more tasks and all threads in
-        # the pool are idling, the management thread
-        # ups the semaphore and does cleanup
-        pass #pragma: no cover

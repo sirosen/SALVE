@@ -14,8 +14,8 @@ class FileBlock(Block):
     A file block describes an action performed on a file.
     This includes creation, deletion, and string append.
     """
-    def __init__(self):
-        Block.__init__(self,Block.types.FILE)
+    def __init__(self,exception_context=None):
+        Block.__init__(self,Block.types.FILE,exception_context)
 
     def expand_file_paths(self,root_dir):
         """
@@ -24,9 +24,9 @@ class FileBlock(Block):
         """
         # there must be a target for both copy and create actions
         if not self.has('target'):
-            raise BlockException('FileBlock missing target')
+            raise self.mk_except('FileBlock missing target')
         if not self.has('backup_dir'):
-            raise BlockException('FileBlock missing backup_dir')
+            raise self.mk_except('FileBlock missing backup_dir')
 
         # no source for create actions
         if self.has('source'):
@@ -90,11 +90,13 @@ class FileBlock(Block):
                                   ])
             commands = [touch_file,chmod_file]
             if ugo.is_root(): commands.append(chown_file)
-        file_action = action.ShellAction(commands)
+        file_action = action.ShellAction(commands,self.context)
         backup_action = backup.FileBackupAction(self.get('target'),
                                                 self.get('backup_dir'),
-                                                self.get('backup_log'))
+                                                self.get('backup_log'),
+                                                self.context)
         if os.path.exists(self.get('target')):
-            return action.ActionList([backup_action,file_action])
+            return action.ActionList([backup_action,file_action],
+                                     self.context)
         else:
             return file_action
