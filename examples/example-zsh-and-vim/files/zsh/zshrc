@@ -1,0 +1,43 @@
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.zsh_history
+HISTSIZE=1000
+SAVEHIST=1000
+setopt appendhistory autocd extendedglob nomatch notify
+unsetopt beep
+bindkey -v
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/sirosen/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+
+# Key Bindings
+bindkey -M vicmd '?' history-incremental-search-backward
+
+# editor
+export EDITOR=vim
+
+# functions
+source ~/.myfuncs.sh
+
+# globus
+source ~/.globus-tools/globus_funcs.sh
+
+# git aliases and functions
+source ~/.zsh_git
+
+###
+# Cosmetics
+###
+
+# colorizing
+eval `dircolors ~/.zsh_dircolors`
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+autoload -U colors && colors
+
+# set prompts
+PROMPT="%{$fg[cyan]%}%B%~%b%{$reset_color%} %{$fg[yellow]%}->%{$reset_color%} "
+RPROMPT="%* %B%{$fg[blue]%}%n%{$reset_color%}@%{$fg[red]%}%M%{$reset_color%}%b"
