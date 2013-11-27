@@ -87,6 +87,9 @@ class DirBlock(Block):
 
     def to_action(self):
         commands = []
+        # only certain actions should actually trigger a dir backup
+        # remove does not exist yet, but when it is added, it will
+        triggers_backup = ('remove',)
         self.ensure_has_attrs('action')
         if self.get('action') == 'create':
             commands = self.create_commands()
@@ -96,7 +99,8 @@ class DirBlock(Block):
             raise self.mk_except('Unsupported directory block action.')
 
         dir_act = action.ShellAction(commands,self.context)
-        if os.path.exists(self.get('target')):
+        if self.get('action') in triggers_backup and\
+           os.path.exists(self.get('target')):
             backup_act = backup.DirBackupAction(self.get('target'),
                                                 self.get('backup_dir'),
                                                 self.get('backup_log'),

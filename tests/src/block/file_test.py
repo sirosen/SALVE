@@ -109,13 +109,8 @@ def file_create_to_action():
     b.set('group','nogroup')
     b.set('mode','0600')
     with mock.patch('os.path.exists', lambda f: True):
-        act = b.to_action()
+        shell_act = b.to_action()
 
-    assert isinstance(act,action.ActionList)
-    assert len(act.actions) == 2
-    backup_act = act.actions[0]
-    shell_act = act.actions[1]
-    assert isinstance(backup_act,backup.FileBackupAction)
     assert isinstance(shell_act,action.ShellAction)
 
     assert shell_act.cmds[0] == 'touch /p/q/r'
@@ -163,13 +158,8 @@ def file_create_chmod_as_root():
     b.set('mode','0600')
     with mock.patch('os.geteuid',lambda:0):
         with mock.patch('os.path.exists', lambda f: True):
-            act = b.to_action()
+            shell_act = b.to_action()
 
-    assert isinstance(act,action.ActionList)
-    assert len(act.actions) == 2
-    backup_act = act.actions[0]
-    shell_act = act.actions[1]
-    assert isinstance(backup_act,backup.FileBackupAction)
     assert isinstance(shell_act,action.ShellAction)
 
     assert shell_act.cmds[0] == 'touch /p/q/r'

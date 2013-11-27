@@ -57,6 +57,8 @@ class FileBlock(Block):
             for arg in args:
                 assert os.path.isabs(self.get(arg))
         commands = []
+        # the following actions trigger backups
+        triggers_backup = ('copy',)
         if self.get('action') == 'copy':
             self.ensure_has_attrs('user','group','mode')
             ensure_abspath_attrs('source','target')
@@ -97,7 +99,8 @@ class FileBlock(Block):
                                                 self.get('backup_dir'),
                                                 self.get('backup_log'),
                                                 self.context)
-        if os.path.exists(self.get('target')):
+        if self.get('action') in triggers_backup and\
+           os.path.exists(self.get('target')):
             return action.ActionList([backup_action,file_action],
                                      self.context)
         else:

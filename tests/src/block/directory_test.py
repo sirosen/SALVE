@@ -26,37 +26,10 @@ def dir_create_to_action():
     b.set('mode','755')
 
     with mock.patch('os.path.exists',lambda f: True):
-        act = b.to_action()
-
-    assert isinstance(act,action.ActionList)
-    assert len(act.actions) == 2
-    backup_act = act.actions[0]
-    dir_act = act.actions[1]
-    assert isinstance(backup_act,backup.DirBackupAction)
-    assert isinstance(dir_act,action.ShellAction)
-
-    assert len(dir_act.cmds) == 1
-    assert dir_act.cmds[0] == 'mkdir -p -m 755 /p/q/r'
-
-@istest
-def dir_create_to_action_nobackup():
-    """
-    Directory Block Create To Action (No Backup)
-    Verifies the result of converting a Dir Block to an Action.
-    """
-    b = src.block.directory_block.DirBlock()
-    b.set('action','create')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    b.set('mode','755')
-
-    with mock.patch('os.path.exists',lambda f: False):
         dir_act = b.to_action()
 
     assert isinstance(dir_act,action.ShellAction)
+
     assert len(dir_act.cmds) == 1
     assert dir_act.cmds[0] == 'mkdir -p -m 755 /p/q/r'
 
@@ -76,13 +49,8 @@ def dir_create_chmod_as_root():
     b.set('mode','755')
     with mock.patch('os.geteuid',lambda:0):
         with mock.patch('os.path.exists',lambda f: True):
-            act = b.to_action()
+            dir_act = b.to_action()
 
-    assert isinstance(act,action.ActionList)
-    assert len(act.actions) == 2
-    backup_act = act.actions[0]
-    dir_act = act.actions[1]
-    assert isinstance(backup_act,backup.DirBackupAction)
     assert isinstance(dir_act,action.ShellAction)
 
     assert len(dir_act.cmds) == 2
@@ -105,35 +73,6 @@ def dir_copy_to_action():
     b.set('group','nogroup')
     b.set('mode','744')
     with mock.patch('os.path.exists',lambda f: True):
-        act = b.to_action()
-
-    assert isinstance(act,action.ActionList)
-    assert len(act.actions) == 2
-    backup_act = act.actions[0]
-    dir_act = act.actions[1]
-    assert isinstance(backup_act,backup.DirBackupAction)
-    assert isinstance(dir_act,action.ShellAction)
-
-    assert len(dir_act.cmds) == 2
-    assert dir_act.cmds[0] == 'mkdir -p -m 744 /p/q/r'
-    assert dir_act.cmds[1] == 'cp -r /a/b/c/. /p/q/r'
-
-@istest
-def dir_copy_to_action_nobackup():
-    """
-    Directory Block Copy To Action (No Backup)
-    Verifies the result of converting a Dir Block to an Action.
-    """
-    b = src.block.directory_block.DirBlock()
-    b.set('action','copy')
-    b.set('source','/a/b/c')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    b.set('mode','744')
-    with mock.patch('os.path.exists',lambda f: False):
         dir_act = b.to_action()
 
     assert isinstance(dir_act,action.ShellAction)
@@ -159,13 +98,8 @@ def dir_copy_chmod_as_root():
     b.set('mode','744')
     with mock.patch('os.geteuid',lambda:0):
         with mock.patch('os.path.exists',lambda f: True):
-            act = b.to_action()
+            dir_act = b.to_action()
 
-    assert isinstance(act,action.ActionList)
-    assert len(act.actions) == 2
-    backup_act = act.actions[0]
-    dir_act = act.actions[1]
-    assert isinstance(backup_act,backup.DirBackupAction)
     assert isinstance(dir_act,action.ShellAction)
 
     assert len(dir_act.cmds) == 3
