@@ -3,7 +3,7 @@ SALVE
 
 Authors: Stephen Rosen
 
-Version: 1.0.0
+Version: 1.0.1
 
 What is SALVE?
 ==============
@@ -40,7 +40,7 @@ The Server-Node Architecture is Sometimes Overcomplicated
 Most configuration management software works around the notion of a configuration management server which polls and modifies nodes.
 This complicates the core task of managing configuration on an individual machine with logic relating to the interaction between the server and the managed nodes.
 
-Furthermore, with Puppet, Chef, and similar tools, the capacity for node introspection makes knowing what will hppen on deployment very hard.
+Furthermore, with Puppet, Chef, and similar tools, the capacity for node introspection makes knowing what will happen on deployment very hard.
 Machines can ask questions "Am I listed as a 'web-server'? Am I in the 'nagios-monitored' group?" and dispatch on the answers.
 
 With SALVE, you instead keep a version controlled directory of configuration, and manage it as you see fit.
