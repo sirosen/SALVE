@@ -18,10 +18,19 @@ dummy_context = StreamContext('no such file',-1)
 
 @istest
 def backupaction_is_abstract():
+    """
+    Backup Action Base Class Is Abstract
+    Checks that instantiating a BackupAction raises an error.
+    """
     ensure_except(TypeError,backup.BackupAction)
 
 @istest
 def file_dst_dir():
+    """
+    File Backup Action Destination Directory
+    Verifies that a file's abspath becomes its storage directory under
+    the backup dir.
+    """
     filename = get_full_path('file1.txt')
     act = backup.FileBackupAction(filename,'/etc/salve/backup',
                                   '/etc/salve/backup.log',dummy_context)
@@ -30,6 +39,11 @@ def file_dst_dir():
 
 @istest
 def file_target_name():
+    """
+    File Backup Action Destination File
+    Verifies that a file's abspath followed by its SHA512 hash is its
+    destination file when backed up.
+    """
     # a hashtable to track inputs into functions &c
     func_log = {}
     def mock_makedirs(dirname):
@@ -67,6 +81,11 @@ def file_target_name():
 
 @istest
 def file_symlink_target_name():
+    """
+    File Backup Action Symlink Destination File
+    Verifies that a symlink's abspath followed by its SHA256 hash is its
+    destination file when backed up.
+    """
     # a hashtable to track inputs into functions &c
     func_log = {}
     def mock_makedirs(dirname):
@@ -102,6 +121,11 @@ def file_symlink_target_name():
 
 @istest
 def file_write_log():
+    """
+    File Backup Action Write Log
+    Verifies that on a successful backup action, the logfile is written
+    with the date, hash, and filename.
+    """
     filename = get_full_path('file1.txt')
     act = backup.FileBackupAction(filename,'/etc/salve/backup',
                                   '/etc/salve/backup.log',dummy_context)
@@ -119,6 +143,11 @@ def file_write_log():
 
 @istest
 def dir_expand():
+    """
+    Directory Backup Action Expand Dir
+    Checks the expansion of a directory into its constituent files for
+    directory backups.
+    """
     dirname = get_full_path('dir1')
     act = backup.DirBackupAction(dirname,'/etc/salve/backup',
                                  '/etc/salve/backup.log',dummy_context)
@@ -136,6 +165,11 @@ def dir_expand():
 
 @istest
 def dir_execute():
+    """
+    Directory Backup Action Execute
+    Verifies that executing a DirBackupAction runs a FileBackupAction on
+    each of the files in the directory.
+    """
     dirname = get_full_path('dir1')
     act = backup.DirBackupAction(dirname,'/etc/salve/backup',
                                  '/etc/salve/backup.log',dummy_context)

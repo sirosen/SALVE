@@ -17,6 +17,11 @@ dummy_context = StreamContext('no such file',-1)
 
 @istest
 def invalid_block_id1():
+    """
+    Block Identifier Invalid Identifier Fails (1)
+    Checks that an invalid block identifier fails, even when it is of
+    type IDENTIFIER.
+    """
     invalid_id = Token('invalid_block_id',Token.types.IDENTIFIER,
                        dummy_context)
     ensure_except(BlockException,
@@ -25,6 +30,11 @@ def invalid_block_id1():
 
 @istest
 def invalid_block_id2():
+    """
+    Block Identifier Invalid Identifier Fails (2)
+    Checks that an invalid block identifier with a non-IDENTIFIER type
+    fails block creation.
+    """
     invalid_id = Token('invalid_block_id',Token.types.TEMPLATE,
                        dummy_context)
     ensure_except(BlockException,
@@ -33,18 +43,30 @@ def invalid_block_id2():
 
 @istest
 def valid_file_id():
+    """
+    Block Identifier File Identifier To Block
+    Checks that an identifier 'file' creates a file block.
+    """
     file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
     file_block = src.block.identifier.block_from_identifier(file_id)
     assert isinstance(file_block,src.block.file_block.FileBlock)
 
 @istest
 def valid_manifest_id():
+    """
+    Block Identifier Manifest Identifier To Block
+    Checks that an identifier 'manifest' creates a manifest block.
+    """
     manifest_id = Token('manifest',Token.types.IDENTIFIER,dummy_context)
     manifest_block = src.block.identifier.block_from_identifier(manifest_id)
     assert isinstance(manifest_block,src.block.manifest_block.ManifestBlock)
 
 @istest
 def valid_directory_id():
+    """
+    Block Identifier Directory Identifier To Block
+    Checks that an identifier 'directory' creates a directory block.
+    """
     manifest_id = Token('directory',Token.types.IDENTIFIER,dummy_context)
     dir_block = src.block.identifier.block_from_identifier(manifest_id)
     assert isinstance(dir_block,src.block.directory_block.DirBlock)

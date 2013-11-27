@@ -27,6 +27,8 @@ class FileBlock(Block):
             raise self.mk_except('FileBlock missing target')
         if not self.has('backup_dir'):
             raise self.mk_except('FileBlock missing backup_dir')
+        if not self.has('backup_log'):
+            raise self.mk_except('FileBlock missing backup_log')
 
         # no source for create actions
         if self.has('source'):

@@ -40,36 +40,71 @@ def ensure_ParsingException(tokens=None,filename=None):
 
 @istest
 def invalid_block_id():
+    """
+    Parser Invalid Block Identifier
+    Verifies that attempting to parse a token stream containing an
+    unknown block identifier raises a ParsingException.
+    """
     invalid_id = Token('invalid_block_id',Token.types.IDENTIFIER,
                        dummy_context)
     ensure_ParsingException(tokens=[invalid_id])
 
 @istest
 def invalid_block_id_from_file():
+    """
+    Parser Invalid Block Identifier From File
+    Verifies that attempting to parse a file containing an unknown
+    block identifier raises a ParsingException.
+    """
     ensure_ParsingException(filename='invalid6.manifest')
 
 @istest
 def empty_token_list():
+    """
+    Parser Empty Token List
+    Checks that parsing an empty token list produces an empty list of
+    blocks.
+    """
     assert len(parse.parse_tokens([])) == 0
 
 @istest
 def unexpected_token():
+    """
+    Parser Unexpected Token
+    Checks that parsing a token list with a token that violates the
+    SALVE grammar raises a ParsingException.
+    """
     bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
     ensure_ParsingException(tokens=[bs_tok])
 
 @istest
 def unclosed_block1():
+    """
+    Parser Partial Block Fails (No Open)
+    Checks that parsing a token list with an unclosed block raises a
+    ParsingException.
+    """
     file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
     ensure_ParsingException(tokens=[file_id])
 
 @istest
 def unclosed_block2():
+    """
+    Parser Partial Block Fails (No Close)
+    Checks that parsing a token list with an unclosed block raises a
+    ParsingException.
+    """
     file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
     bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
     ensure_ParsingException(tokens=[file_id,bs_tok])
 
 @istest
 def unassigned_attr():
+    """
+    Parser Unassigned Attribute Fails
+    Checks that parsing a block with an attribute that is declared but
+    is followed by a block close raises a ParsingException.
+    """
     file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
     bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
     attr_id = Token('source',Token.types.IDENTIFIER,dummy_context)
@@ -78,6 +113,10 @@ def unassigned_attr():
 
 @istest
 def empty_block():
+    """
+    Parser Empty Block
+    Checks that parsing an empty block raises no errors.
+    """
     file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
     bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
     be_tok = Token('}',Token.types.BLOCK_END,dummy_context)
@@ -85,6 +124,10 @@ def empty_block():
 
 @istest
 def single_attr_block():
+    """
+    Parser Empty Block
+    Checks that parsing a block with one attribute raises no errors.
+    """
     file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
     bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
     attr_id = Token('source',Token.types.IDENTIFIER,dummy_context)
@@ -99,6 +142,11 @@ def single_attr_block():
 
 @istest
 def multiple_attr_block():
+    """
+    Parser Empty Block
+    Checks that parsing a block with several attributes raises no
+    errors.
+    """
     file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
     bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
     attr_id1 = Token('source',Token.types.IDENTIFIER,dummy_context)
@@ -117,11 +165,19 @@ def multiple_attr_block():
 
 @istest
 def empty_manifest():
+    """
+    Parser Empty File
+    Checks that parsing an empty file produces an empty block list.
+    """
     blocks = parse_filename(get_full_path('valid1.manifest'))
     assert len(blocks) == 0
 
 @istest
 def empty_block():
+    """
+    Parser Empty Block In File
+    Checks that parsing a file with an empty block is valid.
+    """
     blocks = parse_filename(get_full_path('valid2.manifest'))
     assert len(blocks) == 1
     assert isinstance(blocks[0],src.block.file_block.FileBlock)
@@ -129,6 +185,11 @@ def empty_block():
 
 @istest
 def attribute_with_spaces():
+    """
+    Parser Attribute With Spaces
+    Checks that parsing an attribute that contains spaces in quotes
+    does not raise an error and correctly assigns to the attribute.
+    """
     blocks = parse_filename(get_full_path('valid3.manifest'))
     assert len(blocks) == 1
     assert isinstance(blocks[0],src.block.file_block.FileBlock)

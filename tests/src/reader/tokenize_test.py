@@ -30,37 +30,71 @@ def ensure_TokenizationException(filename):
 
 @istest
 def unclosed_block():
+    """
+    Tokenizer Unclosed Block Fails
+    Ensures that an unclosed block raises a TokenizationException.
+    """
     ensure_TokenizationException('invalid1.manifest')
 
 @istest
 def missing_open():
+    """
+    Tokenizer Missing Block Open Fails
+    Ensures that a missing { raises a TokenizationException.
+    """
     ensure_TokenizationException('invalid2.manifest')
 
 @istest
 def double_identifier():
+    """
+    Tokenizer Double Identifier Fails
+    Ensures that two successive block ids raise a TokenizationException.
+    """
     ensure_TokenizationException('invalid3.manifest')
 
 @istest
 def missing_block_identifier():
+    """
+    Tokenizer Missing Identifier Fails
+    Ensures that a missing block id raises a TokenizationException.
+    """
     ensure_TokenizationException('invalid4.manifest')
 
 @istest
 def missing_attribute_value():
+    """
+    Tokenizer Missing Attribute Value Fails
+    Ensures that a block attribute without a value raises a
+    TokenizationException.
+    """
     ensure_TokenizationException('invalid5.manifest')
 
 @istest
 def double_open():
+    """
+    Tokenizer Double Open Fails
+    Ensures that repeated '{'s raise a TokenizationException.
+    """
     ensure_TokenizationException('invalid7.manifest')
 
 #validation tests
 
 @istest
 def empty_manifest():
+    """
+    Tokenizer Empty Manifest
+    Verifies that tokenizing an empty file produces an empty token list.
+    """
     tokens = tokenize_filename(get_full_path('valid1.manifest'))
     assert len(tokens) == 0
 
 @istest
 def empty_block():
+    """
+    Tokenizer Empty Block
+    Verifies that tokenizing an empty block produces a token list
+    containing the identifier, a block open, and a block close.
+    """
     tokens = tokenize_filename(get_full_path('valid2.manifest'))
     assert len(tokens) == 3
     assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
@@ -69,6 +103,11 @@ def empty_block():
 
 @istest
 def invalid_id_nofail():
+    """
+    Tokenizer Invalid Identifier (No Fail)
+    Ensures that no exception is raised if the tokenizer encounters an
+    unknown block identifier.
+    """
     tokens = tokenize_filename(get_full_path('invalid6.manifest'))
     assert len(tokens) == 8
     assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
@@ -82,6 +121,11 @@ def invalid_id_nofail():
 
 @istest
 def attribute_with_spaces():
+    """
+    Tokenizer Attribute With Spaces
+    Verifies that tokenization proceeds correctly when an attribute
+    value is a quoted string containing spaces.
+    """
     tokens = tokenize_filename(get_full_path('valid3.manifest'))
     assert len(tokens) == 7
     assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
@@ -94,6 +138,10 @@ def attribute_with_spaces():
 
 @istest
 def token_to_string():
+    """
+    Tokenizer Token To String
+    Checks the result of invoking Token.__str__
+    """
     ctx = StreamContext('a/b/c',2)
     file_tok = tokenize.Token('file',tokenize.Token.types.IDENTIFIER,
                               ctx)

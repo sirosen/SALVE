@@ -20,10 +20,18 @@ dummy_context = StreamContext('no such file',-1)
 
 @istest
 def action_is_abstract():
+    """
+    Action Base Class Is Abstract
+    Verifies that instantiating an Action raises an error.
+    """
     ensure_except(TypeError,action.Action)
 
 @istest
 def empty_action_list():
+    """
+    Action List Empty List Is No-Op
+    Verifies that executing an empty ActionList does nothing.
+    """
     done_actions = []
     def mock_execute(self):
         done_actions.append(self)
@@ -37,11 +45,20 @@ def empty_action_list():
 
 @istest
 def empty_shell_action():
+    """
+    Action Shell Empty Command List Is No-Op
+    Verifies that executing an empty ShellAction does nothing.
+    """
     # ensures that empty shell actions are valid (but silly)
     a = action.ShellAction([],dummy_context)
 
 @istest
 def shell_action_basic():
+    """
+    Action Shell Singleton Command List
+    Verifies that executing a ShellAction with one command runs that
+    command.
+    """
     # we patch Popen to prevent an attempt to actually invoke the
     # commands passed in
     # instead, commands are stored in the done_commands list
@@ -58,6 +75,11 @@ def shell_action_basic():
 
 @istest
 def action_list_inorder():
+    """
+    Action List Execute In Order
+    Verifies that executing an ActionList runs the actions in it in the
+    specified order.
+    """
     done_actions = []
     # this ref is used to avoid a recursive loop, since we patch
     # execute with mock_execute
@@ -89,6 +111,11 @@ def action_list_inorder():
 
 @istest
 def failed_shell_action():
+    """
+    Action Shell Failure Raises Exception
+    Verifies that executing a ShellAction raises an exception if one of
+    the commands in it returns a nonzero status.
+    """
     def mock_Popen(commands, stdout=None, stderr=None, shell=None):
         """
         Produces a dummy failure process. We don't bother about the

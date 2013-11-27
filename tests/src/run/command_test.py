@@ -15,6 +15,11 @@ dummy_context = StreamContext('no such file',-1)
 
 @istest
 def no_manifest_error():
+    """
+    Command Line No Manifest Fails
+    Verifies that attempting to run from the commandline fails if there
+    is no manifest specified.
+    """
     mock_opts = Mock()
     mock_opts.manifest = None
     mock_opts.gitrepo = None
@@ -30,12 +35,22 @@ def no_manifest_error():
 
 @istest
 def read_cmd_no_manifest():
+    """
+    Command Line No Manifest Fails On ARGV
+    Verifies that attempting to run from the commandline fails if there
+    is no manifest specified using sys.argv
+    """
     fake_argv = ['./salve.py']
     with patch('sys.argv',fake_argv):
         ensure_except(KeyError,command.read_commandline)
 
 @istest
 def parse_cmd1():
+    """
+    Command Line Parse Manifest File Specified
+    Verifies that attempting to run from the commandline successfully
+    parses manifest file specification in sys.argv
+    """
     fake_argv = ['.salve.py','-m','a/b/c']
 
     parser = command.get_option_parser()
@@ -48,6 +63,11 @@ def parse_cmd1():
 
 @istest
 def parse_cmd2():
+    """
+    Command Line Parse Config File And Git Repo Specified
+    Verifies that attempting to run from the commandline successfully
+    parses config file and git repo specification in sys.argv
+    """
     fake_argv = ['.salve.py','-c','p/q','--git-repo',
                  'git@github.com:sirosen/SALVE.git']
     parser = command.get_option_parser()
@@ -60,6 +80,11 @@ def parse_cmd2():
 
 @istest
 def get_root_given_manifest():
+    """
+    Command Line Get Root Manifest Given Manifest
+    Verifies that attempting to run from the commandline selects the
+    specified manifest when it is part of the commandline arguments.
+    """
     mock_opts = Mock()
     mock_opts.manifest = '/a/b/c'
     mock_opts.gitrepo = None
@@ -69,6 +94,12 @@ def get_root_given_manifest():
 
 @istest
 def get_root_given_gitrepo():
+    """
+    Command Line Get Root Manifest Given Git Repo
+    Verifies that attempting to run from the commandline selects the
+    specified git repo's "root.manifest" when it is part of the
+    commandline arguments and there is no "manifest" option.
+    """
     mock_opts = Mock()
     mock_opts.manifest = None
     mock_opts.gitrepo = 'https://github.com/sirosen/SALVE'
@@ -77,6 +108,11 @@ def get_root_given_gitrepo():
 
 @istest
 def commandline_gitrepo_manifest_conflict():
+    """
+    Command Line Manifest Git Repo Option Conflict Fails
+    Checks that running with the git repo option and manifest option
+    together results in an error being thrown.
+    """
     fake_argv = ['.salve.py','--git-repo',
                  'git@githubcom:sirosen/SALVE.git',
                  '--manifest','root.manifest']
@@ -91,6 +127,11 @@ def commandline_gitrepo_manifest_conflict():
 
 @istest
 def commandline_main():
+    """
+    Command Line Main Dummy Manifest Block Expand And Run
+    Checks that running the commandline main function expands and runs
+    a dummy manifest block with the root manifest as the source.
+    """
     fake_argv = ['.salve.py','--manifest','root.manifest']
     have_run = {
         'action_execute': False,
@@ -114,6 +155,11 @@ def commandline_main():
 
 @istest
 def commandline_salve_exception():
+    """
+    Command Line Main Catch SALVE Exception
+    Checks that running the commandline main function catches and pretty
+    prints any thrown SALVEExceptions.
+    """
     log = {
         'exit': None
     }
@@ -148,6 +194,11 @@ def commandline_salve_exception():
 
 @istest
 def commandline_block_exception():
+    """
+    Command Line Main Catch BlockException
+    Checks that running the commandline main function catches and pretty
+    prints any thrown BlockExceptions.
+    """
     from src.block.base_block import BlockException
     log = {
         'exit': None
@@ -183,6 +234,11 @@ def commandline_block_exception():
 
 @istest
 def commandline_action_exception():
+    """
+    Command Line Main Catch ActionException
+    Checks that running the commandline main function catches and pretty
+    prints any thrown ActionExceptions.
+    """
     from src.execute.action import ActionException
     log = {
         'exit': None
@@ -218,6 +274,11 @@ def commandline_action_exception():
 
 @istest
 def commandline_tokenization_exception():
+    """
+    Command Line Main Catch TokenizationException
+    Checks that running the commandline main function catches and pretty
+    prints any thrown TokenizationExceptions.
+    """
     from src.reader.tokenize import TokenizationException
     log = {
         'exit': None
@@ -253,6 +314,11 @@ def commandline_tokenization_exception():
 
 @istest
 def commandline_parsing_exception():
+    """
+    Command Line Main Catch ParsingException
+    Checks that running the commandline main function catches and pretty
+    prints any thrown ParsingExceptions.
+    """
     from src.reader.parse import ParsingException
     log = {
         'exit': None
@@ -288,6 +354,11 @@ def commandline_parsing_exception():
 
 @istest
 def commandline_unexpected_exception():
+    """
+    Command Line Main Don't Catch Unexpected Exception
+    Checks that running the commandline main function does not catch any
+    non-SALVE Exceptions.
+    """
     def mock_get_root_manifest(opts):
         return None
     def mock_run(root_manifest,opts):

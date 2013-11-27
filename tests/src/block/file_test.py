@@ -12,6 +12,10 @@ import src.block.file_block
 
 @istest
 def file_copy_to_action():
+    """
+    File Block Copy To Action
+    Verifies the result of converting a file copy block to an action.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -37,6 +41,11 @@ def file_copy_to_action():
 
 @istest
 def file_copy_to_action_nobackup():
+    """
+    File Block Copy To Action (No Backup)
+    Verifies the result of converting a file copy block to an action
+    when the target does not exist.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -56,6 +65,11 @@ def file_copy_to_action_nobackup():
 
 @istest
 def file_copy_chmod_as_root():
+    """
+    File Block Copy To Action (As Root)
+    Verifies the result of converting a file copy block to an action
+    when the EUID is 0.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -82,6 +96,10 @@ def file_copy_chmod_as_root():
 
 @istest
 def file_create_to_action():
+    """
+    File Block Create To Action
+    Verifies the result of converting a file create block to an action.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -106,6 +124,11 @@ def file_create_to_action():
 
 @istest
 def file_create_to_action_nobackup():
+    """
+    File Block Create To Action (No Backup)
+    Verifies the result of converting a file create block to an action
+    when the target does not exist.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -125,6 +148,11 @@ def file_create_to_action_nobackup():
 
 @istest
 def file_create_chmod_as_root():
+    """
+    File Block Create To Action (As Root)
+    Verifies the result of converting a file create block to an action
+    when the EUID is 0.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -150,6 +178,11 @@ def file_create_chmod_as_root():
 
 @istest
 def file_copy_fails_nosource():
+    """
+    File Block Copy Fails Without Source
+    Verifies that converting a file copy block to an action when the
+    source attribute is unset raises a BlockException.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
     b.set('target','/p/q/r')
@@ -162,6 +195,11 @@ def file_copy_fails_nosource():
 
 @istest
 def file_copy_fails_notarget():
+    """
+    File Block Copy Fails Without Target
+    Verifies that converting a file copy block to an action when the
+    target attribute is unset raises a BlockException.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -174,6 +212,11 @@ def file_copy_fails_notarget():
 
 @istest
 def file_create_fails_notarget():
+    """
+    File Block Create Fails Without Target
+    Verifies that converting a file create block to an action when the
+    target attribute is unset raises a BlockException.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('source','/a/b/c')
@@ -186,6 +229,11 @@ def file_create_fails_notarget():
 
 @istest
 def file_copy_fails_nouser():
+    """
+    File Block Copy Fails Without User
+    Verifies that converting a file copy block to an action when the
+    user attribute is unset raises a BlockException.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -198,6 +246,11 @@ def file_copy_fails_nouser():
 
 @istest
 def file_create_fails_nouser():
+    """
+    File Block Create Fails Without User
+    Verifies that converting a file create block to an action when the
+    user attribute is unset raises a BlockException.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -209,6 +262,11 @@ def file_create_fails_nouser():
 
 @istest
 def file_copy_fails_nomode():
+    """
+    File Block Copy Fails Without Mode
+    Verifies that converting a file copy block to an action when the
+    mode attribute is unset raises a BlockException.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -221,6 +279,11 @@ def file_copy_fails_nomode():
 
 @istest
 def file_create_fails_nomode():
+    """
+    File Block Create Fails Without Mode
+    Verifies that converting a file create block to an action when the
+    mode attribute is unset raises a BlockException.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -232,6 +295,11 @@ def file_create_fails_nomode():
 
 @istest
 def file_copy_fails_nogroup():
+    """
+    File Block Copy Fails Without Group
+    Verifies that converting a file copy block to an action when the
+    group attribute is unset raises a BlockException.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','copy')
     b.set('source','/a/b/c')
@@ -243,6 +311,11 @@ def file_copy_fails_nogroup():
 
 @istest
 def file_create_fails_nogroup():
+    """
+    File Block Create Fails Without Group
+    Verifies that converting a file create block to an action when the
+    group attribute is unset raises a BlockException.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('target','/p/q/r')
@@ -253,6 +326,10 @@ def file_create_fails_nogroup():
 
 @istest
 def file_path_expand():
+    """
+    File Block Path Expand
+    Tests the results of expanding relative paths in a File block.
+    """
     b = src.block.file_block.FileBlock()
     b.set('source','p/q/r/s')
     b.set('target','t/u/v/w/x/y/z/1/2/3/../3')
@@ -271,6 +348,11 @@ def file_path_expand():
 
 @istest
 def file_path_expand_fail_notarget():
+    """
+    File Block Path Expand Fails Without Target
+    Verifies that a File Block with the target attribute unset raises
+    a BlockException when paths are expanded.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('source','p/q/r/s')
@@ -283,11 +365,35 @@ def file_path_expand_fail_notarget():
     ensure_except(BlockException,b.expand_file_paths,root_dir)
 
 @istest
-def file_path_expand_fail_nobackup():
+def file_path_expand_fail_nobackupdir():
+    """
+    File Block Path Expand Fails Without Backup Dir
+    Verifies that a File Block with the backup_dir attribute unset
+    raises a BlockException when paths are expanded.
+    """
     b = src.block.file_block.FileBlock()
     b.set('action','create')
     b.set('source','p/q/r/s')
     b.set('target','t/u/v')
+    b.set('backup_log','/m/n.log')
+    b.set('user','user1')
+    b.set('group','user1')
+    b.set('mode','644')
+    root_dir = 'file/root/directory'
+    ensure_except(BlockException,b.expand_file_paths,root_dir)
+
+@istest
+def file_path_expand_fail_nobackuplog():
+    """
+    File Block Path Expand Fails Without Backup Log
+    Verifies that a File Block with the backup_log attribute unset
+    raises a BlockException when paths are expanded.
+    """
+    b = src.block.file_block.FileBlock()
+    b.set('action','create')
+    b.set('source','p/q/r/s')
+    b.set('target','t/u/v')
+    b.set('backup_dir','/m/n')
     b.set('user','user1')
     b.set('group','user1')
     b.set('mode','644')
