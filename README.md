@@ -60,3 +60,21 @@ Notes
  * Current variable expansion does not support vars which expand to other vars. This should be changed.
  * Screwing with the directory mode can create messy problems when writing to that dir. Recommend keeping mode umask for user as 7 for now.
  * When overwriting a file, SALVE needs read access in order to hash it and back it up.
+
+Changelog
+=========
+ * 1.0.1
+    * Removed aggressive backups behavior that backed up directories and files on creation
+    * Improved error reporting at levels of execution above the parser
+ * 1.0.0
+    * Addition of backups for overwritten files
+    * Addition of SALVE_USER_PRIMARY_GROUP variable
+    * Completed test coverage
+ * beta 0.1.0
+    * Addition of directory blocks
+ * alpha 0.0.2
+    * Added expansion of relative paths
+    * Fixes for configuration templating in blocks
+    * Checks EUID before attempting chown
+ * alpha 0.0.1
+    * Basic functionality for file blocks and manifest blocks
