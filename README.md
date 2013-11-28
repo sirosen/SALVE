@@ -50,7 +50,8 @@ Importantly, SALVE deployments are idempotent, so multiple runs of SALVE have no
 It gives best effort protection against disallowed actions, and guarantees the validity of a manifest or manifest tree before execution.
 This makes it much safer and more reliable to deploy configuration with SALVE than shell scripts.
 
-To start writing manifests, read the grammar below, or browse the examples in the SALVE examples directory.
+To start writing manifests, browse the examples available at https://sirosen.github.io/SALVE/examples.html
+
 For a more detailed description of the SALVE language, visit https://sirosen.github.io/SALVE/lang.html
 
 Notes
