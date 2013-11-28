@@ -1,0 +1,7 @@
+manifest {
+    source  manifests/vim.manifest
+}
+
+manifest {
+    source  manifests/zsh.manifest
+}
