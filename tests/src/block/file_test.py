@@ -8,6 +8,7 @@ from src.block.base_block import BlockException
 
 import src.execute.action as action
 import src.execute.backup as backup
+import src.execute.copy as copy
 import src.block.file_block
 
 @istest
@@ -24,20 +25,22 @@ def file_copy_to_action():
     b.set('backup_log','/m/n.log')
     b.set('user','user1')
     b.set('group','nogroup')
-    b.set('mode','0600')
+    b.set('mode','600')
     with mock.patch('os.path.exists', lambda f: True):
         act = b.to_action()
 
     assert isinstance(act,action.ActionList)
     assert len(act.actions) == 2
     backup_act = act.actions[0]
-    shell_act = act.actions[1]
+    copy_act = act.actions[1]
     assert isinstance(backup_act,backup.FileBackupAction)
-    assert isinstance(shell_act,action.ShellAction)
+    assert isinstance(copy_act,copy.FileCopyAction)
 
-    assert shell_act.cmds[0] == 'cp /a/b/c /p/q/r'
-    assert 'chmod 0600 /p/q/r' in shell_act.cmds
-    assert 'chown user1:nogroup /p/q/r' not in shell_act.cmds
+    assert copy_act.src == '/a/b/c'
+    assert copy_act.dst == '/p/q/r'
+    assert copy_act.user == 'user1'
+    assert copy_act.group == 'nogroup'
+    assert '{0:o}'.format(copy_act.mode) == '600'
 
 @istest
 def file_copy_to_action_nobackup():
@@ -54,45 +57,15 @@ def file_copy_to_action_nobackup():
     b.set('backup_log','/m/n.log')
     b.set('user','user1')
     b.set('group','nogroup')
-    b.set('mode','0600')
+    b.set('mode','600')
     with mock.patch('os.path.exists', lambda f: False):
-        shell_act = b.to_action()
+        copy_act = b.to_action()
 
-    assert isinstance(shell_act,action.ShellAction)
-    assert shell_act.cmds[0] == 'cp /a/b/c /p/q/r'
-    assert 'chmod 0600 /p/q/r' in shell_act.cmds
-    assert 'chown user1:nogroup /p/q/r' not in shell_act.cmds
-
-@istest
-def file_copy_chmod_as_root():
-    """
-    File Block Copy To Action (As Root)
-    Verifies the result of converting a file copy block to an action
-    when the EUID is 0.
-    """
-    b = src.block.file_block.FileBlock()
-    b.set('action','copy')
-    b.set('source','/a/b/c')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    b.set('mode','0600')
-    with mock.patch('os.geteuid',lambda:0):
-        with mock.patch('os.path.exists', lambda f: True):
-            act = b.to_action()
-
-    assert isinstance(act,action.ActionList)
-    assert len(act.actions) == 2
-    backup_act = act.actions[0]
-    shell_act = act.actions[1]
-    assert isinstance(backup_act,backup.FileBackupAction)
-    assert isinstance(shell_act,action.ShellAction)
-
-    assert shell_act.cmds[0] == 'cp /a/b/c /p/q/r'
-    assert 'chmod 0600 /p/q/r' in shell_act.cmds
-    assert 'chown user1:nogroup /p/q/r' in shell_act.cmds
+    assert copy_act.src == '/a/b/c'
+    assert copy_act.dst == '/p/q/r'
+    assert copy_act.user == 'user1'
+    assert copy_act.group == 'nogroup'
+    assert '{0:o}'.format(copy_act.mode) == '600'
 
 @istest
 def file_create_to_action():

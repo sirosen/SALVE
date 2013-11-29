@@ -4,6 +4,7 @@ import os
 
 import src.execute.action as action
 import src.execute.backup as backup
+import src.execute.copy as copy
 import src.util.locations as locations
 import src.util.ugo as ugo
 
@@ -56,27 +57,20 @@ class FileBlock(Block):
             self.ensure_has_attrs(*args)
             for arg in args:
                 assert os.path.isabs(self.get(arg))
-        commands = []
+        file_action = None
         # the following actions trigger backups
         triggers_backup = ('copy',)
         if self.get('action') == 'copy':
             self.ensure_has_attrs('user','group','mode')
             ensure_abspath_attrs('source','target')
-            copy_file = ' '.join(['cp',
-                                  self.get('source'),
-                                  self.get('target')
-                                 ])
-            chown_file = ' '.join(['chown',
-                                   self.get('user')+':'+\
-                                   self.get('group'),
-                                   self.get('target')
-                                  ])
-            chmod_file = ' '.join(['chmod',
-                                   self.get('mode'),
-                                   self.get('target')
-                                  ])
-            commands = [copy_file,chmod_file]
-            if ugo.is_root(): commands.append(chown_file)
+            file_action = copy.FileCopyAction(
+                            self.get('source'),
+                            self.get('target'),
+                            self.get('user'),
+                            self.get('group'),
+                            self.get('mode'),
+                            self.context
+                            )
         elif self.get('action') == 'create':
             self.ensure_has_attrs('user','group','mode')
             ensure_abspath_attrs('target')
@@ -94,7 +88,7 @@ class FileBlock(Block):
                                   ])
             commands = [touch_file,chmod_file]
             if ugo.is_root(): commands.append(chown_file)
-        file_action = action.ShellAction(commands,self.context)
+            file_action = action.ShellAction(commands,self.context)
         backup_action = backup.FileBackupAction(self.get('target'),
                                                 self.get('backup_dir'),
                                                 self.get('backup_log'),

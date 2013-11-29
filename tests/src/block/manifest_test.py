@@ -6,6 +6,7 @@ from tests.utils.exceptions import ensure_except
 
 import src.execute.action
 import src.execute.backup
+import src.execute.copy
 import src.block.manifest_block
 import src.block.base_block
 import src.util.locations as locations
@@ -106,4 +107,4 @@ def sub_block_to_action():
     assert isinstance(file_act.actions[0],
                       src.execute.backup.FileBackupAction)
     assert isinstance(file_act.actions[1],
-                      src.execute.action.ShellAction)
+                      src.execute.copy.FileCopyAction)

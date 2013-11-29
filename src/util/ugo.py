@@ -7,3 +7,9 @@ def get_group_from_username(username):
 
 def is_root():
     return os.geteuid() == 0
+
+def name_to_uid(username):
+    return pwd.getpwnam(username)[2]
+
+def name_to_gid(groupname):
+    return grp.getgrnam(groupname)[2]

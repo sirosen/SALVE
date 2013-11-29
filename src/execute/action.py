@@ -52,6 +52,10 @@ class ActionList(Action):
         Action.__init__(self,context)
         self.actions = act_lst
 
+    def __str__(self):
+        return "ActionList("+";".join(str(a) for a in self.actions)+\
+               "context="+str(self.context)+")"
+
     def execute(self):
         for a in self.actions:
             a.execute()
