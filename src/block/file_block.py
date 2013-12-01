@@ -54,6 +54,8 @@ class FileBlock(Block):
                                                 self.get('backup_log')))
 
     def to_action(self):
+        self.ensure_has_attrs('action')
+
         def ensure_abspath_attrs(*args):
             self.ensure_has_attrs(*args)
             for arg in args:

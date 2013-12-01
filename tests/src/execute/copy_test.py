@@ -28,6 +28,9 @@ def filecopy_to_str():
 
 @istest
 def filecopy_execute():
+    """
+    File Copy Action Execution
+    """
     log = {
         'mock_cp': None
     }
@@ -43,3 +46,36 @@ def filecopy_execute():
         fcp.execute()
 
     assert log['mock_cp'] == ('a','b/c')
+
+@istest
+def dircopy_to_str():
+    """
+    Directory Copy Action String Conversion
+    """
+    dcp = copy.DirCopyAction('a',
+                             'b/c',
+                             dummy_context)
+
+    assert str(dcp) == 'DirCopyAction(src=a,dst=b/c,context='+\
+                       str(dummy_context)+')'
+
+@istest
+def dircopy_execute():
+    """
+    Directory Copy Action Execution
+    """
+    log = {
+        'mock_cp': None
+    }
+    def mock_copytree(src,dst,symlinks=None):
+        log['mock_cp'] = (src,dst,symlinks)
+    def mock_name_to_uid(username): return 1
+    def mock_name_to_gid(groupname): return 2
+
+    with mock.patch('shutil.copytree',mock_copytree):
+        dcp = copy.DirCopyAction('a',
+                                  'b/c',
+                                  dummy_context)
+        dcp.execute()
+
+    assert log['mock_cp'] == ('a','b/c',True)

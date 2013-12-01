@@ -31,14 +31,12 @@ class FileCopyAction(CopyAction):
         shutil.copyfile(self.src,self.dst)
 
 class DirCopyAction(CopyAction):
-    def __init__(self, src, dst, user, group, mode, context):
-        CopyAction.__init__(self,src,dst,user,group,mode,context)
+    def __init__(self, src, dst, context):
+        CopyAction.__init__(self,src,dst,context)
 
     def __str__(self):
         return "DirCopyAction(src="+str(self.src)+",dst="+\
-               str(self.dst)+",user="+str(self.user)+",group="+\
-               str(self.group)+",mode="+'{0:o}'.format(self.mode)+\
-               ",context="+str(self.context)+")"
+               str(self.dst)+",context="+str(self.context)+")"
 
     def execute(self):
         """
