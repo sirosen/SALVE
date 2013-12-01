@@ -5,6 +5,7 @@ import os
 import src.execute.action as action
 import src.execute.backup as backup
 import src.execute.copy as copy
+import src.execute.modify as modify
 import src.util.locations as locations
 import src.util.ugo as ugo
 
@@ -57,45 +58,55 @@ class FileBlock(Block):
             self.ensure_has_attrs(*args)
             for arg in args:
                 assert os.path.isabs(self.get(arg))
-        file_action = None
+
+        def add_action(file_act,new,prepend=False):
+            if isinstance(file_act,action.ActionList):
+                if prepend: file_act.prepend(new)
+                else: file_act.append(new)
+                return file_act
+            else:
+                if prepend: acts = [new,file_act]
+                else: acts = [file_act,new]
+                return action.ActionList(acts,self.context)
+
         # the following actions trigger backups
         triggers_backup = ('copy',)
+
+        file_action = None
         if self.get('action') == 'copy':
-            self.ensure_has_attrs('user','group','mode')
             ensure_abspath_attrs('source','target')
-            file_action = copy.FileCopyAction(
-                            self.get('source'),
-                            self.get('target'),
-                            self.get('user'),
-                            self.get('group'),
-                            self.get('mode'),
-                            self.context
-                            )
+            file_action = copy.FileCopyAction(self.get('source'),
+                                              self.get('target'),
+                                              self.context)
         elif self.get('action') == 'create':
-            self.ensure_has_attrs('user','group','mode')
             ensure_abspath_attrs('target')
-            touch_file = ' '.join(['touch',
+            touch_file = ' '.join(['touch','-a',
                                    self.get('target'),
                                   ])
-            chmod_file = ' '.join(['chmod',
-                                   self.get('mode'),
-                                   self.get('target')
-                                  ])
-            chown_file = ' '.join(['chown',
-                                   self.get('user')+':'+\
-                                   self.get('group'),
-                                   self.get('target')
-                                  ])
-            commands = [touch_file,chmod_file]
-            if ugo.is_root(): commands.append(chown_file)
-            file_action = action.ShellAction(commands,self.context)
-        backup_action = backup.FileBackupAction(self.get('target'),
-                                                self.get('backup_dir'),
-                                                self.get('backup_log'),
-                                                self.context)
+            file_action = action.ShellAction([touch_file],self.context)
+
+        if self.has('mode'):
+            chmod = modify.FileChmodAction(self.get('target'),
+                                           self.get('mode'),
+                                           self.context)
+            file_action = add_action(file_action,chmod)
+
+        if ugo.is_root() and self.has('user') and self.has('group'):
+            chown = modify.FileChownAction(self.get('target'),
+                                           self.get('user'),
+                                           self.get('group'),
+                                           self.context)
+            file_action = add_action(file_action,chown)
+
         if self.get('action') in triggers_backup and\
            os.path.exists(self.get('target')):
-            return action.ActionList([backup_action,file_action],
-                                     self.context)
-        else:
-            return file_action
+            backup_action = backup.FileBackupAction(
+                self.get('target'),
+                self.get('backup_dir'),
+                self.get('backup_log'),
+                self.context)
+            file_action = add_action(file_action,
+                                     backup_action,
+                                     prepend=True)
+
+        return file_action

@@ -107,4 +107,4 @@ def sub_block_to_action():
     assert isinstance(file_act.actions[0],
                       src.execute.backup.FileBackupAction)
     assert isinstance(file_act.actions[1],
-                      src.execute.copy.FileCopyAction)
+                      src.execute.action.ActionList)

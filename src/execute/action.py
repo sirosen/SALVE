@@ -28,7 +28,7 @@ class ShellAction(Action):
 
     def __str__(self):
         return 'ShellAction(['+str(self.cmds)+'])'
-     
+
     def execute(self):
         stdouts,stderrs = [],[]
         for cmd in self.cmds:
@@ -55,6 +55,14 @@ class ActionList(Action):
     def __str__(self):
         return "ActionList("+";".join(str(a) for a in self.actions)+\
                "context="+str(self.context)+")"
+
+    def append(self,act):
+        assert isinstance(act, Action)
+        self.actions.append(act)
+
+    def prepend(self,act):
+        assert isinstance(act, Action)
+        self.actions.insert(0,act)
 
     def execute(self):
         for a in self.actions:
