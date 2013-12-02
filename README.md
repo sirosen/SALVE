@@ -3,7 +3,7 @@ SALVE
 
 Authors: Stephen Rosen
 
-Version: 1.0.1
+Version: 1.0.2
 
 For a detailed description of the project, please visit https://sirosen.github.io/SALVE
 
@@ -54,16 +54,12 @@ To start writing manifests, browse the examples available at https://sirosen.git
 
 For a more detailed description of the SALVE language, visit https://sirosen.github.io/SALVE/lang.html
 
-Notes
-=====
- * At present, path specifications do not support ```~```, ```*```, or any other special characters for globbing, path expansion, and so forth.
- * The precedence order for values is naturally Specific Block > Block Defaults > Common Attributes, but this should be more clearly documented
- * Current variable expansion does not support vars which expand to other vars. This should be changed.
- * Screwing with the directory mode can create messy problems when writing to that dir. Recommend keeping mode umask for user as 7 for now.
- * When overwriting a file, SALVE needs read access in order to hash it and back it up.
-
 Changelog
 =========
+ * 1.0.2
+    * Fewer actions rely on shell commands and use shutil instead
+    * Underspecifying an action no longer causes a failure for chown and chmod, but skips these actions instead
+    * File create now does a ```touch -a``` instead of a ```touch```, so that access time is changed instead of modified time
  * 1.0.1
     * Removed aggressive backups behavior that backed up directories and files on creation
     * Improved error reporting at levels of execution above the parser
