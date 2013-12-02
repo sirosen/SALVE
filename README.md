@@ -3,9 +3,19 @@ SALVE
 
 Authors: Stephen Rosen
 
-Version: 1.0.1
+Version: 1.0.2
 
 For a detailed description of the project, please visit https://sirosen.github.io/SALVE
+
+What can SALVE do?
+==================
+
+SALVE versions files and directories in a git repository, and handles the messy process of deploying those files onto a machine.
+It is safer to use than shell scripts, and can be used to touch files, create directories, copy files and directories, apply permissions, and back up the preexisting versions of those files so that you can recover them if necessary at a later date.
+
+To start writing manifests, browse the examples available at https://sirosen.github.io/SALVE/examples.html
+
+For a more detailed description of the SALVE language, visit https://sirosen.github.io/SALVE/lang.html
 
 Quick Start Guide
 =================
@@ -38,32 +48,12 @@ git clone https://github.com/myuser/my-salve-fork
 ./my-salve-fork/salve.py --manifest my-salve-fork/bash.manifest
 ```
 
-What can SALVE do?
-------------------
-
-SALVE versions files and directories in a git repository, and handles the messy process of deploying those files onto a machine.
-It can touch files, create directories, copy files and directories, and back up the preexisting versions of those files so that you can recover them if necessary at a later date.
-It can also apply permissions, owner, and group, and expands variables in the calling shell's environment.
-
-Importantly, SALVE deployments are idempotent, so multiple runs of SALVE have no effect on your system, and upgrading a file from one version to another merely consists of updating the SALVE repo, pulling, and rerunning the tool.
-
-It gives best effort protection against disallowed actions, and guarantees the validity of a manifest or manifest tree before execution.
-This makes it much safer and more reliable to deploy configuration with SALVE than shell scripts.
-
-To start writing manifests, browse the examples available at https://sirosen.github.io/SALVE/examples.html
-
-For a more detailed description of the SALVE language, visit https://sirosen.github.io/SALVE/lang.html
-
-Notes
-=====
- * At present, path specifications do not support ```~```, ```*```, or any other special characters for globbing, path expansion, and so forth.
- * The precedence order for values is naturally Specific Block > Block Defaults > Common Attributes, but this should be more clearly documented
- * Current variable expansion does not support vars which expand to other vars. This should be changed.
- * Screwing with the directory mode can create messy problems when writing to that dir. Recommend keeping mode umask for user as 7 for now.
- * When overwriting a file, SALVE needs read access in order to hash it and back it up.
-
 Changelog
 =========
+ * 1.0.2
+    * Fewer actions rely on shell commands and use shutil instead
+    * Underspecifying an action no longer causes a failure for chown and chmod, but skips these actions instead
+    * File create now does a ```touch -a``` instead of a ```touch```, so that access time is changed instead of modified time
  * 1.0.1
     * Removed aggressive backups behavior that backed up directories and files on creation
     * Improved error reporting at levels of execution above the parser
