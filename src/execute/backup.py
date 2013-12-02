@@ -19,6 +19,11 @@ class FileBackupAction(BackupAction):
     def __init__(self, src, backup_dir, backup_log, context):
         BackupAction.__init__(self,src,backup_dir,backup_log,context)
 
+    def __str__(self):
+        return "FileBackupAction(src="+self.src+",backup_dir="+\
+               self.backup_dir+",backup_log="+self.backup_log+\
+               ",context="+str(self.context)+")"
+
     def execute(self):
         # this has a race condition, but it will only be tripped if
         # another program is writing to the backup dir
