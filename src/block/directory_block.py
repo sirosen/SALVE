@@ -4,6 +4,7 @@ import os
 
 import src.execute.action as action
 import src.execute.backup as backup
+import src.execute.copy as copy
 import src.util.locations as locations
 import src.util.ugo as ugo
 
@@ -46,24 +47,25 @@ class DirBlock(Block):
             self.set('target', os.path.join(root_dir,
                                             self.get('target')))
 
-    def create_commands(self):
+    def _mkdir_action(self,dirname,user,group,mode):
+        mkdir = ' '.join(['mkdir -p -m',mode,dirname])
+        commands = [mkdir]
+        if ugo.is_root():
+            chown_dir = ' '.join(['chown',user+':'+group,dirname])
+            commands.append(chown_dir)
+        return action.ShellAction(commands,self.context)
+
+    def create_action(self):
         """
         Create a directory. Used by creation and dir copy.
         """
         self.ensure_has_attrs('target','user','group','mode')
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
-        mkdir = ' '.join(['mkdir -p -m',self.get('mode'),
-                          self.get('target')
-                         ])
-        chown_dir = ' '.join(['chown',self.get('user')+':'+\
-                              self.get('group'),self.get('target')
-                             ])
-        commands = [mkdir]
-        if ugo.is_root(): commands.append(chown_dir)
-        return commands
+        return self._mkdir_action(self.get('target'),self.get('user'),
+                                  self.get('group'),self.get('mode'))
 
-    def copy_commands(self):
+    def copy_action(self):
         """
         Copy a directory.
         """
@@ -71,34 +73,63 @@ class DirBlock(Block):
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
         assert os.path.isabs(self.get('source'))
-        mkdir = ' '.join(['mkdir -p -m',self.get('mode'),
-                          self.get('target')
-                         ])
-        copy_dir = ' '.join(['cp -r',
-                              os.path.join(self.get('source'),'.'),
-                              self.get('target')
-                             ])
-        chown_dir = ' '.join(['chown -R',self.get('user')+':'+\
-                              self.get('group'),self.get('target')
-                             ])
-        commands = [mkdir,copy_dir]
-        if ugo.is_root(): commands.append(chown_dir)
-        return commands
+
+        mkdir = self._mkdir_action(self.get('target'),self.get('user'),
+                                   self.get('group'),self.get('mode'))
+        act = action.ActionList([mkdir],self.context)
+
+        sourcelen = len(self.get('source'))
+        backup_dir = self.get('backup_dir')
+        backup_log = self.get('backup_log')
+        for d,subdirs,files in os.walk(self.get('source')):
+            for f in files:
+                fname = os.path.join(d,f)
+                target_dir = os.path.join(
+                                self.get('target'),
+                                os.path.relpath(d,self.get('source'))
+                             )
+                target_fname = os.path.join(target_dir,f)
+                file_act = action.ActionList([],self.context)
+                file_act.append(backup.FileBackupAction(target_fname,
+                                                        backup_dir,
+                                                        backup_log,
+                                                        self.context))
+                file_act.append(self._mkdir_action(
+                    os.path.dirname(target_fname),self.get('user'),
+                    self.get('group'),self.get('mode'))
+                    )
+                file_act.append(copy.FileCopyAction(fname,
+                                                    target_fname,
+                                                    self.context))
+                act.append(file_act)
+
+        if ugo.is_root():
+            chown_dir = ' '.join(['chown -R',self.get('user')+':'+\
+                                  self.get('group'),self.get('target')
+                                 ])
+            act.append(action.ShellAction([chown_dir],self.context))
+        return act
 
     def to_action(self):
+        def add_action(act,new,prepend=False):
+            if not isinstance(act,action.ActionList):
+                act = action.ActionList([act],self.context)
+            if prepend: act.prepend(new)
+            else: act.append(new)
+            return act
+
         commands = []
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will
         triggers_backup = ('remove',)
         self.ensure_has_attrs('action')
         if self.get('action') == 'create':
-            commands = self.create_commands()
+            dir_act = self.create_action()
         elif self.get('action') == 'copy':
-            commands = self.copy_commands()
+            dir_act = self.copy_action()
         else:
             raise self.mk_except('Unsupported directory block action.')
 
-        dir_act = action.ShellAction(commands,self.context)
         if self.get('action') in triggers_backup and\
            os.path.exists(self.get('target')):
             backup_act = backup.DirBackupAction(self.get('target'),
@@ -106,6 +137,6 @@ class DirBlock(Block):
                                                 self.get('backup_log'),
                                                 self.context)
 
-            return action.ActionList([backup_act,dir_act],self.context)
-        else:
-            return dir_act
+            dir_act = add_action(dir_act,backup_act,prepend=True)
+
+        return dir_act
