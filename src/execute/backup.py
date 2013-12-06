@@ -21,6 +21,7 @@ class BackupAction(copy.CopyAction):
 class FileBackupAction(BackupAction,copy.FileCopyAction):
     def __init__(self, src, backup_dir, backup_log, context):
         BackupAction.__init__(self,src,backup_dir,backup_log,context)
+        self.hash_val = None
 
     def __str__(self):
         return "FileBackupAction(src="+self.src+",backup_dir="+\
@@ -33,21 +34,20 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
 
         # ensure (up to a reasonable doubt) that the dir exists
         # there's no problem with extra invocations of makedirs
-        os.makedirs(self.dst)
+        if not os.path.exists(self.dst): os.makedirs(self.dst)
 
-        hash_val = None
         if os.path.islink(self.src):
             link_contents = os.readlink(self.src)
-            hash_val = hashlib.sha256(link_contents).hexdigest()
+            self.hash_val = hashlib.sha256(link_contents).hexdigest()
         else:
             with open(self.src) as f:
-                hash_val = src.util.streams.sha_512(f)
+                self.hash_val = src.util.streams.sha_512(f)
 
         # update dst so that the FileCopyAction can run correctly
-        self.dst = os.path.join(self.dst,hash_val)
+        self.dst = os.path.join(self.dst,self.hash_val)
 
         # if the backup exists, no need to actually rewrite it
-        if not os.path.exists(target_name):
+        if not os.path.exists(self.dst):
             # otherwise, invoke the FileCopyAction execution
             copy.FileCopyAction.execute(self)
 
@@ -57,7 +57,7 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
         # log the date, filename, to the backup log
         logval = time.strftime('%Y-%m-%d.%s') + ' ' + self.hash_val + ' ' +\
                  self.src
-        with open(self.log,'a') as f:
+        with open(self.logfile,'a') as f:
             print(logval,file=f)
 
 class DirBackupAction(action.ActionList,BackupAction):

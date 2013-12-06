@@ -73,9 +73,14 @@ class DirBlock(Block):
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
         assert os.path.isabs(self.get('source'))
-        act = action.ActionList([],self.context)
+
+        mkdir = self._mkdir_action(self.get('target'),self.get('user'),
+                                   self.get('group'),self.get('mode'))
+        act = action.ActionList([mkdir],self.context)
 
         sourcelen = len(self.get('source'))
+        backup_dir = self.get('backup_dir')
+        backup_log = self.get('backup_log')
         for d,subdirs,files in os.walk(self.get('source')):
             for f in files:
                 fname = os.path.join(d,f)
@@ -88,17 +93,16 @@ class DirBlock(Block):
                 file_act.append(backup.FileBackupAction(target_fname,
                                                         backup_dir,
                                                         backup_log,
-                                                        context))
+                                                        self.context))
+                file_act.append(self._mkdir_action(
+                    os.path.dirname(target_fname),self.get('user'),
+                    self.get('group'),self.get('mode'))
+                    )
                 file_act.append(copy.FileCopyAction(fname,
                                                     target_fname,
-                                                    context))
+                                                    self.context))
                 act.append(file_act)
 
-        mkdir = self._mkdir_action(self.get('target'),self.get('user'),
-                                   self.get('group'),self.get('mode'))
-        act.prepend(mkdir)
-
-        act.append(action.ShellAction([copy_dir],self.context))
         if ugo.is_root():
             chown_dir = ' '.join(['chown -R',self.get('user')+':'+\
                                   self.get('group'),self.get('target')

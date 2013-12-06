@@ -58,9 +58,9 @@ def dir_create_chmod_as_root():
     assert dir_act.cmds[1] == 'chown user1:nogroup /p/q/r'
 
 @istest
-def dir_copy_to_action():
+def empty_dir_copy_to_action():
     """
-    Directory Block Copy To Action
+    Directory Block Copy To Action (Empty Dir)
     Verifies the result of converting a Dir Block to an Action.
     """
     b = src.block.directory_block.DirBlock()
@@ -73,13 +73,15 @@ def dir_copy_to_action():
     b.set('group','nogroup')
     b.set('mode','744')
     with mock.patch('os.path.exists',lambda f: True):
-        dir_act = b.to_action()
+        with mock.patch('os.walk',lambda d: []):
+            dir_act = b.to_action()
 
-    assert isinstance(dir_act,action.ShellAction)
+    assert isinstance(dir_act,action.ActionList)
+    assert len(dir_act.actions) == 1
+    mkdir_act = dir_act.actions[0]
 
-    assert len(dir_act.cmds) == 2
-    assert dir_act.cmds[0] == 'mkdir -p -m 744 /p/q/r'
-    assert dir_act.cmds[1] == 'cp -r /a/b/c/. /p/q/r'
+    assert len(mkdir_act.cmds) == 1
+    assert mkdir_act.cmds[0] == 'mkdir -p -m 744 /p/q/r'
 
 @istest
 def dir_copy_chmod_as_root():
@@ -98,14 +100,22 @@ def dir_copy_chmod_as_root():
     b.set('mode','744')
     with mock.patch('os.geteuid',lambda:0):
         with mock.patch('os.path.exists',lambda f: True):
-            dir_act = b.to_action()
+            with mock.patch('os.walk',lambda d: []):
+                al = b.to_action()
 
-    assert isinstance(dir_act,action.ShellAction)
+    assert isinstance(al,action.ActionList)
+    assert len(al.actions) == 2
+    mkdir_act = al.actions[0]
+    chown_act = al.actions[1]
 
-    assert len(dir_act.cmds) == 3
-    assert dir_act.cmds[0] == 'mkdir -p -m 744 /p/q/r'
-    assert dir_act.cmds[1] == 'cp -r /a/b/c/. /p/q/r'
-    assert dir_act.cmds[2] == 'chown -R user1:nogroup /p/q/r'
+    assert isinstance(mkdir_act,action.ShellAction)
+    assert isinstance(chown_act,action.ShellAction)
+
+    assert len(mkdir_act.cmds) == 2
+    assert len(chown_act.cmds) == 1
+    assert mkdir_act.cmds[0] == 'mkdir -p -m 744 /p/q/r'
+    assert mkdir_act.cmds[1] == 'chown user1:nogroup /p/q/r'
+    assert chown_act.cmds[0] == 'chown -R user1:nogroup /p/q/r'
 
 @istest
 def dir_copy_fails_nosource():
