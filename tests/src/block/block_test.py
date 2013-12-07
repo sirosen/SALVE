@@ -4,7 +4,7 @@ from nose.tools import istest
 import os, mock
 from tests.utils.exceptions import ensure_except
 
-import src.block.base_block
+import src.block.base
 import src.settings.config
 
 _testfile_dir = os.path.join(os.path.dirname(__file__),'files')
@@ -28,4 +28,4 @@ def block_is_abstract():
     Block Base Class Is Abstract
     Ensures that a Block cannot be instantiated.
     """
-    ensure_except(TypeError,src.block.base_block.Block)
+    ensure_except(TypeError,src.block.base.Block)

@@ -9,7 +9,7 @@ import src.execute.modify as modify
 import src.util.locations as locations
 import src.util.ugo as ugo
 
-from src.block.base_block import Block, BlockException
+from src.block.base import Block, BlockException
 
 class FileBlock(Block):
     """

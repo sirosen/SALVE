@@ -9,6 +9,8 @@ from tests.utils.exceptions import ensure_except
 
 import src.run.command as command
 import src.util.locations as locations
+
+from src.block.base import BlockException
 from src.util.error import SALVEException, StreamContext
 
 dummy_context = StreamContext('no such file',-1)
@@ -199,7 +201,6 @@ def commandline_block_exception():
     Checks that running the commandline main function catches and pretty
     prints any thrown BlockExceptions.
     """
-    from src.block.base_block import BlockException
     log = {
         'exit': None
     }

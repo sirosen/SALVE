@@ -4,7 +4,7 @@ from nose.tools import istest
 import os, mock
 
 from tests.utils.exceptions import ensure_except
-from src.block.base_block import BlockException
+from src.block.base import BlockException
 
 import src.execute.action as action
 import src.execute.backup as backup

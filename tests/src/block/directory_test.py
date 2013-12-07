@@ -4,7 +4,7 @@ from nose.tools import istest
 import os, mock
 
 from tests.utils.exceptions import ensure_except
-from src.block.base_block import BlockException
+from src.block.base import BlockException
 
 import src.execute.action as action
 import src.execute.backup as backup
@@ -26,15 +26,11 @@ def dir_create_to_action():
     b.set('mode','755')
 
     with mock.patch('os.path.exists',lambda f: True):
-        dir_act = b.to_action()
+        mkdir = b.to_action()
 
-    assert isinstance(dir_act,action.ActionList)
-    assert len(dir_act.actions) == 2
-    mkdir = dir_act.actions[0]
-    chown = dir_act.actions[1]
+    assert isinstance(mkdir,action.ShellAction)
 
     assert mkdir.cmd == 'mkdir -p -m 755 /p/q/r'
-    assert chown.cmd == 'chown user1:nogroup /p/q/r'
 
 @istest
 def dir_create_chmod_as_root():
