@@ -68,7 +68,7 @@ def shell_action_basic():
         return MockProcess()
 
     with patch('subprocess.Popen',mock_Popen):
-        a = action.ShellAction(['mkdir /a/b'],dummy_context)
+        a = action.ShellAction('mkdir /a/b',dummy_context)
         a.execute()
 
     assert done_commands[0] == 'mkdir /a/b'
@@ -98,14 +98,13 @@ def action_list_inorder():
 
     with patch('src.execute.action.ShellAction.execute',mock_execute):
         with patch('subprocess.Popen',mock_Popen):
-            a = action.ShellAction(['a b'],dummy_context)
-            b = action.ShellAction(['p q r'],dummy_context)
+            a = action.ShellAction('a b',dummy_context)
+            b = action.ShellAction('p q r',dummy_context)
             al = action.ActionList([a,b],dummy_context)
             al.execute()
 
     assert done_actions[0] == a
     assert done_actions[1] == b
-
     assert done_commands[0] == 'a b'
     assert done_commands[1] == 'p q r'
 

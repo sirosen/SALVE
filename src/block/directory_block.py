@@ -49,11 +49,7 @@ class DirBlock(Block):
 
     def _mkdir_action(self,dirname,user,group,mode):
         mkdir = ' '.join(['mkdir -p -m',mode,dirname])
-        commands = [mkdir]
-        if ugo.is_root():
-            chown_dir = ' '.join(['chown',user+':'+group,dirname])
-            commands.append(chown_dir)
-        return action.ShellAction(commands,self.context)
+        return action.ShellAction(mkdir,self.context)
 
     def create_action(self):
         """
@@ -62,8 +58,13 @@ class DirBlock(Block):
         self.ensure_has_attrs('target','user','group','mode')
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
-        return self._mkdir_action(self.get('target'),self.get('user'),
-                                  self.get('group'),self.get('mode'))
+        mkdir = self._mkdir_action(self.get('target'),self.get('user'),
+                                   self.get('group'),self.get('mode'))
+        chown_dir = ' '.join(['chown',self.get('user')+':'+\
+                              self.get('group'),self.get('target')
+                             ])
+        chown_dir = action.ShellAction(chown_dir,self.context)
+        return action.ActionList([mkdir,chown_dir],self.context)
 
     def copy_action(self):
         """
@@ -107,7 +108,7 @@ class DirBlock(Block):
             chown_dir = ' '.join(['chown -R',self.get('user')+':'+\
                                   self.get('group'),self.get('target')
                                  ])
-            act.append(action.ShellAction([chown_dir],self.context))
+            act.append(action.ShellAction(chown_dir,self.context))
         return act
 
     def to_action(self):

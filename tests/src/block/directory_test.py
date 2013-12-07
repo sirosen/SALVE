@@ -28,10 +28,13 @@ def dir_create_to_action():
     with mock.patch('os.path.exists',lambda f: True):
         dir_act = b.to_action()
 
-    assert isinstance(dir_act,action.ShellAction)
+    assert isinstance(dir_act,action.ActionList)
+    assert len(dir_act.actions) == 2
+    mkdir = dir_act.actions[0]
+    chown = dir_act.actions[1]
 
-    assert len(dir_act.cmds) == 1
-    assert dir_act.cmds[0] == 'mkdir -p -m 755 /p/q/r'
+    assert mkdir.cmd == 'mkdir -p -m 755 /p/q/r'
+    assert chown.cmd == 'chown user1:nogroup /p/q/r'
 
 @istest
 def dir_create_chmod_as_root():
@@ -51,11 +54,13 @@ def dir_create_chmod_as_root():
         with mock.patch('os.path.exists',lambda f: True):
             dir_act = b.to_action()
 
-    assert isinstance(dir_act,action.ShellAction)
+    assert isinstance(dir_act,action.ActionList)
+    assert len(dir_act.actions) == 2
+    mkdir = dir_act.actions[0]
+    chown = dir_act.actions[1]
 
-    assert len(dir_act.cmds) == 2
-    assert dir_act.cmds[0] == 'mkdir -p -m 755 /p/q/r'
-    assert dir_act.cmds[1] == 'chown user1:nogroup /p/q/r'
+    assert mkdir.cmd == 'mkdir -p -m 755 /p/q/r'
+    assert chown.cmd == 'chown user1:nogroup /p/q/r'
 
 @istest
 def empty_dir_copy_to_action():
@@ -80,8 +85,7 @@ def empty_dir_copy_to_action():
     assert len(dir_act.actions) == 1
     mkdir_act = dir_act.actions[0]
 
-    assert len(mkdir_act.cmds) == 1
-    assert mkdir_act.cmds[0] == 'mkdir -p -m 744 /p/q/r'
+    assert mkdir_act.cmd == 'mkdir -p -m 744 /p/q/r'
 
 @istest
 def dir_copy_chmod_as_root():
@@ -111,11 +115,8 @@ def dir_copy_chmod_as_root():
     assert isinstance(mkdir_act,action.ShellAction)
     assert isinstance(chown_act,action.ShellAction)
 
-    assert len(mkdir_act.cmds) == 2
-    assert len(chown_act.cmds) == 1
-    assert mkdir_act.cmds[0] == 'mkdir -p -m 744 /p/q/r'
-    assert mkdir_act.cmds[1] == 'chown user1:nogroup /p/q/r'
-    assert chown_act.cmds[0] == 'chown -R user1:nogroup /p/q/r'
+    assert mkdir_act.cmd == 'mkdir -p -m 744 /p/q/r'
+    assert chown_act.cmd == 'chown -R user1:nogroup /p/q/r', "%s" % chown_act.cmd
 
 @istest
 def dir_copy_fails_nosource():

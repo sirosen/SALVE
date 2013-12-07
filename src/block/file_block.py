@@ -85,7 +85,7 @@ class FileBlock(Block):
             touch_file = ' '.join(['touch','-a',
                                    self.get('target'),
                                   ])
-            file_action = action.ShellAction([touch_file],self.context)
+            file_action = action.ShellAction(touch_file,self.context)
 
         if self.has('mode'):
             chmod = modify.FileChmodAction(self.get('target'),
