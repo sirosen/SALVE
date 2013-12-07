@@ -22,30 +22,24 @@ class Action(object):
     def execute(self): pass #pragma: no cover
 
 class ShellAction(Action):
-    def __init__(self, command_list, context):
+    def __init__(self, command, context):
         Action.__init__(self,context)
-        self.cmds = command_list
+        self.cmd = command
 
     def __str__(self):
-        return 'ShellAction(['+str(self.cmds)+'])'
+        return 'ShellAction('+str(self.cmd)+')'
 
     def execute(self):
-        stdouts,stderrs = [],[]
-        for cmd in self.cmds:
-            process = subprocess.Popen(cmd,
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE,
-                                       shell=True)
-            process.wait()
-            if process.returncode != 0:
-                raise ActionException(str(self)+\
-                    ' failed with exit code '+str(process.returncode)+\
-                    ' on command "' + cmd + '"',
-                    self.context)
-            out,err = process.communicate()
-            stdouts.append(out)
-            stderrs.append(err)
-        return (stdouts,stderrs)
+        process = subprocess.Popen(self.cmd,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   shell=True)
+        process.wait()
+        if process.returncode != 0:
+            raise ActionException(str(self)+\
+                ' failed with exit code '+str(process.returncode),
+                self.context)
+        return process.communicate()
 
 class ActionList(Action):
     def __init__(self, act_lst, context):

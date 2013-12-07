@@ -141,8 +141,7 @@ def file_create_to_action():
     assert isinstance(touch,action.ShellAction)
     assert isinstance(chmod,modify.FileChmodAction)
 
-    assert len(touch.cmds) == 1
-    assert touch.cmds[0] == 'touch -a /p/q/r'
+    assert touch.cmd == 'touch -a /p/q/r'
     assert chmod.target == '/p/q/r'
 
 @istest
@@ -173,8 +172,7 @@ def file_create_chown_as_root():
     assert isinstance(chmod,modify.FileChmodAction)
     assert isinstance(chown,modify.FileChownAction)
 
-    assert len(touch.cmds) == 1
-    assert touch.cmds[0] == 'touch -a /p/q/r'
+    assert touch.cmd == 'touch -a /p/q/r'
     assert chmod.target == '/p/q/r'
     assert chmod.mode == int('600',8)
     assert chown.target == '/p/q/r'
@@ -241,8 +239,7 @@ def file_create_nouser():
     assert isinstance(touch,action.ShellAction)
     assert isinstance(chmod_act,modify.FileChmodAction)
 
-    assert len(touch.cmds) == 1
-    assert touch.cmds[0] == 'touch -a /p/q/r'
+    assert touch.cmd == 'touch -a /p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
     assert chmod_act.target == '/p/q/r'
 
@@ -306,8 +303,7 @@ def file_create_nogroup():
     assert isinstance(touch,action.ShellAction)
     assert isinstance(chmod_act,modify.FileChmodAction)
 
-    assert len(touch.cmds) == 1
-    assert touch.cmds[0] == 'touch -a /p/q/r'
+    assert touch.cmd == 'touch -a /p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
     assert chmod_act.target == '/p/q/r'
 
@@ -357,8 +353,7 @@ def file_create_nomode():
             touch = b.to_action()
 
     assert isinstance(touch,action.ShellAction)
-    assert len(touch.cmds) == 1
-    assert touch.cmds[0] == 'touch -a /p/q/r'
+    assert touch.cmd == 'touch -a /p/q/r'
 
 @istest
 def file_copy_fails_nosource():
