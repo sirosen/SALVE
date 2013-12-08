@@ -3,7 +3,7 @@ SALVE
 
 Authors: Stephen Rosen
 
-Version: 1.0.2
+Version: 1.0.3
 
 For a detailed description of the project, please visit https://sirosen.github.io/SALVE
 
@@ -50,6 +50,9 @@ git clone https://github.com/myuser/my-salve-fork
 
 Changelog
 =========
+ * 1.0.3
+    * Fixes major bug with dir copy not triggering file backups
+    * Internal refactoring and cleanup in Blocks and Actions
  * 1.0.2
     * Fewer actions rely on shell commands and use shutil instead
     * Underspecifying an action no longer causes a failure for chown and chmod, but skips these actions instead
