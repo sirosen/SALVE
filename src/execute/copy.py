@@ -28,11 +28,10 @@ class FileCopyAction(CopyAction):
                str(self.dst)+",context="+str(self.context)+")"
 
     def execute(self):
-        if not os.path.exists(self.dst):
-            if os.path.islink(self.src):
-                os.symlink(os.readlink(self.src),self.dst)
-            else:
-                shutil.copyfile(self.src,self.dst)
+        if os.path.islink(self.src):
+            os.symlink(os.readlink(self.src),self.dst)
+        else:
+            shutil.copyfile(self.src,self.dst)
 
 class DirCopyAction(CopyAction):
     def __init__(self, src, dst, context):

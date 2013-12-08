@@ -103,6 +103,10 @@ class DirBlock(Block):
             # destination, then copy from source to target tree
             for f in files:
                 fname = os.path.join(d,f)
+                target_dir = os.path.join(
+                                self.get('target'),
+                                os.path.relpath(d,self.get('source'))
+                             )
                 target_fname = os.path.join(target_dir,f)
                 backup_act = backup.FileBackupAction(target_fname,
                                                      backup_dir,
