@@ -8,118 +8,155 @@ import src.execute.copy as copy
 import src.util.locations as locations
 import src.util.ugo as ugo
 
-from src.block.base_block import Block, BlockException
+from src.block.base import Block, BlockException
 
 class DirBlock(Block):
     """
     A directory block describes an action performed on a directory.
     This includes creation, deletion, and copying from source.
     """
-    def __init__(self,exception_context=None):
-        Block.__init__(self,Block.types.DIRECTORY,exception_context)
-
-    def expand_file_paths(self,root_dir):
+    def __init__(self,context=None):
         """
-        Expand relative paths in source and target to be absolute paths
-        beginning with the root directory.
+        Directory Block constructor.
+
+        KWArgs:
+            @context
+            The StreamContext of the block's initial identifier.
         """
-        if not self.has('target'):
-            raise self.mk_except('DirBlock missing target')
+        Block.__init__(self,Block.types.DIRECTORY,context)
+        for attr in ['backup_dir','backup_log','target','source']:
+            self.path_attrs.add(attr)
+        for attr in ['backup_dir','backup_log','target','user','group',
+                     'mode']:
+            self.min_attrs.add(attr)
 
-        if not self.has('backup_dir'):
-            raise self.mk_except('DirBlock missing backup_dir')
+    def _mkdir_action(self,dirname,mode):
+        """
+        Creates a shell action to create the specified directory with
+        the specified mode. Useful throughout dir actions, as handling
+        subdirectories correctly often requires more of these.
 
-        if not self.has('backup_log'):
-            raise self.mk_except('DirBlock missing backup_log')
+        Args:
+            @dirname
+            The path to the directory to be created. Should be an
+            absolute path in order to ensure correctness.
 
-        if self.has('source') and \
-           not locations.is_abs_or_var(self.get('source')):
-            self.set('source', os.path.join(root_dir,
-                                            self.get('source')))
-
-        if not locations.is_abs_or_var(self.get('backup_dir')):
-            self.set('backup_dir', os.path.join(root_dir,
-                                                self.get('backup_dir')))
-        if not locations.is_abs_or_var(self.get('backup_log')):
-            self.set('backup_log', os.path.join(root_dir,
-                                                self.get('backup_log')))
-        if not locations.is_abs_or_var(self.get('target')):
-            self.set('target', os.path.join(root_dir,
-                                            self.get('target')))
-
-    def _mkdir_action(self,dirname,user,group,mode):
-        mkdir = ' '.join(['mkdir -p -m',mode,dirname])
-        return action.ShellAction(mkdir,self.context)
+            @mode
+            The mode (umask) of the directory being created.
+        """
+        return action.ShellAction('mkdir -p -m %s %s' % (mode,dirname),
+                                  self.context)
 
     def create_action(self):
         """
-        Create a directory. Used by creation and dir copy.
+        Generate a directory creation action. This may be all or part of
+        the action produced by the block upon action conversion.
         """
         self.ensure_has_attrs('target','user','group','mode')
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
-        mkdir = self._mkdir_action(self.get('target'),self.get('user'),
-                                   self.get('group'),self.get('mode'))
-        chown_dir = ' '.join(['chown',self.get('user')+':'+\
-                              self.get('group'),self.get('target')
-                             ])
-        chown_dir = action.ShellAction(chown_dir,self.context)
-        return action.ActionList([mkdir,chown_dir],self.context)
+        # create the target dir
+        act = self._mkdir_action(self.get('target'),self.get('mode'))
+
+        # if running as root, add a non-recursive chown as well, to
+        # set the correct permissions for the directory but not its
+        # children
+        if ugo.is_root():
+            user_group_str = self.get('user')+':'+self.get('group')
+            chown_dir = 'chown %s %s' % (user_group_str,self.get('target'))
+            chown_dir = action.ShellAction(chown_dir,self.context)
+            act = action.ActionList([act,chown_dir],self.context)
+
+        return act
 
     def copy_action(self):
         """
-        Copy a directory.
+        Copy a directory. This may be all or part of the action produced
+        by the block upon action conversion.
         """
         self.ensure_has_attrs('source','target','user','group','mode')
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
         assert os.path.isabs(self.get('source'))
 
-        mkdir = self._mkdir_action(self.get('target'),self.get('user'),
-                                   self.get('group'),self.get('mode'))
+        # create the target directory; make the action an AL for
+        # simplicity when adding actions to it
+        mkdir = self._mkdir_action(self.get('target'),self.get('mode'))
         act = action.ActionList([mkdir],self.context)
 
-        sourcelen = len(self.get('source'))
         backup_dir = self.get('backup_dir')
         backup_log = self.get('backup_log')
+        # walk over all files and subdirs in the directory, creating
+        # directories and copying files
         for d,subdirs,files in os.walk(self.get('source')):
-            for f in files:
-                fname = os.path.join(d,f)
+            # for every subdir, rewrite it to be prefixed with the
+            # target and create that directory
+            for sd in subdirs:
                 target_dir = os.path.join(
                                 self.get('target'),
-                                os.path.relpath(d,self.get('source'))
+                                os.path.relpath(os.path.join(d,sd),
+                                                self.get('source'))
                              )
+                act.append(self._mkdir_action(target_dir,
+                                              self.get('mode')))
+            # for every file, first backup any file that is at the
+            # destination, then copy from source to target tree
+            for f in files:
+                fname = os.path.join(d,f)
                 target_fname = os.path.join(target_dir,f)
-                file_act = action.ActionList([],self.context)
-                file_act.append(backup.FileBackupAction(target_fname,
-                                                        backup_dir,
-                                                        backup_log,
-                                                        self.context))
-                file_act.append(self._mkdir_action(
-                    os.path.dirname(target_fname),self.get('user'),
-                    self.get('group'),self.get('mode'))
-                    )
-                file_act.append(copy.FileCopyAction(fname,
-                                                    target_fname,
-                                                    self.context))
+                backup_act = backup.FileBackupAction(target_fname,
+                                                     backup_dir,
+                                                     backup_log,
+                                                     self.context)
+                copy_act = copy.FileCopyAction(fname,
+                                               target_fname,
+                                               self.context)
+                file_act = action.ActionList([backup_act,copy_act],self.context)
                 act.append(file_act)
 
+        # if running as root, recursively apply permissions after the copy
+        # TODO: replace with something less heavy handed (i.e. set permissions
+        # for everything in the source tree, not the entire dir)
         if ugo.is_root():
-            chown_dir = ' '.join(['chown -R',self.get('user')+':'+\
-                                  self.get('group'),self.get('target')
-                                 ])
+            user_group_str = self.get('user')+':'+self.get('group')
+            chown_dir = 'chown -R %s %s' % (user_group_str,self.get('target'))
             act.append(action.ShellAction(chown_dir,self.context))
+
         return act
 
     def to_action(self):
+        """
+        Uses the DirectoryBlock to produce an action.
+        The type of action produced depends on the value of the block's
+        'action' attribute.
+        If it is a create action, this boils down to an invocation of
+        'mkdir -p'. If it is a copy action, this is a recursive
+        directory copy that creates the target directories and backs up
+        any files that are being overwritten.
+        """
         def add_action(act,new,prepend=False):
+            """
+            Defines a uniform way of expanding an action regardless of
+            whether or not it is an AL.
+
+            Args:
+                @act
+                The action being expanded.
+                @new
+                The action being added to @act
+
+            KWArgs:
+                @prepend
+                When True, prepend @new to @act. When False, append
+                instead.
+            """
+            # convert @act to an AL if it wasn't one before
             if not isinstance(act,action.ActionList):
                 act = action.ActionList([act],self.context)
             if prepend: act.prepend(new)
             else: act.append(new)
             return act
 
-        commands = []
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will
         triggers_backup = ('remove',)
@@ -129,11 +166,14 @@ class DirBlock(Block):
         elif self.get('action') == 'copy':
             dir_act = self.copy_action()
         else:
-            raise self.mk_except('Unsupported directory block action.')
+            raise self.mk_except('Unsupported DirectoryBlock action.')
 
+        # if the action is classified as causing a directory backup, the
+        # backup action is created and prepended to the existing action
         if self.get('action') in triggers_backup and\
            os.path.exists(self.get('target')):
-            backup_act = backup.DirBackupAction(self.get('target'),
+            # no need to test until 'remove' is defined
+            backup_act = backup.DirBackupAction(self.get('target'), #pragma: no cover
                                                 self.get('backup_dir'),
                                                 self.get('backup_log'),
                                                 self.context)

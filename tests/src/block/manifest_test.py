@@ -8,7 +8,7 @@ import src.execute.action
 import src.execute.backup
 import src.execute.copy
 import src.block.manifest_block
-import src.block.base_block
+import src.block.base
 import src.util.locations as locations
 
 from tests.src.block.block_test import _dummy_conf, get_full_path
@@ -21,7 +21,7 @@ def sourceless_manifest_to_action_error():
     converted to an action if the action attribute is unspecified.
     """
     b = src.block.manifest_block.ManifestBlock()
-    ensure_except(src.block.base_block.BlockException,b.to_action)
+    ensure_except(src.block.base.BlockException,b.to_action)
 
 @istest
 def sourceless_manifest_expand_error():
@@ -31,7 +31,7 @@ def sourceless_manifest_expand_error():
     are expanded if the source attribute is unspecified.
     """
     b = src.block.manifest_block.ManifestBlock()
-    ensure_except(src.block.base_block.BlockException,
+    ensure_except(src.block.base.BlockException,
                   b.expand_blocks,
                   locations.get_salve_root(),
                   _dummy_conf)
@@ -55,7 +55,7 @@ def recursive_manifest_error():
     BlockException when expanded.
     """
     b = src.block.manifest_block.ManifestBlock(source=get_full_path('invalid1.manifest'))
-    ensure_except(src.block.base_block.BlockException,
+    ensure_except(src.block.base.BlockException,
                   b.expand_blocks,
                   locations.get_salve_root(),
                   _dummy_conf)

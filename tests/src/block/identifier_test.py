@@ -4,7 +4,7 @@ from nose.tools import istest
 import os, mock
 
 from tests.utils.exceptions import ensure_except
-from src.block.base_block import BlockException
+from src.block.base import BlockException
 from src.reader.tokenize import Token
 from src.util.error import StreamContext
 
