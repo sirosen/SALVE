@@ -18,6 +18,8 @@ class ManifestBlock(Block):
         Block.__init__(self,Block.types.MANIFEST,exception_context)
         self.sub_blocks = None
         if source: self.set('source',source)
+        self.path_attrs.add('source')
+        self.min_attrs.add('source')
 
     def expand_blocks(self,root_dir,config,ancestors=None):
         """
@@ -73,17 +75,6 @@ class ManifestBlock(Block):
             else:
                 config.apply_to_block(b)
                 b.expand_file_paths(root_dir)
-
-    def expand_file_paths(self,root_dir):
-        """
-        Expand relative paths in source and target to be absolute paths
-        beginning with the SALVE_ROOT.
-        """
-        self.ensure_has_attrs('source')
-
-        if not locations.is_abs_or_var(self.get('source')):
-            self.set('source',os.path.join(root_dir,
-                                           self.get('source')))
 
     def to_action(self):
         """

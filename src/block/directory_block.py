@@ -24,31 +24,11 @@ class DirBlock(Block):
             The StreamContext of the block's initial identifier.
         """
         Block.__init__(self,Block.types.DIRECTORY,context)
-
-    def expand_file_paths(self,root_dir):
-        """
-        Expand relative paths in source, target, and backup locations to
-        be absolute paths beginning with the root directory.
-
-        Args:
-            @root_dir
-            The directory to be used as a prefix to all relative paths
-            in the block.
-        """
-        self.ensure_has_attrs('target','backup_dir','backup_log')
-
-        # define a helper to expand attributes with the root_dir
-        def expand_attr(attrname):
-            val = self.get(attrname)
-            if not locations.is_abs_or_var(val):
-                self.set(attrname,os.path.join(root_dir,val))
-
-        # source is not guaranteed to exist because the action could
-        # be a simple "mkdir", in which case source has no meaning
-        if self.has('source'): expand_attr('source')
-
-        for attrname in ['target','backup_log','backup_dir']:
-            expand_attr(attrname)
+        for attr in ['backup_dir','backup_log','target','source']:
+            self.path_attrs.add(attr)
+        for attr in ['backup_dir','backup_log','target','user','group',
+                     'mode']:
+            self.min_attrs.add(attr)
 
     def _mkdir_action(self,dirname,mode):
         """

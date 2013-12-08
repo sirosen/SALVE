@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
-import abc
+import abc, os
 
 from src.util.enum import Enum
 from src.util.error import SALVEException
+import src.util.locations as locations
 
 class BlockException(SALVEException):
     """
@@ -57,6 +58,12 @@ class Block(object):
         # every block holds a hashmap of attribute names to values,
         # always initialized as empty
         self.attrs = {}
+        # this is a set of attribute identifiers which always carry
+        # a path as their value
+        self.path_attrs = set()
+        # this is a set of attribute identifiers which must be present
+        # in order for the block to be valid
+        self.min_attrs = set()
 
     def set(self,attribute_name,value):
         """
@@ -116,7 +123,8 @@ class Block(object):
     def mk_except(self,msg):
         """
         Create a BlockException from the block. Used to easily pass the
-        block's context to the exception.
+        block's context to the exception, and to give any extra
+        information that might be desirable for a specific block type.
 
         Args:
             @msg
@@ -137,14 +145,36 @@ class Block(object):
         """
         return #pragma: no cover
 
-    @abc.abstractmethod
     def expand_file_paths(self, root_dir):
         """
         Expands all relative paths in a block's set of attribute values,
         given a directory to act as the prefix to all of the paths. The
         attributes are identified as paths based on the block type.
 
-        There is no meaningful implementation of this for an untyped
-        block, so it is abstract.
+        Args:
+            @root_dir
+            The directory to be used as a prefix to all relative paths
+            in the block.
         """
-        return #pragma: no cover
+        # define a helper to expand attributes with the root_dir
+        def expand_attr(attrname):
+            val = self.get(attrname)
+            if not locations.is_abs_or_var(val):
+                self.set(attrname,os.path.join(root_dir,val))
+
+        # find the minimal set of path attributes
+        min_path_attrs = self.min_attrs.intersection(self.path_attrs)
+        # ... and the non-minimal path attributes
+        non_min_path_attrs = self.path_attrs.difference(min_path_attrs)
+
+        # first ensure that the minimal attributes are in place
+        self.ensure_has_attrs(*list(min_path_attrs))
+
+        # and expand each one
+        for attr in min_path_attrs:
+            expand_attr(attr)
+
+        # then ensure that any of the non-minimal ones that are present
+        # are also expanded
+        for attr in non_min_path_attrs:
+            if self.has(attr): expand_attr(attr)

@@ -6,7 +6,6 @@ import src.execute.action as action
 import src.execute.backup as backup
 import src.execute.copy as copy
 import src.execute.modify as modify
-import src.util.locations as locations
 import src.util.ugo as ugo
 
 from src.block.base import Block, BlockException
@@ -16,42 +15,20 @@ class FileBlock(Block):
     A file block describes an action performed on a file.
     This includes creation, deletion, and string append.
     """
-    def __init__(self,exception_context=None):
-        Block.__init__(self,Block.types.FILE,exception_context)
-
-    def expand_file_paths(self,root_dir):
+    def __init__(self,context=None):
         """
-        Expand relative paths in source and target to be absolute paths
-        beginning with the SALVE_ROOT.
+        File Block constructor
+
+        KWArgs:
+            @context
+            This is a StreamContext identifying the location of the file
+            block's identifier, for error reporting.
         """
-        # there must be a target for both copy and create actions
-        if not self.has('target'):
-            raise self.mk_except('FileBlock missing target')
-        if not self.has('backup_dir'):
-            raise self.mk_except('FileBlock missing backup_dir')
-        if not self.has('backup_log'):
-            raise self.mk_except('FileBlock missing backup_log')
-
-        # no source for create actions
-        if self.has('source'):
-            if not locations.is_abs_or_var(self.get('source')):
-                self.set('source', os.path.join(root_dir,
-                                                self.get('source')))
-
-        # always have a target
-        if not locations.is_abs_or_var(self.get('target')):
-            self.set('target', os.path.join(root_dir,
-                                            self.get('target')))
-
-        # always have a backup_dir
-        if not locations.is_abs_or_var(self.get('backup_dir')):
-            self.set('backup_dir', os.path.join(root_dir,
-                                                self.get('backup_dir')))
-
-        # always have a backup_log
-        if not locations.is_abs_or_var(self.get('backup_log')):
-            self.set('backup_log', os.path.join(root_dir,
-                                                self.get('backup_log')))
+        Block.__init__(self,Block.types.FILE,context)
+        for attr in ['backup_dir','backup_log','target','source']:
+            self.path_attrs.add(attr)
+        for attr in ['backup_dir','backup_log','target']:
+            self.min_attrs.add(attr)
 
     def to_action(self):
         self.ensure_has_attrs('action')
