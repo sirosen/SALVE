@@ -125,6 +125,15 @@ class DirBlock(Block):
         return act
 
     def to_action(self):
+        """
+        Uses the DirectoryBlock to produce an action.
+        The type of action produced depends on the value of the block's
+        'action' attribute.
+        If it is a create action, this boils down to an invocation of
+        'mkdir -p'. If it is a copy action, this is a recursive
+        directory copy that creates the target directories and backs up
+        any files that are being overwritten.
+        """
         def add_action(act,new,prepend=False):
             """
             Defines a uniform way of expanding an action regardless of
@@ -157,7 +166,7 @@ class DirBlock(Block):
         elif self.get('action') == 'copy':
             dir_act = self.copy_action()
         else:
-            raise self.mk_except('Unsupported directory block action.')
+            raise self.mk_except('Unsupported DirectoryBlock action.')
 
         # if the action is classified as causing a directory backup, the
         # backup action is created and prepended to the existing action

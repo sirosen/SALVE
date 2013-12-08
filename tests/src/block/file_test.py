@@ -61,17 +61,21 @@ def file_copy_to_action_nobackup():
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','600')
-    with mock.patch('os.path.exists', lambda f: False):
-        with mock.patch('src.util.ugo.is_root',lambda: False):
-            file_act = b.to_action()
+    with mock.patch('src.util.ugo.is_root',lambda: False):
+        file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
-    assert len(file_act.actions) == 2
-    copy_act = file_act.actions[0]
-    chmod_act = file_act.actions[1]
+    assert len(file_act.actions) == 3
+    backup_act = file_act.actions[0]
+    copy_act = file_act.actions[1]
+    chmod_act = file_act.actions[2]
+    assert isinstance(backup_act,backup.FileBackupAction)
     assert isinstance(copy_act,copy.FileCopyAction)
     assert isinstance(chmod_act,modify.FileChmodAction)
 
+    assert backup_act.src == '/p/q/r'
+    assert backup_act.dst == '/m/n/p/q/r'
+    assert backup_act.logfile == '/m/n.log'
     assert copy_act.src == '/a/b/c'
     assert copy_act.dst == '/p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
@@ -196,17 +200,20 @@ def file_copy_nouser():
     b.set('mode','0600')
 
     with mock.patch('src.util.ugo.is_root',lambda: True):
-        # skip backup just to generate a simpler action
-        with mock.patch('os.path.exists', lambda f: False):
-            file_act = b.to_action()
+        file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
-    assert len(file_act.actions) == 2
-    copy_act = file_act.actions[0]
-    chmod_act = file_act.actions[1]
+    assert len(file_act.actions) == 3
+    backup_act = file_act.actions[0]
+    copy_act = file_act.actions[1]
+    chmod_act = file_act.actions[2]
+    assert isinstance(backup_act,backup.FileBackupAction)
     assert isinstance(copy_act,copy.FileCopyAction)
     assert isinstance(chmod_act,modify.FileChmodAction)
 
+    assert backup_act.src == '/p/q/r'
+    assert backup_act.dst == '/m/n/p/q/r'
+    assert backup_act.logfile == '/m/n.log'
     assert copy_act.src == '/a/b/c'
     assert copy_act.dst == '/p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
@@ -265,12 +272,17 @@ def file_copy_nogroup():
             file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
-    assert len(file_act.actions) == 2
-    copy_act = file_act.actions[0]
-    chmod_act = file_act.actions[1]
+    assert len(file_act.actions) == 3
+    backup_act = file_act.actions[0]
+    copy_act = file_act.actions[1]
+    chmod_act = file_act.actions[2]
+    assert isinstance(backup_act,backup.FileBackupAction)
     assert isinstance(copy_act,copy.FileCopyAction)
     assert isinstance(chmod_act,modify.FileChmodAction)
 
+    assert backup_act.src == '/p/q/r'
+    assert backup_act.dst == '/m/n/p/q/r'
+    assert backup_act.logfile == '/m/n.log'
     assert copy_act.src == '/a/b/c'
     assert copy_act.dst == '/p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
@@ -324,13 +336,20 @@ def file_copy_nomode():
     b.set('group','nogroup')
     # skip chown, for simplicity
     with mock.patch('src.util.ugo.is_root',lambda: False):
-        # skip backup just to generate a simpler action
-        with mock.patch('os.path.exists', lambda f: False):
-            file_act = b.to_action()
+        file_act = b.to_action()
 
-    assert isinstance(file_act,copy.FileCopyAction)
-    assert file_act.src == '/a/b/c'
-    assert file_act.dst == '/p/q/r'
+    assert isinstance(file_act,action.ActionList)
+    assert len(file_act.actions) == 2
+    backup_act = file_act.actions[0]
+    copy_act = file_act.actions[1]
+
+    assert isinstance(backup_act,backup.FileBackupAction)
+    assert isinstance(copy_act,copy.FileCopyAction)
+    assert backup_act.src == '/p/q/r'
+    assert backup_act.dst == '/m/n/p/q/r'
+    assert backup_act.logfile == '/m/n.log'
+    assert copy_act.src == '/a/b/c'
+    assert copy_act.dst == '/p/q/r'
 
 @istest
 def file_create_nomode():
