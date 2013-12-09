@@ -5,6 +5,7 @@ import os
 import src.execute.action as action
 import src.execute.backup as backup
 import src.execute.copy as copy
+import src.execute.modify as modify
 import src.util.locations as locations
 import src.util.ugo as ugo
 
@@ -62,9 +63,10 @@ class DirBlock(Block):
         # set the correct permissions for the directory but not its
         # children
         if ugo.is_root():
-            user_group_str = self.get('user')+':'+self.get('group')
-            chown_dir = 'chown %s %s' % (user_group_str,self.get('target'))
-            chown_dir = action.ShellAction(chown_dir,self.context)
+            chown_dir = modify.DirChownAction(self.get('target'),
+                                              self.get('user'),
+                                              self.get('group'),
+                                              self.context)
             act = action.ActionList([act,chown_dir],self.context)
 
         return act
@@ -122,9 +124,12 @@ class DirBlock(Block):
         # TODO: replace with something less heavy handed (i.e. set permissions
         # for everything in the source tree, not the entire dir)
         if ugo.is_root():
-            user_group_str = self.get('user')+':'+self.get('group')
-            chown_dir = 'chown -R %s %s' % (user_group_str,self.get('target'))
-            act.append(action.ShellAction(chown_dir,self.context))
+            chown_dir = modify.DirChownAction(self.get('target'),
+                                              self.get('user'),
+                                              self.get('group'),
+                                              self.context,
+                                              recursive=True)
+            act.append(chown_dir)
 
         return act
 
