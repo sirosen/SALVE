@@ -31,22 +31,23 @@ class DirBlock(Block):
                      'mode']:
             self.min_attrs.add(attr)
 
-    def _mkdir_action(self,dirname,mode):
+    def _mkdir_with_mode(self,dirname):
         """
         Creates a shell action to create the specified directory with
-        the specified mode. Useful throughout dir actions, as handling
+        the block's mode. Useful throughout dir actions, as handling
         subdirectories correctly often requires more of these.
 
         Args:
             @dirname
             The path to the directory to be created. Should be an
             absolute path in order to ensure correctness.
-
-            @mode
-            The mode (umask) of the directory being created.
         """
-        return action.ShellAction('mkdir -p -m %s %s' % (mode,dirname),
-                                  self.context)
+        act = action.ActionList([],self.context)
+        act.append(create.DirCreateAction(dirname,self.context))
+        act.append(modify.DirChmodAction(dirname,
+                                         self.get('mode'),
+                                         self.context))
+        return act
 
     def create_action(self):
         """
@@ -57,17 +58,16 @@ class DirBlock(Block):
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
         # create the target dir
-        act = self._mkdir_action(self.get('target'),self.get('mode'))
+        act = self._mkdir_with_mode(self.get('target'))
 
         # if running as root, add a non-recursive chown as well, to
         # set the correct permissions for the directory but not its
         # children
         if ugo.is_root():
-            chown_dir = modify.DirChownAction(self.get('target'),
-                                              self.get('user'),
-                                              self.get('group'),
-                                              self.context)
-            act = action.ActionList([act,chown_dir],self.context)
+            act.append(modify.DirChownAction(self.get('target'),
+                                             self.get('user'),
+                                             self.get('group'),
+                                             self.context))
 
         return act
 
@@ -83,8 +83,7 @@ class DirBlock(Block):
 
         # create the target directory; make the action an AL for
         # simplicity when adding actions to it
-        mkdir = self._mkdir_action(self.get('target'),self.get('mode'))
-        act = action.ActionList([mkdir],self.context)
+        act = self._mkdir_with_mode(self.get('target'))
 
         backup_dir = self.get('backup_dir')
         backup_log = self.get('backup_log')
@@ -99,8 +98,7 @@ class DirBlock(Block):
                                 os.path.relpath(os.path.join(d,sd),
                                                 self.get('source'))
                              )
-                act.append(self._mkdir_action(target_dir,
-                                              self.get('mode')))
+                act.append(self._mkdir_with_mode(target_dir))
             # for every file, first backup any file that is at the
             # destination, then copy from source to target tree
             for f in files:
@@ -119,6 +117,11 @@ class DirBlock(Block):
                                                self.context)
                 file_act = action.ActionList([backup_act,copy_act],self.context)
                 act.append(file_act)
+
+        act.append(modify.DirChmodAction(self.get('target'),
+                                         self.get('mode'),
+                                         self.context,
+                                         recursive=True))
 
         # if running as root, recursively apply permissions after the copy
         # TODO: replace with something less heavy handed (i.e. set permissions

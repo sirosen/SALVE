@@ -5,6 +5,7 @@ import os
 import src.execute.action as action
 import src.execute.backup as backup
 import src.execute.copy as copy
+import src.execute.create as create
 import src.execute.modify as modify
 import src.util.ugo as ugo
 
@@ -91,8 +92,8 @@ class FileBlock(Block):
                                               self.context)
         elif self.get('action') == 'create':
             ensure_abspath_attrs('target')
-            touch_file = 'touch -a %s' % self.get('target')
-            file_action = action.ShellAction(touch_file,self.context)
+            file_action = create.FileCreateAction(self.get('target'),
+                                                  self.context)
         else:
             raise self.mk_except('Unsupported FileBlock action.')
 
