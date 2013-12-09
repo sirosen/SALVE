@@ -23,6 +23,16 @@ class Enum(object):
             if y is x.C: ...
         is tests should pass because y is just another ref to the same
         string.
+
+        Args:
+            @seq
+            A list of string arguments to be added as attributes mapped
+            to themselves as values.
+
+        KWArgs:
+            @named
+            A set of attribute-value mappings to be mapped into the
+            enum.
         """
         enums = dict([(x,x) for x in seq], **named)
         self.__dict__.update(enums)
