@@ -18,6 +18,17 @@ class SALVEConfigParser(ConfigParser):
     values.
     """
     def __init__(self, userhome, filename):
+        """
+        SALVEConfigParser constructor.
+        Creates a ConfigParser specialized for SALVE.
+
+        Args:
+            @userhome
+            The home directory of the running user ($SUDO_USER if
+            running under 'sudo').
+            @filename
+            The name of a specific config file to load.
+        """
         # create a config parser
         ConfigParser.__init__(self)
 
@@ -27,6 +38,7 @@ class SALVEConfigParser(ConfigParser):
         filenames = [locations.get_default_config(),
                      os.path.join(userhome,'.salverc'),
                      filename]
+        # filter out filename if it is None
         self.read(f for f in filenames if f is not None)
 
 class SALVEConfig(object):
@@ -41,6 +53,15 @@ class SALVEConfig(object):
     without inspecting the files.
     """
     def __init__(self, filename=None):
+        """
+        SALVEConfig constructor.
+
+        KWArgs:
+            @filename
+            The specific config file to create Config from. Defaults to
+            None, which indicates that the defaults and ~/.salverc
+            should be used without any supplement.
+        """
         # get the user that we're running as, even if invoked with sudo
         user = os.environ['USER']
         if 'SUDO_USER' in os.environ:
@@ -109,6 +130,12 @@ class SALVEConfig(object):
 
         Returns a new string in which placeholders have been replaced,
         or raises a KeyError if they are not found.
+
+        Args:
+            @template_string
+            A string containing variables meant to be replaced with
+            environment variables, as represented or overridden in the
+            Config.
         """
         temp = string.Template(template_string)
         return temp.substitute(self.env)
@@ -118,6 +145,12 @@ class SALVEConfig(object):
         Given a @block produced by the parser, takes any settings which
         describe defaults and uses them to populate any missing attrs
         of the block.
+
+        Args:
+            @block
+            The block to which Config attributes should be applied. The
+            general policy is to only apply attributes that are not
+            already specified.
         """
         ty = block.block_type.lower()
         relevant_attrs = self.attributes[ty]

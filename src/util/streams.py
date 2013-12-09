@@ -5,6 +5,10 @@ import hashlib
 def get_filename(stream):
     """
     Gets the filename for a given IO stream if it exists.
+
+    Args:
+        @stream
+        A file like object whose name is desired.
     """
     fname = None
     if hasattr(stream,'name'):
@@ -14,6 +18,10 @@ def get_filename(stream):
 def sha_512(stream):
     """
     Computes the sha512 hash of the contents of the stream.
+
+    Args:
+        @stream
+        A file like object whose sha512 has is desired.
     """
     hash = hashlib.sha512()
     while True:

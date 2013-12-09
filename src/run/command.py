@@ -32,6 +32,12 @@ def read_commandline(option_parser=None):
     """
     Reads the commandline with a SALVE option parser, and validates the
     inputs that were received.
+
+    KWArgs:
+        @option_parser
+        A given option_parser for reading the commandline. If not given,
+        or given as a non-true value, the function will generate a new
+        one.
     """
     if not option_parser:
         option_parser = get_option_parser()
@@ -53,6 +59,13 @@ def run_on_manifest(root_manifest,opts):
     """
     Given a manifest file, loads SALVEConfig, parses and expands the
     root manifest, then executes the actions defined by that manifest.
+
+    Args:
+        @root_manifest
+        The manifest at the root of the manifest tree, and starting
+        point for manifest execution.
+        @opts
+        The options, as parsed from the commandline.
     """
     cfg_file = None
     if opts.configfile: cfg_file = opts.configfile
@@ -61,6 +74,8 @@ def run_on_manifest(root_manifest,opts):
     root_dir = os.path.abspath(os.path.dirname(root_manifest))
     if opts.fileroot: root_dir = os.path.abspath(opts.fileroot)
 
+    # root_block is a synthetic manifest block containing the root
+    # manifest
     root_block = src.block.manifest_block.ManifestBlock(source=root_manifest)
     root_block.expand_blocks(root_dir,conf)
 
@@ -71,6 +86,10 @@ def get_root_manifest(opts):
     """
     Given a set of options, identifies the root manifest that they
     describe.
+
+    Args:
+        @opts
+        Options, as parsed from the commandline.
     """
     root_manifest = None
     if opts.manifest:

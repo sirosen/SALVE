@@ -8,19 +8,34 @@ from src.reader.tokenize import Token, tokenize_stream
 class ParsingException(SALVEException):
     """
     A specialized exception for parsing errors.
-    A ParsingException (PE) can carry the token and filename that
-    tripped the exception. In that way, any error handling code that
-    gets a PE can directly inspect the objects/attributes that tripped
-    it.
+
+    A ParsingException (PE) often carres the token that tripped the
+    exception in its message.
     """
     def __init__(self,msg,context):
+        """
+        ParsingException constructor
+
+        Args:
+            @msg
+            A string message that describes the error.
+            @context
+            A StreamContext that identifies the origin of this
+            exception.
+        """
         SALVEException.__init__(self,msg,context)
 
-def parse_tokens(tokens,filename=None):
+def parse_tokens(tokens):
     """
     Converts a token list to a block list.
     This is not entirely stateless, but unlike the tokenizer,
     there are no explicit states.
+
+    Args:
+        @tokens
+        An iterable (generally a list) of Tokens to parse into Blocks.
+        Unordered iterables won't work here, as parsing is very
+        sensitive to token ordering.
     """
     blocks = []
     def unexpected_token(token,expected_types):
@@ -85,9 +100,12 @@ def parse_tokens(tokens,filename=None):
 
 def parse_stream(stream):
     """
-    @stream is any file-like object that supports read() or readlines()
-    Parsing a stream is just tokenizing it, and then handing those
-    tokens to the parser.
+    Parse a stream or file object into blocks.
+
+    Args:
+        @stream
+        any file-like object that supports read() or readlines()
+        Parsing a stream is just tokenizing it, and then handing those
+        tokens to the parser.
     """
-    filename = get_filename(stream)
-    return parse_tokens(tokenize_stream(stream),filename=filename)
+    return parse_tokens(tokenize_stream(stream))

@@ -7,17 +7,53 @@ from src.util.error import SALVEException, StreamContext
 from src.util.streams import get_filename
 
 class TokenizationException(SALVEException):
+    """
+    A SALVE exception specialized for tokenization.
+    """
     def __init__(self,msg,context):
+        """
+        TokenizationException constructor
+
+        Args:
+            @msg
+            A string message that describes the error.
+            @context
+            A StreamContext that identifies the origin of this
+            exception.
+        """
         SALVEException.__init__(self,msg,context)
 
 class Token(object):
+    """
+    A Token is an element of an input stream that has not had any
+    parsing logic applied to it.
+
+    Tokens are mildly sensitive to their context, and may raise errors
+    if found in an invalid ordering.
+    """
+    # these are the valid token types
     types = Enum('IDENTIFIER','BLOCK_START','BLOCK_END','TEMPLATE')
     def __init__(self,value,ty,context):
+        """
+        Token constructor
+
+        Args:
+            @value
+            The string contained in the Token, the original element of
+            the input stream.
+            @ty
+            The type of this token. Determined from context and content.
+            @context
+            The StreamContext at which this Token was found.
+        """
         self.value = value
         self.ty = ty
         self.context = context
 
     def __str__(self):
+        """
+        stringify a Token
+        """
         attrs = ['value='+self.value,'ty='+self.ty,
                  'lineno='+str(self.context.lineno)]
         if self.context.filename:
@@ -26,17 +62,39 @@ class Token(object):
 
 def tokenize_stream(stream):
     """
-    @stream is actually any file-like object that supports read() or
-    readlines(). We need one of these attributes in order to hand the
-    stream off to shlex for basic tokenization.
-    In addition to the shlex tokenization, we do some basic validation
-    that the token order is valid, and tag tokens with their types.
-    Produces a Token list.
+    Convert an input stream into a list of Tokens.
+
+    Args:
+        @stream is actually any file-like object that supports read() or
+        readlines(). We need one of these attributes in order to hand
+        the stream off to shlex for basic tokenization.
+        In addition to the shlex tokenization, we do some basic
+        validation that the token order is valid, and tag tokens with
+        their types.
     """
     def is_block_delim(token):
+        """
+        Check if a token is a BLOCK_START or BLOCK_END
+
+        Args:
+            @token
+            Not a Token, but a raw string being examined.
+        """
         return token == '{' or token == '}'
 
     def unexpected_token(token_str,expected,context):
+        """
+        Raise an exception due to an unexpected Token being fund in the
+        input stream. Usually means that there are out of order tokens.
+
+        Args:
+            @token_str
+            Not a Token, but a string that was found in the stream.
+            @expected
+            The expected type(s) of the Token.
+            @context
+            A StreamContext identifying this location in the file.
+        """
         raise TokenizationException('Unexpected token: ' + token_str +\
             ' Expected ' + str(expected) + ' instead.',
             context)
@@ -66,6 +124,17 @@ def tokenize_stream(stream):
                           '_-+=^&@`/\|~$()[].,<>*?!%#'
 
     def add_token(tok,ty,context):
+        """
+        Add a token to the list in progress.
+
+        Args:
+            @tok
+            The string that was tokenized.
+            @ty
+            The Token type of @tok
+            @context
+            The StreamContext where @tok was found.
+        """
         tokens.append(Token(tok,ty,context))
 
     # The tokenizer acts as a state machine, reading tokens and making
