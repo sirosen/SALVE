@@ -1,0 +1,6 @@
+#a single file block with two attrs
+
+file {
+    source /a/b/c
+    target /d/e
+}

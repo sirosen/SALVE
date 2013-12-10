@@ -1,0 +1,6 @@
+#a single file block with two attrs, one of which contains spaces
+
+file {
+    source /a/b/c
+    target "/d/e f/g"
+}

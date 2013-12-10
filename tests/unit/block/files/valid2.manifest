@@ -2,10 +2,10 @@
 # with relative paths (relative to SALVE_ROOT)
 
 manifest {
-    source tests/src/block/files/valid1.manifest
+    source tests/unit/block/files/valid1.manifest
 }
 
 file {
-    source tests/src/block/files/valid1.manifest
+    source tests/unit/block/files/valid1.manifest
     target a/b/c
 }
