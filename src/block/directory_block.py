@@ -5,6 +5,8 @@ import os
 import src.execute.action as action
 import src.execute.backup as backup
 import src.execute.copy as copy
+import src.execute.create as create
+import src.execute.modify as modify
 import src.util.locations as locations
 import src.util.ugo as ugo
 
@@ -26,46 +28,49 @@ class DirBlock(Block):
         Block.__init__(self,Block.types.DIRECTORY,context)
         for attr in ['backup_dir','backup_log','target','source']:
             self.path_attrs.add(attr)
-        for attr in ['backup_dir','backup_log','target','user','group',
-                     'mode']:
+        for attr in ['backup_dir','backup_log','target']:
             self.min_attrs.add(attr)
 
-    def _mkdir_action(self,dirname,mode):
+    def _mkdir(self,dirname):
         """
         Creates a shell action to create the specified directory with
-        the specified mode. Useful throughout dir actions, as handling
-        subdirectories correctly often requires more of these.
+        the block's mode if set. Useful throughout dir actions, as
+        handling subdirectories correctly often requires more of these.
 
         Args:
             @dirname
             The path to the directory to be created. Should be an
             absolute path in order to ensure correctness.
-
-            @mode
-            The mode (umask) of the directory being created.
         """
-        return action.ShellAction('mkdir -p -m %s %s' % (mode,dirname),
-                                  self.context)
+        act = create.DirCreateAction(dirname,self.context)
+        if self.has('mode'):
+            act = action.ActionList([act],self.context)
+            act.append(modify.DirChmodAction(dirname,
+                                             self.get('mode'),
+                                             self.context))
+        return act
 
     def create_action(self):
         """
         Generate a directory creation action. This may be all or part of
         the action produced by the block upon action conversion.
         """
-        self.ensure_has_attrs('target','user','group','mode')
+        self.ensure_has_attrs('target')
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
         # create the target dir
-        act = self._mkdir_action(self.get('target'),self.get('mode'))
+        act = self._mkdir(self.get('target'))
 
         # if running as root, add a non-recursive chown as well, to
         # set the correct permissions for the directory but not its
         # children
-        if ugo.is_root():
-            user_group_str = self.get('user')+':'+self.get('group')
-            chown_dir = 'chown %s %s' % (user_group_str,self.get('target'))
-            chown_dir = action.ShellAction(chown_dir,self.context)
-            act = action.ActionList([act,chown_dir],self.context)
+        if ugo.is_root() and self.has('user') and self.has('group'):
+            if not isinstance(act,action.ActionList):
+                act = action.ActionList([act],self.context)
+            act.append(modify.DirChownAction(self.get('target'),
+                                             self.get('user'),
+                                             self.get('group'),
+                                             self.context))
 
         return act
 
@@ -74,15 +79,16 @@ class DirBlock(Block):
         Copy a directory. This may be all or part of the action produced
         by the block upon action conversion.
         """
-        self.ensure_has_attrs('source','target','user','group','mode')
+        self.ensure_has_attrs('source','target')
         # TODO: replace with exception
         assert os.path.isabs(self.get('target'))
         assert os.path.isabs(self.get('source'))
 
         # create the target directory; make the action an AL for
         # simplicity when adding actions to it
-        mkdir = self._mkdir_action(self.get('target'),self.get('mode'))
-        act = action.ActionList([mkdir],self.context)
+        act = self._mkdir(self.get('target'))
+        if not isinstance(act,action.ActionList):
+            act = action.ActionList([act],self.context)
 
         backup_dir = self.get('backup_dir')
         backup_log = self.get('backup_log')
@@ -97,8 +103,7 @@ class DirBlock(Block):
                                 os.path.relpath(os.path.join(d,sd),
                                                 self.get('source'))
                              )
-                act.append(self._mkdir_action(target_dir,
-                                              self.get('mode')))
+                act.append(self._mkdir(target_dir))
             # for every file, first backup any file that is at the
             # destination, then copy from source to target tree
             for f in files:
@@ -118,13 +123,22 @@ class DirBlock(Block):
                 file_act = action.ActionList([backup_act,copy_act],self.context)
                 act.append(file_act)
 
+        if self.has('mode'):
+            act.append(modify.DirChmodAction(self.get('target'),
+                                             self.get('mode'),
+                                             self.context,
+                                             recursive=True))
+
         # if running as root, recursively apply permissions after the copy
         # TODO: replace with something less heavy handed (i.e. set permissions
         # for everything in the source tree, not the entire dir)
-        if ugo.is_root():
-            user_group_str = self.get('user')+':'+self.get('group')
-            chown_dir = 'chown -R %s %s' % (user_group_str,self.get('target'))
-            act.append(action.ShellAction(chown_dir,self.context))
+        if ugo.is_root() and self.has('user') and self.has('group'):
+            chown_dir = modify.DirChownAction(self.get('target'),
+                                              self.get('user'),
+                                              self.get('group'),
+                                              self.context,
+                                              recursive=True)
+            act.append(chown_dir)
 
         return act
 

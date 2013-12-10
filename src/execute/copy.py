@@ -3,7 +3,6 @@
 import abc, os, shutil
 
 import src.execute.action as action
-import src.util.ugo as ugo
 
 class CopyAction(action.Action):
     """
