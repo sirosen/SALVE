@@ -8,6 +8,8 @@ from src.block.base import BlockException
 
 import src.execute.action as action
 import src.execute.backup as backup
+import src.execute.modify as modify
+import src.execute.create as create
 import src.block.directory_block
 
 @istest
@@ -23,20 +25,19 @@ def dir_create_to_action():
     b.set('backup_log','/m/n.log')
     b.set('user','user1')
     b.set('group','nogroup')
-    b.set('mode','755')
 
-    with mock.patch('os.path.exists',lambda f: True):
-        mkdir = b.to_action()
+    mkdir = b.to_action()
 
-    assert isinstance(mkdir,action.ShellAction)
+    assert isinstance(mkdir,create.DirCreateAction)
 
-    assert mkdir.cmd == 'mkdir -p -m 755 /p/q/r'
+    assert mkdir.dst == '/p/q/r'
 
 @istest
-def dir_create_chmod_as_root():
+def dir_create_to_action_chmod():
     """
-    Directory Block Create To Action (As Root)
-    Verifies the result of converting a Dir Block to an Action.
+    Directory Block Create To Action With Chmod
+    Verifies the result of converting a Dir Block to an Action when the
+    Block's mode is set.
     """
     b = src.block.directory_block.DirBlock()
     b.set('action','create')
@@ -46,17 +47,50 @@ def dir_create_chmod_as_root():
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','755')
-    with mock.patch('os.geteuid',lambda:0):
-        with mock.patch('os.path.exists',lambda f: True):
-            dir_act = b.to_action()
+
+    dir_act = b.to_action()
+
+    assert isinstance(dir_act,action.ActionList)
+    assert len(dir_act.actions) == 2
+
+    mkdir = dir_act.actions[0]
+    chmod = dir_act.actions[1]
+    assert isinstance(mkdir,create.DirCreateAction)
+    assert isinstance(chmod,modify.DirChmodAction)
+
+    assert mkdir.dst == '/p/q/r'
+    assert chmod.target == '/p/q/r'
+    assert chmod.mode == int('755',8)
+
+@istest
+def dir_create_chown_as_root():
+    """
+    Directory Block Create To Action With Chown
+    Verifies the result of converting a Dir Block to an Action when the
+    user is root and the Block's user and group are set.
+    """
+    b = src.block.directory_block.DirBlock()
+    b.set('action','create')
+    b.set('target','/p/q/r')
+    b.set('backup_dir','/m/n')
+    b.set('backup_log','/m/n.log')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    with mock.patch('src.util.ugo.is_root',lambda:True):
+        dir_act = b.to_action()
 
     assert isinstance(dir_act,action.ActionList)
     assert len(dir_act.actions) == 2
     mkdir = dir_act.actions[0]
     chown = dir_act.actions[1]
 
-    assert mkdir.cmd == 'mkdir -p -m 755 /p/q/r'
-    assert chown.cmd == 'chown user1:nogroup /p/q/r'
+    assert isinstance(mkdir,create.DirCreateAction)
+    assert isinstance(chown,modify.DirChownAction)
+
+    assert mkdir.dst == '/p/q/r'
+    assert chown.target == '/p/q/r'
+    assert chown.user == 'user1'
+    assert chown.group == 'nogroup'
 
 @istest
 def empty_dir_copy_to_action():
@@ -70,21 +104,19 @@ def empty_dir_copy_to_action():
     b.set('target','/p/q/r')
     b.set('backup_dir','/m/n')
     b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    b.set('mode','744')
-    with mock.patch('os.path.exists',lambda f: True):
-        with mock.patch('os.walk',lambda d: []):
-            dir_act = b.to_action()
+    with mock.patch('os.walk',lambda d: []):
+        dir_act = b.to_action()
 
     assert isinstance(dir_act,action.ActionList)
     assert len(dir_act.actions) == 1
     mkdir_act = dir_act.actions[0]
 
-    assert mkdir_act.cmd == 'mkdir -p -m 744 /p/q/r'
+    assert isinstance(mkdir_act,create.DirCreateAction)
+
+    assert mkdir_act.dst == '/p/q/r'
 
 @istest
-def dir_copy_chmod_as_root():
+def dir_copy_chown_as_root():
     """
     Directory Block Copy To Action (As Root)
     Verifies the result of converting a Dir Block to an Action.
@@ -97,22 +129,22 @@ def dir_copy_chmod_as_root():
     b.set('backup_log','/m/n.log')
     b.set('user','user1')
     b.set('group','nogroup')
-    b.set('mode','744')
-    with mock.patch('os.geteuid',lambda:0):
-        with mock.patch('os.path.exists',lambda f: True):
-            with mock.patch('os.walk',lambda d: []):
-                al = b.to_action()
+    with mock.patch('src.util.ugo.is_root',lambda:True):
+        with mock.patch('os.walk',lambda d: []):
+            al = b.to_action()
 
     assert isinstance(al,action.ActionList)
     assert len(al.actions) == 2
     mkdir_act = al.actions[0]
     chown_act = al.actions[1]
 
-    assert isinstance(mkdir_act,action.ShellAction)
-    assert isinstance(chown_act,action.ShellAction)
+    assert isinstance(mkdir_act,create.DirCreateAction)
+    assert isinstance(chown_act,modify.DirChownAction)
 
-    assert mkdir_act.cmd == 'mkdir -p -m 744 /p/q/r'
-    assert chown_act.cmd == 'chown -R user1:nogroup /p/q/r', "%s" % chown_act.cmd
+    assert mkdir_act.dst == '/p/q/r'
+    assert chown_act.target == '/p/q/r'
+    assert chown_act.user == 'user1'
+    assert chown_act.group == 'nogroup'
 
 @istest
 def dir_copy_fails_nosource():
@@ -161,105 +193,6 @@ def dir_create_fails_notarget():
     b.set('backup_log','/m/n.log')
     b.set('user','user1')
     b.set('group','nogroup')
-    b.set('mode','755')
-    ensure_except(BlockException,b.to_action)
-
-@istest
-def dir_copy_fails_nouser():
-    """
-    Directory Block Copy Fails Without User
-    Verifies that converting a Dir Block to an Action raises a
-    BlockException.
-    """
-    b = src.block.directory_block.DirBlock()
-    b.set('action','copy')
-    b.set('source','/a/b/c')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('group','nogroup')
-    b.set('mode','755')
-    ensure_except(BlockException,b.to_action)
-
-@istest
-def dir_create_fails_nouser():
-    """
-    Directory Block Create Fails Without User
-    Verifies that converting a Dir Block to an Action raises a
-    BlockException.
-    """
-    b = src.block.directory_block.DirBlock()
-    b.set('action','create')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('group','nogroup')
-    b.set('mode','755')
-    ensure_except(BlockException,b.to_action)
-
-@istest
-def dir_copy_fails_nomode():
-    """
-    Directory Block Copy Fails Without Mode
-    Verifies that converting a Dir Block to an Action raises a
-    BlockException.
-    """
-    b = src.block.directory_block.DirBlock()
-    b.set('action','copy')
-    b.set('source','/a/b/c')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    ensure_except(BlockException,b.to_action)
-
-@istest
-def dir_create_fails_nomode():
-    """
-    Directory Block Create Fails Without Mode
-    Verifies that converting a Dir Block to an Action raises a
-    BlockException.
-    """
-    b = src.block.directory_block.DirBlock()
-    b.set('action','create')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    ensure_except(BlockException,b.to_action)
-
-@istest
-def dir_copy_fails_nogroup():
-    """
-    Directory Block Copy Fails Without Group
-    Verifies that converting a Dir Block to an Action raises a
-    BlockException.
-    """
-    b = src.block.directory_block.DirBlock()
-    b.set('action','copy')
-    b.set('source','/a/b/c')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('mode','755')
-    ensure_except(BlockException,b.to_action)
-
-@istest
-def dir_create_fails_nogroup():
-    """
-    Directory Block Create Fails Without Group
-    Verifies that converting a Dir Block to an Action raises a
-    BlockException.
-    """
-    b = src.block.directory_block.DirBlock()
-    b.set('action','create')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
     b.set('mode','755')
     ensure_except(BlockException,b.to_action)
 

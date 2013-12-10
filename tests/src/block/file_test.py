@@ -8,6 +8,7 @@ from src.block.base import BlockException
 
 import src.execute.action as action
 import src.execute.backup as backup
+import src.execute.create as create
 import src.execute.modify as modify
 import src.execute.copy as copy
 import src.block.file_block
@@ -142,10 +143,10 @@ def file_create_to_action():
 
     touch = file_act.actions[0]
     chmod = file_act.actions[1]
-    assert isinstance(touch,action.ShellAction)
+    assert isinstance(touch,create.FileCreateAction)
     assert isinstance(chmod,modify.FileChmodAction)
 
-    assert touch.cmd == 'touch -a /p/q/r'
+    assert touch.dst == '/p/q/r'
     assert chmod.target == '/p/q/r'
 
 @istest
@@ -172,11 +173,11 @@ def file_create_chown_as_root():
     touch = file_act.actions[0]
     chmod = file_act.actions[1]
     chown = file_act.actions[2]
-    assert isinstance(touch,action.ShellAction)
+    assert isinstance(touch,create.FileCreateAction)
     assert isinstance(chmod,modify.FileChmodAction)
     assert isinstance(chown,modify.FileChownAction)
 
-    assert touch.cmd == 'touch -a /p/q/r'
+    assert touch.dst == '/p/q/r'
     assert chmod.target == '/p/q/r'
     assert chmod.mode == int('600',8)
     assert chown.target == '/p/q/r'
@@ -243,10 +244,10 @@ def file_create_nouser():
     assert len(file_act.actions) == 2
     touch = file_act.actions[0]
     chmod_act = file_act.actions[1]
-    assert isinstance(touch,action.ShellAction)
+    assert isinstance(touch,create.FileCreateAction)
     assert isinstance(chmod_act,modify.FileChmodAction)
 
-    assert touch.cmd == 'touch -a /p/q/r'
+    assert touch.dst == '/p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
     assert chmod_act.target == '/p/q/r'
 
@@ -312,10 +313,10 @@ def file_create_nogroup():
     assert len(file_act.actions) == 2
     touch = file_act.actions[0]
     chmod_act = file_act.actions[1]
-    assert isinstance(touch,action.ShellAction)
+    assert isinstance(touch,create.FileCreateAction)
     assert isinstance(chmod_act,modify.FileChmodAction)
 
-    assert touch.cmd == 'touch -a /p/q/r'
+    assert touch.dst == '/p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
     assert chmod_act.target == '/p/q/r'
 
@@ -371,8 +372,8 @@ def file_create_nomode():
         with mock.patch('os.path.exists', lambda f: False):
             touch = b.to_action()
 
-    assert isinstance(touch,action.ShellAction)
-    assert touch.cmd == 'touch -a /p/q/r'
+    assert isinstance(touch,create.FileCreateAction)
+    assert touch.dst == '/p/q/r'
 
 @istest
 def file_copy_fails_nosource():

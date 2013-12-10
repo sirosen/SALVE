@@ -61,7 +61,7 @@ class DirCreateAction(CreateAction):
     """
     An action to create a directory.
     """
-    def __init__(self, src, dst, context):
+    def __init__(self, dst, context):
         """
         DirCreateAction constructor.
 
