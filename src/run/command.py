@@ -80,7 +80,7 @@ def run_on_manifest(root_manifest,opts):
     root_block.expand_blocks(root_dir,conf)
 
     root_action = root_block.to_action()
-    root_action.execute()
+    root_action()
 
 def get_root_manifest(opts):
     """

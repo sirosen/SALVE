@@ -68,7 +68,7 @@ def filechown_execute():
     with mock.patch('os.lchown',mock_lchown):
         with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
             with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
-                act.execute()
+                act()
 
     assert log['lchown'] == ('a',1,2)
 
@@ -81,7 +81,7 @@ def filechmod_execute():
 
     log = { 'chmod' : None }
     def mock_chmod(f,mode): log['chmod'] = (f,mode)
-    with mock.patch('os.chmod',mock_chmod): act.execute()
+    with mock.patch('os.chmod',mock_chmod): act()
     assert log['chmod'] == ('a',int('600',8))
 
 def mock_os_walk(dir):
@@ -108,7 +108,7 @@ def dirchown_execute():
         with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
             with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
                 with mock.patch('os.lchown',mock_lchown):
-                    act.execute()
+                    act()
 
     assert len(lchown_args) == 8
     assert ('a',1,2) in lchown_args
@@ -134,7 +134,7 @@ def dirchmod_execute():
         with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
             with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
                 with mock.patch('os.chmod',mock_chmod):
-                    act.execute()
+                    act()
 
     assert len(chmod_args) == 8
     mode = int('755',8)
@@ -161,7 +161,7 @@ def dirchown_execute_nonrecursive():
         with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
             with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
                 with mock.patch('os.lchown',mock_lchown):
-                    act.execute()
+                    act()
 
     assert len(lchown_args) == 1
     assert ('a',1,2) in lchown_args
@@ -180,7 +180,7 @@ def dirchmod_execute_nonrecursive():
         with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
             with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
                 with mock.patch('os.chmod',mock_chmod):
-                    act.execute()
+                    act()
 
     assert len(chmod_args) == 1
     mode = int('755',8)

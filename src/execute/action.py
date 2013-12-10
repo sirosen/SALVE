@@ -129,6 +129,12 @@ class ActionList(Action):
         Action.__init__(self,context)
         self.actions = act_lst
 
+    def __iter__(self):
+        """
+        Iterating over an AL iterates over its sub-actions.
+        """
+        for act in self.actions: yield act
+
     def __str__(self):
         return "ActionList("+";".join(str(a) for a in self.actions)+\
                "context="+str(self.context)+")"
@@ -160,4 +166,4 @@ class ActionList(Action):
         Execute the AL. Consists of a walk over the AL executing each
         of its sub-actions.
         """
-        for a in self.actions: a.execute()
+        for act in self: act()

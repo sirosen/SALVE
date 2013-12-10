@@ -43,7 +43,7 @@ def filecopy_execute():
         fcp = copy.FileCopyAction('a',
                                   'b/c',
                                   dummy_context)
-        fcp.execute()
+        fcp()
 
     assert log['mock_cp'] == ('a','b/c')
 
@@ -76,6 +76,6 @@ def dircopy_execute():
         dcp = copy.DirCopyAction('a',
                                   'b/c',
                                   dummy_context)
-        dcp.execute()
+        dcp()
 
     assert log['mock_cp'] == ('a','b/c',True)

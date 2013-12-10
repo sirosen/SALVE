@@ -141,6 +141,7 @@ def commandline_main():
     }
     class MockAction(object):
         def __init__(self): pass
+        def __call__(self): self.execute()
         def execute(self): have_run['action_execute'] = True
 
     class MockManifest(object):

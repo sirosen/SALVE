@@ -63,7 +63,7 @@ def file_target_name():
         with patch('src.execute.copy.FileCopyAction.execute',mock_cp):
             with patch('os.makedirs',mock_makedirs):
                 with patch('os.path.islink',mock_islink):
-                    act.execute()
+                    act()
 
     assert 'makedirs' in func_log
     assert os.path.basename(act.dst) == '9bfabef5ffd7f5df84171393643'+\
@@ -93,7 +93,7 @@ def file_symlink_target_name():
 
     with patch('src.execute.backup.FileBackupAction.write_log',lambda self: None):
         with patch('os.path.exists',lambda f: True):
-            act.execute()
+            act()
 
     assert os.path.basename(act.dst) == '55ae75d991c770d8f3ef07cbfde'+\
                                         '124ffce9c420da5db6203afab70'+\
@@ -162,7 +162,7 @@ def dir_execute():
 
     with patch('src.execute.backup.FileBackupAction.execute',
                mock_execute):
-        act.execute()
+        act()
 
     assert get_full_path('dir1/a') in seen_files
     assert get_full_path('dir1/b') in seen_files
