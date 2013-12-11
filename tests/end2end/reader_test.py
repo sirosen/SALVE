@@ -10,7 +10,7 @@ import src.reader.parse
 
 from tests.utils.exceptions import ensure_except
 
-_testfile_dir = pjoin(dirname(__file__),'files')
+_testfile_dir = pjoin(dirname(__file__),'testfiles')
 
 def parse_filename(filename):
     with open(filename) as f:
@@ -26,7 +26,7 @@ def empty_file():
 
     Checks that parsing an empty file produces an empty list of blocks.
     """
-    blocks = parse_filename(get_full_path('valid1.manifest'))
+    blocks = parse_filename(get_full_path('empty.manifest'))
     assert len(blocks) == 0
 
 @istest
@@ -36,7 +36,7 @@ def empty_block():
 
     Checks that parsing an empty block raises no errors.
     """
-    blocks = parse_filename(get_full_path('valid2.manifest'))
+    blocks = parse_filename(get_full_path('empty_block.manifest'))
     assert len(blocks) == 1
     fblock = blocks[0]
     assert isinstance(fblock,src.block.file_block.FileBlock)
@@ -48,7 +48,7 @@ def single_attr_block():
 
     Checks that parsing a block with one attribute raises no errors.
     """
-    blocks = parse_filename(get_full_path('valid3.manifest'))
+    blocks = parse_filename(get_full_path('single_attr.manifest'))
     assert len(blocks) == 1
     fblock = blocks[0]
     assert isinstance(fblock,src.block.file_block.FileBlock)
@@ -62,7 +62,7 @@ def multiple_attr_block():
     Checks that parsing a block with several attributes raises no
     errors.
     """
-    blocks = parse_filename(get_full_path('valid4.manifest'))
+    blocks = parse_filename(get_full_path('two_attr.manifest'))
     assert len(blocks) == 1
     fblock = blocks[0]
     assert isinstance(fblock,src.block.file_block.FileBlock)
@@ -77,7 +77,7 @@ def spaced_attr_block():
     Checks that parsing a block with several attributes raises no
     errors.
     """
-    blocks = parse_filename(get_full_path('valid5.manifest'))
+    blocks = parse_filename(get_full_path('spaced_attr.manifest'))
     assert len(blocks) == 1
     fblock = blocks[0]
     assert isinstance(fblock,src.block.file_block.FileBlock)
@@ -92,7 +92,7 @@ def unclosed_block_raises_TE():
     Not only validates that a Tokenization Exception occurs, but also
     verifies the context of the raised exception.
     """
-    path = get_full_path('invalid1.manifest')
+    path = get_full_path('unclosed_block.manifest')
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
@@ -108,7 +108,7 @@ def missing_open_raises_TE():
     Not only validates that a Tokenization Exception occurs, but also
     verifies the context of the raised exception.
     """
-    path = get_full_path('invalid2.manifest')
+    path = get_full_path('missing_open.manifest')
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
@@ -124,7 +124,7 @@ def double_identifier_raises_TE():
     Not only validates that a Tokenization Exception occurs, but also
     verifies the context of the raised exception.
     """
-    path = get_full_path('invalid3.manifest')
+    path = get_full_path('double_id.manifest')
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
@@ -140,7 +140,7 @@ def missing_identifier_raises_TE():
     Not only validates that a Tokenization Exception occurs, but also
     verifies the context of the raised exception.
     """
-    path = get_full_path('invalid4.manifest')
+    path = get_full_path('missing_id.manifest')
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
@@ -156,7 +156,7 @@ def missing_value_raises_TE():
     Not only validates that a Tokenization Exception occurs, but also
     verifies the context of the raised exception.
     """
-    path = get_full_path('invalid5.manifest')
+    path = get_full_path('missing_attr_val.manifest')
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
@@ -172,7 +172,7 @@ def double_open_raises_TE():
     Not only validates that a Tokenization Exception occurs, but also
     verifies the context of the raised exception.
     """
-    path = get_full_path('invalid7.manifest')
+    path = get_full_path('double_open.manifest')
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
@@ -188,7 +188,7 @@ def invalid_block_id_raises_PE():
     Not only validates that a Tokenization Exception occurs, but also
     verifies the context of the raised exception.
     """
-    path = get_full_path('invalid6.manifest')
+    path = get_full_path('invalid_block_id.manifest')
     e = ensure_except(src.reader.parse.ParsingException,
                       parse_filename,
                       path)
