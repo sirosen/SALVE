@@ -18,7 +18,7 @@ class StreamContext(object):
         self.lineno = lineno
 
     def __str__(self):
-        return str(self.filename) + ': ' + str(self.lineno)
+        return str(self.filename) + ', line ' + str(self.lineno)
 
 
 class SALVEException(StandardError):
@@ -46,5 +46,4 @@ class SALVEException(StandardError):
         locstr = str(self.context)
         return 'Encountered a SALVE Exception of type ' +\
                self.__class__.__name__+ '\n'+\
-               'originating at ' + locstr + '\n' +\
-               'carrying a message ' + self.message
+               locstr + ': ' + self.message
