@@ -166,7 +166,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
     @istest
     def copy_file_triggers_backup(self):
         """
-        E2E: Copy a Single File
+        E2E: Copy File Triggers Backup
 
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
@@ -189,6 +189,37 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         s = self.read_file('f1')
         assert s == content, '%s' % s
         s = self.read_file('backup.log').strip()
+        ss = shlex.split(s)
+        assert len(ss) == 3
+        assert ss[2] == os.path.join(cwd,'f1')
+        backup_path = self.get_backup_path(backup_dir,'f1')
+        backup_path = os.path.join(backup_path,ss[1])
+        s = self.read_file(backup_path)
+        assert s == ''
+
+    @istest
+    def copy_file_triggers_backup_implicit_dir(self):
+        """
+        E2E: Copy File Implicit Backup Dir
+
+        Runs a manifest which copies itself and verifies the contents of
+        the destination file.
+        """
+        cwd = self.scratch_dir
+        #assert False, "%s" % os.environ['HOME']
+        backup_dir = 'home/user1/backups'
+        backup_log = 'home/user1/backup.log'
+        self.write_file('f1','')
+
+        content = 'file { action copy source 1.man target f1 }\n'
+
+        self.write_file('1.man',content)
+        man_path = os.path.join(cwd,'1.man')
+        run_on_args(['./salve.py','-m',man_path])
+
+        s = self.read_file('f1')
+        assert s == content, '%s' % s
+        s = self.read_file(backup_log).strip()
         ss = shlex.split(s)
         assert len(ss) == 3
         assert ss[2] == os.path.join(cwd,'f1')
