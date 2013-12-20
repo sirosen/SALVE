@@ -59,6 +59,15 @@ class FileCopyAction(CopyAction):
         Does a file copy or symlink creation, depending on the type
         of the source file.
         """
+
+        def writable_target():
+            """
+            Checks if the target is in a writable directory.
+            """
+            return os.access(os.path.dirname(self.dst),os.W_OK)
+
+        if not writable_target(): return
+
         if os.path.islink(self.src):
             os.symlink(os.readlink(self.src),self.dst)
         else:
@@ -90,4 +99,13 @@ class DirCopyAction(CopyAction):
         """
         Copy a directory tree from one location to another.
         """
+
+        def writable_target():
+            """
+            Checks if the target is in a writable directory.
+            """
+            return os.access(os.path.dirname(self.dst),os.W_OK)
+
+        if not writable_target(): return
+
         shutil.copytree(self.src,self.dst,symlinks=True)

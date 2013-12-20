@@ -3,6 +3,7 @@
 import abc, os, shutil
 
 import src.execute.action as action
+import src.util.locations as locations
 
 class CreateAction(action.Action):
     """
@@ -54,6 +55,14 @@ class FileCreateAction(CreateAction):
 
         Does a file creation if the file does not exist.
         """
+        def writable_target():
+            """
+            Checks if the target is in a writable directory.
+            """
+            return os.access(os.path.dirname(self.dst),os.W_OK)
+
+        if not writable_target(): return
+
         if not os.path.exists(self.dst):
             with open(self.dst,'w') as f: pass
 
@@ -81,6 +90,15 @@ class DirCreateAction(CreateAction):
         """
         Create a directory and any necessary parents.
         """
+        def writable_target():
+            """
+            Checks if the target is in a writable directory.
+            """
+            ancestor = locations.get_existing_prefix(self.dst)
+            return os.access(ancestor,os.W_OK)
+
+        if not writable_target(): return
+
         # have to invoke this check because makedirs fails if the leaf
         # at the destination exists
         if not os.path.exists(self.dst):

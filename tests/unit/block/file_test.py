@@ -28,9 +28,9 @@ def file_copy_to_action():
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','600')
-    with mock.patch('os.path.exists', lambda f: True):
-        with mock.patch('src.util.ugo.is_root',lambda: False):
-            act = b.to_action()
+    with mock.patch('os.path.exists', lambda f: True), \
+         mock.patch('src.util.ugo.is_root',lambda: False):
+        act = b.to_action()
 
     assert isinstance(act,action.ActionList)
     assert len(act.actions) == 3
@@ -98,9 +98,9 @@ def file_copy_with_chown():
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','600')
-    with mock.patch('os.path.exists', lambda f: True):
-        with mock.patch('src.util.ugo.is_root',lambda: True):
-            file_act = b.to_action()
+    with mock.patch('os.path.exists',lambda f: True), \
+         mock.patch('src.util.ugo.is_root',lambda: True):
+        file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
     assert len(file_act.actions) == 4
@@ -134,9 +134,9 @@ def file_create_to_action():
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','0600')
-    with mock.patch('os.path.exists', lambda f: True):
-        with mock.patch('src.util.ugo.is_root',lambda: False):
-            file_act = b.to_action()
+    with mock.patch('os.path.exists', lambda f: True), \
+         mock.patch('src.util.ugo.is_root',lambda: False):
+        file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
     assert len(file_act.actions) == 2
@@ -164,9 +164,9 @@ def file_create_chown_as_root():
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','0600')
-    with mock.patch('src.util.ugo.is_root',lambda: True):
-        with mock.patch('os.path.exists', lambda f: True):
-            file_act = b.to_action()
+    with mock.patch('src.util.ugo.is_root',lambda: True), \
+         mock.patch('os.path.exists', lambda f: True):
+        file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
     assert len(file_act.actions) == 3
@@ -235,10 +235,10 @@ def file_create_nouser():
     b.set('group','nogroup')
     b.set('mode','0600')
 
-    with mock.patch('src.util.ugo.is_root',lambda: True):
-        # skip backup just to generate a simpler action
-        with mock.patch('os.path.exists', lambda f: False):
-            file_act = b.to_action()
+    # skip backup just to generate a simpler action
+    with mock.patch('src.util.ugo.is_root',lambda: True), \
+         mock.patch('os.path.exists', lambda f: False):
+        file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
     assert len(file_act.actions) == 2
@@ -267,10 +267,10 @@ def file_copy_nogroup():
     b.set('user','user1')
     b.set('mode','0600')
 
-    with mock.patch('src.util.ugo.is_root',lambda: True):
-        # skip backup just to generate a simpler action
-        with mock.patch('os.path.exists', lambda f: False):
-            file_act = b.to_action()
+    # skip backup just to generate a simpler action
+    with mock.patch('src.util.ugo.is_root',lambda: True), \
+         mock.patch('os.path.exists', lambda f: False):
+        file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
     assert len(file_act.actions) == 3
@@ -304,10 +304,10 @@ def file_create_nogroup():
     b.set('user','user1')
     b.set('mode','0600')
 
-    with mock.patch('src.util.ugo.is_root',lambda: True):
-        # skip backup just to generate a simpler action
-        with mock.patch('os.path.exists', lambda f: False):
-            file_act = b.to_action()
+    # skip backup just to generate a simpler action
+    with mock.patch('src.util.ugo.is_root',lambda: True), \
+         mock.patch('os.path.exists', lambda f: False):
+        file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
     assert len(file_act.actions) == 2
@@ -366,11 +366,10 @@ def file_create_nomode():
     b.set('backup_log','/m/n.log')
     b.set('user','user1')
     b.set('group','nogroup')
-    # skip chown for simplicity
-    with mock.patch('src.util.ugo.is_root',lambda: False):
-        # skip backup just to generate a simpler action
-        with mock.patch('os.path.exists', lambda f: False):
-            touch = b.to_action()
+    # skip chown and backup just to generate a simpler action
+    with mock.patch('src.util.ugo.is_root',lambda: False), \
+         mock.patch('os.path.exists', lambda f: False):
+        touch = b.to_action()
 
     assert isinstance(touch,create.FileCreateAction)
     assert touch.dst == '/p/q/r'

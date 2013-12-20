@@ -128,6 +128,7 @@ class FileChownAction(ChownAction):
 
         Change the owner and group of a single file.
         """
+
         # chown without following symlinks
         # lchown works on non-symlink files as well
         os.lchown(self.target,ugo.name_to_uid(self.user),
@@ -162,6 +163,13 @@ class FileChmodAction(ChmodAction):
 
         Change the umask of a single file.
         """
+        # skip the chmod if the current user is not the owner or root
+        # or the file is missing
+        if not (os.access(self.target,os.F_OK) and
+                (ugo.is_root() or
+                 os.stat(self.target).st_uid == os.getuid())):
+            return
+
         os.chmod(self.target,self.mode)
 
 class DirChownAction(ChownAction,DirModifyAction):
@@ -259,7 +267,13 @@ class DirChmodAction(ChmodAction,DirModifyAction):
             for directory,subdirs,files in os.walk(self.target):
                 # chmod on all subdirectories
                 for sd in subdirs:
-                    os.chmod(os.path.join(directory,sd),self.mode)
+                    target = os.path.join(directory,sd)
+                    if (ugo.is_root() or
+                        os.stat(target).st_uid == os.getuid()):
+                        os.chmod(target,self.mode)
                 # chmod on all files in the directory
                 for f in files:
-                    os.chmod(os.path.join(directory,f),self.mode)
+                    target = os.path.join(directory,f)
+                    if (ugo.is_root() or
+                        os.stat(target).st_uid == os.getuid()):
+                        os.chmod(target,self.mode)
