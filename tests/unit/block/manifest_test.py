@@ -11,7 +11,7 @@ import src.block.manifest_block
 import src.block.base
 import src.util.locations as locations
 
-from tests.src.block.block_test import _dummy_conf, get_full_path
+from tests.unit.block.block_test import _dummy_conf, get_full_path
 
 @istest
 def sourceless_manifest_to_action_error():

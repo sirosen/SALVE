@@ -192,8 +192,7 @@ def commandline_salve_exception():
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'SALVEException\noriginating at no such file: -1\ncarrying '+\
-        'a message message string\n'
+        'SALVEException\nno such file, line -1: message string\n'
 
 @istest
 def commandline_block_exception():
@@ -231,8 +230,7 @@ def commandline_block_exception():
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'BlockException\noriginating at no such file: -1\ncarrying '+\
-        'a message message string\n'
+        'BlockException\nno such file, line -1: message string\n'
 
 @istest
 def commandline_action_exception():
@@ -271,8 +269,7 @@ def commandline_action_exception():
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'ActionException\noriginating at no such file: -1\ncarrying '+\
-        'a message message string\n'
+        'ActionException\nno such file, line -1: message string\n'
 
 @istest
 def commandline_tokenization_exception():
@@ -311,8 +308,7 @@ def commandline_tokenization_exception():
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'TokenizationException\noriginating at no such file: -1\n'+\
-        'carrying a message message string\n'
+        'TokenizationException\nno such file, line -1: message string\n'
 
 @istest
 def commandline_parsing_exception():
@@ -351,8 +347,7 @@ def commandline_parsing_exception():
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'ParsingException\noriginating at no such file: -1\n'+\
-        'carrying a message message string\n'
+        'ParsingException\nno such file, line -1: message string\n'
 
 @istest
 def commandline_unexpected_exception():

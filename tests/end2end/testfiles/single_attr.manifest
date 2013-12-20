@@ -1,0 +1,5 @@
+#a single file block with one attr
+
+file {
+    source /a/b/c
+}
