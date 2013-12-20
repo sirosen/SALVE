@@ -8,7 +8,6 @@ import src.execute.copy as copy
 import src.execute.create as create
 import src.execute.modify as modify
 import src.util.locations as locations
-import src.util.ugo as ugo
 
 from src.block.base import Block, BlockException
 
@@ -61,10 +60,10 @@ class DirBlock(Block):
         # create the target dir
         act = self._mkdir(self.get('target'))
 
-        # if running as root, add a non-recursive chown as well, to
-        # set the correct permissions for the directory but not its
-        # children
-        if ugo.is_root() and self.has('user') and self.has('group'):
+        # if 'user' and 'group' are set add a non-recursive chown
+        # as well, to set the correct permissions for the directory
+        # but not its children
+        if self.has('user') and self.has('group'):
             if not isinstance(act,action.ActionList):
                 act = action.ActionList([act],self.context)
             act.append(modify.DirChownAction(self.get('target'),
@@ -129,10 +128,12 @@ class DirBlock(Block):
                                              self.context,
                                              recursive=True))
 
-        # if running as root, recursively apply permissions after the copy
-        # TODO: replace with something less heavy handed (i.e. set permissions
-        # for everything in the source tree, not the entire dir)
-        if ugo.is_root() and self.has('user') and self.has('group'):
+        # if 'user' and 'group' are set, recursively apply permissions
+        # after the copy
+        # TODO: replace with something less heavy handed (i.e. set
+        # permissions for everything in the source tree, not the entire
+        # dir)
+        if self.has('user') and self.has('group'):
             chown_dir = modify.DirChownAction(self.get('target'),
                                               self.get('user'),
                                               self.get('group'),

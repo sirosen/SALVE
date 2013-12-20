@@ -128,6 +128,9 @@ class FileChownAction(ChownAction):
 
         Change the owner and group of a single file.
         """
+        if not (os.access(self.target,os.F_OK) and
+                ugo.is_root()):
+            return
 
         # chown without following symlinks
         # lchown works on non-symlink files as well
@@ -211,6 +214,9 @@ class DirChownAction(ChownAction,DirModifyAction):
 
         Change the owner and group of a directory or directory tree.
         """
+        # do nothing if not running as root
+        if not ugo.is_root(): return
+
         uid = ugo.name_to_uid(self.user)
         gid = ugo.name_to_gid(self.group)
         os.lchown(self.target,uid,gid)

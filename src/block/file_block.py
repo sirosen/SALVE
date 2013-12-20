@@ -111,9 +111,8 @@ class FileBlock(Block):
                                            self.context)
             file_action = add_action(file_action,chmod)
 
-        # if running as root, and 'user' and 'group' are set, append
-        # a chwon action
-        if ugo.is_root() and self.has('user') and self.has('group'):
+        # if 'user' and 'group' are set, append a chwon action
+        if self.has('user') and self.has('group'):
             chown = modify.FileChownAction(self.get('target'),
                                            self.get('user'),
                                            self.get('group'),
