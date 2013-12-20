@@ -26,11 +26,19 @@ def dir_create_to_action():
     b.set('user','user1')
     b.set('group','nogroup')
 
-    mkdir = b.to_action()
+    act = b.to_action()
+    assert isinstance(act,action.ActionList)
+    assert len(act.actions) == 2
 
+    mkdir = act.actions[0]
+    chown = act.actions[1]
     assert isinstance(mkdir,create.DirCreateAction)
+    assert isinstance(chown,modify.DirChownAction)
 
     assert mkdir.dst == '/p/q/r'
+    assert chown.user == 'user1'
+    assert chown.group == 'nogroup'
+    assert chown.target == mkdir.dst
 
 @istest
 def dir_create_to_action_chmod():
@@ -51,16 +59,21 @@ def dir_create_to_action_chmod():
     dir_act = b.to_action()
 
     assert isinstance(dir_act,action.ActionList)
-    assert len(dir_act.actions) == 2
+    assert len(dir_act.actions) == 3
 
     mkdir = dir_act.actions[0]
     chmod = dir_act.actions[1]
+    chown = dir_act.actions[2]
     assert isinstance(mkdir,create.DirCreateAction)
     assert isinstance(chmod,modify.DirChmodAction)
+    assert isinstance(chown,modify.DirChownAction)
 
     assert mkdir.dst == '/p/q/r'
-    assert chmod.target == '/p/q/r'
+    assert chmod.target == mkdir.dst
     assert chmod.mode == int('755',8)
+    assert chown.user == 'user1'
+    assert chown.group == 'nogroup'
+    assert chown.target == mkdir.dst
 
 @istest
 def dir_create_chown_as_root():

@@ -41,7 +41,7 @@ class FileBlock(Block):
         'touch -a'. If it is a copy action, this is a file copy preceded
         by an attempt to back up the file being overwritten.
         """
-        self.ensure_has_attrs('action')
+        self.ensure_has_attrs('action','backup_dir','backup_log')
 
         def ensure_abspath_attrs(*args):
             """

@@ -28,86 +28,24 @@ def file_copy_to_action():
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','600')
-    with mock.patch('os.path.exists', lambda f: True), \
-         mock.patch('src.util.ugo.is_root',lambda: False):
-        act = b.to_action()
+
+    act = b.to_action()
 
     assert isinstance(act,action.ActionList)
-    assert len(act.actions) == 3
+    assert len(act.actions) == 4
     backup_act = act.actions[0]
     copy_act = act.actions[1]
-    chmod_act = act.actions[2]
+    mod_act1 = act.actions[2]
+    mod_act2 = act.actions[3]
+
+    if isinstance(mod_act1,modify.FileChmodAction):
+        chmod_act = mod_act1
+        chown_act = mod_act2
+    else:
+        chown_act = mod_act1
+        chmod_act = mod_act2
+
     assert isinstance(backup_act,backup.FileBackupAction)
-    assert isinstance(copy_act,copy.FileCopyAction)
-    assert isinstance(chmod_act,modify.FileChmodAction)
-
-    assert copy_act.src == '/a/b/c'
-    assert copy_act.dst == '/p/q/r'
-    assert '{0:o}'.format(chmod_act.mode) == '600'
-    assert chmod_act.target == copy_act.dst
-
-@istest
-def file_copy_to_action_nobackup():
-    """
-    File Block Copy To Action (No Backup)
-    Verifies the result of converting a file copy block to an action
-    when the target does not exist.
-    """
-    b = src.block.file_block.FileBlock()
-    b.set('action','copy')
-    b.set('source','/a/b/c')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    b.set('mode','600')
-    with mock.patch('src.util.ugo.is_root',lambda: False):
-        file_act = b.to_action()
-
-    assert isinstance(file_act,action.ActionList)
-    assert len(file_act.actions) == 3
-    backup_act = file_act.actions[0]
-    copy_act = file_act.actions[1]
-    chmod_act = file_act.actions[2]
-    assert isinstance(backup_act,backup.FileBackupAction)
-    assert isinstance(copy_act,copy.FileCopyAction)
-    assert isinstance(chmod_act,modify.FileChmodAction)
-
-    assert backup_act.src == '/p/q/r'
-    assert backup_act.dst == '/m/n/p/q/r'
-    assert backup_act.logfile == '/m/n.log'
-    assert copy_act.src == '/a/b/c'
-    assert copy_act.dst == '/p/q/r'
-    assert '{0:o}'.format(chmod_act.mode) == '600'
-    assert chmod_act.target == copy_act.dst
-
-@istest
-def file_copy_with_chown():
-    """
-    File Block Copy To Action (With chown)
-    Verifies the result of converting a file copy block to an action as
-    root, which means that the chown action is included.
-    """
-    b = src.block.file_block.FileBlock()
-    b.set('action','copy')
-    b.set('source','/a/b/c')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    b.set('mode','600')
-    with mock.patch('os.path.exists',lambda f: True), \
-         mock.patch('src.util.ugo.is_root',lambda: True):
-        file_act = b.to_action()
-
-    assert isinstance(file_act,action.ActionList)
-    assert len(file_act.actions) == 4
-    backup_act = file_act.actions[0]
-    copy_act = file_act.actions[1]
-    chmod_act = file_act.actions[2]
-    chown_act = file_act.actions[3]
     assert isinstance(copy_act,copy.FileCopyAction)
     assert isinstance(chmod_act,modify.FileChmodAction)
     assert isinstance(chown_act,modify.FileChownAction)
@@ -115,9 +53,9 @@ def file_copy_with_chown():
     assert copy_act.src == '/a/b/c'
     assert copy_act.dst == '/p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
+    assert chmod_act.target == copy_act.dst
     assert chown_act.user == 'user1'
     assert chown_act.group == 'nogroup'
-    assert chmod_act.target == copy_act.dst
     assert chown_act.target == copy_act.dst
 
 @istest
@@ -139,50 +77,29 @@ def file_create_to_action():
         file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
-    assert len(file_act.actions) == 2
-
-    touch = file_act.actions[0]
-    chmod = file_act.actions[1]
-    assert isinstance(touch,create.FileCreateAction)
-    assert isinstance(chmod,modify.FileChmodAction)
-
-    assert touch.dst == '/p/q/r'
-    assert chmod.target == '/p/q/r'
-
-@istest
-def file_create_chown_as_root():
-    """
-    File Block Create To Action (As Root)
-    Verifies the result of converting a file create block to an action
-    when the EUID is 0.
-    """
-    b = src.block.file_block.FileBlock()
-    b.set('action','create')
-    b.set('target','/p/q/r')
-    b.set('backup_dir','/m/n')
-    b.set('backup_log','/m/n.log')
-    b.set('user','user1')
-    b.set('group','nogroup')
-    b.set('mode','0600')
-    with mock.patch('src.util.ugo.is_root',lambda: True), \
-         mock.patch('os.path.exists', lambda f: True):
-        file_act = b.to_action()
-
-    assert isinstance(file_act,action.ActionList)
     assert len(file_act.actions) == 3
+
     touch = file_act.actions[0]
-    chmod = file_act.actions[1]
-    chown = file_act.actions[2]
+
+    mod_act1 = file_act.actions[1]
+    mod_act2 = file_act.actions[2]
+
+    if isinstance(mod_act1,modify.FileChmodAction):
+        chmod_act = mod_act1
+        chown_act = mod_act2
+    else:
+        chown_act = mod_act1
+        chmod_act = mod_act2
+
     assert isinstance(touch,create.FileCreateAction)
-    assert isinstance(chmod,modify.FileChmodAction)
-    assert isinstance(chown,modify.FileChownAction)
+    assert isinstance(chmod_act,modify.FileChmodAction)
+    assert isinstance(chown_act,modify.FileChownAction)
 
     assert touch.dst == '/p/q/r'
-    assert chmod.target == '/p/q/r'
-    assert chmod.mode == int('600',8)
-    assert chown.target == '/p/q/r'
-    assert chown.user == 'user1'
-    assert chown.group == 'nogroup'
+    assert chmod_act.target == '/p/q/r'
+    assert chown_act.user == 'user1'
+    assert chown_act.group == 'nogroup'
+    assert chown_act.target == touch.dst
 
 @istest
 def file_copy_nouser():
@@ -340,17 +257,23 @@ def file_copy_nomode():
         file_act = b.to_action()
 
     assert isinstance(file_act,action.ActionList)
-    assert len(file_act.actions) == 2
+    assert len(file_act.actions) == 3
     backup_act = file_act.actions[0]
     copy_act = file_act.actions[1]
+    chown_act = file_act.actions[2]
 
     assert isinstance(backup_act,backup.FileBackupAction)
     assert isinstance(copy_act,copy.FileCopyAction)
+    assert isinstance(chown_act,modify.FileChownAction)
+
     assert backup_act.src == '/p/q/r'
     assert backup_act.dst == '/m/n/p/q/r'
     assert backup_act.logfile == '/m/n.log'
     assert copy_act.src == '/a/b/c'
     assert copy_act.dst == '/p/q/r'
+    assert chown_act.user == 'user1'
+    assert chown_act.group == 'nogroup'
+    assert chown_act.target == copy_act.dst
 
 @istest
 def file_create_nomode():
@@ -369,10 +292,19 @@ def file_create_nomode():
     # skip chown and backup just to generate a simpler action
     with mock.patch('src.util.ugo.is_root',lambda: False), \
          mock.patch('os.path.exists', lambda f: False):
-        touch = b.to_action()
+        act = b.to_action()
 
+    assert isinstance(act,action.ActionList)
+    assert len(act.actions) == 2
+    touch = act.actions[0]
+    chown = act.actions[1]
     assert isinstance(touch,create.FileCreateAction)
+    assert isinstance(chown,modify.FileChownAction)
+
     assert touch.dst == '/p/q/r'
+    assert chown.user == 'user1'
+    assert chown.group == 'nogroup'
+    assert chown.target == touch.dst
 
 @istest
 def file_copy_fails_nosource():
@@ -420,6 +352,74 @@ def file_create_fails_notarget():
     b.set('source','/a/b/c')
     b.set('backup_dir','/m/n')
     b.set('backup_log','/m/n.log')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','0600')
+    ensure_except(BlockException,b.to_action)
+
+@istest
+def file_copy_fails_nobackupdir():
+    """
+    File Block Copy Fails Without Backup Directory
+    Verifies that converting a file copy block to an action when the
+    backup_dir attribute is unset raises a BlockException.
+    """
+    b = src.block.file_block.FileBlock()
+    b.set('action','copy')
+    b.set('source','/a/b/c')
+    b.set('target','/p/q/r')
+    b.set('backup_log','/m/n.log')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','0600')
+    ensure_except(BlockException,b.to_action)
+
+@istest
+def file_create_fails_nobackupdir():
+    """
+    File Block Create Fails Without Backup Directory
+    Verifies that converting a file create block to an action when the
+    backup_dir attribute is unset raises a BlockException.
+    """
+    b = src.block.file_block.FileBlock()
+    b.set('action','create')
+    b.set('source','/a/b/c')
+    b.set('target','/p/q/r')
+    b.set('backup_log','/m/n.log')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','0600')
+    ensure_except(BlockException,b.to_action)
+
+@istest
+def file_copy_fails_nobackuplog():
+    """
+    File Block Copy Fails Without Backup Log
+    Verifies that converting a file copy block to an action when the
+    backup_dir attribute is unset raises a BlockException.
+    """
+    b = src.block.file_block.FileBlock()
+    b.set('action','copy')
+    b.set('source','/a/b/c')
+    b.set('target','/p/q/r')
+    b.set('backup_dir','/m/n')
+    b.set('user','user1')
+    b.set('group','nogroup')
+    b.set('mode','0600')
+    ensure_except(BlockException,b.to_action)
+
+@istest
+def file_create_fails_nobackuplog():
+    """
+    File Block Create Fails Without Backup Log
+    Verifies that converting a file create block to an action when the
+    backup_dir attribute is unset raises a BlockException.
+    """
+    b = src.block.file_block.FileBlock()
+    b.set('action','create')
+    b.set('source','/a/b/c')
+    b.set('target','/p/q/r')
+    b.set('backup_dir','/m/n')
     b.set('user','user1')
     b.set('group','nogroup')
     b.set('mode','0600')

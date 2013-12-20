@@ -268,7 +268,9 @@ class DirChmodAction(ChmodAction,DirModifyAction):
 
         Change the umask of a directory or directory tree.
         """
-        os.chmod(self.target,self.mode)
+        if (ugo.is_root() or
+            os.stat(self.target).st_uid == os.getuid()):
+            os.chmod(self.target,self.mode)
         if self.recursive:
             for directory,subdirs,files in os.walk(self.target):
                 # chmod on all subdirectories

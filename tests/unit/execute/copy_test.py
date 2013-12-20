@@ -39,7 +39,8 @@ def filecopy_execute():
     def mock_name_to_uid(username): return 1
     def mock_name_to_gid(groupname): return 2
 
-    with mock.patch('shutil.copyfile',mock_copyfile):
+    with mock.patch('shutil.copyfile',mock_copyfile), \
+         mock.patch('os.access', lambda x,y: True):
         fcp = copy.FileCopyAction('a',
                                   'b/c',
                                   dummy_context)
@@ -72,7 +73,8 @@ def dircopy_execute():
     def mock_name_to_uid(username): return 1
     def mock_name_to_gid(groupname): return 2
 
-    with mock.patch('shutil.copytree',mock_copytree):
+    with mock.patch('shutil.copytree',mock_copytree), \
+         mock.patch('os.access', lambda x,y: True):
         dcp = copy.DirCopyAction('a',
                                   'b/c',
                                   dummy_context)
