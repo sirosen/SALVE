@@ -51,3 +51,19 @@ def is_abs_or_var(path):
     # matches: [begin string][even number of $][$][end string or non-$]
     if re.match('^(\\$\\$)*\\$([^$]|$)',path): return True
     return False
+
+def get_existing_prefix(path):
+    """
+    Finds the longest prefix to a path that is known to exist.
+
+    Args:
+        @path
+        An absolute path whose prefix should be inspected.
+    """
+    # be safe
+    path = os.path.abspath(path)
+    # exists is sufficient because we can stat directories as long as
+    # we have execute permissions
+    while not os.path.exists(path):
+        path = os.path.dirname(path)
+    return path

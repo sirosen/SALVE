@@ -128,6 +128,10 @@ class FileChownAction(ChownAction):
 
         Change the owner and group of a single file.
         """
+        if not (os.access(self.target,os.F_OK) and
+                ugo.is_root()):
+            return
+
         # chown without following symlinks
         # lchown works on non-symlink files as well
         os.lchown(self.target,ugo.name_to_uid(self.user),
@@ -162,6 +166,13 @@ class FileChmodAction(ChmodAction):
 
         Change the umask of a single file.
         """
+        # skip the chmod if the current user is not the owner or root
+        # or the file is missing
+        if not (os.access(self.target,os.F_OK) and
+                (ugo.is_root() or
+                 os.stat(self.target).st_uid == os.getuid())):
+            return
+
         os.chmod(self.target,self.mode)
 
 class DirChownAction(ChownAction,DirModifyAction):
@@ -203,6 +214,9 @@ class DirChownAction(ChownAction,DirModifyAction):
 
         Change the owner and group of a directory or directory tree.
         """
+        # do nothing if not running as root
+        if not ugo.is_root(): return
+
         uid = ugo.name_to_uid(self.user)
         gid = ugo.name_to_gid(self.group)
         os.lchown(self.target,uid,gid)
@@ -254,12 +268,20 @@ class DirChmodAction(ChmodAction,DirModifyAction):
 
         Change the umask of a directory or directory tree.
         """
-        os.chmod(self.target,self.mode)
+        if (ugo.is_root() or
+            os.stat(self.target).st_uid == os.getuid()):
+            os.chmod(self.target,self.mode)
         if self.recursive:
             for directory,subdirs,files in os.walk(self.target):
                 # chmod on all subdirectories
                 for sd in subdirs:
-                    os.chmod(os.path.join(directory,sd),self.mode)
+                    target = os.path.join(directory,sd)
+                    if (ugo.is_root() or
+                        os.stat(target).st_uid == os.getuid()):
+                        os.chmod(target,self.mode)
                 # chmod on all files in the directory
                 for f in files:
-                    os.chmod(os.path.join(directory,f),self.mode)
+                    target = os.path.join(directory,f)
+                    if (ugo.is_root() or
+                        os.stat(target).st_uid == os.getuid()):
+                        os.chmod(target,self.mode)

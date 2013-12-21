@@ -8,6 +8,7 @@ import src.execute.copy as copy
 import src.execute.create as create
 import src.execute.modify as modify
 import src.util.ugo as ugo
+import src.util.locations as locations
 
 from src.block.base import Block, BlockException
 
@@ -40,7 +41,7 @@ class FileBlock(Block):
         'touch -a'. If it is a copy action, this is a file copy preceded
         by an attempt to back up the file being overwritten.
         """
-        self.ensure_has_attrs('action')
+        self.ensure_has_attrs('action','backup_dir','backup_log')
 
         def ensure_abspath_attrs(*args):
             """
@@ -74,6 +75,12 @@ class FileBlock(Block):
                 When True, prepend @new to @file_act. When False, append
                 instead.
             """
+            # if the action is being skipped, subsequent actions should
+            # also be skipped
+            if file_act is None: return None
+
+            # otherwise, check if the action is an actionlist, and convert
+            # it into one if it is not
             if not isinstance(file_act,action.ActionList):
                 file_act = action.ActionList([file_act],self.context)
             if prepend: file_act.prepend(new)
@@ -104,9 +111,8 @@ class FileBlock(Block):
                                            self.context)
             file_action = add_action(file_action,chmod)
 
-        # if running as root, and 'user' and 'group' are set, append
-        # a chwon action
-        if ugo.is_root() and self.has('user') and self.has('group'):
+        # if 'user' and 'group' are set, append a chwon action
+        if self.has('user') and self.has('group'):
             chown = modify.FileChownAction(self.get('target'),
                                            self.get('user'),
                                            self.get('group'),

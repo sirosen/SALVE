@@ -65,12 +65,30 @@ def filechown_execute():
     log = { 'lchown' : None }
     def mock_lchown(f,uid,gid): log['lchown'] = (f,uid,gid)
 
-    with mock.patch('os.lchown',mock_lchown):
-        with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
-            with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
-                act()
+    with mock.patch('os.lchown',mock_lchown), \
+         mock.patch('os.access',lambda x,y: True), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('src.util.ugo.is_root',lambda: True):
+        act()
 
     assert log['lchown'] == ('a',1,2)
+
+@istest
+def filechown_execute_nonroot():
+    """
+    File Chown Action Execute as Non-Root
+    """
+    act = modify.FileChownAction('a','user1','nogroup',dummy_context)
+
+    log = { 'lchown' : None }
+    def mock_lchown(f,uid,gid): log['lchown'] = (f,uid,gid)
+
+    with mock.patch('os.lchown',mock_lchown), \
+         mock.patch('src.util.ugo.is_root',lambda: False):
+        act()
+
+    assert log['lchown'] is None
 
 @istest
 def filechmod_execute():
@@ -81,8 +99,33 @@ def filechmod_execute():
 
     log = { 'chmod' : None }
     def mock_chmod(f,mode): log['chmod'] = (f,mode)
-    with mock.patch('os.chmod',mock_chmod): act()
+    mock_stat_result = mock.Mock()
+    mock_stat_result.st_uid = os.getuid()
+    with mock.patch('os.chmod',mock_chmod), \
+         mock.patch('os.access',lambda x,y: True), \
+         mock.patch('os.stat',lambda x: mock_stat_result):
+        act()
     assert log['chmod'] == ('a',int('600',8))
+
+@istest
+def filechmod_execute_nonowner():
+    """
+    File Chmod Action Execute as Non-Owner
+    """
+    act = modify.FileChmodAction('a','600',dummy_context)
+
+    log = { 'chmod' : None }
+    def mock_chmod(f,mode): log['chmod'] = (f,mode)
+    mock_stat_result = mock.Mock()
+    # use +1 to ensure that they do not match
+    mock_stat_result.st_uid = os.getuid()+1
+    with mock.patch('os.chmod',mock_chmod), \
+         mock.patch('os.access',lambda x,y: True), \
+         mock.patch('src.util.ugo.is_root',lambda: False), \
+         mock.patch('os.stat',lambda x: mock_stat_result):
+        act()
+
+    assert log['chmod'] is None
 
 def mock_os_walk(dir):
     l = [('a',['b','c'],['1']),
@@ -104,10 +147,11 @@ def dirchown_execute():
 
     act = modify.DirChownAction('a','user1','nogroup',
                                 dummy_context,recursive=True)
-    with mock.patch('os.walk',mock_os_walk):
-        with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
-            with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
-                with mock.patch('os.lchown',mock_lchown):
+    with mock.patch('os.walk',mock_os_walk), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('src.util.ugo.is_root',lambda: True), \
+         mock.patch('os.lchown',mock_lchown):
                     act()
 
     assert len(lchown_args) == 8
@@ -121,6 +165,26 @@ def dirchown_execute():
     assert ('a/c/x/4',1,2) in lchown_args
 
 @istest
+def dirchown_execute_nonroot():
+    """
+    Directory Chown Action Execute as Non-Root
+    """
+    lchown_args = []
+    def mock_lchown(f_or_d,uid,gid):
+        lchown_args.append((f_or_d,uid,gid))
+
+    act = modify.DirChownAction('a','user1','nogroup',
+                                dummy_context,recursive=True)
+    with mock.patch('os.walk',mock_os_walk), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('src.util.ugo.is_root',lambda: False), \
+         mock.patch('os.lchown',mock_lchown):
+                    act()
+
+    assert len(lchown_args) == 0
+
+@istest
 def dirchmod_execute():
     """
     Directory Chmod Action Execute
@@ -129,12 +193,16 @@ def dirchmod_execute():
     def mock_chmod(f_or_d,mode):
         chmod_args.append((f_or_d,mode))
 
+    mock_stat_result = mock.Mock()
+    mock_stat_result.st_uid = os.getuid()
+
     act = modify.DirChmodAction('a','755',dummy_context,recursive=True)
-    with mock.patch('os.walk',mock_os_walk):
-        with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
-            with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
-                with mock.patch('os.chmod',mock_chmod):
-                    act()
+    with mock.patch('os.walk',mock_os_walk), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('os.chmod',mock_chmod), \
+         mock.patch('os.stat',lambda x: mock_stat_result):
+        act()
 
     assert len(chmod_args) == 8
     mode = int('755',8)
@@ -148,6 +216,30 @@ def dirchmod_execute():
     assert ('a/c/x/4',mode) in chmod_args
 
 @istest
+def dirchmod_execute_nonowner():
+    """
+    Directory Chmod Action Execute as Non-Owner
+    """
+    chmod_args = []
+    def mock_chmod(f_or_d,mode):
+        chmod_args.append((f_or_d,mode))
+
+    mock_stat_result = mock.Mock()
+    # use +1 to ensure =/=
+    mock_stat_result.st_uid = os.getuid()+1
+
+    act = modify.DirChmodAction('a','755',dummy_context,recursive=True)
+    with mock.patch('os.walk',mock_os_walk), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('src.util.ugo.is_root',lambda: False), \
+         mock.patch('os.chmod',mock_chmod), \
+         mock.patch('os.stat',lambda x: mock_stat_result):
+        act()
+
+    assert len(chmod_args) == 0
+
+@istest
 def dirchown_execute_nonrecursive():
     """
     Directory Chown Action Execute Non-Recursive
@@ -157,17 +249,39 @@ def dirchown_execute_nonrecursive():
         lchown_args.append((f_or_d,uid,gid))
 
     act = modify.DirChownAction('a','user1','nogroup',dummy_context)
-    with mock.patch('os.walk',mock_os_walk):
-        with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
-            with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
-                with mock.patch('os.lchown',mock_lchown):
-                    act()
+    with mock.patch('os.walk',mock_os_walk), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('src.util.ugo.is_root',lambda: True), \
+         mock.patch('os.lchown',mock_lchown):
+        act()
 
     assert len(lchown_args) == 1
     assert ('a',1,2) in lchown_args
 
 @istest
-def dirchmod_execute_nonrecursive():
+def dirchmod_execute_nonrecursive_root():
+    """
+    Directory Chmod Action Execute Non-Recursive as Root
+    """
+    chmod_args = []
+    def mock_chmod(f_or_d,mode):
+        chmod_args.append((f_or_d,mode))
+
+    act = modify.DirChmodAction('a','755',dummy_context)
+    with mock.patch('os.walk',mock_os_walk), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('src.util.ugo.is_root',lambda: True), \
+         mock.patch('os.chmod',mock_chmod):
+        act()
+
+    assert len(chmod_args) == 1
+    mode = int('755',8)
+    assert ('a',mode) in chmod_args
+
+@istest
+def dirchmod_execute_nonrecursive_owner():
     """
     Directory Chmod Action Execute Non-Recursive
     """
@@ -175,13 +289,61 @@ def dirchmod_execute_nonrecursive():
     def mock_chmod(f_or_d,mode):
         chmod_args.append((f_or_d,mode))
 
+    mock_stat_result = mock.Mock()
+    mock_stat_result.st_uid = os.getuid()
+
     act = modify.DirChmodAction('a','755',dummy_context)
-    with mock.patch('os.walk',mock_os_walk):
-        with mock.patch('src.util.ugo.name_to_uid',lambda x: 1):
-            with mock.patch('src.util.ugo.name_to_gid',lambda x: 2):
-                with mock.patch('os.chmod',mock_chmod):
-                    act()
+    with mock.patch('os.walk',mock_os_walk), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('src.util.ugo.is_root',lambda: True), \
+         mock.patch('os.stat',lambda x: mock_stat_result), \
+         mock.patch('os.chmod',mock_chmod):
+        act()
 
     assert len(chmod_args) == 1
     mode = int('755',8)
     assert ('a',mode) in chmod_args
+
+@istest
+def dirchown_execute_nonrecursive_nonroot():
+    """
+    Directory Chown Action Execute Non-Recursive as Non-Root
+    """
+    lchown_args = []
+    def mock_lchown(f_or_d,uid,gid):
+        lchown_args.append((f_or_d,uid,gid))
+
+    act = modify.DirChownAction('a','user1','nogroup',dummy_context)
+    with mock.patch('os.walk',mock_os_walk), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('src.util.ugo.is_root',lambda: False), \
+         mock.patch('os.lchown',mock_lchown):
+        act()
+
+    assert len(lchown_args) == 0
+
+@istest
+def dirchmod_execute_nonrecursive_nonroot_nonowner():
+    """
+    Directory Chmod Action Execute Non-Recursive as Non-Root, Non-Owner
+    """
+    chmod_args = []
+    def mock_chmod(f_or_d,mode):
+        chmod_args.append((f_or_d,mode))
+
+    mock_stat_result = mock.Mock()
+    # use +1 to ensure =/=
+    mock_stat_result.st_uid = os.getuid()+1
+
+    act = modify.DirChmodAction('a','755',dummy_context)
+    with mock.patch('os.walk',mock_os_walk), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
+         mock.patch('src.util.ugo.is_root',lambda: False), \
+         mock.patch('os.stat',lambda x: mock_stat_result), \
+         mock.patch('os.chmod',mock_chmod):
+        act()
+
+    assert len(chmod_args) == 0

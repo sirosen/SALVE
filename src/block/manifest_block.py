@@ -85,6 +85,11 @@ class ManifestBlock(Block):
         if self.sub_blocks is None:
             raise self.mk_except('Attempted to convert unexpanded '+\
                                  'manifest to action.')
-        return action.ActionList([b.to_action()
-                                  for b in self.sub_blocks],
-                                 self.context)
+
+        act = action.ActionList([],self.context)
+        for b in self.sub_blocks:
+            subact = b.to_action()
+            if subact is not None:
+                act.append(subact)
+
+        return act
