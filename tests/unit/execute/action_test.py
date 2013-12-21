@@ -19,6 +19,55 @@ def action_is_abstract():
     ensure_except(TypeError,action.Action)
 
 @istest
+def dynamic_action_is_abstract():
+    """
+    Dynamic Action Base Class Is Abstract
+    Verifies that instantiating a DynamicAction raises an error.
+    """
+    ensure_except(TypeError,action.DynamicAction)
+
+@istest
+def dynamic_action_execute_fails():
+    """
+    Dynamic Action Invocation Generates & Executes
+    Verifies that calling a DynamicAction invokes its generation
+    function and then its execution function, even when generation
+    rewrites execution.
+    """
+    logged_funcs = []
+
+    class DummyAction(action.DynamicAction):
+        def generate(self):
+            pass
+
+    act = DummyAction(dummy_context)
+    ensure_except(action.ActionException,act.execute)
+
+@istest
+def dynamic_action_call_generates_and_executes():
+    """
+    Dynamic Action Invocation Generates & Executes
+    Verifies that calling a DynamicAction invokes its generation
+    function and then its execution function, even when generation
+    rewrites execution.
+    """
+    logged_funcs = []
+
+    class DummyAction(action.DynamicAction):
+        def generate(self):
+            logged_funcs.append('generate')
+            def execute_replacement():
+                logged_funcs.append('execute_replacement')
+            self.execute = execute_replacement
+
+    act = DummyAction(dummy_context)
+    act()
+
+    assert len(logged_funcs) == 2
+    assert logged_funcs[0] == 'generate'
+    assert logged_funcs[1] == 'execute_replacement'
+
+@istest
 def empty_action_list():
     """
     Action List Empty List Is No-Op

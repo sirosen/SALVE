@@ -63,6 +63,40 @@ class Action(object):
         """
         return self.execute(*args,**kwargs)
 
+class DynamicAction(Action):
+    """
+    DynamicActions are actions that may not be executable at the time
+    that they are instantiated. Is an ABC.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def generate(self):
+        """
+        Generates the action body -- can consist of a rewrite of
+        self.execute(), for example -- so that when execution takes
+        place, it will be valid / possible.
+        """
+        pass #pragma: no cover
+
+    def execute(self):
+        """
+        DynamicAction.execute is not abstract because by default, the
+        notion of execute on an ungenerated action is well defined.
+        This needs to be overwritten during generation in most cases.
+        """
+        raise ActionException('Uninstantiated DynamicAction',
+                              self.context)
+
+    def __call__(self, *args, **kwargs):
+        """
+        Calling a DynamicAction invokes self-generation immediately
+        followed by execution. This ensures that execution takes
+        place with the most up-to-date information available.
+        """
+        self.generate()
+        Action.__call__(self, *args, **kwargs)
+
 class ActionList(Action):
     """
     An ActionList, often referred to internally as an "AL", is one of
