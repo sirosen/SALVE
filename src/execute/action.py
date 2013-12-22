@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import abc, subprocess
+import abc
 
 from src.util.error import SALVEException
 
@@ -63,49 +63,39 @@ class Action(object):
         """
         return self.execute(*args,**kwargs)
 
-class ShellAction(Action):
+class DynamicAction(Action):
     """
-    A ShellAction is one of the basic Action types, used to invoke
-    shell subprocesses.
+    DynamicActions are actions that may not be executable at the time
+    that they are instantiated. Is an ABC.
     """
-    def __init__(self, command, context):
-        """
-        ShellAction constructor.
+    __metaclass__ = abc.ABCMeta
 
-        Args:
-            @command
-            A string that defines the shell command to execute when the
-            ShellAction is invoked.
-            @context
-            The ShellAction's StreamContext.
+    @abc.abstractmethod
+    def generate(self):
         """
-        Action.__init__(self,context)
-        self.cmd = command
-
-    def __str__(self):
-        return 'ShellAction('+str(self.cmd)+')'
+        Generates the action body -- can consist of a rewrite of
+        self.execute(), for example -- so that when execution takes
+        place, it will be valid / possible.
+        """
+        pass #pragma: no cover
 
     def execute(self):
         """
-        ShellAction execution.
-
-        Invokes the ShellAction's command, and fails if it returns a
-        nonzero exit code, and returns its stdout and stderr.
+        DynamicAction.execute is not abstract because by default, the
+        notion of execute on an ungenerated action is well defined.
+        This needs to be overwritten during generation in most cases.
         """
-        # run the command, passing output to PIPE
-        process = subprocess.Popen(self.cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   shell=True)
-        # Popen is asynchronous without an invocation of wait()
-        process.wait()
-        # check if returncode became nonzero, and fail if it did
-        if process.returncode != 0:
-            raise ActionException(str(self)+\
-                ' failed with exit code '+str(process.returncode),
-                self.context)
+        raise ActionException('Uninstantiated DynamicAction',
+                              self.context)
 
-        return process.communicate()
+    def __call__(self, *args, **kwargs):
+        """
+        Calling a DynamicAction invokes self-generation immediately
+        followed by execution. This ensures that execution takes
+        place with the most up-to-date information available.
+        """
+        self.generate()
+        Action.__call__(self, *args, **kwargs)
 
 class ActionList(Action):
     """
