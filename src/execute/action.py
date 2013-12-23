@@ -126,7 +126,7 @@ class ActionList(Action):
         for act in self.actions: yield act
 
     def __str__(self):
-        return "ActionList("+";".join(str(a) for a in self.actions)+\
+        return "ActionList(["+",".join(str(a) for a in self.actions)+'],'\
                "context="+str(self.context)+")"
 
     def append(self,act):

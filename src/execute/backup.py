@@ -46,6 +46,8 @@ class BackupAction(copy.CopyAction):
                                  os.path.join(backup_dir,
                                               os.path.relpath(src,'/')),
                                  context)
+        # although redundant with CopyAction, useful for pretty printing
+        self.backup_dir = backup_dir
         # backup_log is a clunky name internally, since we know this is
         # a BackupAction
         self.logfile = backup_log

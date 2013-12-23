@@ -38,6 +38,21 @@ def file_dst_dir():
                                    filename.lstrip('/'))
 
 @istest
+def file_to_str():
+    """
+    File Backup Action to String
+
+    Checks the result of converting a file backup action to a string.
+    """
+    filename = get_full_path('file1.txt')
+    act = backup.FileBackupAction(filename,'/etc/salve/backup',
+                                  '/etc/salve/backup.log',dummy_context)
+    assert str(act) == \
+        'FileBackupAction(src='+filename+',backup_dir='+\
+        '/etc/salve/backup,backup_log=/etc/salve/backup.log'+\
+        ',context='+str(dummy_context)+')'
+
+@istest
 def file_target_name():
     """
     File Backup Action Destination File

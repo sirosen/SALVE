@@ -85,6 +85,17 @@ def empty_action_list():
     assert len(done_actions) == 0
 
 @istest
+def empty_action_list_to_string():
+    """
+    Action List Empty List String Representation
+
+    Checks the string repr of an empty AL.
+    """
+    act = action.ActionList([],dummy_context)
+
+    assert str(act) == 'ActionList([],context='+str(dummy_context)+')'
+
+@istest
 def action_list_inorder():
     """
     Action List Execute In Order
