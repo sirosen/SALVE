@@ -16,7 +16,8 @@ def get_option_parser():
     Produces a command line option parser for SALVE using optparse.
     Although argparse is significantly nicer, it's only available as
     an added package in python<2.7. Since 2.6 is in wide use at this
-    time, optparse is going to have to do.
+    time, and some distributions of 2.7 require a pip install for
+    argparse, optparse is going to have to do.
     """
     option_parser = optparse.OptionParser()
     option_parser.add_option('-m','--manifest',dest='manifest',
@@ -24,7 +25,10 @@ def get_option_parser():
     option_parser.add_option('--git-repo',dest='gitrepo',
                              help='A SALVE git repo, '+\
                              'containing a root.manifest in HEAD.')
-    option_parser.add_option('--fileroot',dest='fileroot',
+    option_parser.add_option('--backup-recovery',dest='backup_recovery',
+                             help='Launch in Backup Recovery Mode, to' +\
+                             'restore files from their SALVE backups.')
+    option_parser.add_option('-f','--fileroot',dest='fileroot',
                              help='The directory to which relative'+\
                              'paths in manifests refer.')
     option_parser.add_option('-c','--config-file',dest='configfile',
@@ -55,6 +59,10 @@ def read_commandline(option_parser=None):
         print('Ambiguous arguments: given a git repo and a manifest'+\
               ' and therefore choosing the manifest.',
               file=sys.stderr)
+
+    if opts.backup_recovery:
+        raise ValueError('The present version of SALVE does not support '+\
+                         'backup recovery.')
 
     return (opts,args)
 

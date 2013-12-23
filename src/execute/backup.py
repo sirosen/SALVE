@@ -108,8 +108,8 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
         """
         Log the date, hash, and filename, to the backup log.
         """
-        logval = time.strftime('%Y-%m-%d.%s') + ' ' + self.hash_val + ' ' +\
-                 self.src
+        logval = time.strftime('%Y-%m-%d %H:%M:%S') + ' ' + \
+                 self.hash_val + ' ' + self.src
         # TODO: use some locks to make this thread-safe for future
         # versions of SALVE supporting parallelism
         with open(self.logfile,'a') as f:
