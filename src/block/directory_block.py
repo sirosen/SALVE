@@ -153,32 +153,8 @@ class DirBlock(Block):
         directory copy that creates the target directories and backs up
         any files that are being overwritten.
         """
-        def add_action(act,new,prepend=False):
-            """
-            Defines a uniform way of expanding an action regardless of
-            whether or not it is an AL.
-
-            Args:
-                @act
-                The action being expanded.
-                @new
-                The action being added to @act
-
-            KWArgs:
-                @prepend
-                When True, prepend @new to @act. When False, append
-                instead.
-            """
-            # convert @act to an AL if it wasn't one before
-            if not isinstance(act,action.ActionList):
-                act = action.ActionList([act],self.context)
-            if prepend: act.prepend(new)
-            else: act.append(new)
-            return act
-
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will
-        triggers_backup = ('remove',)
         self.ensure_has_attrs('action')
         if self.get('action') == 'create':
             dir_act = self.create_action()
@@ -186,17 +162,5 @@ class DirBlock(Block):
             dir_act = self.copy_action()
         else:
             raise self.mk_except('Unsupported DirectoryBlock action.')
-
-        # if the action is classified as causing a directory backup, the
-        # backup action is created and prepended to the existing action
-        if self.get('action') in triggers_backup and\
-           os.path.exists(self.get('target')):
-            # no need to test until 'remove' is defined
-            backup_act = backup.DirBackupAction(self.get('target'), #pragma: no cover
-                                                self.get('backup_dir'),
-                                                self.get('backup_log'),
-                                                self.context)
-
-            dir_act = add_action(dir_act,backup_act,prepend=True) #pragma: no cover
 
         return dir_act
