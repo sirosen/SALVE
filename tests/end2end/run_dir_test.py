@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-from nose.tools import istest, with_setup
-import mock
 import os
+import mock
+from nose.tools import istest, with_setup
 
 import src.run.command
 import tests.utils.scratch

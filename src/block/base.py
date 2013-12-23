@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-import abc, os
+import abc
+import os
 
 from src.util.enum import Enum
 from src.util.error import SALVEException

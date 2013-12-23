@@ -7,7 +7,8 @@ and any globally important directories like the metadata directory
 and the file cache
 """
 
-import os, re
+import os
+import re
 
 def containing_dir(path,depth=1):
     """

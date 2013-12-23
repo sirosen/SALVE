@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
+import os
+import mock
+import shlex
 from nose.tools import istest, with_setup
-import mock, os, shlex
 
 import src.run.command
 import tests.utils.scratch

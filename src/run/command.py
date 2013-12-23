@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-import os, optparse, sys
+
+import os
+import sys
+import optparse
 
 import src.util.locations as locations
 import src.block.manifest_block

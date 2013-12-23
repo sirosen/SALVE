@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-import string, shlex
+import string
+import shlex
+
 from src.util.enum import Enum
 from src.util.error import SALVEException, StreamContext
 from src.util.streams import get_filename

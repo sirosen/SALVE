@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
+import os
+import mock
+import StringIO
+
 from nose.tools import istest
-import mock, StringIO, os
 from tests.utils.exceptions import ensure_except
 
 import src.run.command

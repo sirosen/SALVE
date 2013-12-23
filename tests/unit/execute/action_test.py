@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
+import mock
 from nose.tools import istest
-from mock import patch
 
 from tests.utils.exceptions import ensure_except
 from src.util.error import StreamContext
@@ -78,7 +78,7 @@ def empty_action_list():
         done_actions.append(self)
 
     # Just ensuring that an empty action list is valid
-    with patch('src.execute.action.Action.execute',mock_execute):
+    with mock.patch('src.execute.action.Action.execute',mock_execute):
         actions = action.ActionList([],dummy_context)
         actions.execute()
 
