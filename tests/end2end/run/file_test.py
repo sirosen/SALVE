@@ -3,16 +3,11 @@
 import os
 import mock
 import shlex
-from nose.tools import istest, with_setup
+from nose.tools import istest
 
-import src.run.command
-import tests.utils.scratch
+import tests.end2end.run.common as run_common
 
-def run_on_args(argv):
-    with mock.patch('sys.argv',argv):
-        return src.run.command.main()
-
-class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
+class TestWithScratchdir(run_common.RunScratchContainer):
     @istest
     def copy_single_file(self):
         """
@@ -21,12 +16,10 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
         """
-        cwd = self.scratch_dir
         content = 'file { action copy source 1.man target 2.man }\n'
         self.write_file('1.man',content)
-        man_path = os.path.join(cwd,'1.man')
-        run_on_args(['./salve.py','-m',man_path])
-        assert os.path.exists(os.path.join(cwd,'2.man'))
+        self.run_on_manifest('1.man')
+        assert self.exists('2.man')
         s = self.read_file('2.man')
         assert s == content, '%s' % s
 
@@ -38,12 +31,10 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
         """
-        cwd = self.scratch_dir
         content = 'file { source 1.man target 2.man }\n'
         self.write_file('1.man',content)
-        man_path = os.path.join(cwd,'1.man')
-        run_on_args(['./salve.py','-m',man_path])
-        assert os.path.exists(os.path.join(cwd,'2.man'))
+        self.run_on_manifest('1.man')
+        assert self.exists('2.man')
         s = self.read_file('2.man')
         assert s == content, '%s' % s
 
@@ -55,8 +46,6 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which copies two files and verifies the contents of
         the destination files.
         """
-        cwd = self.scratch_dir
-        man_path = os.path.join(cwd,'1.man')
         self.write_file('1.man',
             'file { action copy source f1 target f1prime }\n'+\
             'file { source f2 target f2prime }\n'
@@ -66,10 +55,10 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         self.write_file('f1',f1_content)
         self.write_file('f2',f2_content)
 
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('1.man')
 
-        assert os.path.exists(os.path.join(cwd,'f1prime'))
-        assert os.path.exists(os.path.join(cwd,'f2prime'))
+        assert self.exists('f1prime')
+        assert self.exists('f2prime')
         s = self.read_file('f1prime')
         assert s == f1_content, '%s' % s
         s = self.read_file('f2prime')
@@ -83,12 +72,10 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which creates a file and verifies the contents of
         the destination file are nil.
         """
-        cwd = self.scratch_dir
         content = 'file { action create target f2 }\n'
         self.write_file('1.man',content)
-        man_path = os.path.join(cwd,'1.man')
-        run_on_args(['./salve.py','-m',man_path])
-        assert os.path.exists(os.path.join(cwd,'f2'))
+        self.run_on_manifest('1.man')
+        assert self.exists('f2')
         s = self.read_file('f2')
         assert s == '', '%s' % s
 
@@ -100,13 +87,11 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which creates two files and verifies the contents of
         the destination file are nil.
         """
-        cwd = self.scratch_dir
         content = 'file{action create target f2}\nfile{action\ncreate target f3}'
         self.write_file('1.man',content)
-        man_path = os.path.join(cwd,'1.man')
-        run_on_args(['./salve.py','-m',man_path])
-        assert os.path.exists(os.path.join(cwd,'f2'))
-        assert os.path.exists(os.path.join(cwd,'f3'))
+        self.run_on_manifest('1.man')
+        assert self.exists('f2')
+        assert self.exists('f3')
         s = self.read_file('f2')
         assert s == '', '%s' % s
         s = self.read_file('f3')
@@ -120,14 +105,12 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which touches an existing file and verifies the
         contents of the destination file do not change.
         """
-        cwd = self.scratch_dir
         content = 'file{action create target f1}\n'
         self.write_file('1.man',content)
         f1_content = 'alpha beta\n'
         self.write_file('f1',f1_content)
-        man_path = os.path.join(cwd,'1.man')
-        run_on_args(['./salve.py','-m',man_path])
-        assert os.path.exists(os.path.join(cwd,'f1'))
+        self.run_on_manifest('1.man')
+        assert self.exists('f1')
         s = self.read_file('f1')
         assert s == f1_content, '%s' % s
 
@@ -139,12 +122,10 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which touches several files and verifies the
         permissions of the target files.
         """
-        cwd = self.scratch_dir
         content = 'file{action create target f1 mode 444}\n'
         self.write_file('1.man',content)
-        man_path = os.path.join(cwd,'1.man')
-        run_on_args(['./salve.py','-m',man_path])
-        assert os.path.exists(os.path.join(cwd,'f1'))
+        self.run_on_manifest('1.man')
+        assert self.exists('f1')
         s = self.read_file('f1')
         assert s == '', '%s' % s
         assert self.get_mode('f1') == int('444',8)
@@ -157,12 +138,10 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which changes its own permissions to remove user
         read/write permissions.
         """
-        cwd = self.scratch_dir
         content = 'file{action create target 1.man mode 066}\n'
         self.write_file('1.man',content)
-        man_path = os.path.join(cwd,'1.man')
-        run_on_args(['./salve.py','-m',man_path])
-        assert os.path.exists(os.path.join(cwd,'1.man'))
+        self.run_on_manifest('1.man')
+        assert self.exists('1.man')
         assert self.get_mode('1.man') == int('066',8)
 
     @istest
@@ -173,7 +152,6 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
         """
-        cwd = self.scratch_dir
         backup_dir = 'backups'
         backup_log = 'backup.log'
         self.make_dir(backup_dir)
@@ -185,15 +163,14 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
                   'backup_log %s ' % backup_log + '}\n'
 
         self.write_file('1.man',content)
-        man_path = os.path.join(cwd,'1.man')
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('1.man')
 
         s = self.read_file('f1')
         assert s == content, '%s' % s
         s = self.read_file('backup.log').strip()
         ss = shlex.split(s)
         assert len(ss) == 3
-        assert ss[2] == os.path.join(cwd,'f1')
+        assert ss[2] == self.get_fullname('f1')
         backup_path = self.get_backup_path(backup_dir,'f1')
         backup_path = os.path.join(backup_path,ss[1])
         s = self.read_file(backup_path)
@@ -207,8 +184,6 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
         """
-        cwd = self.scratch_dir
-        #assert False, "%s" % os.environ['HOME']
         backup_dir = 'home/user1/backups'
         backup_log = 'home/user1/backup.log'
         self.write_file('f1','')
@@ -216,15 +191,14 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         content = 'file { action copy source 1.man target f1 }\n'
 
         self.write_file('1.man',content)
-        man_path = os.path.join(cwd,'1.man')
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('1.man')
 
         s = self.read_file('f1')
         assert s == content, '%s' % s
         s = self.read_file(backup_log).strip()
         ss = shlex.split(s)
         assert len(ss) == 3
-        assert ss[2] == os.path.join(cwd,'f1')
+        assert ss[2] == self.get_fullname('f1')
         backup_path = self.get_backup_path(backup_dir,'f1')
         backup_path = os.path.join(backup_path,ss[1])
         s = self.read_file(backup_path)

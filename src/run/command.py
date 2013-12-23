@@ -24,7 +24,7 @@ def get_option_parser():
     option_parser.add_option('--git-repo',dest='gitrepo',
                              help='A SALVE git repo, '+\
                              'containing a root.manifest in HEAD.')
-    option_parser.add_option('--file-root',dest='fileroot',
+    option_parser.add_option('--fileroot',dest='fileroot',
                              help='The directory to which relative'+\
                              'paths in manifests refer.')
     option_parser.add_option('-c','--config-file',dest='configfile',
@@ -74,7 +74,7 @@ def run_on_manifest(root_manifest,opts):
     if opts.configfile: cfg_file = opts.configfile
     conf = SALVEConfig(filename=cfg_file)
 
-    root_dir = os.path.abspath(os.path.dirname(root_manifest))
+    root_dir = locations.get_salve_root()
     if opts.fileroot: root_dir = os.path.abspath(opts.fileroot)
 
     # root_block is a synthetic manifest block containing the root
