@@ -9,13 +9,38 @@ For a detailed description of the project, please visit http://sirosen.github.io
 
 What can SALVE do?
 ==================
-
 SALVE versions files and directories in a git repository, and handles the messy process of deploying those files onto a machine.
-It is safer to use than shell scripts, and can be used to touch files, create directories, copy files and directories, apply permissions, and back up the preexisting versions of those files so that you can recover them if necessary at a later date.
+It is safer to use than shell scripts, and backs up the preexisting versions of files that it changes so that you can recover them if necessary at a later date.
 
 To start writing manifests, go to the Quick-Start guide at http://sirosen.github.io/SALVE/quickstart.html
 
 For a more detailed description of the SALVE language, visit http://sirosen.github.io/SALVE/lang.html and browse the examples at http://sirosen.github.io/SALVE/examples.html
+
+Roadmap
+=======
+
+These are the features and fixes currently in the pipeline for SALVE.
+Generally Fixes are prioritized over Features, depending on their severity.
+
+Features
+--------
+ - ```~``` and ```*``` expansion.
+ - Git repository fetching
+ - ```apt```, ```yum```, ```macports```, and ```homebrew``` support
+    * Should ```pip``` and/or ```gem``` be added to the list?
+ - Variable and attribute definition in manifest blocks to propogate down the block tree
+ - Automagical backup recovery given a date
+ - Addition of a mode that refuses to execute unless it can guarantee safety (and make this the default)
+ - Track the expected state of the filesys to do more complete safety checking
+
+Fixes
+-----
+ - Common attrs should be carried in an execution context, not expanded into block attrs
+ - Dir alterations (chown/chmod) are based on walks at generation time, not execution time
+ - Backups are stored by path/hash, which replicates any files that move but don't change
+    * They should be stored by hash, and path mapping done in the logfile
+    * This will break backwards log compatibility
+ - Many backup/copy actions should check for checksum mismatches before performing an operation in order to reduce write load
 
 Changelog
 =========
