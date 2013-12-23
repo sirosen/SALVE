@@ -26,7 +26,7 @@ def name_to_uid(username):
         @username
         The user whose UID is desired.
     """
-    return pwd.getpwnam(username)[2]
+    return pwd.getpwnam(username).pw_uid
 
 def name_to_gid(groupname):
     """
@@ -36,4 +36,4 @@ def name_to_gid(groupname):
         @groupname
         The group whose GID is desired.
     """
-    return grp.getgrnam(groupname)[2]
+    return grp.getgrnam(groupname).gr_gid
