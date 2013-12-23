@@ -171,7 +171,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         ss = shlex.split(s)
         assert len(ss) == 3
         assert ss[2] == self.get_fullname('f1')
-        backup_path = self.get_backup_path(backup_dir,'f1')
+        backup_path = self.get_backup_path(backup_dir)
         backup_path = os.path.join(backup_path,ss[1])
         s = self.read_file(backup_path)
         assert s == ''
@@ -199,7 +199,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         ss = shlex.split(s)
         assert len(ss) == 3
         assert ss[2] == self.get_fullname('f1')
-        backup_path = self.get_backup_path(backup_dir,'f1')
+        backup_path = self.get_backup_path(backup_dir)
         backup_path = os.path.join(backup_path,ss[1])
         s = self.read_file(backup_path)
         assert s == ''

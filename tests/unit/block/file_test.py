@@ -131,7 +131,7 @@ def file_copy_nouser():
     assert isinstance(chmod_act,modify.FileChmodAction)
 
     assert backup_act.src == '/p/q/r'
-    assert backup_act.dst == '/m/n/p/q/r'
+    assert backup_act.dst == '/m/n/files'
     assert backup_act.logfile == '/m/n.log'
     assert copy_act.src == '/a/b/c'
     assert copy_act.dst == '/p/q/r'
@@ -200,7 +200,7 @@ def file_copy_nogroup():
     assert isinstance(chmod_act,modify.FileChmodAction)
 
     assert backup_act.src == '/p/q/r'
-    assert backup_act.dst == '/m/n/p/q/r'
+    assert backup_act.dst == '/m/n/files'
     assert backup_act.logfile == '/m/n.log'
     assert copy_act.src == '/a/b/c'
     assert copy_act.dst == '/p/q/r'
@@ -268,7 +268,7 @@ def file_copy_nomode():
     assert isinstance(chown_act,modify.FileChownAction)
 
     assert backup_act.src == '/p/q/r'
-    assert backup_act.dst == '/m/n/p/q/r'
+    assert backup_act.dst == '/m/n/files'
     assert backup_act.logfile == '/m/n.log'
     assert copy_act.src == '/a/b/c'
     assert copy_act.dst == '/p/q/r'

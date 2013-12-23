@@ -160,7 +160,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
 
         assert self.exists('home/user1/backup.log')
         assert self.exists('home/user1/backups')
-        backup = self.get_backup_path('home/user1/backups','b/f1')
+        backup = self.get_backup_path('home/user1/backups')
         assert self.exists(backup)
         backup_files = self.listdir(backup)
         assert len(backup_files) == 1

@@ -87,9 +87,8 @@ group=$SALVE_USER_PRIMARY_GROUP
         for p in self.patches:
             p.stop()
 
-    def get_backup_path(self,backup_dir,relpath):
-        return os.path.join(self.scratch_dir,backup_dir,
-            os.path.relpath(self.scratch_dir,'/'),relpath)
+    def get_backup_path(self,backup_dir):
+        return os.path.join(self.get_fullname(backup_dir),'files')
 
     def make_dir(self,relpath):
         full_path = self.get_fullname(relpath)
