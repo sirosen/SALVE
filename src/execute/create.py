@@ -46,8 +46,8 @@ class FileCreateAction(CreateAction):
         CreateAction.__init__(self,dst,context)
 
     def __str__(self):
-        return "FileCreateAction(src="+str(self.src)+",dst="+\
-               str(self.dst)+",context="+str(self.context)+")"
+        return "FileCreateAction(dst="+str(self.dst)+\
+            ",context="+str(self.context)+")"
 
     def execute(self):
         """
