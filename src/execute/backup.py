@@ -1,7 +1,12 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-import abc, os, shutil, hashlib, time
+
+import abc
+import os
+import shutil
+import hashlib
+import time
 
 import src.execute.action as action
 import src.execute.copy as copy

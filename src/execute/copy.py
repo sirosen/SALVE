@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
-import abc, os, shutil
+import abc
+import os
+import shutil
 
 import src.execute.action as action
 

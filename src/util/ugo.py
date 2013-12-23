@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
-import grp, pwd, os
+import os
+import grp
+import pwd
 
 def get_group_from_username(username):
     """

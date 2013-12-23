@@ -7,7 +7,6 @@ import src.execute.backup as backup
 import src.execute.copy as copy
 import src.execute.create as create
 import src.execute.modify as modify
-import src.util.locations as locations
 
 from src.block.base import Block, BlockException
 

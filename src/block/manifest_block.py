@@ -3,7 +3,6 @@
 import os
 
 import src.execute.action as action
-import src.util.locations as locations
 
 from src.block.base import Block
 

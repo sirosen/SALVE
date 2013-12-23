@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
 from ConfigParser import ConfigParser
-import os, string
+
+import os
+import string
 
 import src.block.manifest_block
 import src.util.locations as locations
