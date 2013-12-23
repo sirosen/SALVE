@@ -197,6 +197,6 @@ class DirBlock(Block):
                                                 self.get('backup_log'),
                                                 self.context)
 
-            dir_act = add_action(dir_act,backup_act,prepend=True)
+            dir_act = add_action(dir_act,backup_act,prepend=True) #pragma: no cover
 
         return dir_act

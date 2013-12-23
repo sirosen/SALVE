@@ -108,9 +108,8 @@ group=$SALVE_USER_PRIMARY_GROUP
         with open(os.path.join(self.scratch_dir,relpath),'r') as f:
             return f.read()
 
-    def get_file_mode(self,relpath):
-        return os.stat(self.get_fullname(relpath)).st_mode\
-               & 0777
+    def get_mode(self,relpath):
+        return os.stat(self.get_fullname(relpath)).st_mode & 0777
 
     def get_fullname(self,relpath):
         return os.path.join(self.scratch_dir,relpath)

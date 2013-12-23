@@ -145,7 +145,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         assert os.path.exists(os.path.join(cwd,'f1'))
         s = self.read_file('f1')
         assert s == '', '%s' % s
-        assert self.get_file_mode('f1') == int('444',8)
+        assert self.get_mode('f1') == int('444',8)
 
     @istest
     def change_own_permissions(self):
@@ -161,7 +161,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         man_path = os.path.join(cwd,'1.man')
         run_on_args(['./salve.py','-m',man_path])
         assert os.path.exists(os.path.join(cwd,'1.man'))
-        assert self.get_file_mode('1.man') == int('066',8)
+        assert self.get_mode('1.man') == int('066',8)
 
     @istest
     def copy_file_triggers_backup(self):
