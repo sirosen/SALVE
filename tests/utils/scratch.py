@@ -8,10 +8,11 @@ import src.util.locations as locations
 
 class ScratchContainer(object):
     def mock_env(self):
-        mock_env = {'SUDO_USER': 'user1',
-                    'USER': 'user1',
-                    'HOME': os.path.join(self.scratch_dir,
-                                         'home/user1')}
+        mock_env = {
+            'SUDO_USER': 'user1',
+            'USER': 'user1',
+            'HOME': self.get_fullname('home/user1')
+        }
         os.makedirs(mock_env['HOME'])
         self.patches.add(mock.patch.dict('os.environ',mock_env))
 
@@ -88,18 +89,27 @@ group=$SALVE_USER_PRIMARY_GROUP
             os.path.relpath(self.scratch_dir,'/'),relpath)
 
     def make_dir(self,relpath):
-        full_path = os.path.join(self.scratch_dir,relpath)
+        full_path = self.get_fullname(relpath)
+        # FIXME: should use EAFP style
         if not os.path.exists(full_path):
             os.makedirs(full_path)
 
+    def exists(self,relpath):
+        return os.path.exists(self.get_fullname(relpath))
+
+    def listdir(self,relpath):
+        return os.listdir(self.get_fullname(relpath))
+
     def write_file(self,relpath,content):
-        with open(os.path.join(self.scratch_dir,relpath),'w') as f:
+        with open(self.get_fullname(relpath),'w') as f:
             f.write(content)
 
     def read_file(self,relpath):
         with open(os.path.join(self.scratch_dir,relpath),'r') as f:
             return f.read()
 
-    def get_file_mode(self,relpath):
-        return os.stat(os.path.join(self.scratch_dir,relpath)).st_mode\
-               & 0777
+    def get_mode(self,relpath):
+        return os.stat(self.get_fullname(relpath)).st_mode & 0777
+
+    def get_fullname(self,relpath):
+        return os.path.join(self.scratch_dir,relpath)
