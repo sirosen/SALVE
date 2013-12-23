@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-import src.util.enum as enum
 from nose.tools import istest
+
+import src.util.enum as enum
 
 @istest
 def automapping():

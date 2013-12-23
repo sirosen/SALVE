@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
+import os
+import mock
 from nose.tools import istest
-import os, mock
 from tests.utils.exceptions import ensure_except
 
 import src.block.base

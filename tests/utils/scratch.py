@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
-import os, tempfile, shutil
+import os
+import tempfile
+import shutil
+
 import mock
 
 import src.util.locations as locations

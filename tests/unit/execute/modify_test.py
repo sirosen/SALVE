@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-import os, mock
+import os
+import mock
 from nose.tools import istest
 
 from src.util.error import StreamContext

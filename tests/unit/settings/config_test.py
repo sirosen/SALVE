@@ -1,14 +1,13 @@
 #!/usr/bin/python
 
-import src.settings.config as config
+import os
+import mock
+from nose.tools import istest, with_setup
+from os.path import dirname, abspath, join as pjoin
 
 from tests.utils.exceptions import ensure_except
 
-from nose.tools import istest, with_setup
-from mock import patch, Mock
-
-import os
-from os.path import dirname, abspath, join as pjoin
+import src.settings.config as config
 
 _testfile_dir = pjoin(dirname(__file__),'files')
 _homes_dir = pjoin(dirname(__file__),'homes')
@@ -58,7 +57,7 @@ def setup_os1():
                'HOME': home_map['user1']}
 
     # mock the whole os.path module
-    mock_path = Mock()
+    mock_path = mock.Mock()
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
     mock_path.dirname = dirname
@@ -66,12 +65,12 @@ def setup_os1():
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = patch('src.util.ugo.get_group_from_username',
-                        mock_get_group)
+    group_patch = mock.patch('src.util.ugo.get_group_from_username',
+                             mock_get_group)
 
     # put the patches in place
-    setup_patches(patch.dict('os.environ',mock_env),
-                  patch('os.path',mock_path),
+    setup_patches(mock.patch.dict('os.environ',mock_env),
+                  mock.patch('os.path',mock_path),
                   group_patch)
 
 def setup_os2():
@@ -83,7 +82,7 @@ def setup_os2():
                'SALVE_METADATA_PATH': '/etc/meta/'}
 
     # mock os.path
-    mock_path = Mock()
+    mock_path = mock.Mock()
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
     mock_path.dirname = dirname
@@ -91,11 +90,11 @@ def setup_os2():
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = patch('src.util.ugo.get_group_from_username',
+    group_patch = mock.patch('src.util.ugo.get_group_from_username',
                         mock_get_group)
 
-    setup_patches(patch.dict('os.environ',mock_env),
-                  patch('os.path',mock_path),
+    setup_patches(mock.patch.dict('os.environ',mock_env),
+                  mock.patch('os.path',mock_path),
                   group_patch)
 
 def setup_os3():
@@ -107,7 +106,7 @@ def setup_os3():
                'SALVE_META_DATA_PATH': '/etc/meta/'}
 
     # mock os.path
-    mock_path = Mock()
+    mock_path = mock.Mock()
     mock_path.expanduser = make_mock_expanduser(mock_env,home_map)
     mock_path.join = pjoin
     mock_path.dirname = dirname
@@ -115,11 +114,11 @@ def setup_os3():
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = patch('src.util.ugo.get_group_from_username',
-                        mock_get_group)
+    group_patch = mock.patch('src.util.ugo.get_group_from_username',
+                             mock_get_group)
 
-    setup_patches(patch.dict('os.environ',mock_env),
-                  patch('os.path',mock_path),
+    setup_patches(mock.patch.dict('os.environ',mock_env),
+                  mock.patch('os.path',mock_path),
                   group_patch)
 
 

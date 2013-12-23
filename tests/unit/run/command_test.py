@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
-import os, StringIO, sys
+import os
+import sys
+import StringIO
+import mock
 
 from nose.tools import istest
 from unittest import SkipTest
-from mock import patch, Mock
 from tests.utils.exceptions import ensure_except
 
 import src.run.command as command
@@ -22,14 +24,14 @@ def no_manifest_error():
     Verifies that attempting to run from the commandline fails if there
     is no manifest specified.
     """
-    mock_opts = Mock()
+    mock_opts = mock.Mock()
     mock_opts.manifest = None
     mock_opts.gitrepo = None
-    optparser = Mock()
-    optparser.parse_args = lambda: (mock_opts,Mock())
+    optparser = mock.Mock()
+    optparser.parse_args = lambda: (mock_opts,mock.Mock())
 
     # Patch this function to make sure the typical works
-    with patch('src.run.command.get_option_parser',lambda:optparser):
+    with mock.patch('src.run.command.get_option_parser',lambda:optparser):
         ensure_except(KeyError,command.read_commandline)
 
     # Try this with an explicit optparser, should be the same as above
@@ -43,7 +45,7 @@ def read_cmd_no_manifest():
     is no manifest specified using sys.argv
     """
     fake_argv = ['./salve.py']
-    with patch('sys.argv',fake_argv):
+    with mock.patch('sys.argv',fake_argv):
         ensure_except(KeyError,command.read_commandline)
 
 @istest
@@ -56,7 +58,7 @@ def parse_cmd1():
     fake_argv = ['.salve.py','-m','a/b/c']
 
     parser = command.get_option_parser()
-    with patch('sys.argv',fake_argv):
+    with mock.patch('sys.argv',fake_argv):
         (opts,args) = parser.parse_args()
         assert opts.manifest == 'a/b/c'
         assert opts.fileroot is None
@@ -73,7 +75,7 @@ def parse_cmd2():
     fake_argv = ['.salve.py','-c','p/q','--git-repo',
                  'git@github.com:sirosen/SALVE.git']
     parser = command.get_option_parser()
-    with patch('sys.argv',fake_argv):
+    with mock.patch('sys.argv',fake_argv):
         (opts,args) = parser.parse_args()
         assert opts.configfile == 'p/q'
         assert opts.gitrepo == 'git@github.com:sirosen/SALVE.git'
@@ -87,7 +89,7 @@ def get_root_given_manifest():
     Verifies that attempting to run from the commandline selects the
     specified manifest when it is part of the commandline arguments.
     """
-    mock_opts = Mock()
+    mock_opts = mock.Mock()
     mock_opts.manifest = '/a/b/c'
     mock_opts.gitrepo = None
 
@@ -102,7 +104,7 @@ def get_root_given_gitrepo():
     specified git repo's "root.manifest" when it is part of the
     commandline arguments and there is no "manifest" option.
     """
-    mock_opts = Mock()
+    mock_opts = mock.Mock()
     mock_opts.manifest = None
     mock_opts.gitrepo = 'https://github.com/sirosen/SALVE'
 
@@ -119,13 +121,13 @@ def commandline_gitrepo_manifest_conflict():
                  'git@githubcom:sirosen/SALVE.git',
                  '--manifest','root.manifest']
     fake_stderr = StringIO.StringIO()
-    with patch('sys.argv',fake_argv):
-        with patch('sys.stderr',fake_stderr):
-            command.read_commandline()
-            stderr_out = fake_stderr.getvalue()
-            assert stderr_out == 'Ambiguous arguments: given a git '+\
-                'repo and a manifest and therefore choosing the '+\
-                'manifest.\n'
+    with mock.patch('sys.argv',fake_argv), \
+         mock.patch('sys.stderr',fake_stderr):
+        command.read_commandline()
+        stderr_out = fake_stderr.getvalue()
+        assert stderr_out == 'Ambiguous arguments: given a git '+\
+            'repo and a manifest and therefore choosing the '+\
+            'manifest.\n'
 
 @istest
 def commandline_main():
@@ -149,9 +151,9 @@ def commandline_main():
         def expand_blocks(self,x,y): have_run['expand_blocks'] = True
         def to_action(self): return MockAction()
 
-    with patch('src.block.manifest_block.ManifestBlock',MockManifest):
-        with patch('sys.argv',fake_argv):
-            command.main()
+    with mock.patch('src.block.manifest_block.ManifestBlock',MockManifest), \
+         mock.patch('sys.argv',fake_argv):
+        command.main()
 
     assert have_run['action_execute']
     assert have_run['expand_blocks']
@@ -178,17 +180,17 @@ def commandline_salve_exception():
 
     fake_stderr = StringIO.StringIO()
 
-    with patch('src.run.command.read_commandline',lambda: (None,None)):
-        with patch('src.run.command.get_root_manifest',
-                   mock_get_root_manifest):
-            with patch('src.run.command.run_on_manifest',mock_run):
-                with patch('sys.stderr',fake_stderr):
-                    with patch('sys.exit',mock_exit):
-                        try:
-                            command.main()
-                        except SystemExit as e:
-                            assert log['exit'] is not None and \
-                                   log['exit'] == 1
+    with mock.patch('src.run.command.read_commandline',lambda: (None,None)), \
+         mock.patch('src.run.command.get_root_manifest',
+                   mock_get_root_manifest), \
+         mock.patch('src.run.command.run_on_manifest',mock_run), \
+         mock.patch('sys.stderr',fake_stderr), \
+         mock.patch('sys.exit',mock_exit):
+        try:
+            command.main()
+        except SystemExit as e:
+            assert log['exit'] is not None and \
+                log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
@@ -216,17 +218,17 @@ def commandline_block_exception():
 
     fake_stderr = StringIO.StringIO()
 
-    with patch('src.run.command.read_commandline',lambda: (None,None)):
-        with patch('src.run.command.get_root_manifest',
-                   mock_get_root_manifest):
-            with patch('src.run.command.run_on_manifest',mock_run):
-                with patch('sys.stderr',fake_stderr):
-                    with patch('sys.exit',mock_exit):
-                        try:
-                            command.main()
-                        except SystemExit as e:
-                            assert log['exit'] is not None and \
-                                   log['exit'] == 1
+    with mock.patch('src.run.command.read_commandline',lambda: (None,None)), \
+         mock.patch('src.run.command.get_root_manifest',
+                    mock_get_root_manifest), \
+         mock.patch('src.run.command.run_on_manifest',mock_run), \
+         mock.patch('sys.stderr',fake_stderr), \
+         mock.patch('sys.exit',mock_exit):
+        try:
+            command.main()
+        except SystemExit as e:
+            assert log['exit'] is not None and \
+                log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
@@ -255,17 +257,17 @@ def commandline_action_exception():
 
     fake_stderr = StringIO.StringIO()
 
-    with patch('src.run.command.read_commandline',lambda: (None,None)):
-        with patch('src.run.command.get_root_manifest',
-                   mock_get_root_manifest):
-            with patch('src.run.command.run_on_manifest',mock_run):
-                with patch('sys.stderr',fake_stderr):
-                    with patch('sys.exit',mock_exit):
-                        try:
-                            command.main()
-                        except SystemExit as e:
-                            assert log['exit'] is not None and \
-                                   log['exit'] == 1
+    with mock.patch('src.run.command.read_commandline',lambda: (None,None)),\
+         mock.patch('src.run.command.get_root_manifest',
+                    mock_get_root_manifest), \
+         mock.patch('src.run.command.run_on_manifest',mock_run), \
+         mock.patch('sys.stderr',fake_stderr), \
+         mock.patch('sys.exit',mock_exit):
+        try:
+            command.main()
+        except SystemExit as e:
+            assert log['exit'] is not None and \
+                log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
@@ -294,17 +296,17 @@ def commandline_tokenization_exception():
 
     fake_stderr = StringIO.StringIO()
 
-    with patch('src.run.command.read_commandline',lambda: (None,None)):
-        with patch('src.run.command.get_root_manifest',
-                   mock_get_root_manifest):
-            with patch('src.run.command.run_on_manifest',mock_run):
-                with patch('sys.stderr',fake_stderr):
-                    with patch('sys.exit',mock_exit):
-                        try:
-                            command.main()
-                        except SystemExit as e:
-                            assert log['exit'] is not None and \
-                                   log['exit'] == 1
+    with mock.patch('src.run.command.read_commandline',lambda: (None,None)), \
+         mock.patch('src.run.command.get_root_manifest',
+                    mock_get_root_manifest), \
+         mock.patch('src.run.command.run_on_manifest',mock_run), \
+         mock.patch('sys.stderr',fake_stderr), \
+         mock.patch('sys.exit',mock_exit):
+        try:
+            command.main()
+        except SystemExit as e:
+            assert log['exit'] is not None and \
+                log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
@@ -333,17 +335,17 @@ def commandline_parsing_exception():
 
     fake_stderr = StringIO.StringIO()
 
-    with patch('src.run.command.read_commandline',lambda: (None,None)):
-        with patch('src.run.command.get_root_manifest',
-                   mock_get_root_manifest):
-            with patch('src.run.command.run_on_manifest',mock_run):
-                with patch('sys.stderr',fake_stderr):
-                    with patch('sys.exit',mock_exit):
-                        try:
-                            command.main()
-                        except SystemExit as e:
-                            assert log['exit'] is not None and \
-                                   log['exit'] == 1
+    with mock.patch('src.run.command.read_commandline',lambda: (None,None)), \
+         mock.patch('src.run.command.get_root_manifest',
+                    mock_get_root_manifest), \
+         mock.patch('src.run.command.run_on_manifest',mock_run), \
+         mock.patch('sys.stderr',fake_stderr), \
+         mock.patch('sys.exit',mock_exit):
+        try:
+            command.main()
+        except SystemExit as e:
+            assert log['exit'] is not None and \
+                log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
     assert stderr_out == 'Encountered a SALVE Exception of type '+\
@@ -361,8 +363,8 @@ def commandline_unexpected_exception():
     def mock_run(root_manifest,opts):
         raise StandardError()
 
-    with patch('src.run.command.read_commandline',lambda: (None,None)):
-        with patch('src.run.command.get_root_manifest',
-                   mock_get_root_manifest):
-            with patch('src.run.command.run_on_manifest',mock_run):
-                ensure_except(StandardError,command.main)
+    with mock.patch('src.run.command.read_commandline',lambda: (None,None)), \
+         mock.patch('src.run.command.get_root_manifest',
+                    mock_get_root_manifest), \
+         mock.patch('src.run.command.run_on_manifest',mock_run):
+        ensure_except(StandardError,command.main)

@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-import os, mock
+import os
+import mock
 from nose.tools import istest
-from mock import patch
 
 from tests.utils.exceptions import ensure_except
 from src.util.error import StreamContext
@@ -59,11 +59,11 @@ def file_target_name():
     act = backup.FileBackupAction(filename,'/etc/salve/backup',
                                   '/etc/salve/backup.log',dummy_context)
 
-    with patch('src.execute.backup.FileBackupAction.write_log',lambda self: None):
-        with patch('src.execute.copy.FileCopyAction.execute',mock_cp):
-            with patch('os.makedirs',mock_makedirs):
-                with patch('os.path.islink',mock_islink):
-                    act()
+    with mock.patch('src.execute.backup.FileBackupAction.write_log',lambda self: None), \
+         mock.patch('src.execute.copy.FileCopyAction.execute',mock_cp), \
+         mock.patch('os.makedirs',mock_makedirs), \
+         mock.patch('os.path.islink',mock_islink):
+        act()
 
     assert 'makedirs' in func_log
     assert os.path.basename(act.dst) == '9bfabef5ffd7f5df84171393643'+\
@@ -91,9 +91,9 @@ def file_symlink_target_name():
     act = backup.FileBackupAction(filename,'/etc/salve/backup',
                                   '/etc/salve/backup.log',dummy_context)
 
-    with patch('src.execute.backup.FileBackupAction.write_log',lambda self: None):
-        with patch('os.path.exists',lambda f: True):
-            act()
+    with mock.patch('src.execute.backup.FileBackupAction.write_log',lambda self: None), \
+         mock.patch('os.path.exists',lambda f: True):
+        act()
 
     assert os.path.basename(act.dst) == '55ae75d991c770d8f3ef07cbfde'+\
                                         '124ffce9c420da5db6203afab70'+\
@@ -113,10 +113,10 @@ def file_write_log():
 
     mo = mock.mock_open()
     mm = mock.MagicMock()
-    with patch('src.execute.backup.open',mo,create=True):
-        with patch('src.execute.backup.print',mm,create=True):
-            with patch('time.strftime',lambda s: 'NOW'):
-                act.write_log()
+    with mock.patch('src.execute.backup.open',mo,create=True), \
+         mock.patch('src.execute.backup.print',mm,create=True), \
+         mock.patch('time.strftime',lambda s: 'NOW'):
+        act.write_log()
 
     mo.assert_called_once_with('/etc/salve/backup.log','a')
     assert mm.call_args[0][0] == ('NOW abc ' + filename)
@@ -160,8 +160,8 @@ def dir_execute():
     seen_files = set()
     mock_execute = lambda self: seen_files.add(self.src)
 
-    with patch('src.execute.backup.FileBackupAction.execute',
-               mock_execute):
+    with mock.patch('src.execute.backup.FileBackupAction.execute',
+                    mock_execute):
         act()
 
     assert get_full_path('dir1/a') in seen_files

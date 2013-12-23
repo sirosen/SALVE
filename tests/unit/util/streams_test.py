@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-import os, timeit
-import src.util.streams
+import os
+import timeit
+from nose.tools import istest
 
-from nose.tools import istest, eq_
-from mock import patch
+import src.util.streams
 
 _testfile_dir = os.path.join(os.path.dirname(__file__),'files')
 
