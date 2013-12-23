@@ -3,7 +3,7 @@ SALVE
 
 Authors: Stephen Rosen
 
-Version: 1.0.3
+Version: 1.1.0
 
 For a detailed description of the project, please visit http://sirosen.github.io/SALVE
 
@@ -19,6 +19,11 @@ For a more detailed description of the SALVE language, visit http://sirosen.gith
 
 Changelog
 =========
+ * 1.1.0
+    * Large expansions to the testsuite
+    * No SALVE actions are performed through the shell anymore
+    * Permissions are now checked before actions are executed so that insufficient permissions will not crash the entire run
+    * Error messages now take the common "[filename], line [lineno]: [message]" format
  * 1.0.3
     * Fixes major bug with dir copy not triggering file backups
     * Internal refactoring and cleanup in Blocks and Actions
