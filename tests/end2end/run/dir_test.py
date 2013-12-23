@@ -2,16 +2,11 @@
 
 import os
 import mock
-from nose.tools import istest, with_setup
+from nose.tools import istest
 
-import src.run.command
-import tests.utils.scratch
+import tests.end2end.run.common as run_common
 
-def run_on_args(argv):
-    with mock.patch('sys.argv',argv):
-        return src.run.command.main()
-
-class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
+class TestWithScratchdir(run_common.RunScratchContainer):
     @istest
     def copy_empty_dir(self):
         """
@@ -23,8 +18,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         self.make_dir('a')
         content = 'directory { action copy source a target b }\n'
         self.write_file('1.man',content)
-        man_path = self.get_fullname('1.man')
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('1.man')
 
         assert self.exists('b')
         # make sure the original is unharmed
@@ -42,8 +36,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         self.make_dir('a')
         content = 'directory { source a target b }\n'
         self.write_file('1.man',content)
-        man_path = self.get_fullname('1.man')
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('1.man')
 
         assert self.exists('b')
         # make sure the original is unharmed
@@ -60,8 +53,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         """
         content = 'directory { action create target a }\n'
         self.write_file('1.man',content)
-        man_path = self.get_fullname('1.man')
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('1.man')
 
         assert self.exists('a')
         assert len(self.listdir('a')) == 0
@@ -77,8 +69,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         self.make_dir('a')
         content = 'directory { action create target a mode 700 }\n'
         self.write_file('1.man',content)
-        man_path = self.get_fullname('1.man')
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('1.man')
 
         assert self.exists('a')
         assert len(self.listdir('a')) == 0
@@ -97,8 +88,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         content = 'directory { action copy source p target q }\n'
         self.write_file('1.man',content)
         self.write_file('p/alpha','string here!')
-        man_path = self.get_fullname('1.man')
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('1.man')
 
         assert self.exists('q')
         # make sure the original is unharmed
@@ -122,8 +112,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         self.make_dir('m/n')
         content = 'directory { action copy source m target m_prime }\n'
         self.write_file('manifest',content)
-        man_path = self.get_fullname('manifest')
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('manifest')
 
         assert self.exists('m_prime')
         # make sure the original is unharmed
@@ -154,8 +143,7 @@ class TestWithScratchdir(tests.utils.scratch.ScratchContainer):
         self.write_file('a/f1',af1_content)
         self.write_file('b/f1',bf1_content)
 
-        man_path = self.get_fullname('manifest')
-        run_on_args(['./salve.py','-m',man_path])
+        self.run_on_manifest('manifest')
 
         backup_dir = 'home/user1/backups'
         backup_log = 'home/usr1/backup.log'

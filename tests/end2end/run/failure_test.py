@@ -9,7 +9,7 @@ from tests.utils.exceptions import ensure_except
 
 import src.run.command
 
-_testfile_dir = os.path.join(os.path.dirname(__file__),'testfiles')
+_testfile_dir = os.path.join(os.path.dirname(__file__),'../testfiles')
 
 def get_full_path(filename):
     return os.path.join(_testfile_dir,filename)
