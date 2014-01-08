@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import os
 import hashlib
 
 def get_filename(stream):
@@ -30,3 +31,11 @@ def sha_512(stream):
             hash.update(string)
         else:
             return hash.hexdigest()
+
+def hash_by_filename(fname):
+    if os.path.islink(fname):
+        link_contents = os.readlink(fname)
+        return hashlib.sha256(link_contents).hexdigest()
+    else:
+        with open(fname) as f:
+            return sha_512(f)

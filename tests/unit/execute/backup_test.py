@@ -34,8 +34,7 @@ def file_dst_dir():
     filename = get_full_path('file1.txt')
     act = backup.FileBackupAction(filename,'/etc/salve/backup',
                                   '/etc/salve/backup.log',dummy_context)
-    assert act.dst == os.path.join('/etc/salve/backup',
-                                   filename.lstrip('/'))
+    assert act.dst == '/etc/salve/backup/files'
 
 @istest
 def file_to_str():

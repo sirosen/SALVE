@@ -4,8 +4,6 @@ from __future__ import print_function
 
 import abc
 import os
-import shutil
-import hashlib
 import time
 
 import src.execute.action as action
@@ -43,8 +41,7 @@ class BackupAction(copy.CopyAction):
         # useful basis for the actual BackupAction
         copy.CopyAction.__init__(self,
                                  src,
-                                 os.path.join(backup_dir,
-                                              os.path.relpath(src,'/')),
+                                 os.path.join(backup_dir,'files'),
                                  context)
         # although redundant with CopyAction, useful for pretty printing
         self.backup_dir = backup_dir
@@ -92,16 +89,10 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
         # no-op if the file to back up does not exist
         if not os.path.exists(self.src): return
 
-        # ensure (up to a reasonable doubt) that the dir exists
-        # there's no problem with extra invocations of makedirs
+        # FIXME: change to EAFP style
         if not os.path.exists(self.dst): os.makedirs(self.dst)
 
-        if os.path.islink(self.src):
-            link_contents = os.readlink(self.src)
-            self.hash_val = hashlib.sha256(link_contents).hexdigest()
-        else:
-            with open(self.src) as f:
-                self.hash_val = src.util.streams.sha_512(f)
+        self.hash_val = src.util.streams.hash_by_filename(self.src)
 
         # update dst so that the FileCopyAction can run correctly
         self.dst = os.path.join(self.dst,self.hash_val)
@@ -117,8 +108,8 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
         """
         Log the date, hash, and filename, to the backup log.
         """
-        logval = time.strftime('%Y-%m-%d.%s') + ' ' + self.hash_val + ' ' +\
-                 self.src
+        logval = time.strftime('%Y-%m-%d %H:%M:%S') + ' ' + \
+                 self.hash_val + ' ' + self.src
         # TODO: use some locks to make this thread-safe for future
         # versions of SALVE supporting parallelism
         with open(self.logfile,'a') as f:
