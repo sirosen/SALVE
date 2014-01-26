@@ -55,7 +55,7 @@ def parse_cmd1():
     Verifies that attempting to run from the commandline successfully
     parses manifest file specification in sys.argv
     """
-    fake_argv = ['.salve.py','-m','a/b/c']
+    fake_argv = ['./salve.py','-m','a/b/c']
 
     parser = command.get_option_parser()
     with mock.patch('sys.argv',fake_argv):
@@ -72,7 +72,7 @@ def parse_cmd2():
     Verifies that attempting to run from the commandline successfully
     parses config file and git repo specification in sys.argv
     """
-    fake_argv = ['.salve.py','-c','p/q','--git-repo',
+    fake_argv = ['./salve.py','-c','p/q','--git-repo',
                  'git@github.com:sirosen/SALVE.git']
     parser = command.get_option_parser()
     with mock.patch('sys.argv',fake_argv):
@@ -117,7 +117,7 @@ def commandline_gitrepo_manifest_conflict():
     Checks that running with the git repo option and manifest option
     together results in an error being thrown.
     """
-    fake_argv = ['.salve.py','--git-repo',
+    fake_argv = ['./salve.py','--git-repo',
                  'git@githubcom:sirosen/SALVE.git',
                  '--manifest','root.manifest']
     fake_stderr = StringIO.StringIO()
@@ -136,7 +136,7 @@ def commandline_main():
     Checks that running the commandline main function expands and runs
     a dummy manifest block with the root manifest as the source.
     """
-    fake_argv = ['.salve.py','--manifest','root.manifest']
+    fake_argv = ['./salve.py','--manifest','root.manifest']
     have_run = {
         'action_execute': False,
         'expand_blocks': False
@@ -368,3 +368,44 @@ def commandline_unexpected_exception():
                     mock_get_root_manifest), \
          mock.patch('src.run.command.run_on_manifest',mock_run):
         ensure_except(StandardError,command.main)
+
+@istest
+def backup_is_subcommand():
+    """
+    Backup Is A Subcommand
+    Verifies that subcommand checks include 'backup'.
+    """
+    args = ['backup','-r','-f','a/b/c']
+    assert command.check_for_subcommand(args)
+
+@istest
+def subcommand_case_sensitive():
+    """
+    Subcommands Are Case Sensitive
+    Verifies that subcommand checks do not include 'Backup', 'bacKup', &c.
+    """
+    args = ['Backup','-r','-f','a/b/c']
+    assert not command.check_for_subcommand(args)
+    args = ['BACKUP','-r','-f','a/b/c']
+    assert not command.check_for_subcommand(args)
+
+@istest
+def run_on_backup_subcommand():
+    """
+    Run With Backup Subcommand
+    Verifies that running on arguments starting with "backup" correctly invokes
+    the backup main method.
+    """
+    fake_argv = ['./salve.py','backup','-f','a/b/c','-r']
+    def assert_false(): assert false
+
+    log = {'main':False}
+    def fake_main():
+        log['main'] = True
+
+    with mock.patch('sys.argv',fake_argv), \
+         mock.patch('src.run.command.read_commandline',assert_false), \
+         mock.patch('src.run.backup.main',fake_main):
+        command.main()
+
+    assert log['main']

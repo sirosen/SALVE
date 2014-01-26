@@ -24,9 +24,9 @@ def get_option_parser():
     time, and some distributions of 2.7 require a pip install for
     argparse, optparse is going to have to do.
     """
-    option_parser = optparse.OptionParser(description="Subcommands: \"backup\". "+\
-                                          "Invoke subcommands with "+\
-                                          "'salve.py [subcommand] [options]'")
+    option_parser = optparse.OptionParser(description="When invoked without a"+\
+        " subcommand, SALVE runs on a manifest tree. However, SALVE can also be"+\
+        " invoked with the following subcommands: \"backup\".")
     option_parser.add_option('-m','--manifest',dest='manifest',
                              help='The root manifest for execution.')
     option_parser.add_option('--git-repo',dest='gitrepo',
