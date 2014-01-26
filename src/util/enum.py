@@ -36,3 +36,9 @@ class Enum(object):
         """
         enums = dict([(x,x) for x in seq], **named)
         self.__dict__.update(enums)
+
+    def __contains__(self,x):
+        """
+        Checks if @x is in an enum. Defines the results of 'in' tests.
+        """
+        return x in self.__dict__

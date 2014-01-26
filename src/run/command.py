@@ -9,7 +9,12 @@ import optparse
 import src.util.locations as locations
 import src.block.manifest_block
 from src.settings.config import SALVEConfig
+from src.util.enum import Enum
 from src.util.error import SALVEException
+
+import src.run.backup
+
+_subcommands = Enum('backup')
 
 def get_option_parser():
     """
@@ -19,15 +24,14 @@ def get_option_parser():
     time, and some distributions of 2.7 require a pip install for
     argparse, optparse is going to have to do.
     """
-    option_parser = optparse.OptionParser()
+    option_parser = optparse.OptionParser(description="Subcommands: \"backup\". "+\
+                                          "Invoke subcommands with "+\
+                                          "'salve.py [subcommand] [options]'")
     option_parser.add_option('-m','--manifest',dest='manifest',
                              help='The root manifest for execution.')
     option_parser.add_option('--git-repo',dest='gitrepo',
                              help='A SALVE git repo, '+\
                              'containing a root.manifest in HEAD.')
-    option_parser.add_option('--backup-recovery',dest='backup_recovery',
-                             help='Launch in Backup Recovery Mode, to' +\
-                             'restore files from their SALVE backups.')
     option_parser.add_option('-f','--fileroot',dest='fileroot',
                              help='The directory to which relative'+\
                              'paths in manifests refer.')
@@ -59,10 +63,6 @@ def read_commandline(option_parser=None):
         print('Ambiguous arguments: given a git repo and a manifest'+\
               ' and therefore choosing the manifest.',
               file=sys.stderr)
-
-    if opts.backup_recovery:
-        raise ValueError('The present version of SALVE does not support '+\
-                         'backup recovery.')
 
     return (opts,args)
 
@@ -109,19 +109,39 @@ def get_root_manifest(opts):
         raise StandardError('TODO: clone git repo; set root_manifest')
     return root_manifest
 
+def check_for_subcommand(args):
+    """
+    Checks to see if the arguments being given start with a subcommand.
+    """
+    return len(args) > 0 and args[0] in _subcommands
+
+def run_on_subcommand(command):
+    """
+    Runs on a subcommand without modifying or handling sys.argv
+    Leaves handling of sys.argv to the subcommand functions.
+    """
+    assert command in _subcommands
+
+    if command == _subcommands.backup:
+        src.run.backup.main()
+
 def main():
     """
     The main method of the entire SALVE codebase. Runs the entire
     program end-to-end.
     """
-    opts,args = read_commandline()
+    if check_for_subcommand(sys.argv[1:]):
+        run_on_subcommand(sys.argv[1])
 
-    try:
-        run_on_manifest(get_root_manifest(opts),opts)
-    except SALVEException as e:
-        print(e.to_message(),file=sys.stderr)
-        # Normally, sys.exit() is to be avoided, but main() is only
-        # invoked if salve is running as a script, and we want to give
-        # the right exit status for commandline usage
-        sys.exit(1)
-    except: raise
+    else:
+        opts,args = read_commandline()
+
+        try:
+            run_on_manifest(get_root_manifest(opts),opts)
+        except SALVEException as e:
+            print(e.to_message(),file=sys.stderr)
+            # Normally, sys.exit() is to be avoided, but main() is only
+            # invoked if salve is running as a script, and we want to give
+            # the right exit status for commandline usage
+            sys.exit(1)
+        except: raise
