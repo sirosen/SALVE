@@ -24,8 +24,6 @@ def run_on_manifest(root_manifest,args):
         @args
         The options, as parsed from the commandline.
     """
-    assert root_manifest is not None
-
     cfg_file = None
     if args.configfile: cfg_file = args.configfile
     conf = config.SALVEConfig(filename=cfg_file)
@@ -41,37 +39,13 @@ def run_on_manifest(root_manifest,args):
     root_action = root_block.to_action()
     root_action()
 
-def get_root_manifest(args):
-    """
-    Given a set of options, identifies the root manifest that they
-    describe.
-
-    Args:
-        @args
-        Options, as parsed from the commandline.
-    """
-    root_manifest = None
-    if args.manifest:
-        root_manifest = args.manifest
-    elif args.gitrepo:
-        raise StandardError('TODO: clone git repo; set root_manifest')
-    return root_manifest
-
 def main(args):
     """
     The main method of SALVE deployment. Runs the core program end-to-end.
     """
-    if not args.manifest and not args.gitrepo:
-        raise KeyError('The present version of SALVE must be invoked '+\
-                       'with a manifest or git repo.')
-
-    if args.gitrepo and args.manifest:
-        print('Ambiguous arguments: given a git repo and a manifest'+\
-              ' and therefore choosing the manifest.',
-              file=sys.stderr)
-
     try:
-        run_on_manifest(get_root_manifest(args),args)
+        assert args.manifest
+        run_on_manifest(args.manifest,args)
     except SALVEException as e:
         print(e.to_message(),file=sys.stderr)
         # Normally, sys.exit() is to be avoided, but main() is only

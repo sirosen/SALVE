@@ -18,7 +18,7 @@ def add_backup_args(parser):
         help='Boolean flag, indicates that the file\'s versions should be '+\
         'displayed with varying generation numbers and dates.')
     parser.add_argument('-f','--filename',dest='filename',default=None,
-        help='The absolute path to the file to act upon.')
+        required=True,help='The absolute path to the file to act upon.')
 
     parser.set_defaults(func=src.run.backup.main)
 
@@ -29,10 +29,7 @@ def add_deploy_args(parser):
     namely, that they are created automatically at the time of addition.
     """
     parser.add_argument('-m','--manifest',dest='manifest',default=None,
-        help='The root manifest file for execution.')
-    parser.add_argument('-g','--git-repo',dest='gitrepo',default=None,
-        help='A git repo, containing a file named root.manifest in the root '+\
-        'directory of HEAD.')
+        required=True,help='The root manifest file for execution.')
     parser.add_argument('-d','--directory',dest='directory',default=None,
         help='The directory to which relative paths in manifests refer.')
 
@@ -54,6 +51,7 @@ def get_parser():
 
     subparsers = parser.add_subparsers(title='Subcommands',
         parser_class=SALVESharedParser,metavar='')
+
     backup_parser = subparsers.add_parser('backup',help='Directly manipulate'+\
         ', inspect, and restore from backups.')
     add_backup_args(backup_parser)

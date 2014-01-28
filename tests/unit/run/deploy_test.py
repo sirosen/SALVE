@@ -21,64 +21,14 @@ dummy_context = StreamContext('no such file',-1)
 @istest
 def no_manifest_error():
     """
-    Command Line No Manifest Fails
-    Verifies that attempting to run from the commandline fails if there
+    Deploy Command No Manifest Fails
+    Verifies that attempting to run the deploy command fails if there
     is no manifest specified.
     """
     mock_args = mock.Mock()
     mock_args.manifest = None
-    mock_args.gitrepo = None
 
-    ensure_except(KeyError,deploy.main,mock_args)
-
-@istest
-def get_root_given_manifest():
-    """
-    Deploy Command Get Root Manifest Given Manifest
-    Verifies that attempting to run from the commandline selects the
-    specified manifest when it is part of the commandline arguments.
-    """
-    mock_args = mock.Mock()
-    mock_args.manifest = '/a/b/c'
-    mock_args.gitrepo = None
-
-    root = deploy.get_root_manifest(mock_args)
-    assert root == '/a/b/c'
-
-@istest
-def get_root_given_gitrepo():
-    """
-    Deploy Command Get Root Manifest Given Git Repo
-    Verifies that attempting to run from the commandline selects the
-    specified git repo's "root.manifest" when it is part of the
-    commandline arguments and there is no "manifest" option.
-    """
-    mock_args = mock.Mock()
-    mock_args.manifest = None
-    mock_args.gitrepo = 'https://github.com/sirosen/SALVE'
-
-    ensure_except(StandardError,deploy.get_root_manifest,mock_args)
-
-@istest
-def deploy_gitrepo_manifest_conflict():
-    """
-    Deploy Command Manifest Git Repo Option Conflict Warning
-    Checks that running deploy with the git repo option and manifest option
-    together results in a warning being printed, but no error being thrown.
-    """
-    fake_args = mock.Mock()
-    fake_args.gitrepo = 'git@githubcom:sirosen/SALVE.git'
-    fake_args.manifest = 'root.manifest'
-
-    fake_stderr = StringIO.StringIO()
-
-    with mock.patch('sys.stderr',fake_stderr), \
-         mock.patch('src.run.deploy.run_on_manifest',lambda x,y: None):
-        deploy.main(fake_args)
-        stderr_out = fake_stderr.getvalue()
-        assert stderr_out == 'Ambiguous arguments: given a git '+\
-            'repo and a manifest and therefore choosing the '+\
-            'manifest.\n', stderr_out
+    ensure_except(AssertionError,deploy.main,mock_args)
 
 @istest
 def deploy_main():
@@ -89,7 +39,6 @@ def deploy_main():
     """
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
-    fake_args.gitrepo = None
     fake_args.directory = '.'
 
     have_run = {
@@ -135,7 +84,6 @@ def deploy_salve_exception():
     fake_stderr = StringIO.StringIO()
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
-    fake_args.gitrepo = None
 
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
          mock.patch('sys.stderr',fake_stderr), \
@@ -171,7 +119,6 @@ def deploy_block_exception():
     fake_stderr = StringIO.StringIO()
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
-    fake_args.gitrepo = None
 
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
          mock.patch('sys.stderr',fake_stderr), \
@@ -208,7 +155,6 @@ def deploy_action_exception():
     fake_stderr = StringIO.StringIO()
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
-    fake_args.gitrepo = None
 
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
          mock.patch('sys.stderr',fake_stderr), \
@@ -245,7 +191,6 @@ def deploy_tokenization_exception():
     fake_stderr = StringIO.StringIO()
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
-    fake_args.gitrepo = None
 
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
          mock.patch('sys.stderr',fake_stderr), \
@@ -282,7 +227,6 @@ def deploy_parsing_exception():
     fake_stderr = StringIO.StringIO()
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
-    fake_args.gitrepo = None
 
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
          mock.patch('sys.stderr',fake_stderr), \
@@ -309,7 +253,6 @@ def deploy_unexpected_exception():
 
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
-    fake_args.gitrepo = None
 
     with mock.patch('src.run.deploy.run_on_manifest',mock_run):
         ensure_except(StandardError,deploy.main,fake_args)
