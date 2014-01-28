@@ -34,7 +34,7 @@ class ScratchContainer(object):
 
         settings_content = (
 """
-[common]
+[global]
 backup_dir=$HOME/backups
 backup_log=$HOME/backup.log
 
@@ -107,7 +107,8 @@ group=$SALVE_USER_PRIMARY_GROUP
             f.write(content)
 
     def read_file(self,relpath):
-        with open(os.path.join(self.scratch_dir,relpath),'r') as f:
+        filename = os.path.join(self.scratch_dir,relpath)
+        with open(filename,'r') as f:
             return f.read()
 
     def get_mode(self,relpath):

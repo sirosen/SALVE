@@ -152,22 +152,20 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
         """
-        backup_dir = 'backups'
-        backup_log = 'backup.log'
+        backup_dir = 'home/user1/backups'
+        backup_log = 'home/user1/backup.log'
         self.make_dir(backup_dir)
         self.write_file(backup_log,'')
         self.write_file('f1','')
 
-        content = 'file { action copy source 1.man target f1 '+\
-                  'backup_dir %s ' % backup_dir +\
-                  'backup_log %s ' % backup_log + '}\n'
+        content = 'file { action copy source 1.man target f1 }\n'
 
         self.write_file('1.man',content)
         self.run_on_manifest('1.man')
 
         s = self.read_file('f1')
         assert s == content, '%s' % s
-        s = self.read_file('backup.log').strip()
+        s = self.read_file(backup_log).strip()
         ss = shlex.split(s)
         assert len(ss) == 4
         assert ss[3] == self.get_fullname('f1')

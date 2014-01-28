@@ -120,10 +120,10 @@ class SALVEConfig(object):
                     subkey = key[len(p)+1:].lower()
                     subdict[subkey] = salve_env[key]
 
-        # expand any common settings by templating
-        common_attrs = self.attributes['common']
-        for key in common_attrs:
-            common_attrs[key] = self.template(common_attrs[key])
+        # expand any global settings by templating
+        global_attrs = self.attributes['global']
+        for key in global_attrs:
+            global_attrs[key] = self.template(global_attrs[key])
 
     def template(self, template_string):
         """
@@ -156,11 +156,16 @@ class SALVEConfig(object):
         """
         ty = block.block_type.lower()
         relevant_attrs = self.attributes[ty]
+
+        # set global attributes
+        for key in self.attributes['global']:
+            block.set(key,self.attributes['global'][key])
+
+        # set any unset attrs in the config
         for key in relevant_attrs:
             if key not in block.attrs:
                 block.set(key,relevant_attrs[key])
+
+        # template any block attrs
         for key in block.attrs:
             block.set(key,self.template(block.get(key)))
-        for key in self.attributes['common']:
-            if not block.has(key):
-                block.set(key,self.attributes['common'][key])
