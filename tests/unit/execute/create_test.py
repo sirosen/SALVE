@@ -8,6 +8,7 @@ from src.util.error import StreamContext
 
 import src.execute.action as action
 import src.execute.create as create
+import tests.utils.scratch as scratch
 
 _testfile_dir = os.path.join(os.path.dirname(__file__),'files')
 def get_full_path(filename):

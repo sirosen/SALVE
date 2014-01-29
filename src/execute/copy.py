@@ -1,10 +1,15 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
+import sys
 import abc
 import os
 import shutil
 
 import src.execute.action as action
+
+import src.util.enum as enum
 
 class CopyAction(action.Action):
     """
@@ -33,6 +38,9 @@ class CopyAction(action.Action):
         self.dst = dst
 
 class FileCopyAction(CopyAction):
+    verification_codes = \
+        CopyAction.verification_codes.extend('UNWRITABLE_TARGET',
+                                             'UNREADABLE_SOURCE')
     """
     An action to copy a single file.
     """
@@ -51,8 +59,40 @@ class FileCopyAction(CopyAction):
         CopyAction.__init__(self,src,dst,context)
 
     def __str__(self):
+        """
+        Stringification into type, source, dst, and context.
+        """
         return "FileCopyAction(src="+str(self.src)+",dst="+\
                str(self.dst)+",context="+str(self.context)+")"
+
+    def verify_can_exec(self):
+        def writable_target():
+            """
+            Checks if the target file is writable.
+            """
+            try:
+                with open(self.dst,'wb') as dst:
+                    pass
+                return True
+            except IOError as e:
+                if e.errno == 13:
+                    return False
+                else:
+                    raise e
+
+        def readable_source():
+            """
+            Checks if the source is a readable file.
+            """
+            return os.access(self.src,os.R_OK)
+
+        if not writable_target():
+            return self.verification_codes.UNWRITABLE_TARGET
+
+        if not readable_source():
+            return self.verification_codes.UNREADABLE_SOURCE
+
+        return self.verification_codes.OK
 
     def execute(self):
         """
@@ -61,14 +101,17 @@ class FileCopyAction(CopyAction):
         Does a file copy or symlink creation, depending on the type
         of the source file.
         """
+        vcode = self.verify_can_exec()
 
-        def writable_target():
-            """
-            Checks if the target is in a writable directory.
-            """
-            return os.access(os.path.dirname(self.dst),os.W_OK)
+        if vcode == self.verification_codes.UNWRITABLE_TARGET:
+            print((str(self.context)+": Warning: Non-Writable target file \"%s\"") % \
+                self.dst,file=sys.stderr)
+            return
 
-        if not writable_target(): return
+        if vcode == self.verification_codes.UNREADABLE_SOURCE:
+            print((str(self.context)+": Warning: Non-Readable source file \"%s\"") % \
+                self.src,file=sys.stderr)
+            return
 
         if os.path.islink(self.src):
             os.symlink(os.readlink(self.src),self.dst)

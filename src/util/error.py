@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import src.util.locations as locations
+
 class StreamContext(object):
     """
     Identifies a location in the manifest tree by filename and lineno.
@@ -18,7 +20,7 @@ class StreamContext(object):
         self.lineno = lineno
 
     def __str__(self):
-        return str(self.filename) + ', line ' + str(self.lineno)
+        return locations.clean_path(self.filename) + ', line ' + str(self.lineno)
 
 
 class SALVEException(StandardError):

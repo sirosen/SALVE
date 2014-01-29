@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import copy
+
 class Enum(object):
     def __init__(self, *seq, **named):
         """
@@ -34,11 +36,27 @@ class Enum(object):
             A set of attribute-value mappings to be mapped into the
             enum.
         """
-        enums = dict([(x,x) for x in seq], **named)
-        self.__dict__.update(enums)
+        self.enum_elems = {}
+        self.add(*seq,**named)
 
     def __contains__(self,x):
         """
         Checks if @x is in an enum. Defines the results of 'in' tests.
         """
-        return x in self.__dict__
+        return x in self.enum_elems
+
+    def add(self,*seq,**named):
+        """
+        Adds elements to the enum.
+        """
+        enums = dict([(x,x) for x in seq], **named)
+        self.__dict__.update(enums)
+        self.enum_elems.update(enums)
+
+    def extend(self,*seq,**named):
+        """
+        Creates a new enum with @seq and @named added.
+        """
+        new = copy.copy(self)
+        new.add(*seq,**named)
+        return new

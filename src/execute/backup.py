@@ -68,8 +68,8 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
             @context
             The action's originating StreamContext.
         """
-        # create the basic action; the only value that needs to be
-        # rewriten is the dst
+        # initialize as a BackupAction with a destination in the @backup_dir
+        # should include initialization as a CopyAction
         BackupAction.__init__(self,src,backup_dir,backup_log,context)
         # the hash_val is the result of taking the sha hash of @src
         self.hash_val = None
