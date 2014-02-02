@@ -16,6 +16,43 @@ def get_full_path(filename):
 
 dummy_context = StreamContext('no such file',-1)
 
+class TestWithScratchdir(scratch.ScratchContainer):
+    @istest
+    def filecreate_execute(self):
+        """
+        File Create Action Execution
+        Needs to be in a scratchdir to ensure that there is no file
+        named 'a' in the target dir.
+        """
+        mock_open = mock.mock_open()
+        a_name = self.get_fullname('a')
+
+        with mock.patch('__builtin__.open',mock_open,create=True), \
+             mock.patch('os.access', lambda x,y: True):
+            fc = create.FileCreateAction(a_name, dummy_context)
+            fc()
+
+        mock_open.assert_called_once_with(a_name,'w')
+        handle = mock_open()
+        assert len(handle.write.mock_calls) == 0
+
+    @istest
+    def dircreate_execute(self):
+        """
+        Directory Create Action Execution
+        Needs to be in a scratchdir to ensure that there is no directory
+        named 'a' in the target dir.
+        """
+        mock_mkdirs = mock.Mock()
+        a_name = self.get_fullname('a')
+
+        with mock.patch('os.makedirs',mock_mkdirs), \
+             mock.patch('os.access', lambda x,y: True):
+            dc = create.DirCreateAction(a_name, dummy_context)
+            dc()
+
+        mock_mkdirs.assert_called_once_with(a_name)
+
 @istest
 def filecreate_to_str():
     """
@@ -27,22 +64,6 @@ def filecreate_to_str():
                        str(dummy_context)+')'
 
 @istest
-def filecreate_execute():
-    """
-    File Create Action Execution
-    """
-    mock_open = mock.mock_open()
-
-    with mock.patch('__builtin__.open',mock_open,create=True), \
-         mock.patch('os.access', lambda x,y: True):
-        fc = create.FileCreateAction('a', dummy_context)
-        fc()
-
-    mock_open.assert_called_once_with('a','w')
-    handle = mock_open()
-    assert len(handle.write.mock_calls) == 0
-
-@istest
 def dircreate_to_str():
     """
     Directory Create Action String Conversion
@@ -51,17 +72,3 @@ def dircreate_to_str():
 
     assert str(dc) == 'DirCreateAction(dst=a,context='+\
                        str(dummy_context)+')'
-
-@istest
-def dircreate_execute():
-    """
-    Directory Create Action Execution
-    """
-    mock_mkdirs = mock.Mock()
-
-    with mock.patch('os.makedirs',mock_mkdirs), \
-         mock.patch('os.access', lambda x,y: True):
-        dc = create.DirCreateAction('a', dummy_context)
-        dc()
-
-    mock_mkdirs.assert_called_once_with('a')

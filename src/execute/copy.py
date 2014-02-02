@@ -20,6 +20,8 @@ class CopyAction(action.Action):
     files and directories, so this is an ABC.
     """
     __metaclass__ = abc.ABCMeta
+    verification_codes = \
+        action.Action.verification_codes.extend('UNWRITABLE_TARGET')
 
     def __init__(self, src, dst, context):
         """
@@ -38,12 +40,12 @@ class CopyAction(action.Action):
         self.dst = dst
 
 class FileCopyAction(CopyAction):
-    verification_codes = \
-        CopyAction.verification_codes.extend('UNWRITABLE_TARGET',
-                                             'UNREADABLE_SOURCE')
     """
     An action to copy a single file.
     """
+    verification_codes = \
+        CopyAction.verification_codes.extend('UNREADABLE_SOURCE')
+
     def __init__(self, src, dst, context):
         """
         FileCopyAction constructor.
@@ -66,19 +68,29 @@ class FileCopyAction(CopyAction):
                str(self.dst)+",context="+str(self.context)+")"
 
     def verify_can_exec(self):
+        """
+        Check to ensure that execution can proceed without errors.
+        Ensures that the source file exists and is readable, and that
+        the target file can be created or is writable.
+        """
         def writable_target():
             """
             Checks if the target file is writable.
             """
-            try:
-                with open(self.dst,'wb') as dst:
-                    pass
+            if os.access(self.dst,os.W_OK):
                 return True
-            except IOError as e:
-                if e.errno == 13:
-                    return False
-                else:
-                    raise e
+            if os.access(self.dst,os.F_OK):
+                return False
+
+            # at this point, the file is known not to exist
+            # now check properties of the containing dir
+            containing_dir = os.path.dirname(self.dst)
+            if os.access(containing_dir,os.W_OK):
+                return True
+
+            # if the file doesn't exist, and the dir containing it
+            # isn't writable, then the file can't be written
+            return False
 
         def readable_source():
             """
@@ -104,12 +116,12 @@ class FileCopyAction(CopyAction):
         vcode = self.verify_can_exec()
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            print((str(self.context)+": Warning: Non-Writable target file \"%s\"") % \
+            print((str(self.context)+": FileCopyWarning: Non-Writable target file \"%s\"") % \
                 self.dst,file=sys.stderr)
             return
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
-            print((str(self.context)+": Warning: Non-Readable source file \"%s\"") % \
+            print((str(self.context)+": FileCopyWarning: Non-Readable source file \"%s\"") % \
                 self.src,file=sys.stderr)
             return
 
@@ -140,17 +152,31 @@ class DirCopyAction(CopyAction):
         return "DirCopyAction(src="+str(self.src)+",dst="+\
                str(self.dst)+",context="+str(self.context)+")"
 
-    def execute(self):
+    def verify_can_exec(self):
         """
-        Copy a directory tree from one location to another.
+        Check to ensure that execution can proceed without errors.
+        Ensures that the the target directory is writable.
         """
-
         def writable_target():
             """
             Checks if the target is in a writable directory.
             """
             return os.access(os.path.dirname(self.dst),os.W_OK)
 
-        if not writable_target(): return
+        if not writable_target():
+            return self.verification_codes.UNWRITABLE_TARGET
+
+        return self.verification_codes.OK
+
+    def execute(self):
+        """
+        Copy a directory tree from one location to another.
+        """
+        vcode = self.verify_can_exec()
+
+        if vcode == self.verification_codes.UNWRITABLE_TARGET:
+            print((str(self.context)+": DirCopyWarning: Non-Writable target directory \"%s\"") % \
+                self.dst,file=sys.stderr)
+            return
 
         shutil.copytree(self.src,self.dst,symlinks=True)

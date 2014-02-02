@@ -82,6 +82,14 @@ group=$SALVE_USER_PRIMARY_GROUP
             p.start()
 
     def tearDown(self):
+        def recursive_chmod(dir):
+            os.chmod(dir,0777)
+            for f in os.listdir(dir):
+                fullname = os.path.join(dir,f)
+                if os.path.isdir(fullname) and not os.path.islink(fullname):
+                    recursive_chmod(fullname)
+
+        recursive_chmod(self.scratch_dir)
         shutil.rmtree(self.scratch_dir)
 
         for p in self.patches:

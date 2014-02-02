@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import abc
 import os
 import shutil
@@ -17,6 +19,8 @@ class CreateAction(action.Action):
     this is an ABC.
     """
     __metaclass__ = abc.ABCMeta
+    verification_codes = \
+        action.Action.verification_codes.extend('UNWRITABLE_TARGET')
 
     def __init__(self, dst, context):
         """
@@ -51,19 +55,45 @@ class FileCreateAction(CreateAction):
         return "FileCreateAction(dst="+str(self.dst)+\
             ",context="+str(self.context)+")"
 
+    def verify_can_exec(self):
+        """
+        Ensures that the target file exists and is writable, or that
+        it does not exist and is in a writable directory.
+        """
+        def writable_target():
+            """
+            Checks if the target is in a writable directory.
+            """
+            if os.access(self.dst,os.W_OK):
+                return True
+            if os.access(self.dst,os.F_OK):
+                return False
+            # file is now known not to exist
+
+            if os.access(os.path.dirname(self.dst),os.W_OK):
+                return True
+
+            # the file is doesn't exist and the containing dir is
+            # not writable or doesn't exist
+            return False
+
+        if not writable_target():
+            return self.verification_codes.UNWRITABLE_TARGET
+
+        return self.verification_codes.OK
+
     def execute(self):
         """
         FileCreateAction execution.
 
         Does a file creation if the file does not exist.
         """
-        def writable_target():
-            """
-            Checks if the target is in a writable directory.
-            """
-            return os.access(os.path.dirname(self.dst),os.W_OK)
+        vcode = self.verify_can_exec()
 
-        if not writable_target(): return
+        if vcode == self.verification_codes.UNWRITABLE_TARGET:
+            print((str(self.context)+": FileCreateWarning: Non-Writable target file \"%s\"") % \
+                self.dst,file=sys.stderr)
+            return
 
         if not os.path.exists(self.dst):
             with open(self.dst,'w') as f: pass
@@ -88,9 +118,9 @@ class DirCreateAction(CreateAction):
         return "DirCreateAction(dst="+str(self.dst)+",context="+\
                str(self.context)+")"
 
-    def execute(self):
+    def verify_can_exec(self):
         """
-        Create a directory and any necessary parents.
+        Checks if the target dir already exists, or if its parent is writable.
         """
         def writable_target():
             """
@@ -99,7 +129,26 @@ class DirCreateAction(CreateAction):
             ancestor = locations.get_existing_prefix(self.dst)
             return os.access(ancestor,os.W_OK)
 
-        if not writable_target(): return
+        # creation of existing dirs is always OK
+        if os.path.exists(self.dst):
+            return self.verification_codes.OK
+
+        if not writable_target():
+            return self.verification_codes.UNWRITABLE_TARGET
+
+        return self.verification_codes.OK
+
+    def execute(self):
+        """
+        Create a directory and any necessary parents.
+        """
+        vcode = self.verify_can_exec()
+
+        if vcode == self.verification_codes.UNWRITABLE_TARGET:
+            print((str(self.context)+ \
+                  ": DirCreateWarning: Non-Writable target dir \"%s\"") % \
+                self.dst,file=sys.stderr)
+            return
 
         # have to invoke this check because makedirs fails if the leaf
         # at the destination exists
