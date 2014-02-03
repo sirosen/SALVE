@@ -66,6 +66,13 @@ group=$SALVE_USER_PRIMARY_GROUP
             mock.patch('src.util.ugo.get_group_from_username',
                        get_groupname)
             )
+        self.patches.add(mock.patch('src.util.ugo.name_to_uid',lambda x: 1001)
+            )
+        self.patches.add(mock.patch('src.util.ugo.name_to_gid',lambda x: 1001)
+            )
+        self.patches.add(mock.patch('os.geteuid',lambda: 1001)
+            )
+
         self.patches.add(
             mock.patch('os.path.expanduser',expanduser)
             )

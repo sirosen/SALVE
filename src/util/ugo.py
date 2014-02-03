@@ -39,3 +39,16 @@ def name_to_gid(groupname):
         The group whose GID is desired.
     """
     return grp.getgrnam(groupname).gr_gid
+
+def is_owner(path):
+    """
+    Checks if the current user owns a file.
+
+    Args:
+        @path
+        Path to the file whose ownership is being checked.
+    """
+    # the operation is only allowed on existing files
+    assert os.path.exists(path)
+
+    return os.stat(path).st_uid == os.geteuid()
