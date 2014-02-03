@@ -2,6 +2,7 @@
 
 import os
 import mock
+import StringIO
 from nose.tools import istest
 
 from src.util.error import StreamContext
@@ -36,6 +37,26 @@ class TestWithScratchdir(scratch.ScratchContainer):
             act()
 
         assert log['lchown'] is None
+
+@istest
+def filechmod_execute_nonowner():
+    """
+    File Chmod Action Execute as Non-Owner
+    """
+    act = modify.FileChmodAction('a','600',dummy_context)
+
+    log = { 'chmod' : None }
+    def mock_chmod(f,mode): log['chmod'] = (f,mode)
+
+    fake_stderr = StringIO.StringIO()
+    with mock.patch('src.execute.modify.FileChmodAction.verify_can_exec',
+                    lambda self: self.verification_codes.UNOWNED_TARGET), \
+         mock.patch('sys.stderr',fake_stderr):
+        act()
+
+    assert log['chmod'] is None
+    assert fake_stderr.getvalue() == \
+        'no such file, line -1: FileChmodWarning: Unowned target file "a"\n'
 
 @istest
 def filechown_to_str():
@@ -116,26 +137,6 @@ def filechmod_execute():
         act()
     assert log['chmod'] == ('a',int('600',8))
 
-@istest
-def filechmod_execute_nonowner():
-    """
-    File Chmod Action Execute as Non-Owner
-    """
-    act = modify.FileChmodAction('a','600',dummy_context)
-
-    log = { 'chmod' : None }
-    def mock_chmod(f,mode): log['chmod'] = (f,mode)
-    mock_stat_result = mock.Mock()
-    # use +1 to ensure that they do not match
-    mock_stat_result.st_uid = os.getuid()+1
-    with mock.patch('os.chmod',mock_chmod), \
-         mock.patch('os.access',lambda x,y: True), \
-         mock.patch('src.util.ugo.is_root',lambda: False), \
-         mock.patch('os.stat',lambda x: mock_stat_result):
-        act()
-
-    assert log['chmod'] is None
-
 def mock_os_walk(dir):
     l = [('a',['b','c'],['1']),
          ('a/b',[],[]),
@@ -185,16 +186,20 @@ def dirchown_execute_nonroot():
     def mock_lchown(f_or_d,uid,gid):
         lchown_args.append((f_or_d,uid,gid))
 
+    fake_stderr = StringIO.StringIO()
+
     act = modify.DirChownAction('a','user1','nogroup',
                                 dummy_context,recursive=True)
-    with mock.patch('os.walk',mock_os_walk), \
-         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
-         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
-         mock.patch('src.util.ugo.is_root',lambda: False), \
-         mock.patch('os.lchown',mock_lchown):
-                    act()
+
+    with mock.patch('src.execute.modify.DirChownAction.verify_can_exec',
+                    lambda x: modify.DirChownAction.verification_codes.NOT_ROOT), \
+         mock.patch('sys.stderr', fake_stderr), \
+         mock.patch('os.lchown', mock_lchown):
+        act()
 
     assert len(lchown_args) == 0
+    assert fake_stderr.getvalue() == \
+        'no such file, line -1: DirChownWarning: Cannot Chown as Non-Root User\n'
 
 @istest
 def dirchmod_recursive_execute():
@@ -236,21 +241,19 @@ def dirchmod_execute_nonowner():
     chmod_args = []
     def mock_chmod(f_or_d,mode):
         chmod_args.append((f_or_d,mode))
-
-    mock_stat_result = mock.Mock()
-    # use +1 to ensure =/=
-    mock_stat_result.st_uid = os.getuid()+1
+    fake_stderr = StringIO.StringIO()
 
     act = modify.DirChmodAction('a','755',dummy_context,recursive=True)
     with mock.patch('os.walk',mock_os_walk), \
-         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
-         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
-         mock.patch('src.util.ugo.is_root',lambda: False), \
-         mock.patch('os.chmod',mock_chmod), \
-         mock.patch('os.stat',lambda x: mock_stat_result):
+         mock.patch('src.execute.modify.DirChmodAction.verify_can_exec',
+                    lambda self: self.verification_codes.UNOWNED_TARGET), \
+         mock.patch('sys.stderr',fake_stderr), \
+         mock.patch('os.chmod',mock_chmod):
         act()
 
     assert len(chmod_args) == 0
+    assert fake_stderr.getvalue() == \
+        'no such file, line -1: DirChmodWarning: Unowned target dir "a"\n'
 
 @istest
 def dirchown_execute_nonrecursive():
@@ -304,15 +307,19 @@ def dirchown_execute_nonrecursive_nonroot():
     def mock_lchown(f_or_d,uid,gid):
         lchown_args.append((f_or_d,uid,gid))
 
+    fake_stderr = StringIO.StringIO()
+
     act = modify.DirChownAction('a','user1','nogroup',dummy_context)
-    with mock.patch('os.walk',mock_os_walk), \
-         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
-         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
-         mock.patch('src.util.ugo.is_root',lambda: False), \
+    with mock.patch('src.execute.modify.DirChownAction.verify_can_exec',
+                    lambda self: self.verification_codes.NOT_ROOT), \
+         mock.patch('os.walk',mock_os_walk), \
+         mock.patch('sys.stderr',fake_stderr), \
          mock.patch('os.lchown',mock_lchown):
         act()
 
     assert len(lchown_args) == 0
+    assert fake_stderr.getvalue() == \
+        'no such file, line -1: DirChownWarning: Cannot Chown as Non-Root User\n'
 
 @istest
 def dirchmod_execute_nonrecursive_nonroot_nonowner():
@@ -323,17 +330,16 @@ def dirchmod_execute_nonrecursive_nonroot_nonowner():
     def mock_chmod(f_or_d,mode):
         chmod_args.append((f_or_d,mode))
 
-    mock_stat_result = mock.Mock()
-    # use +1 to ensure =/=
-    mock_stat_result.st_uid = os.getuid()+1
+    fake_stderr = StringIO.StringIO()
 
     act = modify.DirChmodAction('a','755',dummy_context)
-    with mock.patch('os.walk',mock_os_walk), \
-         mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
-         mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
-         mock.patch('src.util.ugo.is_root',lambda: False), \
-         mock.patch('os.stat',lambda x: mock_stat_result), \
+    with mock.patch('src.execute.modify.DirChmodAction.verify_can_exec',
+                    lambda x: modify.DirChmodAction.verification_codes.UNOWNED_TARGET), \
+         mock.patch('os.walk',mock_os_walk), \
+         mock.patch('sys.stderr',fake_stderr), \
          mock.patch('os.chmod',mock_chmod):
         act()
 
     assert len(chmod_args) == 0
+    assert fake_stderr.getvalue() == \
+        'no such file, line -1: DirChmodWarning: Unowned target dir "a"\n'

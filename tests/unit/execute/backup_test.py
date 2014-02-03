@@ -6,6 +6,7 @@ from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
 from src.util.error import StreamContext
+import tests.utils.scratch as scratch
 
 import src.execute.action as action
 import src.execute.backup as backup
@@ -15,6 +16,87 @@ def get_full_path(filename):
     return os.path.join(_testfile_dir,filename)
 
 dummy_context = StreamContext('no such file',-1)
+
+class TestWithScratchdir(scratch.ScratchContainer):
+    @istest
+    def file_target_name(self):
+        """
+        File Backup Action Destination File
+        Verifies that a file's abspath followed by its SHA512 hash is its
+        destination file when backed up.
+        """
+        self.write_file('file1.txt','Hashing target.\n')
+        filename = self.get_fullname('file1.txt')
+
+        # a hashtable to track inputs into functions &c
+        func_log = {'cp':None}
+
+        def mock_cp(fcp_act):
+            func_log['cp'] = (fcp_act.src,fcp_act.dst)
+
+        def mock_exists(path):
+            if path == '/etc/salve/backup' or path == '/etc/salve/backup/files':
+                return True
+            else:
+                return False
+
+        act = backup.FileBackupAction(filename,'/etc/salve/backup',
+                                      '/etc/salve/backup.log',dummy_context)
+
+        with mock.patch('src.execute.copy.FileCopyAction.execute',mock_cp), \
+             mock.patch('src.execute.backup.FileBackupAction.verify_can_exec',
+                        lambda self: self.verification_codes.OK), \
+             mock.patch('src.execute.backup.FileBackupAction.write_log',
+                        lambda self: None), \
+             mock.patch('os.path.exists',mock_exists):
+            act()
+
+        assert os.path.basename(act.dst) == '9bfabef5ffd7f5df84171393643'+\
+                                            'e7ceeba916e64876ace612ca8d2'+\
+                                            '0ad0ffd69e0ecd284ca7899f4ba'+\
+                                            'b6805c06f881296d20f619e714b'+\
+                                            'efb255e23fdf09ef0eed', act.dst
+
+        assert func_log['cp'] == (filename,act.dst)
+
+    @istest
+    def file_symlink_target_name(self):
+        """
+        File Backup Action Symlink Destination File
+        Verifies that a symlink's abspath followed by its SHA256 hash is its
+        destination file when backed up.
+        """
+        linkname = self.get_fullname('file_link1')
+        os.symlink('file1.txt',linkname)
+
+        # a hashtable to track inputs into functions &c
+        func_log = {'cp':None}
+
+        def mock_cp(fcp_act):
+            func_log['cp'] = (fcp_act.src,fcp_act.dst)
+
+        def mock_exists(path):
+            if path == '/etc/salve/backup' or path == '/etc/salve/backup/files':
+                return True
+            else:
+                return False
+
+        act = backup.FileBackupAction(linkname,'/etc/salve/backup',
+                                      '/etc/salve/backup.log',dummy_context)
+
+        with mock.patch('src.execute.copy.FileCopyAction.execute',mock_cp), \
+             mock.patch('src.execute.backup.FileBackupAction.write_log',
+                        lambda self: None), \
+             mock.patch('src.execute.backup.FileBackupAction.verify_can_exec',
+                        lambda self: self.verification_codes.OK), \
+             mock.patch('os.path.exists',mock_exists):
+            act()
+
+        assert os.path.basename(act.dst) == '55ae75d991c770d8f3ef07cbfde'+\
+                                            '124ffce9c420da5db6203afab70'+\
+                                            '0b27e10cf9'
+
+        assert func_log['cp'] == (linkname,act.dst)
 
 @istest
 def backupaction_is_abstract():
@@ -52,68 +134,6 @@ def file_to_str():
         ',context='+str(dummy_context)+')'
 
 @istest
-def file_target_name():
-    """
-    File Backup Action Destination File
-    Verifies that a file's abspath followed by its SHA512 hash is its
-    destination file when backed up.
-    """
-    # a hashtable to track inputs into functions &c
-    func_log = {}
-    def mock_makedirs(dirname):
-        func_log['makedirs'] = dirname
-    real_islink = os.path.islink
-    def mock_islink(filename):
-        func_log['islink'] = real_islink(filename)
-        return func_log['islink']
-    def mock_cp(fcp_act):
-        func_log['cp'] = (fcp_act.src,fcp_act.dst)
-
-    filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup',
-                                  '/etc/salve/backup.log',dummy_context)
-
-    with mock.patch('src.execute.backup.FileBackupAction.write_log',lambda self: None), \
-         mock.patch('src.execute.copy.FileCopyAction.execute',mock_cp), \
-         mock.patch('os.makedirs',mock_makedirs), \
-         mock.patch('os.path.islink',mock_islink):
-        act()
-
-    assert 'makedirs' in func_log
-    assert os.path.basename(act.dst) == '9bfabef5ffd7f5df84171393643'+\
-                                        'e7ceeba916e64876ace612ca8d2'+\
-                                        '0ad0ffd69e0ecd284ca7899f4ba'+\
-                                        'b6805c06f881296d20f619e714b'+\
-                                        'efb255e23fdf09ef0eed'
-    assert func_log['makedirs'] == os.path.dirname(act.dst)
-    assert 'islink' in func_log
-    assert func_log['islink'] == False
-    assert 'cp' in func_log
-    assert func_log['cp'] == (filename,act.dst)
-
-@istest
-def file_symlink_target_name():
-    """
-    File Backup Action Symlink Destination File
-    Verifies that a symlink's abspath followed by its SHA256 hash is its
-    destination file when backed up.
-    """
-    # a hashtable to track inputs into functions &c
-    func_log = {}
-
-    filename = get_full_path('file_link1')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup',
-                                  '/etc/salve/backup.log',dummy_context)
-
-    with mock.patch('src.execute.backup.FileBackupAction.write_log',lambda self: None), \
-         mock.patch('os.path.exists',lambda f: True):
-        act()
-
-    assert os.path.basename(act.dst) == '55ae75d991c770d8f3ef07cbfde'+\
-                                        '124ffce9c420da5db6203afab70'+\
-                                        '0b27e10cf9'
-
-@istest
 def file_write_log():
     """
     File Backup Action Write Log
@@ -145,6 +165,11 @@ def dir_expand():
     dirname = get_full_path('dir1')
     act = backup.DirBackupAction(dirname,'/etc/salve/backup',
                                  '/etc/salve/backup.log',dummy_context)
+
+    def mock_execute(self): pass
+    with mock.patch('src.execute.action.ActionList.execute',
+                    mock_execute):
+        act()
 
     # must be a valid ActionList
     assert isinstance(act,action.ActionList)
