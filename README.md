@@ -3,7 +3,7 @@ SALVE
 
 Authors: Stephen Rosen
 
-Version: 1.1.0
+Version: 2.0.0
 
 For a detailed description of the project, please visit http://sirosen.github.io/SALVE
 
@@ -44,6 +44,13 @@ Fixes
 
 Changelog
 =========
+ * 2.0.0
+    * Backups are now stored in a flat dir by hash, resolving some dir/file conflict issues
+    * Change to backup logfile timestamp format, more human readable
+    * Old ```python salve.py``` usage is now ```python salve.py deploy```, and added stub ```python salve.py backup```
+    * Switched to argparse -- now incompatible with python 2.6.x without libraries
+    * 'common' block attributes are now 'global', and have precedence over block-defined attributes
+    * Action verification checks and warnings on failures and skips
  * 1.1.0
     * Large expansions to the testsuite
     * No SALVE actions are performed through the shell anymore
