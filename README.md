@@ -25,9 +25,7 @@ Generally Fixes are prioritized over Features, depending on their severity.
 Features
 --------
  - ```~``` and ```*``` expansion.
- - Git repository fetching
- - ```apt```, ```yum```, ```macports```, and ```homebrew``` support
-    * Should ```pip``` and/or ```gem``` be added to the list?
+ - Plugin framework
  - Variable and attribute definition in manifest blocks to propogate down the block tree
  - Automagical backup recovery given a date
  - Addition of a mode that refuses to execute unless it can guarantee safety (and make this the default)
@@ -35,12 +33,7 @@ Features
 
 Fixes
 -----
- - Common attrs should be carried in an execution context, not expanded into block attrs
  - Dir alterations (chown/chmod) are based on walks at generation time, not execution time
- - Backups are stored by path/hash, which replicates any files that move but don't change
-    * They should be stored by hash, and path mapping done in the logfile
-    * This will break backwards log compatibility
- - Many backup/copy actions should check for checksum mismatches before performing an operation in order to reduce write load
 
 Changelog
 =========
