@@ -31,12 +31,13 @@ def unclosed_block_fails():
     verifies the exit code and message of the raised exception.
     """
     path = get_full_path('unclosed_block.manifest')
+    rpath = os.path.relpath(path,'.')
     argv = ['./salve.py','deploy','-m',path]
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
         "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 4: " % path +\
+        "\n%s, line 4: " % rpath +\
         "Tokenizer ended in state BLOCK\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -50,12 +51,13 @@ def missing_open_fails():
     verifies the exit code and message of the raised exception.
     """
     path = get_full_path('missing_open.manifest')
+    rpath = os.path.relpath(path,'.')
     argv = ['./salve.py','deploy','-m',path]
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
         "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 5: " % path +\
+        "\n%s, line 5: " % rpath +\
         "Unexpected token: } Expected BLOCK_START instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -69,12 +71,13 @@ def double_identifier_fails():
     verifies the exit code and message of the raised exception.
     """
     path = get_full_path('double_id.manifest')
+    rpath = os.path.relpath(path,'.')
     argv = ['./salve.py','deploy','-m',path]
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
         "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 5: " % path +\
+        "\n%s, line 5: " % rpath +\
         "Unexpected token: file Expected BLOCK_START instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -88,12 +91,13 @@ def missing_identifier_fails():
     verifies the exit code and message of the raised exception.
     """
     path = get_full_path('missing_id.manifest')
+    rpath = os.path.relpath(path,'.')
     argv = ['./salve.py','deploy','-m',path]
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
         "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 3: " % path +\
+        "\n%s, line 3: " % rpath +\
         "Unexpected token: { Expected IDENTIFIER instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -107,12 +111,13 @@ def missing_value_fails():
     verifies the exit code and message of the raised exception.
     """
     path = get_full_path('missing_attr_val.manifest')
+    rpath = os.path.relpath(path,'.')
     argv = ['./salve.py','deploy','-m',path]
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
         "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 5: " % path +\
+        "\n%s, line 5: " % rpath +\
         "Unexpected token: } Expected TEMPLATE instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -126,12 +131,13 @@ def double_open_fails():
     verifies the exit code and message of the raised exception.
     """
     path = get_full_path('double_open.manifest')
+    rpath = os.path.relpath(path,'.')
     argv = ['./salve.py','deploy','-m',path]
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
         "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 3: " % path +\
+        "\n%s, line 3: " % rpath +\
         "Unexpected token: { Expected ['BLOCK_END', 'IDENTIFIER'] instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -145,12 +151,13 @@ def invalid_block_id_fails():
     verifies the exit code and message of the raised exception.
     """
     path = get_full_path('invalid_block_id.manifest')
+    rpath = os.path.relpath(path,'.')
     argv = ['./salve.py','deploy','-m',path]
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
         "Encountered a SALVE Exception of type ParsingException"+\
-        "\n%s, line 7: " % path +\
+        "\n%s, line 7: " % rpath +\
         "Invalid block id invalid_block_id\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code

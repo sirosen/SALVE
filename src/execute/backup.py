@@ -4,10 +4,12 @@ from __future__ import print_function
 
 import abc
 import os
+import sys
 import time
 
 import src.execute.action as action
 import src.execute.copy as copy
+import src.util.locations as locations
 import src.util.streams
 
 class BackupAction(copy.CopyAction):
@@ -54,6 +56,9 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
     A single file Backupaction. This is a type of BackupAction, and
     therefore a CopyAction, but more specifically a FileCopyAction.
     """
+    verification_codes = \
+        copy.FileCopyAction.verification_codes.extend('NONEXISTENT_SOURCE')
+
     def __init__(self, src, backup_dir, backup_log, context):
         """
         FileBackupAction constructor.
@@ -68,8 +73,8 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
             @context
             The action's originating StreamContext.
         """
-        # create the basic action; the only value that needs to be
-        # rewriten is the dst
+        # initialize as a BackupAction with a destination in the @backup_dir
+        # should include initialization as a CopyAction
         BackupAction.__init__(self,src,backup_dir,backup_log,context)
         # the hash_val is the result of taking the sha hash of @src
         self.hash_val = None
@@ -79,6 +84,41 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
                self.backup_dir+",backup_log="+self.logfile+\
                ",context="+str(self.context)+")"
 
+    def verify_can_exec(self):
+        def writable_target():
+            """
+            Checks if the backup target dir is writable.
+            """
+            if os.access(self.dst,os.W_OK):
+                return True
+
+            if os.access(self.dst,os.F_OK):
+                return False
+
+            # at this point, the dir is known not to exist
+            # now check properties of the containing dir
+            containing_dir = locations.get_existing_prefix(self.dst)
+            if os.access(containing_dir,os.W_OK):
+                return True
+
+            # if the dir doesn't exist, and the dir containing it
+            # isn't writable, then the dir can't be written
+            return False
+
+        def readable_source():
+            """
+            Checks if the source is a readable file.
+            """
+            return os.access(self.src,os.R_OK)
+
+        if not readable_source():
+            return self.verification_codes.UNREADABLE_SOURCE
+
+        if not writable_target():
+            return self.verification_codes.UNWRITABLE_TARGET
+
+        return self.verification_codes.OK
+
     def execute(self):
         """
         Perform the FileBackupAction.
@@ -86,8 +126,20 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
         Rewrites dst based on the value of the @src, does a file copy,
         then writes to the logfile.
         """
-        # no-op if the file to back up does not exist
-        if not os.path.exists(self.src): return
+        vcode = self.verify_can_exec()
+
+        if vcode == self.verification_codes.UNREADABLE_SOURCE:
+            print((str(self.context)+": FileBackupWarning: Non-Readable source file \"%s\"") % \
+                self.src,file=sys.stderr)
+            return
+        if vcode == self.verification_codes.NONEXISTENT_SOURCE:
+            print((str(self.context)+": FileBackupWarning: Non-Existent source file \"%s\"") % \
+                self.src,file=sys.stderr)
+            return
+        if vcode == self.verification_codes.UNWRITABLE_TARGET:
+            print((str(self.context)+": FileBackupWarning: Non-Writable target dir \"%s\"") % \
+                self.dst,file=sys.stderr)
+            return
 
         # FIXME: change to EAFP style
         if not os.path.exists(self.dst): os.makedirs(self.dst)
@@ -120,6 +172,9 @@ class DirBackupAction(action.ActionList,BackupAction):
     A single dir Backupaction. This is a type of BackupAction, and
     therefore a CopyAction, but also an AL of file backups.
     """
+    verification_codes = \
+        BackupAction.verification_codes.extend('NONEXISTENT_SOURCE')
+
     def __init__(self, src, backup_dir, backup_log, context):
         """
         DirBackupAction constructor.
@@ -140,12 +195,11 @@ class DirBackupAction(action.ActionList,BackupAction):
         BackupAction.__init__(self,src,backup_dir,backup_log,context)
         action.ActionList.__init__(self,[],context)
 
-        # append a file backup for each file in @src
-        for dirname,subdirs,files in os.walk(src):
-            # for now, to keep it super-simple, we ignore empty dirs
-            for f in files:
-                filename = os.path.join(dirname,f)
-                self.append(FileBackupAction(filename,backup_dir,backup_log,context))
+    def verify_can_exec(self):
+        if not os.path.exists(self.src):
+            return self.verification_codes.NONEXISTENT_SOURCE
+
+        return self.verification_codes.OK
 
     def execute(self):
         """
@@ -153,4 +207,21 @@ class DirBackupAction(action.ActionList,BackupAction):
 
         Consists of an AL execution of all file backups.
         """
+        vcode = self.verify_can_exec()
+
+        if vcode == self.verification_codes.NONEXISTENT_SOURCE:
+            print((str(self.context)+": DirBackupWarning: Non-Existent source dir \"%s\"") % \
+                self.src,file=sys.stderr)
+            return
+
+        # append a file backup for each file in @src
+        for dirname,subdirs,files in os.walk(self.src):
+            # for now, to keep it super-simple, we ignore empty dirs
+            for f in files:
+                filename = os.path.join(dirname,f)
+                self.append(FileBackupAction(filename,
+                                             self.backup_dir,
+                                             self.logfile,
+                                             self.context))
+
         action.ActionList.execute(self)

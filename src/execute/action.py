@@ -3,6 +3,7 @@
 import abc
 
 from src.util.error import SALVEException
+import src.util.enum as enum
 
 class ActionException(SALVEException):
     """
@@ -31,6 +32,9 @@ class Action(object):
     """
     __metaclass__ = abc.ABCMeta
 
+    # by default, the only verification code is OK
+    verification_codes = enum.Enum('OK')
+
     def __init__(self,context):
         """
         Base Action constructor.
@@ -43,6 +47,15 @@ class Action(object):
             tripped during the Action's creation or execution.
         """
         self.context = context
+
+    def verify_can_exec(self):
+        """
+        Verifies that the action can be executed. Returns a verification code
+        from self.verification_codes.
+        'OK' indicates that execution can proceed. Anything else is an error
+        or warning code specific to the action type.
+        """
+        return verification_codes.OK
 
     @abc.abstractmethod
     def execute(self):

@@ -5,6 +5,7 @@ import tempfile
 import shutil
 
 import mock
+import StringIO
 
 import src.util.locations as locations
 
@@ -66,6 +67,13 @@ group=$SALVE_USER_PRIMARY_GROUP
             mock.patch('src.util.ugo.get_group_from_username',
                        get_groupname)
             )
+        self.patches.add(mock.patch('src.util.ugo.name_to_uid',lambda x: 1001)
+            )
+        self.patches.add(mock.patch('src.util.ugo.name_to_gid',lambda x: 1001)
+            )
+        self.patches.add(mock.patch('os.geteuid',lambda: 1001)
+            )
+
         self.patches.add(
             mock.patch('os.path.expanduser',expanduser)
             )
@@ -73,15 +81,35 @@ group=$SALVE_USER_PRIMARY_GROUP
             mock.patch('__builtin__.open',mock_open)
             )
 
+    def mock_io(self):
+        self.stderr = StringIO.StringIO()
+        self.stdout = StringIO.StringIO()
+
+        self.patches.add(
+            mock.patch('sys.stderr',self.stderr)
+            )
+        self.patches.add(
+            mock.patch('sys.stdout',self.stdout)
+            )
+
     def setUp(self):
         self.scratch_dir = tempfile.mkdtemp()
         self.patches = set()
         self.mock_env()
+        self.mock_io()
 
         for p in self.patches:
             p.start()
 
     def tearDown(self):
+        def recursive_chmod(dir):
+            os.chmod(dir,0777)
+            for f in os.listdir(dir):
+                fullname = os.path.join(dir,f)
+                if os.path.isdir(fullname) and not os.path.islink(fullname):
+                    recursive_chmod(fullname)
+
+        recursive_chmod(self.scratch_dir)
         shutil.rmtree(self.scratch_dir)
 
         for p in self.patches:

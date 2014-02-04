@@ -68,3 +68,26 @@ def get_existing_prefix(path):
     while not os.path.exists(path):
         path = os.path.dirname(path)
     return path
+
+def clean_path(path,absolute=False):
+    """
+    Cleans up a path for printing or logging. Primarily, this is
+    just and invocation of os.path.normpath, but it may also alter
+    the path to relative or absolute.
+
+    Args:
+        @path
+        The path that will be altered and returned.
+
+    KWArgs:
+        @absolute
+        Convert the path to absolute? When false, taken to mean that
+        the path should be converted to relative with respect to the
+        cwd.
+    """
+    if absolute:
+        path = os.path.abspath(path)
+    else:
+        path = os.path.relpath(path,'.')
+
+    return os.path.normpath(path)

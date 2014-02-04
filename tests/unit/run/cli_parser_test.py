@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import mock
+import StringIO
 from nose.tools import istest
 
 import src.run.cli_parser as cli_parser
@@ -57,11 +58,13 @@ def parse_cmd3():
 @istest
 def parse_cmd4():
     """
-    Command Line Parse Deploy No manifest
+    Command Line Parse Deploy No Manifest
     Confirms that omitting the manifest option causes a hard abort.
     """
     fake_argv = ['./salve.py','deploy','-c','p/q']
+    stderr = StringIO.StringIO()
 
     parser = cli_parser.get_parser()
-    with mock.patch('sys.argv',fake_argv):
+    with mock.patch('sys.argv',fake_argv), \
+         mock.patch('sys.stderr',stderr):
         ensure_except(SystemExit,parser.parse_args)
