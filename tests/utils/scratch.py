@@ -39,17 +39,17 @@ class ScratchContainer(object):
 backup_dir=$HOME/backups
 backup_log=$HOME/backup.log
 
+[default]
+user=$USER # an inline comment
+group=$SALVE_USER_PRIMARY_GROUP'
+
 [file]
 action=copy
 mode=600
-user=$USER
-group=$SALVE_USER_PRIMARY_GROUP'
 
 [directory]
 action=copy
 mode=755
-user=$USER
-group=$SALVE_USER_PRIMARY_GROUP
 
 [manifest]
 """
