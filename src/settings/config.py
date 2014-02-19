@@ -120,11 +120,6 @@ class SALVEConfig(object):
                     subkey = key[len(p)+1:].lower()
                     subdict[subkey] = salve_env[key]
 
-        # expand any global settings by templating
-        global_attrs = self.attributes['global']
-        for key in global_attrs:
-            global_attrs[key] = self.template(global_attrs[key])
-
     def template(self, template_string):
         """
         Given a @template_string, takes the environment stored in the
@@ -165,6 +160,11 @@ class SALVEConfig(object):
         for key in relevant_attrs:
             if key not in block.attrs:
                 block.set(key,relevant_attrs[key])
+
+        # set any remaining unspecified attributes using defaults
+        for key in self.attributes['default']:
+            if key not in block.attrs:
+                block.set(key,self.attributes['default'][key])
 
         # template any block attrs
         for key in block.attrs:
