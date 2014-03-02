@@ -8,16 +8,21 @@ import src.block.file_block
 import src.reader.tokenize
 import src.reader.parse
 
+import src.util.locations as locations
+
+from src.util.context import SALVEContext, ExecutionContext
 from tests.utils.exceptions import ensure_except
 
 _testfile_dir = pjoin(dirname(__file__),'testfiles')
+dummy_exec_context = ExecutionContext()
+dummy_context = SALVEContext(exec_context=dummy_exec_context)
 
 def parse_filename(filename):
     with open(filename) as f:
-        return src.reader.parse.parse_stream(f)
+        return src.reader.parse.parse_stream(dummy_context,f)
 
 def get_full_path(filename):
-    return pjoin(_testfile_dir,filename)
+    return locations.clean_path(pjoin(_testfile_dir,filename))
 
 @istest
 def empty_file():
@@ -96,9 +101,9 @@ def unclosed_block_raises_TE():
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
-    ctx = e.context
-    assert ctx.lineno == 4
-    assert ctx.filename == path
+    sctx = e.context.stream_context
+    assert sctx.lineno == 4
+    assert sctx.filename == path
 
 @istest
 def missing_open_raises_TE():
@@ -112,9 +117,9 @@ def missing_open_raises_TE():
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
-    ctx = e.context
-    assert ctx.lineno == 5
-    assert ctx.filename == path
+    sctx = e.context.stream_context
+    assert sctx.lineno == 5
+    assert sctx.filename == path
 
 @istest
 def double_identifier_raises_TE():
@@ -128,9 +133,9 @@ def double_identifier_raises_TE():
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
-    ctx = e.context
-    assert ctx.lineno == 5
-    assert ctx.filename == path
+    sctx = e.context.stream_context
+    assert sctx.lineno == 5
+    assert sctx.filename == path
 
 @istest
 def missing_identifier_raises_TE():
@@ -144,9 +149,9 @@ def missing_identifier_raises_TE():
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
-    ctx = e.context
-    assert ctx.lineno == 3
-    assert ctx.filename == path
+    sctx = e.context.stream_context
+    assert sctx.lineno == 3
+    assert sctx.filename == path
 
 @istest
 def missing_value_raises_TE():
@@ -160,9 +165,9 @@ def missing_value_raises_TE():
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
-    ctx = e.context
-    assert ctx.lineno == 5
-    assert ctx.filename == path
+    sctx = e.context.stream_context
+    assert sctx.lineno == 5
+    assert sctx.filename == path
 
 @istest
 def double_open_raises_TE():
@@ -176,9 +181,9 @@ def double_open_raises_TE():
     e = ensure_except(src.reader.tokenize.TokenizationException,
                       parse_filename,
                       path)
-    ctx = e.context
-    assert ctx.lineno == 3
-    assert ctx.filename == path
+    sctx = e.context.stream_context
+    assert sctx.lineno == 3
+    assert sctx.filename == path
 
 @istest
 def invalid_block_id_raises_PE():
@@ -192,6 +197,6 @@ def invalid_block_id_raises_PE():
     e = ensure_except(src.reader.parse.ParsingException,
                       parse_filename,
                       path)
-    ctx = e.context
-    assert ctx.lineno == 7
-    assert ctx.filename == path
+    sctx = e.context.stream_context
+    assert sctx.lineno == 7
+    assert sctx.filename == path

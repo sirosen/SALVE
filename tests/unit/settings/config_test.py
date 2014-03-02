@@ -6,12 +6,19 @@ from nose.tools import istest, with_setup
 from os.path import dirname, abspath, join as pjoin
 
 from tests.utils.exceptions import ensure_except
+from src.util.context import SALVEContext, ExecutionContext
 
 import src.settings.config as config
 
 _testfile_dir = pjoin(dirname(__file__),'files')
 _homes_dir = pjoin(dirname(__file__),'homes')
 _active_patches = set()
+
+dummy_context = SALVEContext(
+    exec_context=ExecutionContext(
+        startphase=ExecutionContext.phases.CONFIG_LOADING
+        )
+    )
 
 def setup_patches(*patches):
     """
@@ -130,7 +137,7 @@ def sudo_user_replace():
     Tests the replacement of USER with SUDO_USER
     """
     orig_user = os.environ['USER']
-    conf = config.SALVEConfig()
+    conf = config.SALVEConfig(dummy_context)
     assert conf.env['USER'] == 'user1'
     assert os.environ['USER'] == orig_user
 
@@ -142,7 +149,7 @@ def sudo_homedir_resolution():
     Tests the replacement of HOME with an expanded ~USER
     """
     orig_home = os.environ['HOME']
-    conf = config.SALVEConfig()
+    conf = config.SALVEConfig(dummy_context)
     assert conf.env['HOME'] == pjoin(_homes_dir,'user1')
     assert os.environ['HOME'] == orig_home
 
@@ -153,7 +160,8 @@ def valid_config1():
     Configuration Valid Config File
     Tests that parsing a specified config file works.
     """
-    conf = config.SALVEConfig(pjoin(_testfile_dir,'valid1.ini'))
+    conf = config.SALVEConfig(dummy_context,
+                              filename=pjoin(_testfile_dir,'valid1.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
 
 @istest
@@ -163,7 +171,7 @@ def load_rc_file():
     Configuration Load RC File
     Tests that, by default, the user's ~/.salverc is used for config.
     """
-    conf = config.SALVEConfig()
+    conf = config.SALVEConfig(dummy_context)
     assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
 
 @istest
@@ -174,7 +182,8 @@ def overload_from_env():
     Ensures that overloads in the environment take precedence over
     config file settings.
     """
-    conf = config.SALVEConfig(pjoin(_testfile_dir,'valid1.ini'))
+    conf = config.SALVEConfig(dummy_context,
+                              filename=pjoin(_testfile_dir,'valid1.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/meta/'
 
 @istest
@@ -186,7 +195,8 @@ def multiple_env_overload():
     settings if they happen to match badly. This is the expected
     behavior, as the alternatives are inconsistent and unpredictable.
     """
-    conf = config.SALVEConfig(pjoin(_testfile_dir,'valid2.ini'))
+    conf = config.SALVEConfig(dummy_context,
+                              filename=pjoin(_testfile_dir,'valid2.ini'))
     assert conf.attributes['meta_data']['path'] == '/etc/meta/'
     assert conf.attributes['meta']['data_path'] == '/etc/meta/'
 
@@ -198,7 +208,8 @@ def missing_config():
     Checks that with a missing config file specified, the default is
     still loaded and works as if no config were specified.
     """
-    conf = config.SALVEConfig(pjoin(_testfile_dir,'NONEXISTENT_FILE'))
+    conf = config.SALVEConfig(dummy_context,
+                              filename=pjoin(_testfile_dir,'NONEXISTENT_FILE'))
 
     assert conf.attributes['file']['action'] == 'copy'
     assert conf.attributes['file']['mode'] == '644'
@@ -217,7 +228,7 @@ def template_sub_keyerror():
     Tests that templating throws an error when there is a nonexistent
     variable specified.
     """
-    conf = config.SALVEConfig()
+    conf = config.SALVEConfig(dummy_context)
     ensure_except(KeyError,conf.template,'$NONEXISTENT_VAR')
 
 @istest
@@ -227,7 +238,7 @@ def template_sub():
     Configuration Variable Substitution
     Tests the normal functioning of variable substitution.
     """
-    conf = config.SALVEConfig()
+    conf = config.SALVEConfig(dummy_context)
     assert conf.template('$USER') == 'user1'
     assert conf.template('$HOME') == pjoin(_homes_dir,'user1')
     assert conf.template('$HOME/bin/program') == pjoin(_homes_dir,'user1','bin/program')

@@ -14,9 +14,14 @@ import src.run.deploy as deploy
 import src.util.locations as locations
 
 from src.block.base import BlockException
-from src.util.error import SALVEException, StreamContext
+from src.util.error import SALVEException
+from src.util.context import SALVEContext, ExecutionContext, StreamContext
 
-dummy_context = StreamContext('no such file',-1)
+def generate_dummy_context(phase=ExecutionContext.phases.STARTUP):
+    dummy_stream_context = StreamContext('no such file',-1)
+    dummy_exec_context = ExecutionContext(startphase=phase)
+    return SALVEContext(stream_context=dummy_stream_context,
+                        exec_context=dummy_exec_context)
 
 @istest
 def no_manifest_error():
@@ -52,7 +57,8 @@ def deploy_main():
         def execute(self): have_run['action_execute'] = True
 
     class MockManifest(object):
-        def __init__(self,source=None): assert source == 'root.manifest'
+        def __init__(self,exec_context,source=None):
+            assert source == 'root.manifest'
         def expand_blocks(self,x,y): have_run['expand_blocks'] = True
         def to_action(self): return MockAction()
 
@@ -73,7 +79,8 @@ def deploy_salve_exception():
     log = {
         'exit': None
     }
-    def mock_run(root_manifest,args):
+    dummy_context = generate_dummy_context()
+    def mock_run(root_manifest,exec_context,args):
         raise SALVEException('message string',dummy_context)
 
     real_exit = sys.exit
@@ -95,8 +102,7 @@ def deploy_salve_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'SALVEException\nno such file, line -1: message string\n'
+    assert stderr_out == '[STARTUP] no such file, line -1: message string\n'
 
 @istest
 def deploy_block_exception():
@@ -108,7 +114,8 @@ def deploy_block_exception():
     log = {
         'exit': None
     }
-    def mock_run(root_manifest,opts):
+    dummy_context = generate_dummy_context(phase=ExecutionContext.phases.PARSING)
+    def mock_run(root_manifest,exec_context,args):
         raise BlockException('message string',dummy_context)
 
     real_exit = sys.exit
@@ -130,8 +137,7 @@ def deploy_block_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'BlockException\nno such file, line -1: message string\n'
+    assert stderr_out == '[PARSING] no such file, line -1: message string\n'
 
 @istest
 def deploy_action_exception():
@@ -144,7 +150,9 @@ def deploy_action_exception():
     log = {
         'exit': None
     }
-    def mock_run(root_manifest,opts):
+    dummy_context = generate_dummy_context(
+        phase=ExecutionContext.phases.ACTION_CONVERSION)
+    def mock_run(root_manifest,exec_context,args):
         raise ActionException('message string',dummy_context)
 
     real_exit = sys.exit
@@ -166,8 +174,7 @@ def deploy_action_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'ActionException\nno such file, line -1: message string\n', stderr_out
+    assert stderr_out == '[ACTION_CONVERSION] no such file, line -1: message string\n', stderr_out
 
 @istest
 def deploy_tokenization_exception():
@@ -180,7 +187,8 @@ def deploy_tokenization_exception():
     log = {
         'exit': None
     }
-    def mock_run(root_manifest,args):
+    dummy_context = generate_dummy_context(phase=ExecutionContext.phases.PARSING)
+    def mock_run(root_manifest,exec_context,args):
         raise TokenizationException('message string',dummy_context)
 
     real_exit = sys.exit
@@ -202,8 +210,7 @@ def deploy_tokenization_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'TokenizationException\nno such file, line -1: message string\n',stderr_out
+    assert stderr_out == '[PARSING] no such file, line -1: message string\n',stderr_out
 
 @istest
 def deploy_parsing_exception():
@@ -216,7 +223,8 @@ def deploy_parsing_exception():
     log = {
         'exit': None
     }
-    def mock_run(root_manifest,args):
+    dummy_context = generate_dummy_context(phase=ExecutionContext.phases.PARSING)
+    def mock_run(root_manifest,exec_context,args):
         raise ParsingException('message string',dummy_context)
 
     real_exit = sys.exit
@@ -238,8 +246,7 @@ def deploy_parsing_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == 'Encountered a SALVE Exception of type '+\
-        'ParsingException\nno such file, line -1: message string\n', stderr_out
+    assert stderr_out == '[PARSING] no such file, line -1: message string\n', stderr_out
 
 @istest
 def deploy_unexpected_exception():
@@ -248,7 +255,7 @@ def deploy_unexpected_exception():
     Checks that running the deploy main function does not catch any
     non-SALVE Exceptions.
     """
-    def mock_run(root_manifest,args):
+    def mock_run(root_manifest,exec_context,args):
         raise StandardError()
 
     fake_args = mock.Mock()

@@ -4,7 +4,7 @@ from nose.tools import istest
 import mock
 
 from tests.utils.exceptions import ensure_except
-from src.util.error import StreamContext
+from src.util.context import SALVEContext, ExecutionContext, StreamContext
 
 import src.execute.action as action
 import src.execute.shell as shell
@@ -17,7 +17,10 @@ class MockProcess(object):
     def communicate(self):
         return None,None
 
-dummy_context = StreamContext('no such file',-1)
+dummy_stream_context = StreamContext('no such file',-1)
+dummy_exec_context = ExecutionContext()
+dummy_context = SALVEContext(stream_context=dummy_stream_context,
+                             exec_context=dummy_exec_context)
 
 @istest
 def shell_action_basic():

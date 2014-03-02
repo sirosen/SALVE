@@ -7,6 +7,7 @@ from tests.utils.exceptions import ensure_except
 
 import src.block.base
 import src.settings.config
+from src.util.context import SALVEContext, ExecutionContext
 
 _testfile_dir = os.path.join(os.path.dirname(__file__),'files')
 def get_full_path(filename):
@@ -21,7 +22,9 @@ def mock_expanduser(string):
 
 _dummy_conf = None
 with mock.patch('os.path.expanduser',mock_expanduser):
-    _dummy_conf = src.settings.config.SALVEConfig()
+    _dummy_conf = src.settings.config.SALVEConfig(
+        SALVEContext(exec_context=ExecutionContext())
+        )
 
 @istest
 def block_is_abstract():

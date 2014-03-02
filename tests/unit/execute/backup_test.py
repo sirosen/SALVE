@@ -5,7 +5,7 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from src.util.error import StreamContext
+from src.util.context import SALVEContext, ExecutionContext, StreamContext
 import tests.utils.scratch as scratch
 
 import src.execute.action as action
@@ -15,7 +15,12 @@ _testfile_dir = os.path.join(os.path.dirname(__file__),'files')
 def get_full_path(filename):
     return os.path.join(_testfile_dir,filename)
 
-dummy_context = StreamContext('no such file',-1)
+dummy_stream_context = StreamContext('no such file',-1)
+dummy_exec_context = ExecutionContext()
+dummy_exec_context.set('backup_dir','/etc/salve/backup')
+dummy_exec_context.set('backup_log','/etc/salve/backup.log')
+dummy_context = SALVEContext(stream_context=dummy_stream_context,
+                             exec_context=dummy_exec_context)
 
 class TestWithScratchdir(scratch.ScratchContainer):
     @istest
@@ -40,8 +45,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
             else:
                 return False
 
-        act = backup.FileBackupAction(filename,'/etc/salve/backup',
-                                      '/etc/salve/backup.log',dummy_context)
+        act = backup.FileBackupAction(filename,
+                                      dummy_context)
 
         with mock.patch('src.execute.copy.FileCopyAction.execute',mock_cp), \
              mock.patch('src.execute.backup.FileBackupAction.verify_can_exec',
@@ -81,8 +86,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
             else:
                 return False
 
-        act = backup.FileBackupAction(linkname,'/etc/salve/backup',
-                                      '/etc/salve/backup.log',dummy_context)
+        act = backup.FileBackupAction(linkname,
+                                      dummy_context)
 
         with mock.patch('src.execute.copy.FileCopyAction.execute',mock_cp), \
              mock.patch('src.execute.backup.FileBackupAction.write_log',
@@ -114,8 +119,8 @@ def file_dst_dir():
     the backup dir.
     """
     filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup',
-                                  '/etc/salve/backup.log',dummy_context)
+    act = backup.FileBackupAction(filename,
+                                  dummy_context)
     assert act.dst == '/etc/salve/backup/files'
 
 @istest
@@ -126,8 +131,8 @@ def file_to_str():
     Checks the result of converting a file backup action to a string.
     """
     filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup',
-                                  '/etc/salve/backup.log',dummy_context)
+    act = backup.FileBackupAction(filename,
+                                  dummy_context)
     assert str(act) == \
         'FileBackupAction(src='+filename+',backup_dir='+\
         '/etc/salve/backup,backup_log=/etc/salve/backup.log'+\
@@ -141,8 +146,8 @@ def file_write_log():
     with the date, hash, and filename.
     """
     filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,'/etc/salve/backup',
-                                  '/etc/salve/backup.log',dummy_context)
+    act = backup.FileBackupAction(filename,
+                                  dummy_context)
     act.hash_val = 'abc'
 
     mo = mock.mock_open()
@@ -163,8 +168,8 @@ def dir_expand():
     directory backups.
     """
     dirname = get_full_path('dir1')
-    act = backup.DirBackupAction(dirname,'/etc/salve/backup',
-                                 '/etc/salve/backup.log',dummy_context)
+    act = backup.DirBackupAction(dirname,
+                                 dummy_context)
 
     def mock_execute(self): pass
     with mock.patch('src.execute.action.ActionList.execute',
@@ -190,8 +195,7 @@ def dir_execute():
     each of the files in the directory.
     """
     dirname = get_full_path('dir1')
-    act = backup.DirBackupAction(dirname,'/etc/salve/backup',
-                                 '/etc/salve/backup.log',dummy_context)
+    act = backup.DirBackupAction(dirname,dummy_context)
     # check this here so that we abort the test if this condition is
     # unsatisfied, rather than starting to actually perform actions
     for subact in act.actions:

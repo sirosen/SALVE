@@ -3,24 +3,24 @@
 import abc
 
 from src.util.error import SALVEException
+from src.util.context import ExecutionContext
 import src.util.enum as enum
 
 class ActionException(SALVEException):
     """
     A SALVE exception specialized for Actions.
     """
-    def __init__(self,msg,ctx):
+    def __init__(self,msg,context):
         """
         ActionException constructor
 
         Args:
             @msg
             A string message that describes the error.
-            @ctx
-            A StreamContext that identifies the origin of this
-            exception.
+            @context
+            A SALVEContext.
         """
-        SALVEException.__init__(self,msg,ctx)
+        SALVEException.__init__(self,msg,context)
 
 class Action(object):
     """
@@ -41,10 +41,7 @@ class Action(object):
 
         Args:
             @context
-            The StreamContext from which this Action originates. Usually
-            this can be traced directly to a Block that generated the
-            Action. Used to identify the origin of any errors that are
-            tripped during the Action's creation or execution.
+            The SALVEContext.
         """
         self.context = context
 
@@ -55,6 +52,9 @@ class Action(object):
         'OK' indicates that execution can proceed. Anything else is an error
         or warning code specific to the action type.
         """
+        # transition to the action verification phase,
+        # confirming execution will work
+        context.transition(ExecutionContext.phases.VERIFICATION)
         return verification_codes.OK
 
     @abc.abstractmethod
@@ -126,8 +126,9 @@ class ActionList(Action):
             A list of Action objects. No checking is performed, the
             class assumes that what it is handed is in fact a list of
             Action objects.
+
             @context
-            The StreamContext for the AL.
+            The SALVEContext.
         """
         Action.__init__(self,context)
         self.actions = act_lst

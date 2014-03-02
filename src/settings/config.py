@@ -9,6 +9,8 @@ import src.block.manifest_block
 import src.util.locations as locations
 import src.util.ugo as ugo
 
+from src.util.context import ExecutionContext
+
 SALVE_ENV_PREFIX = 'SALVE_'
 
 
@@ -54,7 +56,7 @@ class SALVEConfig(object):
     of guaranteeing that the configuration values are as desired
     without inspecting the files.
     """
-    def __init__(self, filename=None):
+    def __init__(self,context,filename=None):
         """
         SALVEConfig constructor.
 
@@ -64,6 +66,12 @@ class SALVEConfig(object):
             None, which indicates that the defaults and ~/.salverc
             should be used without any supplement.
         """
+        assert context.exec_context is not None
+        # transition to the config reading phase
+        context.transition(ExecutionContext.phases.CONFIG_LOADING)
+        # store a ref to the exec context in the config
+        self.context = context
+
         # get the user that we're running as, even if invoked with sudo
         user = os.environ['USER']
         if 'SUDO_USER' in os.environ:
@@ -110,6 +118,7 @@ class SALVEConfig(object):
         # the existing configuration with them if present
         prefixes = {(SALVE_ENV_PREFIX + s.upper()):s
                     for s in sections}
+
         for key in salve_env:
             for p in prefixes:
                 if key.startswith(p):
@@ -119,6 +128,11 @@ class SALVEConfig(object):
                     # environment vars are uppercase
                     subkey = key[len(p)+1:].lower()
                     subdict[subkey] = salve_env[key]
+
+        # set globals in the execution context as shared variables
+        for key in self.attributes['global']:
+            val = self.attributes['global'][key]
+            self.context.exec_context.set(key,self.template(val))
 
     def template(self, template_string):
         """
@@ -151,10 +165,6 @@ class SALVEConfig(object):
         """
         ty = block.block_type.lower()
         relevant_attrs = self.attributes[ty]
-
-        # set global attributes
-        for key in self.attributes['global']:
-            block.set(key,self.attributes['global'][key])
 
         # set any unset attrs in the config
         for key in relevant_attrs:

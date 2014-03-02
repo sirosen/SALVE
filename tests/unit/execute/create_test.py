@@ -4,7 +4,7 @@ import os
 import mock
 from nose.tools import istest
 
-from src.util.error import StreamContext
+from src.util.context import SALVEContext, ExecutionContext, StreamContext
 
 import src.execute.action as action
 import src.execute.create as create
@@ -14,7 +14,10 @@ _testfile_dir = os.path.join(os.path.dirname(__file__),'files')
 def get_full_path(filename):
     return os.path.join(_testfile_dir,filename)
 
-dummy_context = StreamContext('no such file',-1)
+dummy_stream_context = StreamContext('no such file',-1)
+dummy_exec_context = ExecutionContext()
+dummy_context = SALVEContext(stream_context=dummy_stream_context,
+                             exec_context=dummy_exec_context)
 
 class TestWithScratchdir(scratch.ScratchContainer):
     @istest
@@ -29,7 +32,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with mock.patch('__builtin__.open',mock_open,create=True), \
              mock.patch('os.access', lambda x,y: True):
-            fc = create.FileCreateAction(a_name, dummy_context)
+            fc = create.FileCreateAction(a_name,dummy_context)
             fc()
 
         mock_open.assert_called_once_with(a_name,'w')
@@ -48,7 +51,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with mock.patch('os.makedirs',mock_mkdirs), \
              mock.patch('os.access', lambda x,y: True):
-            dc = create.DirCreateAction(a_name, dummy_context)
+            dc = create.DirCreateAction(a_name,dummy_context)
             dc()
 
         mock_mkdirs.assert_called_once_with(a_name)

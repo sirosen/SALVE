@@ -2,7 +2,7 @@
 
 import src.block.identifier
 from src.util.streams import get_filename
-from src.util.error import SALVEException, StreamContext
+from src.util.error import SALVEException
 from src.reader.tokenize import Token, tokenize_stream
 
 class ParsingException(SALVEException):
@@ -20,12 +20,11 @@ class ParsingException(SALVEException):
             @msg
             A string message that describes the error.
             @context
-            A StreamContext that identifies the origin of this
-            exception.
+            The SALVEContext.
         """
         SALVEException.__init__(self,msg,context)
 
-def parse_tokens(tokens):
+def parse_tokens(context,tokens):
     """
     Converts a token list to a block list.
     This is not entirely stateless, but unlike the tokenizer,
@@ -59,7 +58,7 @@ def parse_tokens(tokens):
         elif not current_block:
             try:
                 b_from_id = src.block.identifier.block_from_identifier
-                current_block = b_from_id(token)
+                current_block = b_from_id(context,token)
             except:
                 raise ParsingException('Invalid block id ' +\
                     token.value,token.context)
@@ -98,7 +97,7 @@ def parse_tokens(tokens):
 
     return blocks
 
-def parse_stream(stream):
+def parse_stream(context,stream):
     """
     Parse a stream or file object into blocks.
 
@@ -108,4 +107,4 @@ def parse_stream(stream):
         Parsing a stream is just tokenizing it, and then handing those
         tokens to the parser.
     """
-    return parse_tokens(tokenize_stream(stream))
+    return parse_tokens(context,tokenize_stream(context,stream))

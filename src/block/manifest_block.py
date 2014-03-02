@@ -4,6 +4,7 @@ import os
 
 import src.execute.action as action
 
+from src.util.context import ExecutionContext
 from src.block.base import Block
 
 class ManifestBlock(Block):
@@ -13,10 +14,25 @@ class ManifestBlock(Block):
     execution. For example, if a manifest's blocks can be executed
     in parallel, or if its execution is conditional on a file existing.
     """
-    def __init__(self,exception_context=None,source=None):
-        Block.__init__(self,Block.types.MANIFEST,exception_context)
+    def __init__(self,context,source=None):
+        """
+        Manifest Block constructor.
+
+        Args:
+            @context
+            The SALVEContext for this block.
+
+        KWArgs:
+            @source
+            The file from which this block is constructed.
+        """
+        # transition to the parsing/block expansion phase, converting
+        # files into blocks
+        context.transition(ExecutionContext.phases.PARSING)
+        Block.__init__(self,Block.types.MANIFEST,context)
         self.sub_blocks = None
-        if source: self.set('source',source)
+        if source:
+            self.set('source',source)
         self.path_attrs.add('source')
         self.min_attrs.add('source')
 
@@ -61,7 +77,7 @@ class ManifestBlock(Block):
 
         # parse the manifest source
         with open(filename) as man:
-            self.sub_blocks = parse.parse_stream(man)
+            self.sub_blocks = parse.parse_stream(self.context,man)
         for b in self.sub_blocks:
             # recursively apply to manifest blocks
             if isinstance(b,ManifestBlock):
@@ -81,6 +97,9 @@ class ManifestBlock(Block):
         The action will always be an actionlist of the expansion of
         the manifest block's sub-blocks.
         """
+        # transition to the action conversion phase, converting
+        # blocks into actions
+        self.context.transition(ExecutionContext.phases.ACTION_CONVERSION)
         if self.sub_blocks is None:
             raise self.mk_except('Attempted to convert unexpanded '+\
                                  'manifest to action.')

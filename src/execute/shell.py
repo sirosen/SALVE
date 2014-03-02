@@ -3,6 +3,7 @@
 import subprocess
 
 from src.execute.action import Action, ActionException
+from src.util.context import ExecutionContext
 
 class ShellAction(Action):
     """
@@ -18,7 +19,7 @@ class ShellAction(Action):
             A string that defines the shell command to execute when the
             ShellAction is invoked.
             @context
-            The ShellAction's StreamContext.
+            The SALVEContext.
         """
         Action.__init__(self,context)
         self.cmd = command
@@ -33,6 +34,9 @@ class ShellAction(Action):
         Invokes the ShellAction's command, and fails if it returns a
         nonzero exit code, and returns its stdout and stderr.
         """
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
+
         # run the command, passing output to PIPE
         process = subprocess.Popen(self.cmd,
                                    stdout=subprocess.PIPE,

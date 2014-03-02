@@ -4,7 +4,8 @@ import string
 import shlex
 
 from src.util.enum import Enum
-from src.util.error import SALVEException, StreamContext
+from src.util.error import SALVEException
+from src.util.context import SALVEContext, StreamContext
 from src.util.streams import get_filename
 
 class TokenizationException(SALVEException):
@@ -19,8 +20,7 @@ class TokenizationException(SALVEException):
             @msg
             A string message that describes the error.
             @context
-            A StreamContext that identifies the origin of this
-            exception.
+            The SALVEContext.
         """
         SALVEException.__init__(self,msg,context)
 
@@ -45,7 +45,7 @@ class Token(object):
             @ty
             The type of this token. Determined from context and content.
             @context
-            The StreamContext at which this Token was found.
+            The SALVEContext.
         """
         self.value = value
         self.ty = ty
@@ -56,12 +56,12 @@ class Token(object):
         stringify a Token
         """
         attrs = ['value='+self.value,'ty='+self.ty,
-                 'lineno='+str(self.context.lineno)]
-        if self.context.filename:
-            attrs.append('filename='+self.context.filename)
+                 'lineno='+str(self.context.stream_context.lineno)]
+        if self.context.stream_context.filename:
+            attrs.append('filename='+self.context.stream_context.filename)
         return 'Token('+','.join(attrs)+')'
 
-def tokenize_stream(stream):
+def tokenize_stream(context,stream):
     """
     Convert an input stream into a list of Tokens.
 
@@ -94,7 +94,7 @@ def tokenize_stream(stream):
             @expected
             The expected type(s) of the Token.
             @context
-            A StreamContext identifying this location in the file.
+            The SALVEContext.
         """
         raise TokenizationException('Unexpected token: ' + token_str +\
             ' Expected ' + str(expected) + ' instead.',
@@ -134,7 +134,7 @@ def tokenize_stream(stream):
             @ty
             The Token type of @tok
             @context
-            The StreamContext where @tok was found.
+            The SALVEContext.
         """
         tokens.append(Token(tok,ty,context))
 
@@ -143,7 +143,8 @@ def tokenize_stream(stream):
     # get the first Maybe(Token)
     current = tokenizer.get_token()
     while current is not None:
-        ctx = StreamContext(filename,tokenizer.lineno)
+        ctx = SALVEContext(exec_context=context.exec_context,
+                           stream_context=StreamContext(filename,tokenizer.lineno))
         # if we have not found a block, the expectation is that we will
         # find a block identifier as the first token
         if state is states.FREE:
