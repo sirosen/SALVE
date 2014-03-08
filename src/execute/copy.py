@@ -8,8 +8,9 @@ import os
 import shutil
 
 import src.execute.action as action
-
 import src.util.enum as enum
+
+from src.util.context import ExecutionContext
 
 class CopyAction(action.Action):
     """
@@ -33,9 +34,9 @@ class CopyAction(action.Action):
             @dst
             The destination path (being copied to).
             @context
-            The StreamContext of origin.
+            The SALVEContext.
         """
-        action.Action.__init__(self, context)
+        action.Action.__init__(self,context)
         self.src = src
         self.dst = dst
 
@@ -56,7 +57,7 @@ class FileCopyAction(CopyAction):
             @dst
             Destination path.
             @context
-            StreamContext of action origin.
+            The SALVEContext.
         """
         CopyAction.__init__(self,src,dst,context)
 
@@ -73,6 +74,10 @@ class FileCopyAction(CopyAction):
         Ensures that the source file exists and is readable, and that
         the target file can be created or is writable.
         """
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         def writable_target():
             """
             Checks if the target file is writable.
@@ -125,6 +130,9 @@ class FileCopyAction(CopyAction):
                 self.src,file=sys.stderr)
             return
 
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
+
         if os.path.islink(self.src):
             os.symlink(os.readlink(self.src),self.dst)
         else:
@@ -144,7 +152,7 @@ class DirCopyAction(CopyAction):
             @dst
             Destination path.
             @context
-            StreamContext of action origin.
+            The SALVEContext.
         """
         CopyAction.__init__(self,src,dst,context)
 
@@ -157,6 +165,10 @@ class DirCopyAction(CopyAction):
         Check to ensure that execution can proceed without errors.
         Ensures that the the target directory is writable.
         """
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         def writable_target():
             """
             Checks if the target is in a writable directory.
@@ -178,5 +190,8 @@ class DirCopyAction(CopyAction):
             print((str(self.context)+": DirCopyWarning: Non-Writable target directory \"%s\"") % \
                 self.dst,file=sys.stderr)
             return
+
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
 
         shutil.copytree(self.src,self.dst,symlinks=True)

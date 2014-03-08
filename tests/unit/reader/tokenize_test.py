@@ -5,26 +5,32 @@ from os.path import dirname, join as pjoin
 
 from tests.utils.exceptions import ensure_except
 
-from src.util.error import StreamContext
+from src.util.context import SALVEContext, StreamContext, ExecutionContext
 import src.reader.tokenize as tokenize
+import src.util.locations as locations
 
 _testfile_dir = pjoin(dirname(__file__),'files')
 
-dummy_context = StreamContext('no such file',-1)
+dummy_stream_context = StreamContext('no such file',-1)
+dummy_exec_context = ExecutionContext(
+    startphase=ExecutionContext.phases.PARSING
+)
+dummy_context = SALVEContext(stream_context=dummy_stream_context,
+                             exec_context=dummy_exec_context)
 
 def tokenize_filename(filename):
     with open(filename) as f:
-        return tokenize.tokenize_stream(f)
+        return tokenize.tokenize_stream(dummy_context,f)
 
 def get_full_path(filename):
-    return pjoin(_testfile_dir,filename)
+    return locations.clean_path(pjoin(_testfile_dir,filename))
 
 def ensure_TokenizationException(filename):
     full_path = get_full_path(filename)
     e = ensure_except(tokenize.TokenizationException,
                       tokenize_filename,
                       full_path)
-    assert e.context.filename == full_path
+    assert e.context.stream_context.filename == full_path
 
 #failure tests
 
@@ -142,7 +148,7 @@ def token_to_string():
     Tokenizer Token To String
     Checks the result of invoking Token.__str__
     """
-    ctx = StreamContext('a/b/c',2)
+    ctx = SALVEContext(stream_context=StreamContext('a/b/c',2))
     file_tok = tokenize.Token('file',tokenize.Token.types.IDENTIFIER,
                               ctx)
     assert str(file_tok) == 'Token(value=file,ty=IDENTIFIER,lineno=2,filename=a/b/c)'

@@ -15,19 +15,19 @@ class FileBlock(Block):
     A file block describes an action performed on a file.
     This includes creation, deletion, and string append.
     """
-    def __init__(self,context=None):
+    def __init__(self,context):
         """
         File Block constructor
 
-        KWArgs:
+        Args:
             @context
-            This is a StreamContext identifying the location of the file
-            block's identifier, for error reporting.
+            The SALVEContext for this block.
         """
+        assert context.has_context('EXEC')
         Block.__init__(self,Block.types.FILE,context)
-        for attr in ['backup_dir','backup_log','target','source']:
+        for attr in ['target','source']:
             self.path_attrs.add(attr)
-        for attr in ['backup_dir','backup_log','target']:
+        for attr in ['target']:
             self.min_attrs.add(attr)
 
     def to_action(self):
@@ -39,7 +39,7 @@ class FileBlock(Block):
         'touch -a'. If it is a copy action, this is a file copy preceded
         by an attempt to back up the file being overwritten.
         """
-        self.ensure_has_attrs('action','backup_dir','backup_log')
+        self.ensure_has_attrs('action')
 
         def ensure_abspath_attrs(*args):
             """
@@ -80,7 +80,8 @@ class FileBlock(Block):
             # otherwise, check if the action is an actionlist, and convert
             # it into one if it is not
             if not isinstance(file_act,action.ActionList):
-                file_act = action.ActionList([file_act],self.context)
+                file_act = action.ActionList([file_act],
+                                             self.context)
             if prepend: file_act.prepend(new)
             else: file_act.append(new)
             return file_act
@@ -121,8 +122,6 @@ class FileBlock(Block):
         if self.get('action') in triggers_backup:
             backup_action = backup.FileBackupAction(
                 self.get('target'),
-                self.get('backup_dir'),
-                self.get('backup_log'),
                 self.context)
             file_action = add_action(file_action,
                                      backup_action,

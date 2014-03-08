@@ -12,6 +12,8 @@ import src.execute.copy as copy
 import src.util.locations as locations
 import src.util.streams
 
+from src.util.context import ExecutionContext
+
 class BackupAction(copy.CopyAction):
     """
     The base class for all BackupActions, all of which are types of
@@ -22,21 +24,18 @@ class BackupAction(copy.CopyAction):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, src, backup_dir, backup_log, context):
+    def __init__(self, src, context):
         """
         BackupAction constructor.
 
         Args:
             @src
             The file to back up.
-            @backup_dir
-            The directory in which @src should be backed up.
-            @backup_log
-            A logfile, which should have the backup action's details
-            appended after execution.
             @context
-            The BackupAction's StreamContext of origin.
+            The SALVEContext.
         """
+        backup_dir = context.exec_context.get('backup_dir')
+        backup_log = context.exec_context.get('backup_log')
         # in the default case, a Backup is a File Copy into the
         # backup_dir in which the target filename is @src's abspath
         # this leads to bad behavior if run as-is, but can serve as a
@@ -59,23 +58,19 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
     verification_codes = \
         copy.FileCopyAction.verification_codes.extend('NONEXISTENT_SOURCE')
 
-    def __init__(self, src, backup_dir, backup_log, context):
+    def __init__(self, src, context):
         """
         FileBackupAction constructor.
 
         Args:
             @src
             The source file.
-            @backup_dir
-            The storage location for backups.
-            @backup_log
-            The logfile for backups.
             @context
-            The action's originating StreamContext.
+            The SALVEContext.
         """
         # initialize as a BackupAction with a destination in the @backup_dir
         # should include initialization as a CopyAction
-        BackupAction.__init__(self,src,backup_dir,backup_log,context)
+        BackupAction.__init__(self,src,context)
         # the hash_val is the result of taking the sha hash of @src
         self.hash_val = None
 
@@ -85,6 +80,10 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
                ",context="+str(self.context)+")"
 
     def verify_can_exec(self):
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         def writable_target():
             """
             Checks if the backup target dir is writable.
@@ -105,11 +104,17 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
             # isn't writable, then the dir can't be written
             return False
 
+        def existant_source():
+            return os.access(self.src,os.F_OK)
+
         def readable_source():
             """
             Checks if the source is a readable file.
             """
             return os.access(self.src,os.R_OK)
+
+        if not existant_source():
+            return self.verification_codes.NONEXISTENT_SOURCE
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
@@ -141,6 +146,9 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
                 self.dst,file=sys.stderr)
             return
 
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
+
         # FIXME: change to EAFP style
         if not os.path.exists(self.dst): os.makedirs(self.dst)
 
@@ -161,7 +169,8 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
         Log the date, hash, and filename, to the backup log.
         """
         logval = time.strftime('%Y-%m-%d %H:%M:%S') + ' ' + \
-                 self.hash_val + ' ' + self.src
+                 self.hash_val + ' ' + \
+                 locations.clean_path(self.src,absolute=True)
         # TODO: use some locks to make this thread-safe for future
         # versions of SALVE supporting parallelism
         with open(self.logfile,'a') as f:
@@ -175,27 +184,26 @@ class DirBackupAction(action.ActionList,BackupAction):
     verification_codes = \
         BackupAction.verification_codes.extend('NONEXISTENT_SOURCE')
 
-    def __init__(self, src, backup_dir, backup_log, context):
+    def __init__(self, src, context):
         """
         DirBackupAction constructor.
 
         Args:
             @src
             The dir to back up.
-            @backup_dir
-            The directory in which @src should be backed up.
-            @backup_log
-            A logfile, to which each of the backup actions' details will
-            be appended after execution.
             @context
-            The DirBackupAction's StreamContext of origin.
+            The SALVEContext.
         """
         # call both parent constructors so that all fields are in place
         # don't use super because it complicates argument passing
-        BackupAction.__init__(self,src,backup_dir,backup_log,context)
+        BackupAction.__init__(self,src,context)
         action.ActionList.__init__(self,[],context)
 
     def verify_can_exec(self):
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         if not os.path.exists(self.src):
             return self.verification_codes.NONEXISTENT_SOURCE
 
@@ -214,14 +222,15 @@ class DirBackupAction(action.ActionList,BackupAction):
                 self.src,file=sys.stderr)
             return
 
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
+
         # append a file backup for each file in @src
         for dirname,subdirs,files in os.walk(self.src):
             # for now, to keep it super-simple, we ignore empty dirs
             for f in files:
                 filename = os.path.join(dirname,f)
                 self.append(FileBackupAction(filename,
-                                             self.backup_dir,
-                                             self.logfile,
                                              self.context))
 
         action.ActionList.execute(self)

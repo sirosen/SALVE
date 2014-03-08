@@ -6,19 +6,23 @@ from os.path import dirname, join as pjoin
 import src.block.file_block
 import src.reader.parse as parse
 from src.reader.tokenize import Token
-from src.util.error import StreamContext
+from src.util.context import SALVEContext, ExecutionContext, StreamContext
+import src.util.locations as locations
 
 from tests.utils.exceptions import ensure_except
 
 _testfile_dir = pjoin(dirname(__file__),'files')
-dummy_context = StreamContext('no such file',-1)
+dummy_stream_context = StreamContext('no such file',-1)
+dummy_exec_context = ExecutionContext()
+dummy_context = SALVEContext(stream_context=dummy_stream_context,
+                             exec_context=dummy_exec_context)
 
 def parse_filename(filename):
     with open(filename) as f:
-        return parse.parse_stream(f)
+        return parse.parse_stream(dummy_context,f)
 
 def get_full_path(filename):
-    return pjoin(_testfile_dir,filename)
+    return locations.clean_path(pjoin(_testfile_dir,filename))
 
 def ensure_ParsingException(tokens=None,filename=None):
     if tokens and filename:
@@ -28,6 +32,7 @@ def ensure_ParsingException(tokens=None,filename=None):
     if tokens:
         e = ensure_except(parse.ParsingException,
                           parse.parse_tokens,
+                          dummy_context,
                           tokens)
     elif filename:
         e = ensure_except(parse.ParsingException,
@@ -36,7 +41,7 @@ def ensure_ParsingException(tokens=None,filename=None):
     else:
         assert False
     assert filename is None or \
-           e.context.filename == get_full_path(filename)
+           e.context.stream_context.filename == get_full_path(filename)
 
 @istest
 def invalid_block_id():
@@ -65,7 +70,7 @@ def empty_token_list():
     Checks that parsing an empty token list produces an empty list of
     blocks.
     """
-    assert len(parse.parse_tokens([])) == 0
+    assert len(parse.parse_tokens(dummy_context,[])) == 0
 
 @istest
 def unexpected_token():
@@ -120,7 +125,7 @@ def empty_block():
     file_id = Token('file',Token.types.IDENTIFIER,dummy_context)
     bs_tok = Token('{',Token.types.BLOCK_START,dummy_context)
     be_tok = Token('}',Token.types.BLOCK_END,dummy_context)
-    parse.parse_tokens([file_id,bs_tok,be_tok])
+    parse.parse_tokens(dummy_context,[file_id,bs_tok,be_tok])
 
 @istest
 def single_attr_block():
@@ -133,7 +138,8 @@ def single_attr_block():
     attr_id = Token('source',Token.types.IDENTIFIER,dummy_context)
     attr_val = Token('/tmp/txt',Token.types.TEMPLATE,dummy_context)
     be_tok = Token('}',Token.types.BLOCK_END,dummy_context)
-    blocks = parse.parse_tokens([file_id,bs_tok,
+    blocks = parse.parse_tokens(dummy_context,
+                                [file_id,bs_tok,
                                  attr_id,attr_val,
                                  be_tok])
     assert len(blocks) == 1
@@ -154,7 +160,8 @@ def multiple_attr_block():
     attr_id2 = Token('target',Token.types.IDENTIFIER,dummy_context)
     attr_val2 = Token('/tmp/txt2',Token.types.TEMPLATE,dummy_context)
     be_tok = Token('}',Token.types.BLOCK_END,dummy_context)
-    blocks = parse.parse_tokens([file_id,bs_tok,
+    blocks = parse.parse_tokens(dummy_context,
+                                [file_id,bs_tok,
                                  attr_id1,attr_val1,
                                  attr_id2,attr_val2,
                                  be_tok])

@@ -36,8 +36,7 @@ def unclosed_block_fails():
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
-        "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 4: " % rpath +\
+        "[PARSING] %s, line 4: " % rpath +\
         "Tokenizer ended in state BLOCK\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -56,8 +55,7 @@ def missing_open_fails():
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
-        "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 5: " % rpath +\
+        "[PARSING] %s, line 5: " % rpath +\
         "Unexpected token: } Expected BLOCK_START instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -76,8 +74,7 @@ def double_identifier_fails():
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
-        "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 5: " % rpath +\
+        "[PARSING] %s, line 5: " % rpath +\
         "Unexpected token: file Expected BLOCK_START instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -96,8 +93,7 @@ def missing_identifier_fails():
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
-        "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 3: " % rpath +\
+        "[PARSING] %s, line 3: " % rpath +\
         "Unexpected token: { Expected IDENTIFIER instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -116,8 +112,7 @@ def missing_value_fails():
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
-        "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 5: " % rpath +\
+        "[PARSING] %s, line 5: " % rpath +\
         "Unexpected token: } Expected TEMPLATE instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -136,8 +131,7 @@ def double_open_fails():
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
-        "Encountered a SALVE Exception of type TokenizationException"+\
-        "\n%s, line 3: " % rpath +\
+        "[PARSING] %s, line 3: " % rpath +\
         "Unexpected token: { Expected ['BLOCK_END', 'IDENTIFIER'] instead.\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code
@@ -156,8 +150,7 @@ def invalid_block_id_fails():
     (e,stderr) = except_from_args(argv)
 
     assert stderr.getvalue() ==\
-        "Encountered a SALVE Exception of type ParsingException"+\
-        "\n%s, line 7: " % rpath +\
+        "[PARSING] %s, line 7: " % rpath +\
         "Invalid block id invalid_block_id\n", \
         stderr.getvalue()
     assert e.code == 1, "incorrect error code: %d" % e.code

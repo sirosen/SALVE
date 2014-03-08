@@ -13,6 +13,7 @@ import src.block.base
 import src.util.locations as locations
 
 from tests.unit.block.block_test import _dummy_conf, get_full_path
+from src.util.context import SALVEContext, ExecutionContext
 
 @istest
 def sourceless_manifest_to_action_error():
@@ -21,7 +22,8 @@ def sourceless_manifest_to_action_error():
     Verifies that a Manifest block raises a BlockException when
     converted to an action if the action attribute is unspecified.
     """
-    b = src.block.manifest_block.ManifestBlock()
+    ctx = SALVEContext(exec_context=ExecutionContext())
+    b = src.block.manifest_block.ManifestBlock(ctx)
     ensure_except(src.block.base.BlockException,b.to_action)
 
 @istest
@@ -31,7 +33,8 @@ def sourceless_manifest_expand_error():
     Verifies that a Manifest block raises a BlockException when paths
     are expanded if the source attribute is unspecified.
     """
-    b = src.block.manifest_block.ManifestBlock()
+    ctx = SALVEContext(exec_context=ExecutionContext())
+    b = src.block.manifest_block.ManifestBlock(ctx)
     ensure_except(src.block.base.BlockException,
                   b.expand_blocks,
                   locations.get_salve_root(),
@@ -44,7 +47,9 @@ def empty_manifest_expand():
     Verifies that a Manifest block with no sub-blocks expands without
     errors.
     """
-    b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid1.manifest'))
+    ctx = SALVEContext(exec_context=ExecutionContext())
+    b = src.block.manifest_block.ManifestBlock(ctx,
+        source=get_full_path('valid1.manifest'))
     b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 0
 
@@ -55,7 +60,9 @@ def recursive_manifest_error():
     Verifies that a Manifest block which includes itself raises a
     BlockException when expanded.
     """
-    b = src.block.manifest_block.ManifestBlock(source=get_full_path('invalid1.manifest'))
+    ctx = SALVEContext(exec_context=ExecutionContext())
+    b = src.block.manifest_block.ManifestBlock(ctx,
+        source=get_full_path('invalid1.manifest'))
     ensure_except(src.block.base.BlockException,
                   b.expand_blocks,
                   locations.get_salve_root(),
@@ -67,7 +74,9 @@ def sub_block_expand():
     Manifest Block SubBlock Expand
     Verifies that Manifest block expansion works normally.
     """
-    b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid2.manifest'))
+    ctx = SALVEContext(exec_context=ExecutionContext())
+    b = src.block.manifest_block.ManifestBlock(ctx,
+        source=get_full_path('valid2.manifest'))
     b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 2
     man_block = b.sub_blocks[0]
@@ -86,7 +95,12 @@ def sub_block_to_action():
     Verifies that Manifest block expansion followed by action
     conversion works normally.
     """
-    b = src.block.manifest_block.ManifestBlock(source=get_full_path('valid2.manifest'))
+    dummy_exec_context = ExecutionContext()
+    dummy_exec_context.set('backup_dir','/m/n')
+    dummy_exec_context.set('backup_log','/m/n.log')
+    dummy_context = SALVEContext(exec_context=dummy_exec_context)
+    b = src.block.manifest_block.ManifestBlock(dummy_context,
+        source=get_full_path('valid2.manifest'))
     b.expand_blocks(locations.get_salve_root(),_dummy_conf)
     assert len(b.sub_blocks) == 2
     man_block = b.sub_blocks[0]

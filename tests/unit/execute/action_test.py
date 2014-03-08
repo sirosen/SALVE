@@ -4,11 +4,14 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from src.util.error import StreamContext
+from src.util.context import SALVEContext, ExecutionContext, StreamContext
 
 import src.execute.action as action
 
-dummy_context = StreamContext('no such file',-1)
+dummy_stream_context = StreamContext('no such file',-1)
+dummy_exec_context = ExecutionContext()
+dummy_context = SALVEContext(stream_context=dummy_stream_context,
+                             exec_context=dummy_exec_context)
 
 @istest
 def action_is_abstract():

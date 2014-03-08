@@ -10,6 +10,8 @@ import shutil
 import src.execute.action as action
 import src.util.locations as locations
 
+from src.util.context import ExecutionContext
+
 class CreateAction(action.Action):
     """
     The base class for all CreateActions.
@@ -31,7 +33,7 @@ class CreateAction(action.Action):
             @dst
             The destination path (being copied to).
             @context
-            The StreamContext of origin.
+            The SALVEContext.
         """
         action.Action.__init__(self, context)
         self.dst = dst
@@ -48,7 +50,7 @@ class FileCreateAction(CreateAction):
             @dst
             Destination path.
             @context
-            StreamContext of action origin.
+            The SALVEContext.
         """
         CreateAction.__init__(self,dst,context)
 
@@ -61,6 +63,10 @@ class FileCreateAction(CreateAction):
         Ensures that the target file exists and is writable, or that
         it does not exist and is in a writable directory.
         """
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         def writable_target():
             """
             Checks if the target is in a writable directory.
@@ -96,6 +102,9 @@ class FileCreateAction(CreateAction):
                 self.dst,file=sys.stderr)
             return
 
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
+
         if not os.path.exists(self.dst):
             with open(self.dst,'w') as f: pass
 
@@ -111,7 +120,7 @@ class DirCreateAction(CreateAction):
             @dst
             Destination path.
             @context
-            StreamContext of action origin.
+            The SALVEContext.
         """
         CreateAction.__init__(self,dst,context)
 
@@ -123,6 +132,10 @@ class DirCreateAction(CreateAction):
         """
         Checks if the target dir already exists, or if its parent is writable.
         """
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         def writable_target():
             """
             Checks if the target is in a writable directory.
@@ -150,6 +163,9 @@ class DirCreateAction(CreateAction):
                   ": DirCreateWarning: Non-Writable target dir \"%s\"") % \
                 self.dst,file=sys.stderr)
             return
+
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
 
         # have to invoke this check because makedirs fails if the leaf
         # at the destination exists

@@ -15,18 +15,18 @@ class DirBlock(Block):
     A directory block describes an action performed on a directory.
     This includes creation, deletion, and copying from source.
     """
-    def __init__(self,context=None):
+    def __init__(self,context):
         """
         Directory Block constructor.
 
-        KWArgs:
+        Args:
             @context
-            The StreamContext of the block's initial identifier.
+            The SALVEContext for this block.
         """
         Block.__init__(self,Block.types.DIRECTORY,context)
-        for attr in ['backup_dir','backup_log','target','source']:
+        for attr in ['target','source']:
             self.path_attrs.add(attr)
-        for attr in ['backup_dir','backup_log','target']:
+        for attr in ['target']:
             self.min_attrs.add(attr)
 
     def _mkdir(self,dirname):
@@ -88,8 +88,6 @@ class DirBlock(Block):
         if not isinstance(act,action.ActionList):
             act = action.ActionList([act],self.context)
 
-        backup_dir = self.get('backup_dir')
-        backup_log = self.get('backup_log')
         # walk over all files and subdirs in the directory, creating
         # directories and copying files
         for d,subdirs,files in os.walk(self.get('source')):
@@ -112,13 +110,12 @@ class DirBlock(Block):
                              )
                 target_fname = os.path.join(target_dir,f)
                 backup_act = backup.FileBackupAction(target_fname,
-                                                     backup_dir,
-                                                     backup_log,
                                                      self.context)
                 copy_act = copy.FileCopyAction(fname,
                                                target_fname,
                                                self.context)
-                file_act = action.ActionList([backup_act,copy_act],self.context)
+                file_act = action.ActionList([backup_act,copy_act],
+                                             self.context)
                 act.append(file_act)
 
         if self.has('mode'):

@@ -9,6 +9,7 @@ import shutil
 
 import src.execute.action as action
 import src.util.ugo as ugo
+from src.util.context import ExecutionContext
 
 class ModifyAction(action.Action):
     """
@@ -27,7 +28,7 @@ class ModifyAction(action.Action):
             @target
             The path to the file or dir to modify.
             @context
-            The StreamContext of Action origin.
+            The SALVECOntext.
         """
         action.Action.__init__(self, context)
         self.target = target
@@ -52,7 +53,7 @@ class DirModifyAction(ModifyAction):
             If true, apply the modification to any contained files and
             dirs.
             @context
-            The StreamContext of Action origin.
+            The SALVEContext.
         """
         ModifyAction.__init__(self,target,context)
         self.recursive = recursive
@@ -79,13 +80,17 @@ class ChownAction(ModifyAction):
             @group
             The new group of @target.
             @context
-            The StreamContext of Action origin.
+            The SALVEContext.
         """
         ModifyAction.__init__(self,target,context)
         self.user = user
         self.group = group
 
     def verify_can_exec(self):
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         if not os.path.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
@@ -118,12 +123,16 @@ class ChmodAction(ModifyAction):
             @mode
             The new umask of @target.
             @context
-            The StreamContext of Action origin.
+            The SALVEContext.
         """
         ModifyAction.__init__(self,target,context)
         self.mode = int(mode,8)
 
     def verify_can_exec(self):
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         # a nonexistent file or dir can never be chmoded
         if not os.path.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
@@ -154,7 +163,7 @@ class FileChownAction(ChownAction):
             @group
             The new group of @target.
             @context
-            The StreamContext of Action origin.
+            The SALVEContext.
         """
         ChownAction.__init__(self,target,user,group,context)
 
@@ -186,6 +195,9 @@ class FileChownAction(ChownAction):
         if vcode == self.verification_codes.SKIP_EXEC:
             return
 
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
+
         # chown without following symlinks
         # lchown works on non-symlink files as well
         os.lchown(self.target,ugo.name_to_uid(self.user),
@@ -205,7 +217,7 @@ class FileChmodAction(ChmodAction):
             @mode
             The new umask of @target.
             @context
-            The StreamContext of Action origin.
+            The SALVEContext.
         """
         ChmodAction.__init__(self,target,mode,context)
 
@@ -233,13 +245,17 @@ class FileChmodAction(ChmodAction):
                 self.target,file=sys.stderr)
             return
 
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
+
         os.chmod(self.target,self.mode)
 
 class DirChownAction(ChownAction,DirModifyAction):
     """
     A ChownAction applied to a directory.
     """
-    def __init__(self, target, user, group, context, recursive=False):
+    def __init__(self, target, user, group, context,
+                 recursive=False):
         """
         DirChownAction constructor.
 
@@ -251,7 +267,7 @@ class DirChownAction(ChownAction,DirModifyAction):
             @group
             The new group of @target.
             @context
-            The StreamContext of Action origin.
+            The SALVEContext.
 
         KWArgs:
             @recursive
@@ -269,6 +285,10 @@ class DirChownAction(ChownAction,DirModifyAction):
                ",context="+str(self.context)+")"
 
     def verify_can_exec(self):
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         if not os.access(self.target,os.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
@@ -306,6 +326,9 @@ class DirChownAction(ChownAction,DirModifyAction):
             # chown without following symlinks
             os.lchown(self.target,uid,gid)
 
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
+
         if self.recursive:
             for directory,subdirs,files in os.walk(self.target):
                 # chown on all subdirectories
@@ -342,7 +365,7 @@ class DirChmodAction(ChmodAction,DirModifyAction):
             @mode
             The new umask of @target.
             @context
-            The StreamContext of Action origin.
+            The SALVEContext.
 
         KWArgs:
             @recursive
@@ -360,6 +383,10 @@ class DirChmodAction(ChmodAction,DirModifyAction):
                ",context="+str(self.context)+")"
 
     def verify_can_exec(self):
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+
         if not os.access(self.target,os.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
@@ -390,6 +417,9 @@ class DirChmodAction(ChmodAction,DirModifyAction):
                 ": DirChmodWarning: Unowned target dir \"%s\"") % \
                 self.target,file=sys.stderr)
             return
+
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
 
         os.chmod(self.target,self.mode)
 
