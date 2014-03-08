@@ -88,6 +88,9 @@ def clean_path(path,absolute=False):
     if absolute:
         path = os.path.abspath(path)
     else:
-        path = os.path.relpath(path,'.')
+        # use a relative path if it is shorter
+        rpath = os.path.relpath(path,'.')
+        if len(rpath) < len(path):
+            path = rpath
 
     return os.path.normpath(path)

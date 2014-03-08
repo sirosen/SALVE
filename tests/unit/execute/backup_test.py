@@ -210,3 +210,20 @@ def dir_execute():
     assert get_full_path('dir1/a') in seen_files
     assert get_full_path('dir1/b') in seen_files
     assert get_full_path('dir1/inner_dir1/.abc') in seen_files
+
+@istest
+def dir_verify_no_source():
+    """
+    Directory Backup Action Verify (No Source)
+    Verifies that verification of a DirBackupAction identifies missing
+    source dir.
+    """
+    dirname = get_full_path('no such dir')
+    act = backup.DirBackupAction(dirname,dummy_context)
+    # check this here so that we abort the test if this condition is
+    # unsatisfied, rather than starting to actually perform actions
+    for subact in act.actions:
+        assert isinstance(subact,backup.FileBackupAction)
+
+    assert act.verify_can_exec() ==\
+        backup.DirBackupAction.verification_codes.NONEXISTENT_SOURCE

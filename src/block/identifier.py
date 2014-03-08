@@ -42,4 +42,4 @@ def block_from_identifier(context,id_token):
         return identifier_map[val](ctx)
     except KeyError:
         raise BlockException('Unknown block identifier ' + val, ctx)
-    except: raise
+    except: raise #pragma: no cover

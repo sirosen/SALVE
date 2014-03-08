@@ -104,11 +104,17 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
             # isn't writable, then the dir can't be written
             return False
 
+        def existant_source():
+            return os.access(self.src,os.F_OK)
+
         def readable_source():
             """
             Checks if the source is a readable file.
             """
             return os.access(self.src,os.R_OK)
+
+        if not existant_source():
+            return self.verification_codes.NONEXISTENT_SOURCE
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE

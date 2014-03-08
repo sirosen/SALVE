@@ -71,9 +71,9 @@ class SALVEContext(object):
     def shallow_copy(self):
         new = SALVEContext()
         if self.has_context(self.ctx_types.STREAM):
-            new.set_context(self.stream_context)
+            new.stream_context = self.stream_context
         if self.has_context(self.ctx_types.EXEC):
-            new.set_context(self.exec_context)
+            new.exec_context = self.exec_context
         return new
 
     def __str__(self):
