@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from ConfigParser import ConfigParser
+import ConfigParser
 
 import os
 import string
@@ -8,6 +8,8 @@ import string
 import src.block.manifest_block
 import src.util.locations as locations
 import src.util.ugo as ugo
+
+from src.util.error import SALVEException
 import src.util.log as log
 
 from src.util.context import context_types, ExecutionContext
@@ -15,7 +17,7 @@ from src.util.context import context_types, ExecutionContext
 SALVE_ENV_PREFIX = 'SALVE_'
 
 
-class SALVEConfigParser(ConfigParser):
+class SALVEConfigParser(ConfigParser.ConfigParser):
     """
     The SALVE configuration parser.
     Loads default values, then attempts to look up
@@ -35,7 +37,7 @@ class SALVEConfigParser(ConfigParser):
             The name of a specific config file to load.
         """
         # create a config parser
-        ConfigParser.__init__(self)
+        ConfigParser.ConfigParser.__init__(self)
 
         # first read the defaults
         # either read the user's rc file, if not given a filename
@@ -73,8 +75,6 @@ class SALVEConfig(object):
             should be used without any supplement.
         """
         assert context.has_context(context_types.EXEC)
-        # transition to the config reading phase
-        context.transition(ExecutionContext.phases.CONFIG_LOADING)
         # store a ref to the exec context in the config
         self.context = context
 
@@ -102,7 +102,10 @@ class SALVEConfig(object):
 
         # read the configuration, taking ~userhome/.salverc if there is
         # no file
-        conf = SALVEConfigParser(userhome,filename)
+        try:
+            conf = SALVEConfigParser(userhome,filename)
+        except ConfigParser.Error as e:
+            raise SALVEException('Encountered an error while parsing your configuration file(s).\n%s' % e.message,context)
         sections = conf.sections()
         # the loaded configuration is stored in the config object as a
         # dict mapping section names to a dict of (key,value) items

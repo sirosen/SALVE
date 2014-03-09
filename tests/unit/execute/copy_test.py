@@ -102,48 +102,48 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert fcp.verify_can_exec() == fcp.verification_codes.UNREADABLE_SOURCE
 
-@istest
-def filecopy_to_str():
-    """
-    File Copy Action String Conversion
-    """
-    fcp = copy.FileCopyAction('a',
-                              'b/c',
-                              dummy_context)
-
-    assert str(fcp) == 'FileCopyAction(src=a,dst=b/c,context='+\
-                       str(dummy_context)+')'
-
-@istest
-def dircopy_to_str():
-    """
-    Directory Copy Action String Conversion
-    """
-    dcp = copy.DirCopyAction('a',
-                             'b/c',
-                             dummy_context)
-
-    assert str(dcp) == 'DirCopyAction(src=a,dst=b/c,context='+\
-                       str(dummy_context)+')'
-
-@istest
-def dircopy_execute():
-    """
-    Directory Copy Action Execution
-    """
-    log = {
-        'mock_cp': None
-    }
-    def mock_copytree(src,dst,symlinks=None):
-        log['mock_cp'] = (src,dst,symlinks)
-    def mock_name_to_uid(username): return 1
-    def mock_name_to_gid(groupname): return 2
-
-    with mock.patch('shutil.copytree',mock_copytree), \
-         mock.patch('os.access', lambda x,y: True):
-        dcp = copy.DirCopyAction('a',
+    @istest
+    def filecopy_to_str(self):
+        """
+        File Copy Action String Conversion
+        """
+        fcp = copy.FileCopyAction('a',
                                   'b/c',
                                   dummy_context)
-        dcp()
 
-    assert log['mock_cp'] == ('a','b/c',True)
+        assert str(fcp) == 'FileCopyAction(src=a,dst=b/c,context='+\
+                           str(dummy_context)+')'
+
+    @istest
+    def dircopy_to_str(self):
+        """
+        Directory Copy Action String Conversion
+        """
+        dcp = copy.DirCopyAction('a',
+                                 'b/c',
+                                 dummy_context)
+
+        assert str(dcp) == 'DirCopyAction(src=a,dst=b/c,context='+\
+                           str(dummy_context)+')'
+
+    @istest
+    def dircopy_execute(self):
+        """
+        Directory Copy Action Execution
+        """
+        log = {
+            'mock_cp': None
+        }
+        def mock_copytree(src,dst,symlinks=None):
+            log['mock_cp'] = (src,dst,symlinks)
+        def mock_name_to_uid(username): return 1
+        def mock_name_to_gid(groupname): return 2
+
+        with mock.patch('shutil.copytree',mock_copytree), \
+             mock.patch('os.access', lambda x,y: True):
+            dcp = copy.DirCopyAction('a',
+                                      'b/c',
+                                      dummy_context)
+            dcp()
+
+        assert log['mock_cp'] == ('a','b/c',True)

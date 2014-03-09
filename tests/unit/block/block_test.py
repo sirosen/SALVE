@@ -22,9 +22,11 @@ def mock_expanduser(string):
 
 _dummy_conf = None
 with mock.patch('os.path.expanduser',mock_expanduser):
+    dummy_exec_context=ExecutionContext()
     _dummy_conf = src.settings.config.SALVEConfig(
-        SALVEContext(exec_context=ExecutionContext())
+        SALVEContext(exec_context=dummy_exec_context)
         )
+    dummy_exec_context.set('log_level',set())
 
 @istest
 def block_is_abstract():

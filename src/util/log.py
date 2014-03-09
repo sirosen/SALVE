@@ -42,13 +42,12 @@ def salve_log(message,type,context,print_context=True):
     if ectx.has('run_log'):
         target = context.exec_context.get('run_log')
 
+    # if log_level is not set, treat it as 'ALL'
     if ectx.has('log_level'):
         # short-circuit our way out of logging if we are specifying a type
         # not in the enabled log_levels
         if type not in ectx.get('log_level'):
             return
-    # if log_level is not set, suppress all logging
-    else: return
 
     # if print_context is true, prepend it to the message with a colon separator
     # otherwise, it will be omitted

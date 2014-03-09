@@ -32,8 +32,8 @@ class ExecutionContext(object):
     Identifies the phase of execution, and carries any global or shared data
     from phase to phase.
     """
-    phases = Enum('STARTUP','CONFIG_LOADING','PARSING',
-                  'ACTION_CONVERSION','VERIFICATION','EXECUTION')
+    phases = Enum('STARTUP','PARSING','ACTION_CONVERSION','VERIFICATION',
+                  'EXECUTION')
 
     def __init__(self,startphase=phases.STARTUP):
         self.phase = startphase
