@@ -8,8 +8,9 @@ import string
 import src.block.manifest_block
 import src.util.locations as locations
 import src.util.ugo as ugo
+import src.util.log as log
 
-from src.util.context import ExecutionContext
+from src.util.context import context_types, ExecutionContext
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -60,13 +61,18 @@ class SALVEConfig(object):
         """
         SALVEConfig constructor.
 
+        Args:
+            @context
+            The SALVEContext, which must contain an execution
+            context for phase tracking and globals.
+
         KWArgs:
             @filename
             The specific config file to create Config from. Defaults to
             None, which indicates that the defaults and ~/.salverc
             should be used without any supplement.
         """
-        assert context.exec_context is not None
+        assert context.has_context(context_types.EXEC)
         # transition to the config reading phase
         context.transition(ExecutionContext.phases.CONFIG_LOADING)
         # store a ref to the exec context in the config
@@ -107,17 +113,22 @@ class SALVEConfig(object):
                                      in conf.items(s)))
                                for s in sections)
 
+        self._apply_environment_overrides()
+
+        self._set_context_globals()
+
+    def _apply_environment_overrides(self):
         # Grab all of the mappings from the environment that
         # start with the SALVE prefix and are uppercase
         # prevents XYz=a and XYZ=b from being ambiguous
-        salve_env = dict((k,os.environ[k]) for k in os.environ
+        salve_env = dict((k,self.env[k]) for k in self.env
                           if k.startswith(SALVE_ENV_PREFIX)
                              and k.isupper())
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
         prefixes = {(SALVE_ENV_PREFIX + s.upper()):s
-                    for s in sections}
+                    for s in self.attributes}
 
         for key in salve_env:
             for p in prefixes:
@@ -129,10 +140,30 @@ class SALVEConfig(object):
                     subkey = key[len(p)+1:].lower()
                     subdict[subkey] = salve_env[key]
 
+    def _set_context_globals(self):
+        ctx = self.context.exec_context
         # set globals in the execution context as shared variables
         for key in self.attributes['global']:
-            val = self.attributes['global'][key]
-            self.context.exec_context.set(key,self.template(val))
+            # do templating to the string value to put environment
+            # variables in place
+            val = self.template(self.attributes['global'][key])
+
+            # special handling for the run_log
+            # convert to a file open in 'w' mode
+            if key == 'run_log':
+                try: val = open(val,'w')
+                except: raise
+
+            # special handling for the log_level
+            # convert to a set of strings
+            if key == 'log_level':
+                val = set(t.strip() for t in val.split(','))
+                # if all appears in the set, replace it with the set of all
+                # defined log types
+                if 'ALL' in val:
+                    val = set(log.log_types)
+
+            ctx.set(key,val)
 
     def template(self, template_string):
         """

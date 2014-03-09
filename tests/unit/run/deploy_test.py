@@ -20,6 +20,7 @@ from src.util.context import SALVEContext, ExecutionContext, StreamContext
 def generate_dummy_context(phase=ExecutionContext.phases.STARTUP):
     dummy_stream_context = StreamContext('no such file',-1)
     dummy_exec_context = ExecutionContext(startphase=phase)
+    dummy_exec_context.set('log_level',set(('WARN','ERROR')))
     return SALVEContext(stream_context=dummy_stream_context,
                         exec_context=dummy_exec_context)
 
@@ -102,7 +103,7 @@ def deploy_salve_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[STARTUP] no such file, line -1: message string\n'
+    assert stderr_out == '[ERROR] [STARTUP] no such file, line -1: message string\n'
 
 @istest
 def deploy_block_exception():
@@ -137,7 +138,7 @@ def deploy_block_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[PARSING] no such file, line -1: message string\n'
+    assert stderr_out == '[ERROR] [PARSING] no such file, line -1: message string\n'
 
 @istest
 def deploy_action_exception():
@@ -174,7 +175,7 @@ def deploy_action_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[ACTION_CONVERSION] no such file, line -1: message string\n', stderr_out
+    assert stderr_out == '[ERROR] [ACTION_CONVERSION] no such file, line -1: message string\n', stderr_out
 
 @istest
 def deploy_tokenization_exception():
@@ -210,7 +211,7 @@ def deploy_tokenization_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[PARSING] no such file, line -1: message string\n',stderr_out
+    assert stderr_out == '[ERROR] [PARSING] no such file, line -1: message string\n',stderr_out
 
 @istest
 def deploy_parsing_exception():
@@ -246,7 +247,7 @@ def deploy_parsing_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[PARSING] no such file, line -1: message string\n', stderr_out
+    assert stderr_out == '[ERROR] [PARSING] no such file, line -1: message string\n', stderr_out
 
 @istest
 def deploy_unexpected_exception():

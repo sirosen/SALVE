@@ -92,7 +92,7 @@ def salvectx_has_streamctx():
     """
     stream_ctx = context.StreamContext('p/q',2)
     ctx = context.SALVEContext(stream_context=stream_ctx)
-    assert ctx.has_context(context.SALVEContext.ctx_types.STREAM)
+    assert ctx.has_context(context.context_types.STREAM)
 
 @istest
 def salvectx_not_has_streamctx():
@@ -101,7 +101,7 @@ def salvectx_not_has_streamctx():
     Tests the has_context() check for a SALVEContext without a StreamContext.
     """
     ctx = context.SALVEContext()
-    assert not ctx.has_context(context.SALVEContext.ctx_types.STREAM)
+    assert not ctx.has_context(context.context_types.STREAM)
 
 @istest
 def salvectx_has_execctx():
@@ -112,7 +112,7 @@ def salvectx_has_execctx():
     exec_ctx = context.ExecutionContext(
         startphase=context.ExecutionContext.phases.STARTUP)
     ctx = context.SALVEContext(exec_context=exec_ctx)
-    assert ctx.has_context(context.SALVEContext.ctx_types.EXEC)
+    assert ctx.has_context(context.context_types.EXEC)
 
 @istest
 def salvectx_not_has_execctx():
@@ -121,7 +121,7 @@ def salvectx_not_has_execctx():
     Tests the has_context() check for a SALVEContext without an ExecutionContext.
     """
     ctx = context.SALVEContext()
-    assert not ctx.has_context(context.SALVEContext.ctx_types.EXEC)
+    assert not ctx.has_context(context.context_types.EXEC)
 
 @istest
 def salvectx_not_has_invalidctx():

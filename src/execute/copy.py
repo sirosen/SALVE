@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-
 import sys
 import abc
 import os
@@ -10,6 +8,7 @@ import shutil
 import src.execute.action as action
 import src.util.enum as enum
 
+import src.util.log as log
 from src.util.context import ExecutionContext
 
 class CopyAction(action.Action):
@@ -121,17 +120,20 @@ class FileCopyAction(CopyAction):
         vcode = self.verify_can_exec()
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            print((str(self.context)+": FileCopyWarning: Non-Writable target file \"%s\"") % \
-                self.dst,file=sys.stderr)
+            logstr = "FileCopy: Non-Writable target file \"%s\"" % self.dst
+            log.warn(logstr,self.context)
             return
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
-            print((str(self.context)+": FileCopyWarning: Non-Readable source file \"%s\"") % \
-                self.src,file=sys.stderr)
+            logstr = "FileCopy: Non-Readable source file \"%s\"" % self.src
+            log.warn(logstr,self.context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
+
+        log.info('Performing File Copy \"%s\" -> \"%s\"' % (self.src,self.dst),
+                 self.context)
 
         if os.path.islink(self.src):
             os.symlink(os.readlink(self.src),self.dst)
@@ -187,11 +189,14 @@ class DirCopyAction(CopyAction):
         vcode = self.verify_can_exec()
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            print((str(self.context)+": DirCopyWarning: Non-Writable target directory \"%s\"") % \
-                self.dst,file=sys.stderr)
+            logstr = "DirCopy: Non-Writable target directory \"%s\"" % self.dst
+            log.warn(logstr,self.context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
+
+        log.info('Performing Directory Copy \"%s\" -> \"%s\"' % (self.src,self.dst),
+                 self.context)
 
         shutil.copytree(self.src,self.dst,symlinks=True)

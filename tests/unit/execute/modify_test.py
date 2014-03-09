@@ -19,6 +19,7 @@ def get_full_path(filename):
 dummy_stream_context = StreamContext('no such file',-1)
 dummy_exec_context = ExecutionContext(
     startphase=ExecutionContext.phases.EXECUTION)
+dummy_exec_context.set('log_level',set(('WARN','ERROR')))
 dummy_context = SALVEContext(stream_context=dummy_stream_context,
                              exec_context=dummy_exec_context)
 
@@ -60,7 +61,7 @@ def filechmod_execute_nonowner():
 
     assert log['chmod'] is None
     assert fake_stderr.getvalue() == \
-        '[VERIFICATION] no such file, line -1: FileChmodWarning: Unowned target file "a"\n'
+        '[WARN] [VERIFICATION] no such file, line -1: FileChmod: Unowned target file "a"\n'
 
 @istest
 def filechown_to_str():
@@ -201,7 +202,7 @@ def dirchown_execute_nonroot():
 
     assert len(lchown_args) == 0
     assert fake_stderr.getvalue() == \
-        '[EXECUTION] no such file, line -1: DirChownWarning: Cannot Chown as Non-Root User\n'
+        '[WARN] [EXECUTION] no such file, line -1: DirChown: Cannot Chown as Non-Root User\n'
 
 @istest
 def dirchmod_recursive_execute():
@@ -255,7 +256,7 @@ def dirchmod_execute_nonowner():
 
     assert len(chmod_args) == 0
     assert fake_stderr.getvalue() == \
-        '[EXECUTION] no such file, line -1: DirChmodWarning: Unowned target dir "a"\n'
+        '[WARN] [EXECUTION] no such file, line -1: DirChmod: Unowned target dir "a"\n'
 
 @istest
 def dirchown_execute_nonrecursive():
@@ -321,7 +322,7 @@ def dirchown_execute_nonrecursive_nonroot():
 
     assert len(lchown_args) == 0
     assert fake_stderr.getvalue() == \
-        '[EXECUTION] no such file, line -1: DirChownWarning: Cannot Chown as Non-Root User\n'
+        '[WARN] [EXECUTION] no such file, line -1: DirChown: Cannot Chown as Non-Root User\n'
 
 @istest
 def dirchmod_execute_nonrecursive_nonroot_nonowner():
@@ -344,4 +345,4 @@ def dirchmod_execute_nonrecursive_nonroot_nonowner():
 
     assert len(chmod_args) == 0
     assert fake_stderr.getvalue() == \
-        '[EXECUTION] no such file, line -1: DirChmodWarning: Unowned target dir "a"\n'
+        '[WARN] [EXECUTION] no such file, line -1: DirChmod: Unowned target dir "a"\n'

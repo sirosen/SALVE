@@ -2,6 +2,7 @@
 
 import os
 
+import src.util.log as log
 import src.execute.action as action
 import src.execute.backup as backup
 import src.execute.copy as copy
@@ -39,6 +40,8 @@ class FileBlock(Block):
         'touch -a'. If it is a copy action, this is a file copy preceded
         by an attempt to back up the file being overwritten.
         """
+        log.info('Converting FileBlock to FileAction',self.context)
+
         self.ensure_has_attrs('action')
 
         def ensure_abspath_attrs(*args):

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import src.util.log as log
 import src.block.identifier
 from src.util.streams import get_filename
 from src.util.error import SALVEException
@@ -36,6 +37,8 @@ def parse_tokens(context,tokens):
         Unordered iterables won't work here, as parsing is very
         sensitive to token ordering.
     """
+    log.info('Beginning Parse of Token Stream',context)
+
     blocks = []
     def unexpected_token(token,expected_types):
         raise ParsingException('Invalid token.' +\
@@ -94,6 +97,8 @@ def parse_tokens(context,tokens):
         # that triggers it
         raise ParsingException('Incomplete block in token stream!',
             current_block.context)
+
+    log.info('Finished Parsing Token Stream',context)
 
     return blocks
 

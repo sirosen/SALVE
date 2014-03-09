@@ -6,11 +6,37 @@ import shutil
 
 import mock
 import StringIO
+import textwrap
 
 import src.util.locations as locations
 
 
 class ScratchContainer(object):
+    default_settings_content = textwrap.dedent(
+        """
+        [global]
+        backup_dir=$HOME/backups
+        backup_log=$HOME/backup.log
+
+        log_level=ERROR
+        # run_log=$HOME/.salve/run_log
+
+        [default]
+        user=$USER # an inline comment
+        group=$SALVE_USER_PRIMARY_GROUP'
+
+        [file]
+        action=copy
+        mode=600
+
+        [directory]
+        action=copy
+        mode=755
+
+        [manifest]
+        """
+    )
+
     def mock_env(self):
         mock_env = {
             'SUDO_USER': 'user1',
@@ -33,29 +59,8 @@ class ScratchContainer(object):
             else:
                 return real_expanduser(path)
 
-        settings_content = (
-"""
-[global]
-backup_dir=$HOME/backups
-backup_log=$HOME/backup.log
-
-[default]
-user=$USER # an inline comment
-group=$SALVE_USER_PRIMARY_GROUP'
-
-[file]
-action=copy
-mode=600
-
-[directory]
-action=copy
-mode=755
-
-[manifest]
-"""
-        )
         settings_loc = os.path.join(mock_env['HOME'],'settings.ini')
-        self.write_file(settings_loc,settings_content)
+        self.write_file(settings_loc,self.default_settings_content)
         real_open = open
         def mock_open(path,*args,**kwargs):
             if os.path.abspath(path) == locations.get_default_config():

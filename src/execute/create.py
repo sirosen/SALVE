@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-
 import abc
 import os
 import sys
@@ -10,6 +8,7 @@ import shutil
 import src.execute.action as action
 import src.util.locations as locations
 
+import src.util.log as log
 from src.util.context import ExecutionContext
 
 class CreateAction(action.Action):
@@ -98,12 +97,14 @@ class FileCreateAction(CreateAction):
         vcode = self.verify_can_exec()
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            print((str(self.context)+": FileCreateWarning: Non-Writable target file \"%s\"") % \
-                self.dst,file=sys.stderr)
+            logstr = "FileCreate: Non-Writable target file \"%s\"" % self.dst
+            log.warn(logstr,self.context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
+
+        log.info('Performing File Creation of \"%s\"' % self.dst,self.context)
 
         if not os.path.exists(self.dst):
             with open(self.dst,'w') as f: pass
@@ -159,13 +160,14 @@ class DirCreateAction(CreateAction):
         vcode = self.verify_can_exec()
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            print((str(self.context)+ \
-                  ": DirCreateWarning: Non-Writable target dir \"%s\"") % \
-                self.dst,file=sys.stderr)
+            logstr = "DirCreate: Non-Writable target dir \"%s\"" % self.dst
+            log.warn(logstr,self.context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
+
+        log.info('Performing Directory Creation of \"%s\"' % self.dst,self.context)
 
         # have to invoke this check because makedirs fails if the leaf
         # at the destination exists
