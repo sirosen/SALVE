@@ -40,7 +40,7 @@ class FileBlock(Block):
         'touch -a'. If it is a copy action, this is a file copy preceded
         by an attempt to back up the file being overwritten.
         """
-        log.info('Converting FileBlock to FileAction',self.context)
+        log.info('Converting FileBlock to FileAction',self.context,min_verbosity=3)
 
         self.ensure_has_attrs('action')
 

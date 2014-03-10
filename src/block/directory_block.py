@@ -150,7 +150,7 @@ class DirBlock(Block):
         directory copy that creates the target directories and backs up
         any files that are being overwritten.
         """
-        log.info('Converting DirBlock to DirAction',self.context)
+        log.info('Converting DirBlock to DirAction',self.context,min_verbosity=3)
 
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will

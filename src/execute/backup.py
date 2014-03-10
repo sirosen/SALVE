@@ -114,11 +114,20 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
             """
             return os.access(self.src,os.R_OK)
 
+        log.info('FileBackup: Checking source existence, \"%s\"' % self.src,
+                 self.context,min_verbosity=3)
+
         if not existant_source():
             return self.verification_codes.NONEXISTENT_SOURCE
 
+        log.info('FileBackup: Checking source is readable, \"%s\"' % self.src,
+                 self.context,min_verbosity=3)
+
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
+
+        log.info('FileBackup: Checking destination is writable, \"%s\"' % self.dst,
+                 self.context,min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -150,7 +159,7 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing File Backup of \"%s\"' % self.src,self.context)
+        log.info('Performing File Backup of \"%s\"' % self.src,self.context,min_verbosity=1)
 
         # FIXME: change to EAFP style
         if not os.path.exists(self.dst): os.makedirs(self.dst)
@@ -207,6 +216,9 @@ class DirBackupAction(action.ActionList,BackupAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
+        log.info('DirBackup: Checking destination is writable, \"%s\"' % self.dst,
+                 self.context,min_verbosity=3)
+
         if not os.path.exists(self.src):
             return self.verification_codes.NONEXISTENT_SOURCE
 
@@ -228,7 +240,7 @@ class DirBackupAction(action.ActionList,BackupAction):
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing Directory Backup of \"%s\"' % self.src,self.context)
+        log.info('Performing Directory Backup of \"%s\"' % self.src,self.context,min_verbosity=1)
 
         # append a file backup for each file in @src
         for dirname,subdirs,files in os.walk(self.src):

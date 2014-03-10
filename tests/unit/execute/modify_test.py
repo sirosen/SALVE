@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import sys
 import mock
 import StringIO
 from nose.tools import istest
@@ -16,12 +17,15 @@ _testfile_dir = os.path.join(os.path.dirname(__file__),'files')
 def get_full_path(filename):
     return os.path.join(_testfile_dir,filename)
 
-dummy_stream_context = StreamContext('no such file',-1)
-dummy_exec_context = ExecutionContext(
-    startphase=ExecutionContext.phases.EXECUTION)
-dummy_exec_context.set('log_level',set(('WARN','ERROR')))
-dummy_context = SALVEContext(stream_context=dummy_stream_context,
-                             exec_context=dummy_exec_context)
+def generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.STARTUP):
+    with mock.patch.dict('src.settings.default_globals.defaults',
+                         {'run_log':fake_stderr}):
+        dummy_stream_context = StreamContext('no such file',-1)
+        dummy_exec_context = ExecutionContext(startphase=phase)
+        dummy_exec_context.set('log_level',set(('WARN','ERROR')))
+        return SALVEContext(stream_context=dummy_stream_context,
+                            exec_context=dummy_exec_context)
+
 
 class TestWithScratchdir(scratch.ScratchContainer):
     @istest
@@ -32,7 +36,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.write_file('a','')
         a_name = self.get_fullname('a')
 
-        act = modify.FileChownAction(a_name,'user1','nogroup',dummy_context)
+        ctx = generate_dummy_context(sys.stderr)
+
+        act = modify.FileChownAction(a_name,'user1','nogroup',ctx)
 
         log = { 'lchown' : None }
         def mock_lchown(f,uid,gid): log['lchown'] = (f,uid,gid)
@@ -48,12 +54,14 @@ def filechmod_execute_nonowner():
     """
     File Chmod Action Execute as Non-Owner
     """
-    act = modify.FileChmodAction('a','600',dummy_context)
-
     log = { 'chmod' : None }
     def mock_chmod(f,mode): log['chmod'] = (f,mode)
 
     fake_stderr = StringIO.StringIO()
+    ctx = generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.VERIFICATION)
+
+    act = modify.FileChmodAction('a','600',ctx)
+
     with mock.patch('src.execute.modify.FileChmodAction.verify_can_exec',
                     lambda self: self.verification_codes.UNOWNED_TARGET), \
          mock.patch('sys.stderr',fake_stderr):
@@ -68,48 +76,53 @@ def filechown_to_str():
     """
     File Chown Action String Conversion
     """
-    act = modify.FileChownAction('a','user1','nogroup',dummy_context)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.FileChownAction('a','user1','nogroup',ctx)
 
     assert str(act) == 'FileChownAction(target=a,user=user1,'+\
-                       'group=nogroup,context='+str(dummy_context)+')'
+                       'group=nogroup,context='+str(ctx)+')'
 
 @istest
 def filechmod_to_str():
     """
     File Chmod Action String Conversion
     """
-    act = modify.FileChmodAction('a','600',dummy_context)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.FileChmodAction('a','600',ctx)
 
     assert str(act) == 'FileChmodAction(target=a,mode=600,'+\
-                       'context='+str(dummy_context)+')'
+                       'context='+str(ctx)+')'
 
 @istest
 def dirchown_to_str():
     """
     Directory Chown Action String Conversion
     """
-    act = modify.DirChownAction('a','user1','nogroup',dummy_context)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.DirChownAction('a','user1','nogroup',ctx)
 
     assert str(act) == 'DirChownAction(target=a,user=user1,'+\
                        'group=nogroup,recursive=False,'+\
-                       'context='+str(dummy_context)+')'
+                       'context='+str(ctx)+')'
 
 @istest
 def dirchmod_to_str():
     """
     Directory Chmod Action String Conversion
     """
-    act = modify.DirChmodAction('a','600',dummy_context)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.DirChmodAction('a','600',ctx)
 
     assert str(act) == 'DirChmodAction(target=a,mode=600,'+\
-                       'recursive=False,context='+str(dummy_context)+')'
+                       'recursive=False,context='+str(ctx)+')'
 
 @istest
 def filechown_execute():
     """
     File Chown Action Execute
     """
-    act = modify.FileChownAction('a','user1','nogroup',dummy_context)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.FileChownAction('a','user1','nogroup',ctx)
 
     log = { 'lchown' : None }
     def mock_lchown(f,uid,gid): log['lchown'] = (f,uid,gid)
@@ -130,7 +143,8 @@ def filechmod_execute():
     """
     File Chmod Action Execute
     """
-    act = modify.FileChmodAction('a','600',dummy_context)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.FileChmodAction('a','600',ctx)
 
     log = { 'chmod' : None }
     def mock_chmod(f,mode): log['chmod'] = (f,mode)
@@ -160,7 +174,8 @@ def dirchown_execute():
     def mock_lchown(f_or_d,uid,gid):
         lchown_args.append((f_or_d,uid,gid))
 
-    act = modify.DirChownAction('a','user1','nogroup',dummy_context,recursive=True)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.DirChownAction('a','user1','nogroup',ctx,recursive=True)
     with mock.patch('os.walk',mock_os_walk), \
          mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
          mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
@@ -169,7 +184,7 @@ def dirchown_execute():
          mock.patch('src.execute.modify.FileChownAction.verify_can_exec',
                     lambda x: modify.FileChownAction.verification_codes.OK), \
          mock.patch('os.lchown',mock_lchown):
-                    act()
+        act()
 
     assert len(lchown_args) == 8
     assert ('a',1,2) in lchown_args
@@ -192,7 +207,8 @@ def dirchown_execute_nonroot():
 
     fake_stderr = StringIO.StringIO()
 
-    act = modify.DirChownAction('a','user1','nogroup',dummy_context,recursive=True)
+    ctx = generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.EXECUTION)
+    act = modify.DirChownAction('a','user1','nogroup',ctx,recursive=True)
 
     with mock.patch('src.execute.modify.DirChownAction.verify_can_exec',
                     lambda x: modify.DirChownAction.verification_codes.NOT_ROOT), \
@@ -216,7 +232,8 @@ def dirchmod_recursive_execute():
     mock_stat_result = mock.Mock()
     mock_stat_result.st_uid = os.getuid()
 
-    act = modify.DirChmodAction('a','755',dummy_context,recursive=True)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.DirChmodAction('a','755',ctx,recursive=True)
     with mock.patch('os.walk',mock_os_walk), \
          mock.patch('src.execute.modify.DirChmodAction.verify_can_exec',
                     lambda x: modify.DirChmodAction.verification_codes.OK), \
@@ -246,7 +263,8 @@ def dirchmod_execute_nonowner():
         chmod_args.append((f_or_d,mode))
     fake_stderr = StringIO.StringIO()
 
-    act = modify.DirChmodAction('a','755',dummy_context,recursive=True)
+    ctx = generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.EXECUTION)
+    act = modify.DirChmodAction('a','755',ctx,recursive=True)
     with mock.patch('os.walk',mock_os_walk), \
          mock.patch('src.execute.modify.DirChmodAction.verify_can_exec',
                     lambda self: self.verification_codes.UNOWNED_TARGET), \
@@ -267,7 +285,8 @@ def dirchown_execute_nonrecursive():
     def mock_lchown(f_or_d,uid,gid):
         lchown_args.append((f_or_d,uid,gid))
 
-    act = modify.DirChownAction('a','user1','nogroup',dummy_context)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.DirChownAction('a','user1','nogroup',ctx)
     with mock.patch('os.walk',mock_os_walk), \
          mock.patch('src.util.ugo.name_to_uid',lambda x: 1), \
          mock.patch('src.util.ugo.name_to_gid',lambda x: 2), \
@@ -291,7 +310,8 @@ def dirchmod_execute_nonrecursive_owner():
     mock_stat_result = mock.Mock()
     mock_stat_result.st_uid = os.getuid()
 
-    act = modify.DirChmodAction('a','755',dummy_context)
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.DirChmodAction('a','755',ctx)
     with mock.patch('src.execute.modify.DirChmodAction.verify_can_exec',
                     lambda x: modify.DirChmodAction.verification_codes.OK), \
          mock.patch('os.chmod',mock_chmod):
@@ -312,7 +332,8 @@ def dirchown_execute_nonrecursive_nonroot():
 
     fake_stderr = StringIO.StringIO()
 
-    act = modify.DirChownAction('a','user1','nogroup',dummy_context)
+    ctx = generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.EXECUTION)
+    act = modify.DirChownAction('a','user1','nogroup',ctx)
     with mock.patch('src.execute.modify.DirChownAction.verify_can_exec',
                     lambda self: self.verification_codes.NOT_ROOT), \
          mock.patch('os.walk',mock_os_walk), \
@@ -335,14 +356,15 @@ def dirchmod_execute_nonrecursive_nonroot_nonowner():
 
     fake_stderr = StringIO.StringIO()
 
-    act = modify.DirChmodAction('a','755',dummy_context)
+    ctx = generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.EXECUTION)
+    act = modify.DirChmodAction('a','755',ctx)
+
     with mock.patch('src.execute.modify.DirChmodAction.verify_can_exec',
                     lambda x: modify.DirChmodAction.verification_codes.UNOWNED_TARGET), \
          mock.patch('os.walk',mock_os_walk), \
-         mock.patch('sys.stderr',fake_stderr), \
          mock.patch('os.chmod',mock_chmod):
         act()
 
     assert len(chmod_args) == 0
     assert fake_stderr.getvalue() == \
-        '[WARN] [EXECUTION] no such file, line -1: DirChmod: Unowned target dir "a"\n'
+        '[WARN] [EXECUTION] no such file, line -1: DirChmod: Unowned target dir "a"\n', fake_stderr.getvalue()

@@ -98,7 +98,7 @@ class ManifestBlock(Block):
         The action will always be an actionlist of the expansion of
         the manifest block's sub-blocks.
         """
-        log.info('Converting ManifestBlock to ActionList',self.context)
+        log.info('Converting ManifestBlock to ActionList',self.context,min_verbosity=3)
 
         # transition to the action conversion phase, converting
         # blocks into actions

@@ -166,6 +166,10 @@ class SALVEConfig(object):
                 if 'ALL' in val:
                     val = set(log.log_types)
 
+            # verbosity is an integer
+            if key == 'verbosity':
+                val = int(val)
+
             ctx.set(key,val)
 
     def template(self, template_string):

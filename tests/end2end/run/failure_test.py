@@ -17,8 +17,10 @@ def get_full_path(filename):
 
 def except_from_args(argv):
     stderr = StringIO.StringIO()
-    with mock.patch('sys.argv',argv):
-        with mock.patch('sys.stderr',stderr):
+    with mock.patch('sys.argv',argv), \
+         mock.patch('sys.stderr',stderr), \
+         mock.patch.dict('src.settings.default_globals.defaults',
+                         {'run_log':stderr}):
             e = ensure_except(SystemExit,src.run.command.run)
 
     return (e,stderr)

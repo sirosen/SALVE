@@ -37,7 +37,7 @@ def parse_tokens(context,tokens):
         Unordered iterables won't work here, as parsing is very
         sensitive to token ordering.
     """
-    log.info('Beginning Parse of Token Stream',context)
+    log.info('Beginning Parse of Token Stream',context,min_verbosity=2)
 
     blocks = []
     def unexpected_token(token,expected_types):
@@ -98,7 +98,7 @@ def parse_tokens(context,tokens):
         raise ParsingException('Incomplete block in token stream!',
             current_block.context)
 
-    log.info('Finished Parsing Token Stream',context)
+    log.info('Finished Parsing Token Stream',context,min_verbosity=2)
 
     return blocks
 

@@ -34,6 +34,9 @@ def run_on_manifest(root_manifest,context,args):
     if args.configfile: cfg_file = args.configfile
     conf = config.SALVEConfig(context,filename=cfg_file)
 
+    # must be done after config is loaded to have correct override behavior
+    if args.verbosity: context.exec_context.set('verbosity',args.verbosity)
+
     root_dir = locations.get_salve_root()
     if args.directory: root_dir = os.path.abspath(args.directory)
 

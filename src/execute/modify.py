@@ -90,13 +90,22 @@ class ChownAction(ModifyAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
+        log.info('Chown: Checking target exists, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
+
         if not os.path.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
+
+        log.info('Chown: Checking if execution can be skipped, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
 
         # if the chown would do nothing, give skip exec
         if ugo.name_to_uid(self.user) == os.stat(self.target).st_gid and \
            ugo.name_to_gid(self.group) == os.stat(self.target).st_gid:
             return self.verification_codes.SKIP_EXEC
+
+        log.info('Chown: Checking user is root',
+                 self.context,min_verbosity=3)
 
         if not ugo.is_root():
             return self.verification_codes.NOT_ROOT
@@ -132,13 +141,22 @@ class ChmodAction(ModifyAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
+        log.info('Chmod: Checking target exists, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
+
         # a nonexistent file or dir can never be chmoded
         if not os.path.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
+        log.info('Chmod: Checking if user is root',
+                 self.context,min_verbosity=3)
+
         # as root, you can always perform a chmod on existing files
         if ugo.is_root():
             return self.verification_codes.OK
+
+        log.info('Chmod: Checking if user is owner of target, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
 
         # now the file is known to exist and the user is not root
         if not ugo.is_owner(self.target):
@@ -196,7 +214,7 @@ class FileChownAction(ChownAction):
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
         log.info('Performing FileChown of \"%s\" to %s:%s' % \
-            (self.target,self.user,self.group),self.context)
+            (self.target,self.user,self.group),self.context,min_verbosity=1)
 
         # chown without following symlinks
         # lchown works on non-symlink files as well
@@ -247,7 +265,7 @@ class FileChmodAction(ChmodAction):
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
         log.info('Performing FileChmod of \"%s\" to %s' % \
-            (self.target,'{0:o}'.format(self.mode)),self.context)
+            (self.target,'{0:o}'.format(self.mode)),self.context,min_verbosity=1)
 
         os.chmod(self.target,self.mode)
 
@@ -290,12 +308,21 @@ class DirChownAction(ChownAction,DirModifyAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
+        log.info('DirChown: Checking target exists, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
+
         if not os.access(self.target,os.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
+
+        log.info('DirChown: Checking if execution can be skipped, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
 
         if os.stat(self.target).st_uid == ugo.name_to_uid(self.user) and \
             os.stat(self.target).st_gid == ugo.name_to_gid(self.group):
             return self.verification_codes.SKIP_EXEC
+
+        log.info('DirChown: Checking if user is root',
+                 self.context,min_verbosity=3)
 
         if not ugo.is_root():
             return self.verification_codes.NOT_ROOT
@@ -323,7 +350,7 @@ class DirChownAction(ChownAction,DirModifyAction):
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
         log.info('Performing DirChown of \"%s\" to %s:%s' % \
-            (self.target,self.user,self.group),self.context)
+            (self.target,self.user,self.group),self.context,min_verbosity=1)
 
         if vcode != self.verification_codes.SKIP_EXEC:
             uid = ugo.name_to_uid(self.user)
@@ -389,11 +416,20 @@ class DirChmodAction(ChmodAction,DirModifyAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
+        log.info('DirChmod: Checking if target exists, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
+
         if not os.access(self.target,os.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
+        log.info('DirChmod: Checking if user is root',
+                 self.context,min_verbosity=3)
+
         if ugo.is_root():
             return self.verification_codes.OK
+
+        log.info('DirChmod: Checking if user is target owner, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
 
         if not ugo.is_owner(self.target):
             return self.verification_codes.UNOWNED_TARGET
@@ -422,7 +458,7 @@ class DirChmodAction(ChmodAction,DirModifyAction):
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
         log.info('Performing DirChmod of \"%s\" to %s' % \
-            (self.target,'{0:o}'.format(self.mode)),self.context)
+            (self.target,'{0:o}'.format(self.mode)),self.context,min_verbosity=1)
 
         os.chmod(self.target,self.mode)
 

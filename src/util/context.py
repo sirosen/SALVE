@@ -3,6 +3,7 @@
 import src.util.locations as locations
 import src.util.log as log
 
+from src.settings.default_globals import apply_exec_context_defaults
 from src.util.enum import Enum
 
 context_types = Enum('STREAM','EXEC')
@@ -38,6 +39,7 @@ class ExecutionContext(object):
     def __init__(self,startphase=phases.STARTUP):
         self.phase = startphase
         self.vars = {}
+        apply_exec_context_defaults(self)
 
     def __str__(self):
         return self.phase
@@ -93,5 +95,6 @@ class SALVEContext(object):
         assert self.exec_context is not None
         if newphase != self.exec_context.phase:
             log.info('SALVE Execution Phase Transition [%s] -> [%s]' % \
-                (self.exec_context.phase,newphase),self,print_context=False)
+                (self.exec_context.phase,newphase),self,print_context=False,
+                min_verbosity=3)
             self.exec_context.transition(newphase)

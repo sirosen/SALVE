@@ -102,8 +102,14 @@ class FileCopyAction(CopyAction):
             """
             return os.access(self.src,os.R_OK)
 
+        log.info('FileCopy: Checking destination is writable, \"%s\"' % self.dst,
+                 self.context,min_verbosity=3)
+
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
+
+        log.info('FileCopy: Checking source is readable, \"%s\"' % self.src,
+                 self.context,min_verbosity=3)
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
@@ -133,7 +139,7 @@ class FileCopyAction(CopyAction):
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
         log.info('Performing File Copy \"%s\" -> \"%s\"' % (self.src,self.dst),
-                 self.context)
+                 self.context,min_verbosity=1)
 
         if os.path.islink(self.src):
             os.symlink(os.readlink(self.src),self.dst)
@@ -177,6 +183,9 @@ class DirCopyAction(CopyAction):
             """
             return os.access(os.path.dirname(self.dst),os.W_OK)
 
+        log.info('DirCopy: Checking target is writable, \"%s\"' % self.dst,
+                 self.context,min_verbosity=3)
+
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
 
@@ -197,6 +206,6 @@ class DirCopyAction(CopyAction):
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
         log.info('Performing Directory Copy \"%s\" -> \"%s\"' % (self.src,self.dst),
-                 self.context)
+                 self.context,min_verbosity=1)
 
         shutil.copytree(self.src,self.dst,symlinks=True)
