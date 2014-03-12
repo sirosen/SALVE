@@ -45,6 +45,14 @@ class Enum(object):
         """
         return x in self.enum_elems
 
+    def __iter__(self):
+        """
+        An iterator over the enum, yields the keys of the enum, rather than the
+        values.
+        """
+        for x in self.enum_elems:
+            yield x
+
     def add(self,*seq,**named):
         """
         Adds elements to the enum.

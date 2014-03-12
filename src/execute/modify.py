@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-
 import abc
 import os
 import sys
@@ -9,6 +7,7 @@ import shutil
 
 import src.execute.action as action
 import src.util.ugo as ugo
+import src.util.log as log
 from src.util.context import ExecutionContext
 
 class ModifyAction(action.Action):
@@ -91,13 +90,22 @@ class ChownAction(ModifyAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
+        log.info('Chown: Checking target exists, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
+
         if not os.path.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
+
+        log.info('Chown: Checking if execution can be skipped, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
 
         # if the chown would do nothing, give skip exec
         if ugo.name_to_uid(self.user) == os.stat(self.target).st_gid and \
            ugo.name_to_gid(self.group) == os.stat(self.target).st_gid:
             return self.verification_codes.SKIP_EXEC
+
+        log.info('Chown: Checking user is root',
+                 self.context,min_verbosity=3)
 
         if not ugo.is_root():
             return self.verification_codes.NOT_ROOT
@@ -133,13 +141,22 @@ class ChmodAction(ModifyAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
+        log.info('Chmod: Checking target exists, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
+
         # a nonexistent file or dir can never be chmoded
         if not os.path.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
+        log.info('Chmod: Checking if user is root',
+                 self.context,min_verbosity=3)
+
         # as root, you can always perform a chmod on existing files
         if ugo.is_root():
             return self.verification_codes.OK
+
+        log.info('Chmod: Checking if user is owner of target, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
 
         # now the file is known to exist and the user is not root
         if not ugo.is_owner(self.target):
@@ -181,14 +198,12 @@ class FileChownAction(ChownAction):
         vcode = self.verify_can_exec()
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            print((str(self.context)+\
-                ": FileChownWarning: Non-Existent target file \"%s\"") % \
-                self.target,file=sys.stderr)
+            logstr = "FileChown: Non-Existent target file \"%s\"" % self.target
+            log.warn(logstr,self.context)
             return
         if vcode == self.verification_codes.NOT_ROOT:
-            print(str(self.context)+\
-                ": FileChownWarning: Cannot Chown as Non-Root User",
-                file=sys.stderr)
+            logstr = "FileChown: Cannot Chown as Non-Root User"
+            log.warn(logstr,self.context)
             return
         # if verification says that we skip without performing any action
         # then there should be no warning message
@@ -197,6 +212,9 @@ class FileChownAction(ChownAction):
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
+
+        log.info('Performing FileChown of \"%s\" to %s:%s' % \
+            (self.target,self.user,self.group),self.context,min_verbosity=1)
 
         # chown without following symlinks
         # lchown works on non-symlink files as well
@@ -235,18 +253,19 @@ class FileChmodAction(ChmodAction):
         vcode = self.verify_can_exec()
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            print((str(self.context)+\
-                ": FileChmodWarning: Non-Existent target file \"%s\"") % \
-                self.target,file=sys.stderr)
+            logstr = "FileChmod: Non-Existent target file \"%s\"" % self.target
+            log.warn(logstr,self.context)
             return
         if vcode == self.verification_codes.UNOWNED_TARGET:
-            print((str(self.context)+\
-                ": FileChmodWarning: Unowned target file \"%s\"") % \
-                self.target,file=sys.stderr)
+            logstr = "FileChmod: Unowned target file \"%s\"" % self.target
+            log.warn(logstr,self.context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
+
+        log.info('Performing FileChmod of \"%s\" to %s' % \
+            (self.target,'{0:o}'.format(self.mode)),self.context,min_verbosity=1)
 
         os.chmod(self.target,self.mode)
 
@@ -289,12 +308,21 @@ class DirChownAction(ChownAction,DirModifyAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
+        log.info('DirChown: Checking target exists, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
+
         if not os.access(self.target,os.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
+
+        log.info('DirChown: Checking if execution can be skipped, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
 
         if os.stat(self.target).st_uid == ugo.name_to_uid(self.user) and \
             os.stat(self.target).st_gid == ugo.name_to_gid(self.group):
             return self.verification_codes.SKIP_EXEC
+
+        log.info('DirChown: Checking if user is root',
+                 self.context,min_verbosity=3)
 
         if not ugo.is_root():
             return self.verification_codes.NOT_ROOT
@@ -310,24 +338,25 @@ class DirChownAction(ChownAction,DirModifyAction):
         vcode = self.verify_can_exec()
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            print((str(self.context)+\
-                ": DirChownWarning: Non-Existent target dir \"%s\"") % \
-                self.target,file=sys.stderr)
+            logstr = "DirChown: Non-Existent target dir \"%s\"" % self.target
+            log.warn(logstr,self.context)
             return
         if vcode == self.verification_codes.NOT_ROOT:
-            print(str(self.context)+\
-                ": DirChownWarning: Cannot Chown as Non-Root User",
-                file=sys.stderr)
+            logstr = "DirChown: Cannot Chown as Non-Root User"
+            log.warn(logstr,self.context)
             return
+
+        # transition to the execution phase
+        self.context.transition(ExecutionContext.phases.EXECUTION)
+
+        log.info('Performing DirChown of \"%s\" to %s:%s' % \
+            (self.target,self.user,self.group),self.context,min_verbosity=1)
 
         if vcode != self.verification_codes.SKIP_EXEC:
             uid = ugo.name_to_uid(self.user)
             gid = ugo.name_to_gid(self.group)
             # chown without following symlinks
             os.lchown(self.target,uid,gid)
-
-        # transition to the execution phase
-        self.context.transition(ExecutionContext.phases.EXECUTION)
 
         if self.recursive:
             for directory,subdirs,files in os.walk(self.target):
@@ -387,11 +416,20 @@ class DirChmodAction(ChmodAction,DirModifyAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
+        log.info('DirChmod: Checking if target exists, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
+
         if not os.access(self.target,os.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
+        log.info('DirChmod: Checking if user is root',
+                 self.context,min_verbosity=3)
+
         if ugo.is_root():
             return self.verification_codes.OK
+
+        log.info('DirChmod: Checking if user is target owner, \"%s\"' % self.target,
+                 self.context,min_verbosity=3)
 
         if not ugo.is_owner(self.target):
             return self.verification_codes.UNOWNED_TARGET
@@ -407,19 +445,20 @@ class DirChmodAction(ChmodAction,DirModifyAction):
         vcode = self.verify_can_exec()
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            print((str(self.context)+\
-                ": DirChmodWarning: Non-Existent target dir \"%s\"") % \
-                self.target,file=sys.stderr)
+            logstr = "DirChmod: Non-Existent target dir \"%s\"" % self.target
+            log.warn(logstr,self.context)
             return
 
         if vcode == self.verification_codes.UNOWNED_TARGET:
-            print((str(self.context)+\
-                ": DirChmodWarning: Unowned target dir \"%s\"") % \
-                self.target,file=sys.stderr)
+            logstr = "DirChmod: Unowned target dir \"%s\"" % self.target
+            log.warn(logstr,self.context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
+
+        log.info('Performing DirChmod of \"%s\" to %s' % \
+            (self.target,'{0:o}'.format(self.mode)),self.context,min_verbosity=1)
 
         os.chmod(self.target,self.mode)
 

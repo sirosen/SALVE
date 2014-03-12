@@ -22,7 +22,7 @@ def sourceless_manifest_to_action_error():
     Verifies that a Manifest block raises a BlockException when
     converted to an action if the action attribute is unspecified.
     """
-    ctx = SALVEContext(exec_context=ExecutionContext())
+    ctx = _dummy_conf.context
     b = src.block.manifest_block.ManifestBlock(ctx)
     ensure_except(src.block.base.BlockException,b.to_action)
 
@@ -33,7 +33,7 @@ def sourceless_manifest_expand_error():
     Verifies that a Manifest block raises a BlockException when paths
     are expanded if the source attribute is unspecified.
     """
-    ctx = SALVEContext(exec_context=ExecutionContext())
+    ctx = _dummy_conf.context
     b = src.block.manifest_block.ManifestBlock(ctx)
     ensure_except(src.block.base.BlockException,
                   b.expand_blocks,
@@ -47,7 +47,7 @@ def empty_manifest_expand():
     Verifies that a Manifest block with no sub-blocks expands without
     errors.
     """
-    ctx = SALVEContext(exec_context=ExecutionContext())
+    ctx = _dummy_conf.context
     b = src.block.manifest_block.ManifestBlock(ctx,
         source=get_full_path('valid1.manifest'))
     b.expand_blocks(locations.get_salve_root(),_dummy_conf)
@@ -60,7 +60,7 @@ def recursive_manifest_error():
     Verifies that a Manifest block which includes itself raises a
     BlockException when expanded.
     """
-    ctx = SALVEContext(exec_context=ExecutionContext())
+    ctx = _dummy_conf.context
     b = src.block.manifest_block.ManifestBlock(ctx,
         source=get_full_path('invalid1.manifest'))
     ensure_except(src.block.base.BlockException,
@@ -74,7 +74,7 @@ def sub_block_expand():
     Manifest Block SubBlock Expand
     Verifies that Manifest block expansion works normally.
     """
-    ctx = SALVEContext(exec_context=ExecutionContext())
+    ctx = _dummy_conf.context
     b = src.block.manifest_block.ManifestBlock(ctx,
         source=get_full_path('valid2.manifest'))
     b.expand_blocks(locations.get_salve_root(),_dummy_conf)
@@ -98,6 +98,7 @@ def sub_block_to_action():
     dummy_exec_context = ExecutionContext()
     dummy_exec_context.set('backup_dir','/m/n')
     dummy_exec_context.set('backup_log','/m/n.log')
+    dummy_exec_context.set('log_level',set())
     dummy_context = SALVEContext(exec_context=dummy_exec_context)
     b = src.block.manifest_block.ManifestBlock(dummy_context,
         source=get_full_path('valid2.manifest'))

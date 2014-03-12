@@ -3,6 +3,7 @@
 import string
 import shlex
 
+import src.util.log as log
 from src.util.enum import Enum
 from src.util.error import SALVEException
 from src.util.context import SALVEContext, StreamContext
@@ -117,6 +118,7 @@ def tokenize_stream(context,stream):
     tokens = []
     state = states.FREE
 
+    log.info('Beginning Tokenization of \"%s\"' % filename,context,min_verbosity=2)
     tokenizer = shlex.shlex(stream,posix=True)
     # Basically, everything other than BLOCK_START or BLOCK_END
     # is okay here, we'll let the os library handle it later wrt
@@ -143,6 +145,8 @@ def tokenize_stream(context,stream):
     # get the first Maybe(Token)
     current = tokenizer.get_token()
     while current is not None:
+        # generate a new SALVEContext with the same exec_context (shared ref)
+        # but a new StreamContext
         ctx = SALVEContext(exec_context=context.exec_context,
                            stream_context=StreamContext(filename,tokenizer.lineno))
         # if we have not found a block, the expectation is that we will
@@ -189,5 +193,7 @@ def tokenize_stream(context,stream):
     if state is not states.FREE:
         raise TokenizationException('Tokenizer ended in state ' + \
                                      state,ctx)
+
+    log.info('Finished Tokenization of \"%s\"' % filename,context,min_verbosity=2)
 
     return tokens

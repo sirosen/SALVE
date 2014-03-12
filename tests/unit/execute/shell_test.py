@@ -19,6 +19,7 @@ class MockProcess(object):
 
 dummy_stream_context = StreamContext('no such file',-1)
 dummy_exec_context = ExecutionContext()
+dummy_exec_context.set('log_level',set())
 dummy_context = SALVEContext(stream_context=dummy_stream_context,
                              exec_context=dummy_exec_context)
 

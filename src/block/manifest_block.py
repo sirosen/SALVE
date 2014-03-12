@@ -2,6 +2,7 @@
 
 import os
 
+import src.util.log as log
 import src.execute.action as action
 
 from src.util.context import ExecutionContext
@@ -97,6 +98,8 @@ class ManifestBlock(Block):
         The action will always be an actionlist of the expansion of
         the manifest block's sub-blocks.
         """
+        log.info('Converting ManifestBlock to ActionList',self.context,min_verbosity=3)
+
         # transition to the action conversion phase, converting
         # blocks into actions
         self.context.transition(ExecutionContext.phases.ACTION_CONVERSION)

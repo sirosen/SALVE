@@ -7,6 +7,7 @@ import src.block.file_block
 import src.block.manifest_block
 import src.block.directory_block
 
+import src.util.log as log
 from src.util.context import SALVEContext
 
 # maps valid identifiers to block constructors
@@ -33,6 +34,9 @@ def block_from_identifier(context,id_token):
     if id_token.ty != Token.types.IDENTIFIER:
         raise BlockException('Cannot create block from non-identifier: '+str(id_token),
                              id_token.context.stream_context)
+
+    log.info('Generating Block From Identifier Token: ' + str(id_token),
+             context,min_verbosity=3)
 
     # if the identifier is not in the map, raise an exception
     val = id_token.value.lower()

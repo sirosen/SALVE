@@ -46,6 +46,9 @@ def get_parser():
             argparse.ArgumentParser.__init__(self,*args,**kwargs)
             self.add_argument('-c','--config-file',dest='configfile',
                 default=None,help='A SALVE config file.')
+            self.add_argument('-v','--verbose',dest='verbosity',
+                default=0,action='count',help='Verbosity of log output. '+\
+                'Specify multiple times for higher verbosity.')
 
     parser = SALVESharedParser(description='Run SALVE.')
 

@@ -103,127 +103,127 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert func_log['cp'] == (linkname,act.dst)
 
-@istest
-def backupaction_is_abstract():
-    """
-    Backup Action Base Class Is Abstract
-    Checks that instantiating a BackupAction raises an error.
-    """
-    ensure_except(TypeError,backup.BackupAction)
+    @istest
+    def backupaction_is_abstract(self):
+        """
+        Backup Action Base Class Is Abstract
+        Checks that instantiating a BackupAction raises an error.
+        """
+        ensure_except(TypeError,backup.BackupAction)
 
-@istest
-def file_dst_dir():
-    """
-    File Backup Action Destination Directory
-    Verifies that a file's abspath becomes its storage directory under
-    the backup dir.
-    """
-    filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,
-                                  dummy_context)
-    assert act.dst == '/etc/salve/backup/files'
+    @istest
+    def file_dst_dir(self):
+        """
+        File Backup Action Destination Directory
+        Verifies that a file's abspath becomes its storage directory under
+        the backup dir.
+        """
+        filename = get_full_path('file1.txt')
+        act = backup.FileBackupAction(filename,
+                                      dummy_context)
+        assert act.dst == '/etc/salve/backup/files'
 
-@istest
-def file_to_str():
-    """
-    File Backup Action to String
+    @istest
+    def file_to_str(self):
+        """
+        File Backup Action to String
 
-    Checks the result of converting a file backup action to a string.
-    """
-    filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,
-                                  dummy_context)
-    assert str(act) == \
-        'FileBackupAction(src='+filename+',backup_dir='+\
-        '/etc/salve/backup,backup_log=/etc/salve/backup.log'+\
-        ',context='+str(dummy_context)+')'
+        Checks the result of converting a file backup action to a string.
+        """
+        filename = get_full_path('file1.txt')
+        act = backup.FileBackupAction(filename,
+                                      dummy_context)
+        assert str(act) == \
+            'FileBackupAction(src='+filename+',backup_dir='+\
+            '/etc/salve/backup,backup_log=/etc/salve/backup.log'+\
+            ',context='+str(dummy_context)+')'
 
-@istest
-def file_write_log():
-    """
-    File Backup Action Write Log
-    Verifies that on a successful backup action, the logfile is written
-    with the date, hash, and filename.
-    """
-    filename = get_full_path('file1.txt')
-    act = backup.FileBackupAction(filename,
-                                  dummy_context)
-    act.hash_val = 'abc'
+    @istest
+    def file_write_log(self):
+        """
+        File Backup Action Write Log
+        Verifies that on a successful backup action, the logfile is written
+        with the date, hash, and filename.
+        """
+        filename = get_full_path('file1.txt')
+        act = backup.FileBackupAction(filename,
+                                      dummy_context)
+        act.hash_val = 'abc'
 
-    mo = mock.mock_open()
-    mm = mock.MagicMock()
-    with mock.patch('src.execute.backup.open',mo,create=True), \
-         mock.patch('src.execute.backup.print',mm,create=True), \
-         mock.patch('time.strftime',lambda s: 'NOW'):
-        act.write_log()
+        mo = mock.mock_open()
+        mm = mock.MagicMock()
+        with mock.patch('src.execute.backup.open',mo,create=True), \
+             mock.patch('src.execute.backup.print',mm,create=True), \
+             mock.patch('time.strftime',lambda s: 'NOW'):
+            act.write_log()
 
-    mo.assert_called_once_with('/etc/salve/backup.log','a')
-    assert mm.call_args[0][0] == ('NOW abc ' + filename)
+        mo.assert_called_once_with('/etc/salve/backup.log','a')
+        assert mm.call_args[0][0] == ('NOW abc ' + filename)
 
-@istest
-def dir_expand():
-    """
-    Directory Backup Action Expand Dir
-    Checks the expansion of a directory into its constituent files for
-    directory backups.
-    """
-    dirname = get_full_path('dir1')
-    act = backup.DirBackupAction(dirname,
-                                 dummy_context)
+    @istest
+    def dir_expand(self):
+        """
+        Directory Backup Action Expand Dir
+        Checks the expansion of a directory into its constituent files for
+        directory backups.
+        """
+        dirname = get_full_path('dir1')
+        act = backup.DirBackupAction(dirname,
+                                     dummy_context)
 
-    def mock_execute(self): pass
-    with mock.patch('src.execute.action.ActionList.execute',
-                    mock_execute):
-        act()
+        def mock_execute(self): pass
+        with mock.patch('src.execute.action.ActionList.execute',
+                        mock_execute):
+            act()
 
-    # must be a valid ActionList
-    assert isinstance(act,action.ActionList)
-    assert hasattr(act,'actions')
-    seen_files = set()
-    for subact in act.actions:
-        assert isinstance(subact,backup.FileBackupAction)
-        seen_files.add(subact.src)
-    assert get_full_path('dir1/a') in seen_files
-    assert get_full_path('dir1/b') in seen_files
-    assert get_full_path('dir1/inner_dir1/.abc') in seen_files
+        # must be a valid ActionList
+        assert isinstance(act,action.ActionList)
+        assert hasattr(act,'actions')
+        seen_files = set()
+        for subact in act.actions:
+            assert isinstance(subact,backup.FileBackupAction)
+            seen_files.add(subact.src)
+        assert get_full_path('dir1/a') in seen_files
+        assert get_full_path('dir1/b') in seen_files
+        assert get_full_path('dir1/inner_dir1/.abc') in seen_files
 
-@istest
-def dir_execute():
-    """
-    Directory Backup Action Execute
-    Verifies that executing a DirBackupAction runs a FileBackupAction on
-    each of the files in the directory.
-    """
-    dirname = get_full_path('dir1')
-    act = backup.DirBackupAction(dirname,dummy_context)
-    # check this here so that we abort the test if this condition is
-    # unsatisfied, rather than starting to actually perform actions
-    for subact in act.actions:
-        assert isinstance(subact,backup.FileBackupAction)
-    seen_files = set()
-    mock_execute = lambda self: seen_files.add(self.src)
+    @istest
+    def dir_execute(self):
+        """
+        Directory Backup Action Execute
+        Verifies that executing a DirBackupAction runs a FileBackupAction on
+        each of the files in the directory.
+        """
+        dirname = get_full_path('dir1')
+        act = backup.DirBackupAction(dirname,dummy_context)
+        # check this here so that we abort the test if this condition is
+        # unsatisfied, rather than starting to actually perform actions
+        for subact in act.actions:
+            assert isinstance(subact,backup.FileBackupAction)
+        seen_files = set()
+        mock_execute = lambda self: seen_files.add(self.src)
 
-    with mock.patch('src.execute.backup.FileBackupAction.execute',
-                    mock_execute):
-        act()
+        with mock.patch('src.execute.backup.FileBackupAction.execute',
+                        mock_execute):
+            act()
 
-    assert get_full_path('dir1/a') in seen_files
-    assert get_full_path('dir1/b') in seen_files
-    assert get_full_path('dir1/inner_dir1/.abc') in seen_files
+        assert get_full_path('dir1/a') in seen_files
+        assert get_full_path('dir1/b') in seen_files
+        assert get_full_path('dir1/inner_dir1/.abc') in seen_files
 
-@istest
-def dir_verify_no_source():
-    """
-    Directory Backup Action Verify (No Source)
-    Verifies that verification of a DirBackupAction identifies missing
-    source dir.
-    """
-    dirname = get_full_path('no such dir')
-    act = backup.DirBackupAction(dirname,dummy_context)
-    # check this here so that we abort the test if this condition is
-    # unsatisfied, rather than starting to actually perform actions
-    for subact in act.actions:
-        assert isinstance(subact,backup.FileBackupAction)
+    @istest
+    def dir_verify_no_source(self):
+        """
+        Directory Backup Action Verify (No Source)
+        Verifies that verification of a DirBackupAction identifies missing
+        source dir.
+        """
+        dirname = get_full_path('no such dir')
+        act = backup.DirBackupAction(dirname,dummy_context)
+        # check this here so that we abort the test if this condition is
+        # unsatisfied, rather than starting to actually perform actions
+        for subact in act.actions:
+            assert isinstance(subact,backup.FileBackupAction)
 
-    assert act.verify_can_exec() ==\
-        backup.DirBackupAction.verification_codes.NONEXISTENT_SOURCE
+        assert act.verify_can_exec() ==\
+            backup.DirBackupAction.verification_codes.NONEXISTENT_SOURCE

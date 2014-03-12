@@ -14,11 +14,7 @@ _testfile_dir = pjoin(dirname(__file__),'files')
 _homes_dir = pjoin(dirname(__file__),'homes')
 _active_patches = set()
 
-dummy_context = SALVEContext(
-    exec_context=ExecutionContext(
-        startphase=ExecutionContext.phases.CONFIG_LOADING
-        )
-    )
+dummy_context = SALVEContext(exec_context=ExecutionContext())
 
 def setup_patches(*patches):
     """

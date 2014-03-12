@@ -17,11 +17,14 @@ from src.block.base import BlockException
 from src.util.error import SALVEException
 from src.util.context import SALVEContext, ExecutionContext, StreamContext
 
-def generate_dummy_context(phase=ExecutionContext.phases.STARTUP):
-    dummy_stream_context = StreamContext('no such file',-1)
-    dummy_exec_context = ExecutionContext(startphase=phase)
-    return SALVEContext(stream_context=dummy_stream_context,
-                        exec_context=dummy_exec_context)
+def generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.STARTUP):
+    with mock.patch.dict('src.settings.default_globals.defaults',
+                         {'run_log':fake_stderr}):
+        dummy_stream_context = StreamContext('no such file',-1)
+        dummy_exec_context = ExecutionContext(startphase=phase)
+        dummy_exec_context.set('log_level',set(('WARN','ERROR')))
+        return SALVEContext(stream_context=dummy_stream_context,
+                            exec_context=dummy_exec_context)
 
 @istest
 def no_manifest_error():
@@ -79,9 +82,6 @@ def deploy_salve_exception():
     log = {
         'exit': None
     }
-    dummy_context = generate_dummy_context()
-    def mock_run(root_manifest,exec_context,args):
-        raise SALVEException('message string',dummy_context)
 
     real_exit = sys.exit
     def mock_exit(n):
@@ -92,8 +92,11 @@ def deploy_salve_exception():
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
 
+    dummy_context = generate_dummy_context(fake_stderr)
+    def mock_run(root_manifest,exec_context,args):
+        raise SALVEException('message string',dummy_context)
+
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
-         mock.patch('sys.stderr',fake_stderr), \
          mock.patch('sys.exit',mock_exit):
         try:
             deploy.main(fake_args)
@@ -102,7 +105,7 @@ def deploy_salve_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[STARTUP] no such file, line -1: message string\n'
+    assert stderr_out == '[ERROR] [STARTUP] no such file, line -1: message string\n'
 
 @istest
 def deploy_block_exception():
@@ -114,9 +117,6 @@ def deploy_block_exception():
     log = {
         'exit': None
     }
-    dummy_context = generate_dummy_context(phase=ExecutionContext.phases.PARSING)
-    def mock_run(root_manifest,exec_context,args):
-        raise BlockException('message string',dummy_context)
 
     real_exit = sys.exit
     def mock_exit(n):
@@ -126,6 +126,10 @@ def deploy_block_exception():
     fake_stderr = StringIO.StringIO()
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
+
+    dummy_context = generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.PARSING)
+    def mock_run(root_manifest,exec_context,args):
+        raise BlockException('message string',dummy_context)
 
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
          mock.patch('sys.stderr',fake_stderr), \
@@ -137,7 +141,7 @@ def deploy_block_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[PARSING] no such file, line -1: message string\n'
+    assert stderr_out == '[ERROR] [PARSING] no such file, line -1: message string\n'
 
 @istest
 def deploy_action_exception():
@@ -150,10 +154,6 @@ def deploy_action_exception():
     log = {
         'exit': None
     }
-    dummy_context = generate_dummy_context(
-        phase=ExecutionContext.phases.ACTION_CONVERSION)
-    def mock_run(root_manifest,exec_context,args):
-        raise ActionException('message string',dummy_context)
 
     real_exit = sys.exit
     def mock_exit(n):
@@ -164,8 +164,12 @@ def deploy_action_exception():
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
 
+    dummy_context = generate_dummy_context(fake_stderr,
+        phase=ExecutionContext.phases.ACTION_CONVERSION)
+    def mock_run(root_manifest,exec_context,args):
+        raise ActionException('message string',dummy_context)
+
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
-         mock.patch('sys.stderr',fake_stderr), \
          mock.patch('sys.exit',mock_exit):
         try:
             deploy.main(fake_args)
@@ -174,7 +178,7 @@ def deploy_action_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[ACTION_CONVERSION] no such file, line -1: message string\n', stderr_out
+    assert stderr_out == '[ERROR] [ACTION_CONVERSION] no such file, line -1: message string\n', stderr_out
 
 @istest
 def deploy_tokenization_exception():
@@ -187,9 +191,6 @@ def deploy_tokenization_exception():
     log = {
         'exit': None
     }
-    dummy_context = generate_dummy_context(phase=ExecutionContext.phases.PARSING)
-    def mock_run(root_manifest,exec_context,args):
-        raise TokenizationException('message string',dummy_context)
 
     real_exit = sys.exit
     def mock_exit(n):
@@ -200,8 +201,12 @@ def deploy_tokenization_exception():
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
 
+    dummy_context = generate_dummy_context(fake_stderr,
+        phase=ExecutionContext.phases.PARSING)
+    def mock_run(root_manifest,exec_context,args):
+        raise TokenizationException('message string',dummy_context)
+
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
-         mock.patch('sys.stderr',fake_stderr), \
          mock.patch('sys.exit',mock_exit):
         try:
             deploy.main(fake_args)
@@ -210,7 +215,7 @@ def deploy_tokenization_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[PARSING] no such file, line -1: message string\n',stderr_out
+    assert stderr_out == '[ERROR] [PARSING] no such file, line -1: message string\n',stderr_out
 
 @istest
 def deploy_parsing_exception():
@@ -223,21 +228,22 @@ def deploy_parsing_exception():
     log = {
         'exit': None
     }
-    dummy_context = generate_dummy_context(phase=ExecutionContext.phases.PARSING)
-    def mock_run(root_manifest,exec_context,args):
-        raise ParsingException('message string',dummy_context)
 
     real_exit = sys.exit
     def mock_exit(n):
         log['exit'] = n
         real_exit(n)
 
-    fake_stderr = StringIO.StringIO()
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
+    fake_stderr = StringIO.StringIO()
+
+    dummy_context = generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.PARSING)
+
+    def mock_run(root_manifest,context,args):
+        raise ParsingException('message string',dummy_context)
 
     with mock.patch('src.run.deploy.run_on_manifest',mock_run), \
-         mock.patch('sys.stderr',fake_stderr), \
          mock.patch('sys.exit',mock_exit):
         try:
             deploy.main(fake_args)
@@ -246,7 +252,7 @@ def deploy_parsing_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == '[PARSING] no such file, line -1: message string\n', stderr_out
+    assert stderr_out == '[ERROR] [PARSING] no such file, line -1: message string\n', stderr_out
 
 @istest
 def deploy_unexpected_exception():

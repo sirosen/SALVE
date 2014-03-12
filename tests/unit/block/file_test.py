@@ -18,6 +18,7 @@ import src.block.file_block
 dummy_exec_context = ExecutionContext()
 dummy_exec_context.set('backup_dir','/m/n')
 dummy_exec_context.set('backup_log','/m/n.log')
+dummy_exec_context.set('log_level',set())
 dummy_context = SALVEContext(exec_context=dummy_exec_context)
 
 @istest

@@ -10,8 +10,10 @@ import src.block.manifest_block
 
 import src.settings.config as config
 from src.util.enum import Enum
-from src.util.error import SALVEException
 from src.util.context import SALVEContext, ExecutionContext
+
+import src.util.log as log
+from src.util.error import SALVEException
 
 def run_on_manifest(root_manifest,context,args):
     """
@@ -31,6 +33,9 @@ def run_on_manifest(root_manifest,context,args):
     cfg_file = None
     if args.configfile: cfg_file = args.configfile
     conf = config.SALVEConfig(context,filename=cfg_file)
+
+    # must be done after config is loaded to have correct override behavior
+    if args.verbosity: context.exec_context.set('verbosity',args.verbosity)
 
     root_dir = locations.get_salve_root()
     if args.directory: root_dir = os.path.abspath(args.directory)
@@ -53,7 +58,7 @@ def main(args):
         assert args.manifest
         run_on_manifest(args.manifest,context,args)
     except SALVEException as e:
-        print(e.to_message(),file=sys.stderr)
+        log.error(e.message,e.context)
         # Normally, sys.exit() is to be avoided, but main() is only
         # invoked if salve is running as a script, and we want to give
         # the right exit status for commandline usage
