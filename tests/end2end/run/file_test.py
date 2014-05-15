@@ -145,59 +145,26 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         assert self.get_mode('1.man') == int('066',8)
 
     @istest
-    def copy_file_triggers_backup(self):
+    def copy_unwritable_target(self):
         """
-        E2E: Copy File Triggers Backup
+        E2E: Copy File, Unwritable Target
 
-        Runs a manifest which copies itself and verifies the contents of
-        the destination file.
+        Runs a manifest which copies itself over an unwritable target file.
+        Should result in failure during verification.
         """
-        backup_dir = 'home/user1/backups'
-        backup_log = 'home/user1/backup.log'
-        self.make_dir(backup_dir)
-        self.write_file(backup_log,'')
-        self.write_file('f1','')
-
-        content = 'file { action copy source 1.man target f1 }\n'
-
+        content = 'file { action copy source 1.man target 2 }\n'
         self.write_file('1.man',content)
+        self.write_file('2','')
+
+        fullname = self.get_fullname('2')
+        os.chmod(fullname,0400)
+
         self.run_on_manifest('1.man')
+        assert self.exists('2')
+        s = self.read_file('2')
+        assert s == '', s
 
-        s = self.read_file('f1')
-        assert s == content, '%s' % s
-        s = self.read_file(backup_log).strip()
-        ss = shlex.split(s)
-        assert len(ss) == 4
-        assert ss[3] == self.get_fullname('f1')
-        backup_path = self.get_backup_path(backup_dir)
-        backup_path = os.path.join(backup_path,ss[2])
-        s = self.read_file(backup_path)
-        assert s == ''
-
-    @istest
-    def copy_file_triggers_backup_implicit_dir(self):
-        """
-        E2E: Copy File Implicit Backup Dir
-
-        Runs a manifest which copies itself and verifies the contents of
-        the destination file.
-        """
-        backup_dir = 'home/user1/backups'
-        backup_log = 'home/user1/backup.log'
-        self.write_file('f1','')
-
-        content = 'file { action copy source 1.man target f1 }\n'
-
-        self.write_file('1.man',content)
-        self.run_on_manifest('1.man')
-
-        s = self.read_file('f1')
-        assert s == content, '%s' % s
-        s = self.read_file(backup_log).strip()
-        ss = shlex.split(s)
-        assert len(ss) == 4
-        assert ss[3] == self.get_fullname('f1')
-        backup_path = self.get_backup_path(backup_dir)
-        backup_path = os.path.join(backup_path,ss[2])
-        s = self.read_file(backup_path)
-        assert s == ''
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCopy: '+
+            'Non-Writable target file "%s"\n') % (self.get_fullname('1.man'),fullname)
+        assert err == expected, "%s != %s" % (err,expected)

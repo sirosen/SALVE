@@ -23,6 +23,11 @@ dummy_context = SALVEContext(stream_context=dummy_stream_context,
                              exec_context=dummy_exec_context)
 
 class TestWithScratchdir(scratch.ScratchContainer):
+
+    def setUp(self):
+        scratch.ScratchContainer.setUp(self)
+        dummy_exec_context.set('run_log',self.stderr)
+
     @istest
     def file_target_name(self):
         """
@@ -227,3 +232,22 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert act.verify_can_exec() ==\
             backup.DirBackupAction.verification_codes.NONEXISTENT_SOURCE
+
+    @istest
+    def dir_execute_no_source(self):
+        """
+        Directory Backup Action Execute (No Source)
+        Verifies that verification of a DirBackupAction identifies missing
+        source dir during execution.
+        """
+        dirname = get_full_path('no such dir')
+        act = backup.DirBackupAction(dirname,dummy_context)
+        # check this here so that we abort the test if this condition is
+        # unsatisfied, rather than starting to actually perform actions
+        for subact in act.actions:
+            assert isinstance(subact,backup.FileBackupAction)
+
+        act.execute()
+        assert self.stderr.getvalue() ==\
+                "[WARN] [VERIFICATION] no such file, line -1: " +\
+                "DirBackup: Non-Existent source dir \"%s\"\n" % dirname

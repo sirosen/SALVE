@@ -18,7 +18,7 @@ class ScratchContainer(object):
         backup_dir=$HOME/backups
         backup_log=$HOME/backup.log
 
-        log_level=ERROR
+        log_level=ALL
         # run_log=$HOME/.salve/run_log
 
         [default]
@@ -98,6 +98,10 @@ class ScratchContainer(object):
             mock.patch('sys.stderr',self.stderr)
             )
         self.patches.add(
+            mock.patch.dict('src.settings.default_globals.defaults',
+                {'run_log':self.stderr})
+            )
+        self.patches.add(
             mock.patch('sys.stdout',self.stdout)
             )
 
@@ -111,10 +115,10 @@ class ScratchContainer(object):
             p.start()
 
     def tearDown(self):
-        def recursive_chmod(dir):
-            os.chmod(dir,0777)
-            for f in os.listdir(dir):
-                fullname = os.path.join(dir,f)
+        def recursive_chmod(d):
+            os.chmod(d,0777)
+            for f in os.listdir(d):
+                fullname = os.path.join(d,f)
                 if os.path.isdir(fullname) and not os.path.islink(fullname):
                     recursive_chmod(fullname)
 

@@ -120,3 +120,22 @@ def action_list_inorder():
 
     assert done_actions[0] == a
     assert done_actions[1] == b
+
+@istest
+def action_verifies_OK():
+    """
+    Action Verification Defaults To OK
+    Verifies that an action verification on an action which does not override
+    verification will produce an OK status.
+    """
+    class DummyAction(action.Action):
+        def __init__(self,ctx):
+            action.Action.__init__(self,ctx)
+        def execute(self):
+            pass
+
+    a = DummyAction(dummy_context)
+
+    verify_code = a.verify_can_exec()
+
+    assert verify_code == a.verification_codes.OK
