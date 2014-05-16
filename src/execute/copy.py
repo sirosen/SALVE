@@ -102,11 +102,24 @@ class FileCopyAction(CopyAction):
             """
             return os.access(self.src,os.R_OK)
 
+        def source_islink():
+            """
+            Checks if the source is a symlink (copied by value, not
+            dereferenced)
+            """
+            return os.path.islink(self.src)
+
         log.info('FileCopy: Checking destination is writable, \"%s\"' % self.dst,
                  self.context,min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
+
+        log.info('FileCopy: Checking if source is link, "%s"' % self.src,
+                 self.context,min_verbosity=3)
+
+        if source_islink():
+            return self.verification_codes.OK
 
         log.info('FileCopy: Checking source is readable, \"%s\"' % self.src,
                  self.context,min_verbosity=3)

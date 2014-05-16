@@ -168,3 +168,26 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         expected = ('[WARN] [VERIFICATION] %s, line 1: FileCopy: '+
             'Non-Writable target file "%s"\n') % (self.get_fullname('1.man'),fullname)
         assert err == expected, "%s != %s" % (err,expected)
+
+    @istest
+    def copy_unwritable_target(self):
+        """
+        E2E: Copy File, Unreadable Source
+
+        Runs a manifest which copies an unreadable source file.
+        Should result in failure during verification.
+        """
+        content = 'file { action copy source 1 target 2 }\n'
+        self.write_file('1.man',content)
+        self.write_file('1','')
+
+        fullname = self.get_fullname('1')
+        os.chmod(fullname,0200)
+
+        self.run_on_manifest('1.man')
+        assert not self.exists('2')
+
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCopy: '+
+            'Non-Readable source file "%s"\n') % (self.get_fullname('1.man'),fullname)
+        assert err.find(expected) != -1, "%s\nnot in\n%s" % (err,expected)
