@@ -7,6 +7,7 @@ import shutil
 import mock
 import StringIO
 import textwrap
+import string
 
 import src.util.locations as locations
 
@@ -43,6 +44,9 @@ class ScratchContainer(object):
             'USER': 'user1',
             'HOME': self.get_fullname('home/user1')
         }
+        self.username = 'user1'
+        self.sudouser = 'user1'
+        self.userhome = 'home/user1'
         os.makedirs(mock_env['HOME'])
         self.patches.add(mock.patch.dict('os.environ',mock_env))
 

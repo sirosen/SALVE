@@ -19,9 +19,3 @@ class SALVEException(StandardError):
         StandardError.__init__(self,message)
         self.message = message
         self.context = context
-
-    def to_message(self):
-        """
-        Convert the exception to a message string.
-        """
-        return str(self.context) + ': ' + self.message

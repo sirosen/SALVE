@@ -170,7 +170,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         assert err == expected, "%s != %s" % (err,expected)
 
     @istest
-    def copy_unwritable_target(self):
+    def copy_unreadable_source(self):
         """
         E2E: Copy File, Unreadable Source
 
@@ -190,4 +190,52 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         err = self.stderr.getvalue()
         expected = ('[WARN] [VERIFICATION] %s, line 1: FileCopy: '+
             'Non-Readable source file "%s"\n') % (self.get_fullname('1.man'),fullname)
-        assert err.find(expected) != -1, "%s\nnot in\n%s" % (err,expected)
+        assert expected in err, "%s\ndoesn't contain\n%s" % (err,expected)
+
+    @istest
+    def create_unwritable_target(self):
+        """
+        E2E: Create File, Existing Unwritable Target
+
+        Runs a manifest which creates a file on top of an existing unwritable
+        file.
+        Should result in failure during verification due to unwritable target.
+        """
+        content = 'file { action create target a }\n'
+        self.write_file('1.man',content)
+        self.write_file('a','')
+
+        fullname = self.get_fullname('a')
+        os.chmod(fullname,0400)
+
+        self.run_on_manifest('1.man')
+
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCreate: '+
+            'Non-Writable target file "%s"\n') % (self.get_fullname('1.man'),fullname)
+        assert expected in err, "%s\ndoesn't contain\n%s" % (err,expected)
+
+    @istest
+    def create_unwritable_parent(self):
+        """
+        E2E: Create File, Unwritable Parent Dir
+
+        Runs a manifest which creates a file on in an existing unwritable
+        directory.
+        Should result in failure during verify due to unwritable target.
+        """
+        content = 'file { action create target a/b }\n'
+        self.write_file('1.man',content)
+        self.make_dir('a')
+
+        fullname = self.get_fullname('a')
+        fullname_b = self.get_fullname('a/b')
+        os.chmod(fullname,0400)
+
+        self.run_on_manifest('1.man')
+
+        err = self.stderr.getvalue()
+        expected = (('[WARN] [VERIFICATION] %s, line 1: FileCreate: '+
+            'Non-Writable target file "%s"\n') %
+            (self.get_fullname('1.man'),fullname_b))
+        assert expected in err, "%s\ndoesn't contain\n%s" % (err,expected)

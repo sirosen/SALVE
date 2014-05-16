@@ -124,3 +124,32 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         assert ls_result[0] == 'n'
         ls_result = self.listdir('m_prime/n')
         assert len(ls_result) == 0
+
+    @istest
+    def copy_unwritable_target_parent(self):
+        """
+        E2E: Copy Directory, Unwritable Target Parent
+
+        Runs a manifest which copies a dir to an unwritable location.
+        Should result in failure during verification.
+        """
+        content = 'directory { action copy source 1 target 2/1 }\n'
+        self.write_file('1.man',content)
+        self.make_dir('1')
+        self.make_dir('2')
+
+        fullname = self.get_fullname('2')
+        fullname_sub = self.get_fullname('2/1')
+        os.chmod(fullname,0400)
+
+        self.run_on_manifest('1.man')
+
+        assert self.exists('2')
+        assert not self.exists('2/1')
+        assert len(self.listdir('2')) == 0
+
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [VERIFICATION] %s, line 1: DirCreate: '+
+            'Non-Writable target dir "%s"\n'
+            ) % (self.get_fullname('1.man'),fullname_sub)
+        assert err.find(expected) != -1, "%s\ndoesn't contain\n%s" % (err,expected)

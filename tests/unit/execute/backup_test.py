@@ -23,7 +23,6 @@ dummy_context = SALVEContext(stream_context=dummy_stream_context,
                              exec_context=dummy_exec_context)
 
 class TestWithScratchdir(scratch.ScratchContainer):
-
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
         dummy_exec_context.set('run_log',self.stderr)

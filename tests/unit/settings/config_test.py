@@ -7,6 +7,7 @@ from os.path import dirname, abspath, join as pjoin
 
 from tests.utils.exceptions import ensure_except
 from src.util.context import SALVEContext, ExecutionContext
+from src.util.error import SALVEException
 
 import src.settings.config as config
 
@@ -205,7 +206,8 @@ def missing_config():
     still loaded and works as if no config were specified.
     """
     conf = config.SALVEConfig(dummy_context,
-                              filename=pjoin(_testfile_dir,'NONEXISTENT_FILE'))
+            filename=pjoin(_testfile_dir,'NONEXISTENT_FILE'))
+    dummy_context
 
     assert conf.attributes['file']['action'] == 'copy'
     assert conf.attributes['file']['mode'] == '644'
@@ -215,6 +217,22 @@ def missing_config():
 
     assert conf.attributes['default']['user'] == '$USER'
     assert conf.attributes['default']['group'] == '$SALVE_USER_PRIMARY_GROUP'
+
+@istest
+@with_setup(setup_os1,teardown_patches)
+def invalid_file():
+    """
+    Configuration Invalid Config File
+    Checks that with a invalid config file specified, the ConfigParser
+    error is converted into a SALVEException.
+    """
+    try:
+        conf = config.SALVEConfig(dummy_context,
+                filename=pjoin(_testfile_dir,'invalid1.ini'))
+    except SALVEException, e:
+        assert isinstance(e,SALVEException)
+        assert ('Encountered an error while parsing'+
+                ' your configuration file(s).' in e.message)
 
 @istest
 @with_setup(setup_os1,teardown_patches)

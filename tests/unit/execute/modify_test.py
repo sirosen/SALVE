@@ -10,6 +10,7 @@ from src.util.context import SALVEContext, ExecutionContext, StreamContext
 
 import src.execute.action as action
 import src.execute.modify as modify
+import src.util.ugo as ugo
 
 import tests.utils.scratch as scratch
 
@@ -29,6 +30,28 @@ def generate_dummy_context(fake_stderr,phase=ExecutionContext.phases.STARTUP):
 
 class TestWithScratchdir(scratch.ScratchContainer):
     @istest
+    def filechown_verify_nonroot(self):
+        """
+        File Chown Action Verify as Non-Root
+        """
+        self.write_file('a','')
+        a_name = self.get_fullname('a')
+
+        ctx = generate_dummy_context(sys.stderr)
+
+        act = modify.FileChownAction(a_name,'user1','nogroup',ctx)
+        mock_stat_result = mock.Mock()
+        # ensure a uid/gid mismatch
+        mock_stat_result.st_uid = ugo.name_to_uid('user1')+1
+        mock_stat_result.st_gid = ugo.name_to_gid('nogroup')+1
+
+        # have to mock to be 100% certain that we are not root
+        with mock.patch('src.util.ugo.is_root',lambda: False), \
+                mock.patch('os.stat',lambda x: mock_stat_result):
+            code = act.verify_can_exec()
+            assert code == act.verification_codes.NOT_ROOT, str(code)
+
+    @istest
     def filechown_execute_nonroot(self):
         """
         File Chown Action Execute as Non-Root
@@ -43,11 +66,87 @@ class TestWithScratchdir(scratch.ScratchContainer):
         log = { 'lchown' : None }
         def mock_lchown(f,uid,gid): log['lchown'] = (f,uid,gid)
 
+        mock_stat_result = mock.Mock()
+        # ensure a uid/gid mismatch
+        mock_stat_result.st_uid = ugo.name_to_uid('user1')+1
+        mock_stat_result.st_gid = ugo.name_to_gid('nogroup')+1
+
         with mock.patch('os.lchown',mock_lchown), \
+             mock.patch('os.stat',lambda x: mock_stat_result), \
              mock.patch('src.util.ugo.is_root',lambda: False):
             act()
 
         assert log['lchown'] is None
+
+    @istest
+    def filechmod_verify_nonowner(self):
+        """
+        Unit: File Chmod Action Verify as Non-Owner
+        """
+        self.write_file('a','')
+        a_name = self.get_fullname('a')
+
+        ctx = generate_dummy_context(self.stderr,phase=ExecutionContext.phases.VERIFICATION)
+
+        act = modify.FileChmodAction(a_name,'600',ctx)
+
+        with mock.patch('src.util.ugo.is_owner',lambda x: False):
+            code = act.verify_can_exec()
+            assert code == act.verification_codes.UNOWNED_TARGET, str(code)
+
+    @istest
+    def dirchown_verify_nonroot(self):
+        """
+        Unit: Dir Chown Action Verify as Non-Root
+        """
+        self.make_dir('a')
+        a_name = self.get_fullname('a')
+
+        # ensure mismatch between name_to_uid/name_to_gid and
+        # os.stat results
+        mock_stat_result = mock.Mock()
+        mock_stat_result.st_uid = ugo.name_to_uid('user1')+1
+        mock_stat_result.st_gid = ugo.name_to_uid('nogroup')+1
+
+        ctx = generate_dummy_context(self.stderr,phase=ExecutionContext.phases.VERIFICATION)
+        act = modify.DirChownAction(a_name,'user1','nogroup',ctx)
+
+        with mock.patch('os.stat',lambda x: mock_stat_result), \
+             mock.patch('src.util.ugo.is_root',lambda: False):
+            code = act.verify_can_exec()
+            assert code == act.verification_codes.NOT_ROOT, str(code)
+
+    @istest
+    def dirchmod_verify_root(self):
+        """
+        Unit: Dir Chmod Action Verify as Root
+        """
+        self.make_dir('a')
+        a_name = self.get_fullname('a')
+
+        ctx = generate_dummy_context(self.stderr,phase=ExecutionContext.phases.VERIFICATION)
+        act = modify.DirChmodAction(a_name,'0600',ctx)
+
+        with mock.patch('src.util.ugo.is_root',lambda: True):
+            code = act.verify_can_exec()
+            assert code == act.verification_codes.OK, str(code)
+
+    @istest
+    def dirchmod_verify_nonowner(self):
+        """
+        Unit: Dir Chmod Action Verify as Non-Owner
+        """
+        self.make_dir('a')
+        a_name = self.get_fullname('a')
+
+        ctx = generate_dummy_context(self.stderr,phase=ExecutionContext.phases.VERIFICATION)
+        act = modify.DirChmodAction(a_name,'0600',ctx)
+
+        with mock.patch('src.util.ugo.is_root',lambda: False), \
+             mock.patch('src.util.ugo.is_owner',lambda x: False):
+            code = act.verify_can_exec()
+            assert code == act.verification_codes.UNOWNED_TARGET, str(code)
+
 
 @istest
 def filechmod_execute_nonowner():
@@ -115,6 +214,55 @@ def dirchmod_to_str():
 
     assert str(act) == 'DirChmodAction(target=a,mode=600,'+\
                        'recursive=False,context='+str(ctx)+')'
+
+@istest
+def filechmod_verify_root():
+    """
+    Unit: File Chmod Action Verify (as Root)
+    """
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.FileChmodAction('a','0000',ctx)
+
+    with mock.patch('os.path.exists',lambda x: True), \
+         mock.patch('src.util.ugo.is_root',lambda: True):
+        assert act.verify_can_exec() == act.verification_codes.OK
+
+@istest
+def filechown_verify():
+    """
+    Unit: File Chown Action Verify
+    """
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.FileChownAction('a','user1','nogroup',ctx)
+
+    mock_stat_result = mock.Mock()
+    mock_stat_result.st_gid = 1
+    mock_stat_result.st_uid = 1
+
+    with mock.patch('os.stat',lambda x: mock_stat_result), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 0), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 0), \
+         mock.patch('src.util.ugo.is_root',lambda: True):
+        assert act.verify_can_exec() == act.verification_codes.OK
+
+@istest
+def dirchown_verify():
+    """
+    Unit: Dir Chown Action Verify
+    """
+    ctx = generate_dummy_context(sys.stderr)
+    act = modify.DirChownAction('a','user1','nogroup',ctx)
+
+    mock_stat_result = mock.Mock()
+    mock_stat_result.st_gid = 1
+    mock_stat_result.st_uid = 1
+
+    with mock.patch('os.stat',lambda x: mock_stat_result), \
+         mock.patch('os.access',lambda x,y: True), \
+         mock.patch('src.util.ugo.name_to_uid',lambda x: 0), \
+         mock.patch('src.util.ugo.name_to_gid',lambda x: 0), \
+         mock.patch('src.util.ugo.is_root',lambda: True):
+        assert act.verify_can_exec() == act.verification_codes.OK
 
 @istest
 def filechown_execute():
