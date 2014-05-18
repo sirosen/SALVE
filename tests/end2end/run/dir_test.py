@@ -126,44 +126,30 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         assert len(ls_result) == 0
 
     @istest
-    def copy_dir_triggers_backup(self):
+    def copy_unwritable_target_parent(self):
         """
-        E2E: Copy Directory Triggers File Backup
+        E2E: Copy Directory, Unwritable Target Parent
 
-        Runs a manifest which copies an directory containing an empty dir.
-        Verifies that the target is created, and that it has a duplicate
-        of the original dir contents.
+        Runs a manifest which copies a dir to an unwritable location.
+        Should result in failure during verification.
         """
-        self.make_dir('a')
-        self.make_dir('b')
-        content = 'directory { action copy source a target b }\n'
-        af1_content = 'new'
-        bf1_content = 'old'
-        self.write_file('manifest',content)
-        self.write_file('a/f1',af1_content)
-        self.write_file('b/f1',bf1_content)
+        content = 'directory { action copy source 1 target 2/1 }\n'
+        self.write_file('1.man',content)
+        self.make_dir('1')
+        self.make_dir('2')
 
-        self.run_on_manifest('manifest')
+        fullname = self.get_fullname('2')
+        fullname_sub = self.get_fullname('2/1')
+        os.chmod(fullname,0400)
 
-        backup_dir = 'home/user1/backups'
-        backup_log = 'home/usr1/backup.log'
+        self.run_on_manifest('1.man')
 
-        assert self.exists('b')
-        assert self.exists('b/f1')
-        s = self.read_file('b/f1').strip()
-        assert s == 'new'
-        # make sure the original is unharmed
-        assert self.exists('a')
-        assert self.exists('a/f1')
-        s = self.read_file('a/f1').strip()
-        assert s == 'new'
+        assert self.exists('2')
+        assert not self.exists('2/1')
+        assert len(self.listdir('2')) == 0
 
-        assert self.exists('home/user1/backup.log')
-        assert self.exists('home/user1/backups')
-        backup = self.get_backup_path('home/user1/backups')
-        assert self.exists(backup)
-        backup_files = self.listdir(backup)
-        assert len(backup_files) == 1
-        backup_file = os.path.join(backup,backup_files[0])
-        s = self.read_file(backup_file).strip()
-        assert s == 'old'
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [VERIFICATION] %s, line 1: DirCreate: '+
+            'Non-Writable target dir "%s"\n'
+            ) % (self.get_fullname('1.man'),fullname_sub)
+        assert err.find(expected) != -1, "%s\ndoesn't contain\n%s" % (err,expected)

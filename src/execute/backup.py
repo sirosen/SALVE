@@ -93,7 +93,7 @@ class FileBackupAction(BackupAction,copy.FileCopyAction):
                 return True
 
             if os.access(self.dst,os.F_OK):
-                return False
+                return False #pragma: no cover
 
             # at this point, the dir is known not to exist
             # now check properties of the containing dir

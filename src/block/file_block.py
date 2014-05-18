@@ -104,7 +104,7 @@ class FileBlock(Block):
             file_action = create.FileCreateAction(self.get('target'),
                                                   self.context)
         else:
-            raise self.mk_except('Unsupported FileBlock action.')
+            raise self.mk_except('Unsupported FileBlock action.') #pragma: no cover
 
         # if 'mode' is set, append a chmod action
         if self.has('mode'):

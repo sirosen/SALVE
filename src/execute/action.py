@@ -54,8 +54,8 @@ class Action(object):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        context.transition(ExecutionContext.phases.VERIFICATION)
-        return verification_codes.OK
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+        return self.verification_codes.OK
 
     @abc.abstractmethod
     def execute(self):

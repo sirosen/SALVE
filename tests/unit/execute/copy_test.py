@@ -20,6 +20,10 @@ dummy_context = SALVEContext(stream_context=dummy_stream_context,
                              exec_context=dummy_exec_context)
 
 class TestWithScratchdir(scratch.ScratchContainer):
+    def setUp(self):
+        scratch.ScratchContainer.setUp(self)
+        dummy_exec_context.set('run_log',self.stderr)
+
     @istest
     def filecopy_execute(self):
         """
@@ -103,6 +107,26 @@ class TestWithScratchdir(scratch.ScratchContainer):
         assert fcp.verify_can_exec() == fcp.verification_codes.UNREADABLE_SOURCE
 
     @istest
+    def dir_canexec_unwritable_target(self):
+        """
+        Dir Copy Action Verify Unwritable Target
+        Checks the results of a verification check when the target
+        is an unwritable directory.
+        """
+        self.make_dir('a')
+        self.make_dir('b')
+
+        a_name = self.get_fullname('a')
+        b_name = self.get_fullname('b')
+        os.chmod(b_name,0444)
+
+        c_name = self.get_fullname('b/c')
+        dcp = copy.DirCopyAction(a_name, c_name,
+                                  dummy_context)
+
+        assert dcp.verify_can_exec() == dcp.verification_codes.UNWRITABLE_TARGET
+
+    @istest
     def filecopy_to_str(self):
         """
         File Copy Action String Conversion
@@ -147,3 +171,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
             dcp()
 
         assert log['mock_cp'] == ('a','b/c',True)
+
+    @istest
+    def dircopy_unwritable_target_execute(self):
+        """
+        Unit: Directory Copy Action Execution, Unwritable Target
+        """
+        with mock.patch('src.execute.copy.DirCopyAction.verify_can_exec',
+                lambda x: copy.DirCopyAction.verification_codes.UNWRITABLE_TARGET):
+            dcp = copy.DirCopyAction('a','b/c',dummy_context)
+            dcp.execute()
+
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [EXECUTION] no such file, line -1: '+
+            'DirCopy: Non-Writable target directory "b/c"\n')
+        assert err == expected, "%s != %s" % (err,expected)

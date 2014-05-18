@@ -145,59 +145,97 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         assert self.get_mode('1.man') == int('066',8)
 
     @istest
-    def copy_file_triggers_backup(self):
+    def copy_unwritable_target(self):
         """
-        E2E: Copy File Triggers Backup
+        E2E: Copy File, Unwritable Target
 
-        Runs a manifest which copies itself and verifies the contents of
-        the destination file.
+        Runs a manifest which copies itself over an unwritable target file.
+        Should result in failure during verification.
         """
-        backup_dir = 'home/user1/backups'
-        backup_log = 'home/user1/backup.log'
-        self.make_dir(backup_dir)
-        self.write_file(backup_log,'')
-        self.write_file('f1','')
-
-        content = 'file { action copy source 1.man target f1 }\n'
-
+        content = 'file { action copy source 1.man target 2 }\n'
         self.write_file('1.man',content)
-        self.run_on_manifest('1.man')
+        self.write_file('2','')
 
-        s = self.read_file('f1')
-        assert s == content, '%s' % s
-        s = self.read_file(backup_log).strip()
-        ss = shlex.split(s)
-        assert len(ss) == 4
-        assert ss[3] == self.get_fullname('f1')
-        backup_path = self.get_backup_path(backup_dir)
-        backup_path = os.path.join(backup_path,ss[2])
-        s = self.read_file(backup_path)
-        assert s == ''
+        fullname = self.get_fullname('2')
+        os.chmod(fullname,0400)
+
+        self.run_on_manifest('1.man')
+        assert self.exists('2')
+        s = self.read_file('2')
+        assert s == '', s
+
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCopy: '+
+            'Non-Writable target file "%s"\n') % (self.get_fullname('1.man'),fullname)
+        assert err == expected, "%s != %s" % (err,expected)
 
     @istest
-    def copy_file_triggers_backup_implicit_dir(self):
+    def copy_unreadable_source(self):
         """
-        E2E: Copy File Implicit Backup Dir
+        E2E: Copy File, Unreadable Source
 
-        Runs a manifest which copies itself and verifies the contents of
-        the destination file.
+        Runs a manifest which copies an unreadable source file.
+        Should result in failure during verification.
         """
-        backup_dir = 'home/user1/backups'
-        backup_log = 'home/user1/backup.log'
-        self.write_file('f1','')
-
-        content = 'file { action copy source 1.man target f1 }\n'
-
+        content = 'file { action copy source 1 target 2 }\n'
         self.write_file('1.man',content)
+        self.write_file('1','')
+
+        fullname = self.get_fullname('1')
+        os.chmod(fullname,0200)
+
+        self.run_on_manifest('1.man')
+        assert not self.exists('2')
+
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCopy: '+
+            'Non-Readable source file "%s"\n') % (self.get_fullname('1.man'),fullname)
+        assert expected in err, "%s\ndoesn't contain\n%s" % (err,expected)
+
+    @istest
+    def create_unwritable_target(self):
+        """
+        E2E: Create File, Existing Unwritable Target
+
+        Runs a manifest which creates a file on top of an existing unwritable
+        file.
+        Should result in failure during verification due to unwritable target.
+        """
+        content = 'file { action create target a }\n'
+        self.write_file('1.man',content)
+        self.write_file('a','')
+
+        fullname = self.get_fullname('a')
+        os.chmod(fullname,0400)
+
         self.run_on_manifest('1.man')
 
-        s = self.read_file('f1')
-        assert s == content, '%s' % s
-        s = self.read_file(backup_log).strip()
-        ss = shlex.split(s)
-        assert len(ss) == 4
-        assert ss[3] == self.get_fullname('f1')
-        backup_path = self.get_backup_path(backup_dir)
-        backup_path = os.path.join(backup_path,ss[2])
-        s = self.read_file(backup_path)
-        assert s == ''
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCreate: '+
+            'Non-Writable target file "%s"\n') % (self.get_fullname('1.man'),fullname)
+        assert expected in err, "%s\ndoesn't contain\n%s" % (err,expected)
+
+    @istest
+    def create_unwritable_parent(self):
+        """
+        E2E: Create File, Unwritable Parent Dir
+
+        Runs a manifest which creates a file on in an existing unwritable
+        directory.
+        Should result in failure during verify due to unwritable target.
+        """
+        content = 'file { action create target a/b }\n'
+        self.write_file('1.man',content)
+        self.make_dir('a')
+
+        fullname = self.get_fullname('a')
+        fullname_b = self.get_fullname('a/b')
+        os.chmod(fullname,0400)
+
+        self.run_on_manifest('1.man')
+
+        err = self.stderr.getvalue()
+        expected = (('[WARN] [VERIFICATION] %s, line 1: FileCreate: '+
+            'Non-Writable target file "%s"\n') %
+            (self.get_fullname('1.man'),fullname_b))
+        assert expected in err, "%s\ndoesn't contain\n%s" % (err,expected)

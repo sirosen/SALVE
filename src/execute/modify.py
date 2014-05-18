@@ -100,7 +100,7 @@ class ChownAction(ModifyAction):
                  self.context,min_verbosity=3)
 
         # if the chown would do nothing, give skip exec
-        if ugo.name_to_uid(self.user) == os.stat(self.target).st_gid and \
+        if ugo.name_to_uid(self.user) == os.stat(self.target).st_uid and \
            ugo.name_to_gid(self.group) == os.stat(self.target).st_gid:
             return self.verification_codes.SKIP_EXEC
 

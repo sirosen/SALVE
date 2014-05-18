@@ -8,7 +8,7 @@ from src.util.enum import Enum
 
 log_types = Enum('INFO','WARN','ERROR')
 
-def salve_log(message,type,context,print_context=True,min_verbosity=0):
+def salve_log(message,log_type,context,print_context=True,min_verbosity=0):
     """
     Print a message if the appropriate logging level is set, including
     message info about context and log type.
@@ -16,7 +16,7 @@ def salve_log(message,type,context,print_context=True,min_verbosity=0):
     Args:
         @message
         A string to print.
-        @type
+        @log_type
         The log_type for the message.
         @context
         A SALVEContext used to find the run_log. If the log
@@ -37,7 +37,7 @@ def salve_log(message,type,context,print_context=True,min_verbosity=0):
     # import takes place here to avoid circular dependency
     from src.util.context import context_types
 
-    assert type in log_types
+    assert log_type in log_types
     assert context.has_context(context_types.EXEC)
 
     ectx = context.exec_context
@@ -49,7 +49,7 @@ def salve_log(message,type,context,print_context=True,min_verbosity=0):
     # short-circuit our way out of logging if
     # - we are specifying a type not in the enabled log_levels
     # - the message requires a higher verbosity level
-    if type not in ectx.get('log_level') or \
+    if log_type not in ectx.get('log_level') or \
        min_verbosity > ectx.get('verbosity'):
         return
 
@@ -59,7 +59,7 @@ def salve_log(message,type,context,print_context=True,min_verbosity=0):
         message = str(context) + ': ' + message
 
     # construct message prefix
-    prefix = '['+type+']'
+    prefix = '['+log_type+']'
     if min_verbosity > 0:
         prefix = prefix+'['+str(min_verbosity)+']'
 
@@ -67,7 +67,7 @@ def salve_log(message,type,context,print_context=True,min_verbosity=0):
 
 def warn(message,context,print_context=True,min_verbosity=0):
     """
-    A lightweight wrapper of salve_log with type=WARN
+    A lightweight wrapper of salve_log with log_type=WARN
 
     Args:
         @message
@@ -93,7 +93,7 @@ def warn(message,context,print_context=True,min_verbosity=0):
 
 def info(message,context,print_context=True,min_verbosity=0):
     """
-    A lightweight wrapper of salve_log with type=INFO
+    A lightweight wrapper of salve_log with log_type=INFO
 
     Args:
         @message
@@ -119,7 +119,7 @@ def info(message,context,print_context=True,min_verbosity=0):
 
 def error(message,context,print_context=True,min_verbosity=0):
     """
-    A lightweight wrapper of salve_log with type=ERROR
+    A lightweight wrapper of salve_log with log_type=ERROR
 
     Args:
         @message

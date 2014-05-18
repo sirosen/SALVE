@@ -7,6 +7,7 @@ import shutil
 import mock
 import StringIO
 import textwrap
+import string
 
 import src.util.locations as locations
 
@@ -18,7 +19,7 @@ class ScratchContainer(object):
         backup_dir=$HOME/backups
         backup_log=$HOME/backup.log
 
-        log_level=ERROR
+        log_level=ALL
         # run_log=$HOME/.salve/run_log
 
         [default]
@@ -43,6 +44,9 @@ class ScratchContainer(object):
             'USER': 'user1',
             'HOME': self.get_fullname('home/user1')
         }
+        self.username = 'user1'
+        self.sudouser = 'user1'
+        self.userhome = 'home/user1'
         os.makedirs(mock_env['HOME'])
         self.patches.add(mock.patch.dict('os.environ',mock_env))
 
@@ -72,11 +76,15 @@ class ScratchContainer(object):
             mock.patch('src.util.ugo.get_group_from_username',
                        get_groupname)
             )
-        self.patches.add(mock.patch('src.util.ugo.name_to_uid',lambda x: 1001)
+
+        # mock the gid and uid helpers -- this allows dummy user lookups
+        # with this mocking in place, the dummy user looks like the real
+        # user
+        real_uid = os.geteuid()
+        real_gid = os.getegid()
+        self.patches.add(mock.patch('src.util.ugo.name_to_uid',lambda x: real_uid)
             )
-        self.patches.add(mock.patch('src.util.ugo.name_to_gid',lambda x: 1001)
-            )
-        self.patches.add(mock.patch('os.geteuid',lambda: 1001)
+        self.patches.add(mock.patch('src.util.ugo.name_to_gid',lambda x: real_gid)
             )
 
         self.patches.add(
@@ -94,6 +102,10 @@ class ScratchContainer(object):
             mock.patch('sys.stderr',self.stderr)
             )
         self.patches.add(
+            mock.patch.dict('src.settings.default_globals.defaults',
+                {'run_log':self.stderr})
+            )
+        self.patches.add(
             mock.patch('sys.stdout',self.stdout)
             )
 
@@ -107,10 +119,10 @@ class ScratchContainer(object):
             p.start()
 
     def tearDown(self):
-        def recursive_chmod(dir):
-            os.chmod(dir,0777)
-            for f in os.listdir(dir):
-                fullname = os.path.join(dir,f)
+        def recursive_chmod(d):
+            os.chmod(d,0777)
+            for f in os.listdir(d):
+                fullname = os.path.join(d,f)
                 if os.path.isdir(fullname) and not os.path.islink(fullname):
                     recursive_chmod(fullname)
 
