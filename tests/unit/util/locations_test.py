@@ -5,6 +5,7 @@ from nose.tools import istest
 
 import src.util.locations
 
+
 @istest
 def get_salve_root():
     """
@@ -15,6 +16,7 @@ def get_salve_root():
     with mock.patch('src.util.locations.__file__',
                     '/tmp/SALVE/src/util/locations.py'):
         assert src.util.locations.get_salve_root() == '/tmp/SALVE'
+
 
 @istest
 def get_default_config():
@@ -27,6 +29,7 @@ def get_default_config():
                     '/tmp/SALVE/src/util/locations.py'):
         assert src.util.locations.get_default_config() == \
                '/tmp/SALVE/default_settings.ini'
+
 
 @istest
 def identify_abspath():
@@ -43,6 +46,7 @@ def identify_abspath():
     assert not src.util.locations.is_abs_or_var('a/b/c')
     assert not src.util.locations.is_abs_or_var('../a/b/c')
 
+
 @istest
 def identify_varpath():
     """
@@ -53,7 +57,6 @@ def identify_varpath():
     assert src.util.locations.is_abs_or_var('$a')
     assert src.util.locations.is_abs_or_var('$USER/a/b/c')
     assert src.util.locations.is_abs_or_var('$a/b/c')
-
 
     assert not src.util.locations.is_abs_or_var('$$a/b/c')
     assert not src.util.locations.is_abs_or_var('$$$$a/b/c')

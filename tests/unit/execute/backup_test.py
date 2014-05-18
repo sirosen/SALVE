@@ -11,21 +11,24 @@ import tests.utils.scratch as scratch
 import src.execute.action as action
 import src.execute.backup as backup
 
-_testfile_dir = os.path.join(os.path.dirname(__file__),'files')
-def get_full_path(filename):
-    return os.path.join(_testfile_dir,filename)
+_testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 
-dummy_stream_context = StreamContext('no such file',-1)
+
+def get_full_path(filename):
+    return os.path.join(_testfile_dir, filename)
+
+dummy_stream_context = StreamContext('no such file', -1)
 dummy_exec_context = ExecutionContext()
-dummy_exec_context.set('backup_dir','/etc/salve/backup')
-dummy_exec_context.set('backup_log','/etc/salve/backup.log')
+dummy_exec_context.set('backup_dir', '/etc/salve/backup')
+dummy_exec_context.set('backup_log', '/etc/salve/backup.log')
 dummy_context = SALVEContext(stream_context=dummy_stream_context,
                              exec_context=dummy_exec_context)
+
 
 class TestWithScratchdir(scratch.ScratchContainer):
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
-        dummy_exec_context.set('run_log',self.stderr)
+        dummy_exec_context.set('run_log', self.stderr)
 
     @istest
     def file_target_name(self):
@@ -34,17 +37,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that a file's abspath followed by its SHA512 hash is its
         destination file when backed up.
         """
-        self.write_file('file1.txt','Hashing target.\n')
+        self.write_file('file1.txt', 'Hashing target.\n')
         filename = self.get_fullname('file1.txt')
 
         # a hashtable to track inputs into functions &c
-        func_log = {'cp':None}
+        func_log = {'cp': None}
 
         def mock_cp(fcp_act):
-            func_log['cp'] = (fcp_act.src,fcp_act.dst)
+            func_log['cp'] = (fcp_act.src, fcp_act.dst)
 
         def mock_exists(path):
-            if path == '/etc/salve/backup' or path == '/etc/salve/backup/files':
+            if path == '/etc/salve/backup' or \
+               path == '/etc/salve/backup/files':
                 return True
             else:
                 return False
@@ -52,21 +56,21 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = backup.FileBackupAction(filename,
                                       dummy_context)
 
-        with mock.patch('src.execute.copy.FileCopyAction.execute',mock_cp), \
+        with mock.patch('src.execute.copy.FileCopyAction.execute', mock_cp), \
              mock.patch('src.execute.backup.FileBackupAction.verify_can_exec',
                         lambda self: self.verification_codes.OK), \
              mock.patch('src.execute.backup.FileBackupAction.write_log',
                         lambda self: None), \
-             mock.patch('os.path.exists',mock_exists):
+             mock.patch('os.path.exists', mock_exists):
             act()
 
-        assert os.path.basename(act.dst) == '9bfabef5ffd7f5df84171393643'+\
-                                            'e7ceeba916e64876ace612ca8d2'+\
-                                            '0ad0ffd69e0ecd284ca7899f4ba'+\
-                                            'b6805c06f881296d20f619e714b'+\
-                                            'efb255e23fdf09ef0eed', act.dst
+        assert os.path.basename(act.dst) == ('9bfabef5ffd7f5df84171393643' +
+                                             'e7ceeba916e64876ace612ca8d2' +
+                                             '0ad0ffd69e0ecd284ca7899f4ba' +
+                                             'b6805c06f881296d20f619e714b' +
+                                             'efb255e23fdf09ef0eed'), act.dst
 
-        assert func_log['cp'] == (filename,act.dst)
+        assert func_log['cp'] == (filename, act.dst)
 
     @istest
     def file_symlink_target_name(self):
@@ -76,16 +80,17 @@ class TestWithScratchdir(scratch.ScratchContainer):
         destination file when backed up.
         """
         linkname = self.get_fullname('file_link1')
-        os.symlink('file1.txt',linkname)
+        os.symlink('file1.txt', linkname)
 
         # a hashtable to track inputs into functions &c
-        func_log = {'cp':None}
+        func_log = {'cp': None}
 
         def mock_cp(fcp_act):
-            func_log['cp'] = (fcp_act.src,fcp_act.dst)
+            func_log['cp'] = (fcp_act.src, fcp_act.dst)
 
         def mock_exists(path):
-            if path == '/etc/salve/backup' or path == '/etc/salve/backup/files':
+            if path == '/etc/salve/backup' or \
+               path == '/etc/salve/backup/files':
                 return True
             else:
                 return False
@@ -93,19 +98,19 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = backup.FileBackupAction(linkname,
                                       dummy_context)
 
-        with mock.patch('src.execute.copy.FileCopyAction.execute',mock_cp), \
+        with mock.patch('src.execute.copy.FileCopyAction.execute', mock_cp), \
              mock.patch('src.execute.backup.FileBackupAction.write_log',
                         lambda self: None), \
              mock.patch('src.execute.backup.FileBackupAction.verify_can_exec',
                         lambda self: self.verification_codes.OK), \
-             mock.patch('os.path.exists',mock_exists):
+             mock.patch('os.path.exists', mock_exists):
             act()
 
-        assert os.path.basename(act.dst) == '55ae75d991c770d8f3ef07cbfde'+\
-                                            '124ffce9c420da5db6203afab70'+\
-                                            '0b27e10cf9'
+        assert os.path.basename(act.dst) == ('55ae75d991c770d8f3ef07cbfde' +
+                                             '124ffce9c420da5db6203afab70' +
+                                             '0b27e10cf9')
 
-        assert func_log['cp'] == (linkname,act.dst)
+        assert func_log['cp'] == (linkname, act.dst)
 
     @istest
     def backupaction_is_abstract(self):
@@ -113,7 +118,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Backup Action Base Class Is Abstract
         Checks that instantiating a BackupAction raises an error.
         """
-        ensure_except(TypeError,backup.BackupAction)
+        ensure_except(TypeError, backup.BackupAction)
 
     @istest
     def file_dst_dir(self):
@@ -138,9 +143,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = backup.FileBackupAction(filename,
                                       dummy_context)
         assert str(act) == \
-            'FileBackupAction(src='+filename+',backup_dir='+\
-            '/etc/salve/backup,backup_log=/etc/salve/backup.log'+\
-            ',context='+str(dummy_context)+')'
+            ('FileBackupAction(src=' + filename + ',backup_dir=' +
+             '/etc/salve/backup,backup_log=/etc/salve/backup.log' +
+             ',context=' + str(dummy_context) + ')')
 
     @istest
     def file_write_log(self):
@@ -156,12 +161,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         mo = mock.mock_open()
         mm = mock.MagicMock()
-        with mock.patch('src.execute.backup.open',mo,create=True), \
-             mock.patch('src.execute.backup.print',mm,create=True), \
-             mock.patch('time.strftime',lambda s: 'NOW'):
+        with mock.patch('src.execute.backup.open', mo, create=True), \
+             mock.patch('src.execute.backup.print', mm, create=True), \
+             mock.patch('time.strftime', lambda s: 'NOW'):
             act.write_log()
 
-        mo.assert_called_once_with('/etc/salve/backup.log','a')
+        mo.assert_called_once_with('/etc/salve/backup.log', 'a')
         assert mm.call_args[0][0] == ('NOW abc ' + filename)
 
     @istest
@@ -175,17 +180,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = backup.DirBackupAction(dirname,
                                      dummy_context)
 
-        def mock_execute(self): pass
+        def mock_execute(self):
+            pass
         with mock.patch('src.execute.action.ActionList.execute',
                         mock_execute):
             act()
 
         # must be a valid ActionList
-        assert isinstance(act,action.ActionList)
-        assert hasattr(act,'actions')
+        assert isinstance(act, action.ActionList)
+        assert hasattr(act, 'actions')
         seen_files = set()
         for subact in act.actions:
-            assert isinstance(subact,backup.FileBackupAction)
+            assert isinstance(subact, backup.FileBackupAction)
             seen_files.add(subact.src)
         assert get_full_path('dir1/a') in seen_files
         assert get_full_path('dir1/b') in seen_files
@@ -199,11 +205,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
         each of the files in the directory.
         """
         dirname = get_full_path('dir1')
-        act = backup.DirBackupAction(dirname,dummy_context)
+        act = backup.DirBackupAction(dirname, dummy_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
         for subact in act.actions:
-            assert isinstance(subact,backup.FileBackupAction)
+            assert isinstance(subact, backup.FileBackupAction)
         seen_files = set()
         mock_execute = lambda self: seen_files.add(self.src)
 
@@ -223,11 +229,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
         source dir.
         """
         dirname = get_full_path('no such dir')
-        act = backup.DirBackupAction(dirname,dummy_context)
+        act = backup.DirBackupAction(dirname, dummy_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
         for subact in act.actions:
-            assert isinstance(subact,backup.FileBackupAction)
+            assert isinstance(subact, backup.FileBackupAction)
 
         assert act.verify_can_exec() ==\
             backup.DirBackupAction.verification_codes.NONEXISTENT_SOURCE
@@ -240,11 +246,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
         source dir during execution.
         """
         dirname = get_full_path('no such dir')
-        act = backup.DirBackupAction(dirname,dummy_context)
+        act = backup.DirBackupAction(dirname, dummy_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
         for subact in act.actions:
-            assert isinstance(subact,backup.FileBackupAction)
+            assert isinstance(subact, backup.FileBackupAction)
 
         act.execute()
         assert self.stderr.getvalue() ==\
