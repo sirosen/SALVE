@@ -6,9 +6,11 @@ import sys
 
 from src.util.enum import Enum
 
-log_types = Enum('INFO','WARN','ERROR')
 
-def salve_log(message,log_type,context,print_context=True,min_verbosity=0):
+log_types = Enum('INFO', 'WARN', 'ERROR')
+
+
+def salve_log(message, log_type, context, print_context=True, min_verbosity=0):
     """
     Print a message if the appropriate logging level is set, including
     message info about context and log type.
@@ -53,19 +55,20 @@ def salve_log(message,log_type,context,print_context=True,min_verbosity=0):
        min_verbosity > ectx.get('verbosity'):
         return
 
-    # if print_context is true, prepend it to the message with a colon separator
-    # otherwise, it will be omitted
+    # if print_context is true, prepend it to the message with
+    # a colon separator. Otherwise, it will be omitted
     if print_context:
         message = str(context) + ': ' + message
 
     # construct message prefix
-    prefix = '['+log_type+']'
+    prefix = '[' + log_type + ']'
     if min_verbosity > 0:
-        prefix = prefix+'['+str(min_verbosity)+']'
+        prefix = prefix + '[' + str(min_verbosity) + ']'
 
-    print(prefix + ' ' + message,file=target)
+    print(prefix + ' ' + message, file=target)
 
-def warn(message,context,print_context=True,min_verbosity=0):
+
+def warn(message, context, print_context=True, min_verbosity=0):
     """
     A lightweight wrapper of salve_log with log_type=WARN
 
@@ -88,10 +91,11 @@ def warn(message,context,print_context=True,min_verbosity=0):
         The minimum verbosity for this message to print. If that verbosity
         level is not met, the logging action is a no-op.
     """
-    salve_log(message,log_types.WARN,context,
-              print_context=print_context,min_verbosity=min_verbosity)
+    salve_log(message, log_types.WARN, context,
+              print_context=print_context, min_verbosity=min_verbosity)
 
-def info(message,context,print_context=True,min_verbosity=0):
+
+def info(message, context, print_context=True, min_verbosity=0):
     """
     A lightweight wrapper of salve_log with log_type=INFO
 
@@ -114,10 +118,11 @@ def info(message,context,print_context=True,min_verbosity=0):
         The minimum verbosity for this message to print. If that verbosity
         level is not met, the logging action is a no-op.
     """
-    salve_log(message,log_types.INFO,context,
-              print_context=print_context,min_verbosity=min_verbosity)
+    salve_log(message, log_types.INFO, context,
+              print_context=print_context, min_verbosity=min_verbosity)
 
-def error(message,context,print_context=True,min_verbosity=0):
+
+def error(message, context, print_context=True, min_verbosity=0):
     """
     A lightweight wrapper of salve_log with log_type=ERROR
 
@@ -140,5 +145,5 @@ def error(message,context,print_context=True,min_verbosity=0):
         The minimum verbosity for this message to print. If that verbosity
         level is not met, the logging action is a no-op.
     """
-    salve_log(message,log_types.ERROR,context,
-              print_context=print_context,min_verbosity=min_verbosity)
+    salve_log(message, log_types.ERROR, context,
+              print_context=print_context, min_verbosity=min_verbosity)

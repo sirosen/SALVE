@@ -6,11 +6,12 @@ from src.util.error import SALVEException
 from src.util.context import ExecutionContext
 import src.util.enum as enum
 
+
 class ActionException(SALVEException):
     """
     A SALVE exception specialized for Actions.
     """
-    def __init__(self,msg,context):
+    def __init__(self, msg, context):
         """
         ActionException constructor
 
@@ -20,7 +21,8 @@ class ActionException(SALVEException):
             @context
             A SALVEContext.
         """
-        SALVEException.__init__(self,msg,context)
+        SALVEException.__init__(self, msg, context)
+
 
 class Action(object):
     """
@@ -35,7 +37,7 @@ class Action(object):
     # by default, the only verification code is OK
     verification_codes = enum.Enum('OK')
 
-    def __init__(self,context):
+    def __init__(self, context):
         """
         Base Action constructor.
 
@@ -65,7 +67,7 @@ class Action(object):
         This is the only essential characteristic of an Action: that
         it can be executed to produce some effect.
         """
-        pass #pragma: no cover
+        pass  # pragma: no cover
 
     def __call__(self, *args, **kwargs):
         """
@@ -74,7 +76,8 @@ class Action(object):
         In a sense, this is a better description of what the "execute"
         attribute is. Calling an Action and executing it are identical.
         """
-        return self.execute(*args,**kwargs)
+        return self.execute(*args, **kwargs)
+
 
 class DynamicAction(Action):
     """
@@ -90,7 +93,7 @@ class DynamicAction(Action):
         self.execute(), for example -- so that when execution takes
         place, it will be valid / possible.
         """
-        pass #pragma: no cover
+        pass  # pragma: no cover
 
     def execute(self):
         """
@@ -109,6 +112,7 @@ class DynamicAction(Action):
         """
         self.generate()
         Action.__call__(self, *args, **kwargs)
+
 
 class ActionList(Action):
     """
@@ -130,20 +134,22 @@ class ActionList(Action):
             @context
             The SALVEContext.
         """
-        Action.__init__(self,context)
+        Action.__init__(self, context)
         self.actions = act_lst
 
     def __iter__(self):
         """
         Iterating over an AL iterates over its sub-actions.
         """
-        for act in self.actions: yield act
+        for act in self.actions:
+            yield act
 
     def __str__(self):
-        return "ActionList(["+",".join(str(a) for a in self.actions)+'],'\
-               "context="+str(self.context)+")"
+        return ("ActionList([" +
+                ",".join(str(a) for a in self.actions) +
+                "],context=" + str(self.context) + ")")
 
-    def append(self,act):
+    def append(self, act):
         """
         Append a new Action to the AL.
 
@@ -154,7 +160,7 @@ class ActionList(Action):
         assert isinstance(act, Action)
         self.actions.append(act)
 
-    def prepend(self,act):
+    def prepend(self, act):
         """
         Prepend a new Action to the AL.
 
@@ -163,11 +169,12 @@ class ActionList(Action):
             The action to prepend.
         """
         assert isinstance(act, Action)
-        self.actions.insert(0,act)
+        self.actions.insert(0, act)
 
     def execute(self):
         """
         Execute the AL. Consists of a walk over the AL executing each
         of its sub-actions.
         """
-        for act in self: act()
+        for act in self:
+            act()

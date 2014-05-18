@@ -9,7 +9,8 @@ defaults = {
     'log_level': set(log.log_types)
 }
 
-def apply_exec_context_defaults(exec_context,overwrite=False):
+
+def apply_exec_context_defaults(exec_context, overwrite=False):
     """
     Apply the default globals to an ExecutionContext.
 
@@ -24,6 +25,7 @@ def apply_exec_context_defaults(exec_context,overwrite=False):
     """
     for key in defaults:
         # if the key is present and not being ovewritten, continue the loop
-        if exec_context.has(key) and (not overwrite): continue
+        if exec_context.has(key) and (not overwrite):
+            continue
         # otherwise, apply the default value
-        exec_context.set(key,defaults[key])
+        exec_context.set(key, defaults[key])

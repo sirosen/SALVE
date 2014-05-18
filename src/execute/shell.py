@@ -5,6 +5,7 @@ import subprocess
 from src.execute.action import Action, ActionException
 from src.util.context import ExecutionContext
 
+
 class ShellAction(Action):
     """
     A ShellAction is one of the basic Action types, used to invoke
@@ -21,11 +22,11 @@ class ShellAction(Action):
             @context
             The SALVEContext.
         """
-        Action.__init__(self,context)
+        Action.__init__(self, context)
         self.cmd = command
 
     def __str__(self):
-        return 'ShellAction('+str(self.cmd)+')'
+        return 'ShellAction(' + str(self.cmd) + ')'
 
     def execute(self):
         """
@@ -46,8 +47,8 @@ class ShellAction(Action):
         process.wait()
         # check if returncode became nonzero, and fail if it did
         if process.returncode != 0:
-            raise ActionException(str(self)+\
-                ' failed with exit code '+str(process.returncode),
+            raise ActionException(str(self) +
+                ' failed with exit code ' + str(process.returncode),
                 self.context)
 
         return process.communicate()
