@@ -10,7 +10,8 @@ and the file cache
 import os
 import re
 
-def containing_dir(path,depth=1):
+
+def containing_dir(path, depth=1):
     """
     Gets a specific ancestor of a directory.
 
@@ -27,17 +28,20 @@ def containing_dir(path,depth=1):
         d = os.path.dirname(d)
     return d
 
+
 def get_salve_root():
     """
     Get the root directory of the SALVE repository.
     """
-    return containing_dir(__file__,depth=3)
+    return containing_dir(__file__, depth=3)
+
 
 def get_default_config():
     """
     Get the location of the default settings ini file.
     """
-    return os.path.join(get_salve_root(),'default_settings.ini')
+    return os.path.join(get_salve_root(), 'default_settings.ini')
+
 
 def is_abs_or_var(path):
     """
@@ -48,10 +52,14 @@ def is_abs_or_var(path):
         @path
         The string to check for being an absolute or variable path.
     """
-    if os.path.isabs(path): return True
+    if os.path.isabs(path):
+        return True
     # matches: [begin string][even number of $][$][end string or non-$]
-    if re.match('^(\\$\\$)*\\$([^$]|$)',path): return True
+    if re.match('^(\\$\\$)*\\$([^$]|$)', path):
+        return True
+
     return False
+
 
 def get_existing_prefix(path):
     """
@@ -69,7 +77,8 @@ def get_existing_prefix(path):
         path = os.path.dirname(path)
     return path
 
-def clean_path(path,absolute=False):
+
+def clean_path(path, absolute=False):
     """
     Cleans up a path for printing or logging. Primarily, this is
     just and invocation of os.path.normpath, but it may also alter
@@ -89,7 +98,7 @@ def clean_path(path,absolute=False):
         path = os.path.abspath(path)
     else:
         # use a relative path if it is shorter
-        rpath = os.path.relpath(path,'.')
+        rpath = os.path.relpath(path, '.')
         if len(rpath) < len(path):
             path = rpath
 

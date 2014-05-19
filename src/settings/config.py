@@ -43,10 +43,11 @@ class SALVEConfigParser(ConfigParser.ConfigParser):
         # either read the user's rc file, if not given a filename
         # or read the given file
         filenames = [locations.get_default_config(),
-                     os.path.join(userhome,'.salverc'),
+                     os.path.join(userhome, '.salverc'),
                      filename]
         # filter out filename if it is None
         self.read(f for f in filenames if f is not None)
+
 
 class SALVEConfig(object):
     """
@@ -59,7 +60,7 @@ class SALVEConfig(object):
     of guaranteeing that the configuration values are as desired
     without inspecting the files.
     """
-    def __init__(self,context,filename=None):
+    def __init__(self, context, filename=None):
         """
         SALVEConfig constructor.
 
@@ -95,7 +96,8 @@ class SALVEConfig(object):
         self.env['USER'] = user
         self.env['HOME'] = userhome
         self.env['SALVE_ROOT'] = locations.get_salve_root()
-        self.env['SALVE_USER_PRIMARY_GROUP'] = ugo.get_group_from_username(user)
+        self.env['SALVE_USER_PRIMARY_GROUP'] = \
+                ugo.get_group_from_username(user)
 
         # track the filename that's being used, for error out
         self.filename = filename
@@ -103,16 +105,17 @@ class SALVEConfig(object):
         # read the configuration, taking ~userhome/.salverc if there is
         # no file
         try:
-            conf = SALVEConfigParser(userhome,filename)
+            conf = SALVEConfigParser(userhome, filename)
         except ConfigParser.Error as e:
-            raise SALVEException('Encountered an error while parsing your configuration file(s).\n%s' % e.message,context)
+            raise SALVEException('Encountered an error while parsing your ' +
+                    'configuration file(s).\n%s' % e.message, context)
         sections = conf.sections()
         # the loaded configuration is stored in the config object as a
         # dict mapping section names to a dict of (key,value) items
         # all keys are converted the lowercase for uniformity
         self.attributes = dict((s.lower(),
-                                dict((k.lower(),v)
-                                     for (k,v)
+                                dict((k.lower(), v)
+                                     for (k, v)
                                      in conf.items(s)))
                                for s in sections)
 
@@ -124,13 +127,13 @@ class SALVEConfig(object):
         # Grab all of the mappings from the environment that
         # start with the SALVE prefix and are uppercase
         # prevents XYz=a and XYZ=b from being ambiguous
-        salve_env = dict((k,self.env[k]) for k in self.env
+        salve_env = dict((k, self.env[k]) for k in self.env
                           if k.startswith(SALVE_ENV_PREFIX)
                              and k.isupper())
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
-        prefixes = {(SALVE_ENV_PREFIX + s.upper()):s
+        prefixes = {(SALVE_ENV_PREFIX + s.upper()): s
                     for s in self.attributes}
 
         for key in salve_env:
@@ -140,7 +143,7 @@ class SALVEConfig(object):
                     # section
                     subdict = self.attributes[prefixes[p]]
                     # environment vars are uppercase
-                    subkey = key[len(p)+1:].lower()
+                    subkey = key[(len(p) + 1):].lower()
                     subdict[subkey] = salve_env[key]
 
     def _set_context_globals(self):
@@ -154,8 +157,10 @@ class SALVEConfig(object):
             # special handling for the run_log
             # convert to a file open in 'w' mode
             if key == 'run_log':
-                try: val = open(val,'w')
-                except: raise
+                try:
+                    val = open(val, 'w')
+                except:
+                    raise  # pragma: no cover
 
             # special handling for the log_level
             # convert to a set of strings
@@ -170,7 +175,7 @@ class SALVEConfig(object):
             if key == 'verbosity':
                 val = int(val)
 
-            ctx.set(key,val)
+            ctx.set(key, val)
 
     def template(self, template_string):
         """
@@ -207,13 +212,13 @@ class SALVEConfig(object):
         # set any unset attrs in the config
         for key in relevant_attrs:
             if key not in block.attrs:
-                block.set(key,relevant_attrs[key])
+                block.set(key, relevant_attrs[key])
 
         # set any remaining unspecified attributes using defaults
         for key in self.attributes['default']:
             if key not in block.attrs:
-                block.set(key,self.attributes['default'][key])
+                block.set(key, self.attributes['default'][key])
 
         # template any block attrs
         for key in block.attrs:
-            block.set(key,self.template(block.get(key)))
+            block.set(key, self.template(block.get(key)))

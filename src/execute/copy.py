@@ -11,6 +11,7 @@ import src.util.enum as enum
 import src.util.log as log
 from src.util.context import ExecutionContext
 
+
 class CopyAction(action.Action):
     """
     The base class for all CopyActions.
@@ -35,9 +36,10 @@ class CopyAction(action.Action):
             @context
             The SALVEContext.
         """
-        action.Action.__init__(self,context)
+        action.Action.__init__(self, context)
         self.src = src
         self.dst = dst
+
 
 class FileCopyAction(CopyAction):
     """
@@ -58,14 +60,14 @@ class FileCopyAction(CopyAction):
             @context
             The SALVEContext.
         """
-        CopyAction.__init__(self,src,dst,context)
+        CopyAction.__init__(self, src, dst, context)
 
     def __str__(self):
         """
         Stringification into type, source, dst, and context.
         """
-        return "FileCopyAction(src="+str(self.src)+",dst="+\
-               str(self.dst)+",context="+str(self.context)+")"
+        return ("FileCopyAction(src=" + str(self.src) + ",dst=" +
+                str(self.dst) + ",context=" + str(self.context) + ")")
 
     def verify_can_exec(self):
         """
@@ -81,15 +83,15 @@ class FileCopyAction(CopyAction):
             """
             Checks if the target file is writable.
             """
-            if os.access(self.dst,os.W_OK):
+            if os.access(self.dst, os.W_OK):
                 return True
-            if os.access(self.dst,os.F_OK):
+            if os.access(self.dst, os.F_OK):
                 return False
 
             # at this point, the file is known not to exist
             # now check properties of the containing dir
             containing_dir = os.path.dirname(self.dst)
-            if os.access(containing_dir,os.W_OK):
+            if os.access(containing_dir, os.W_OK):
                 return True
 
             # if the file doesn't exist, and the dir containing it
@@ -100,7 +102,7 @@ class FileCopyAction(CopyAction):
             """
             Checks if the source is a readable file.
             """
-            return os.access(self.src,os.R_OK)
+            return os.access(self.src, os.R_OK)
 
         def source_islink():
             """
@@ -109,20 +111,20 @@ class FileCopyAction(CopyAction):
             """
             return os.path.islink(self.src)
 
-        log.info('FileCopy: Checking destination is writable, \"%s\"' % self.dst,
-                 self.context,min_verbosity=3)
+        log.info('FileCopy: Checking destination is writable, \"%s\"' %
+                self.dst, self.context, min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
 
         log.info('FileCopy: Checking if source is link, "%s"' % self.src,
-                 self.context,min_verbosity=3)
+                 self.context, min_verbosity=3)
 
         if source_islink():
             return self.verification_codes.OK
 
         log.info('FileCopy: Checking source is readable, \"%s\"' % self.src,
-                 self.context,min_verbosity=3)
+                 self.context, min_verbosity=3)
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
@@ -140,24 +142,25 @@ class FileCopyAction(CopyAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "FileCopy: Non-Writable target file \"%s\"" % self.dst
-            log.warn(logstr,self.context)
+            log.warn(logstr, self.context)
             return
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
             logstr = "FileCopy: Non-Readable source file \"%s\"" % self.src
-            log.warn(logstr,self.context)
+            log.warn(logstr, self.context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing File Copy \"%s\" -> \"%s\"' % (self.src,self.dst),
-                 self.context,min_verbosity=1)
+        log.info('Performing File Copy \"%s\" -> \"%s\"' %
+                (self.src, self.dst), self.context, min_verbosity=1)
 
         if os.path.islink(self.src):
-            os.symlink(os.readlink(self.src),self.dst)
+            os.symlink(os.readlink(self.src), self.dst)
         else:
-            shutil.copyfile(self.src,self.dst)
+            shutil.copyfile(self.src, self.dst)
+
 
 class DirCopyAction(CopyAction):
     """
@@ -175,11 +178,11 @@ class DirCopyAction(CopyAction):
             @context
             The SALVEContext.
         """
-        CopyAction.__init__(self,src,dst,context)
+        CopyAction.__init__(self, src, dst, context)
 
     def __str__(self):
-        return "DirCopyAction(src="+str(self.src)+",dst="+\
-               str(self.dst)+",context="+str(self.context)+")"
+        return ("DirCopyAction(src=" + str(self.src) + ",dst=" +
+                str(self.dst) + ",context=" + str(self.context) + ")")
 
     def verify_can_exec(self):
         """
@@ -194,10 +197,10 @@ class DirCopyAction(CopyAction):
             """
             Checks if the target is in a writable directory.
             """
-            return os.access(os.path.dirname(self.dst),os.W_OK)
+            return os.access(os.path.dirname(self.dst), os.W_OK)
 
         log.info('DirCopy: Checking target is writable, \"%s\"' % self.dst,
-                 self.context,min_verbosity=3)
+                 self.context, min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -212,13 +215,13 @@ class DirCopyAction(CopyAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "DirCopy: Non-Writable target directory \"%s\"" % self.dst
-            log.warn(logstr,self.context)
+            log.warn(logstr, self.context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing Directory Copy \"%s\" -> \"%s\"' % (self.src,self.dst),
-                 self.context,min_verbosity=1)
+        log.info('Performing Directory Copy \"%s\" -> \"%s\"' %
+                (self.src, self.dst), self.context, min_verbosity=1)
 
-        shutil.copytree(self.src,self.dst,symlinks=True)
+        shutil.copytree(self.src, self.dst, symlinks=True)

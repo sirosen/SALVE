@@ -14,16 +14,19 @@ from src.util.context import SALVEContext, ExecutionContext
 import tests.utils.scratch
 from tests.utils.exceptions import ensure_except
 
-_testfile_dir = pjoin(dirname(__file__),'testfiles')
+_testfile_dir = pjoin(dirname(__file__), 'testfiles')
 dummy_exec_context = ExecutionContext()
 dummy_context = SALVEContext(exec_context=dummy_exec_context)
 
+
 def parse_filename(filename):
     with open(filename) as f:
-        return src.reader.parse.parse_stream(dummy_context,f)
+        return src.reader.parse.parse_stream(dummy_context, f)
+
 
 def get_full_path(filename):
-    return locations.clean_path(pjoin(_testfile_dir,filename))
+    return locations.clean_path(pjoin(_testfile_dir, filename))
+
 
 class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
     @istest
@@ -46,7 +49,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('empty_block.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock,src.block.file_block.FileBlock)
+        assert isinstance(fblock, src.block.file_block.FileBlock)
 
     @istest
     def single_attr_block(self):
@@ -58,7 +61,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('single_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock,src.block.file_block.FileBlock)
+        assert isinstance(fblock, src.block.file_block.FileBlock)
         assert fblock.get('source') == '/a/b/c'
 
     @istest
@@ -72,7 +75,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('two_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock,src.block.file_block.FileBlock)
+        assert isinstance(fblock, src.block.file_block.FileBlock)
         assert fblock.get('source') == '/a/b/c'
         assert fblock.get('target') == '/d/e'
 
@@ -87,7 +90,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('spaced_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock,src.block.file_block.FileBlock)
+        assert isinstance(fblock, src.block.file_block.FileBlock)
         assert fblock.get('source') == '/a/b/c'
         assert fblock.get('target') == '/d/e f/g'
 

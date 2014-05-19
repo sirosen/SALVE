@@ -13,14 +13,15 @@ def run_on_backup_subcommand():
     Verifies that running on arguments starting with "backup" correctly invokes
     the backup main method.
     """
-    fake_argv = ['./salve.py','backup','-f','a/b/c','-r']
+    fake_argv = ['./salve.py', 'backup', '-f', 'a/b/c', '-r']
 
-    log = {'main':False}
+    log = {'main': False}
+
     def fake_main(args):
         log['main'] = True
 
-    with mock.patch('sys.argv',fake_argv), \
-         mock.patch('src.run.backup.main',fake_main):
+    with mock.patch('sys.argv', fake_argv), \
+         mock.patch('src.run.backup.main', fake_main):
         command.run()
 
     assert log['main']

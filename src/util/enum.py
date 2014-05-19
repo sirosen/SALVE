@@ -2,6 +2,7 @@
 
 import copy
 
+
 class Enum(object):
     def __init__(self, *seq, **named):
         """
@@ -37,9 +38,9 @@ class Enum(object):
             enum.
         """
         self.enum_elems = {}
-        self.add(*seq,**named)
+        self.add(*seq, **named)
 
-    def __contains__(self,x):
+    def __contains__(self, x):
         """
         Checks if @x is in an enum. Defines the results of 'in' tests.
         """
@@ -53,18 +54,18 @@ class Enum(object):
         for x in self.enum_elems:
             yield x
 
-    def add(self,*seq,**named):
+    def add(self, *seq, **named):
         """
         Adds elements to the enum.
         """
-        enums = dict([(x,x) for x in seq], **named)
+        enums = dict([(x, x) for x in seq], **named)
         self.__dict__.update(enums)
         self.enum_elems.update(enums)
 
-    def extend(self,*seq,**named):
+    def extend(self, *seq, **named):
         """
         Creates a new enum with @seq and @named added.
         """
         new = copy.copy(self)
-        new.add(*seq,**named)
+        new.add(*seq, **named)
         return new

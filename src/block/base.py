@@ -7,11 +7,12 @@ from src.util.enum import Enum
 from src.util.error import SALVEException
 import src.util.locations as locations
 
+
 class BlockException(SALVEException):
     """
     A SALVE exception specialized for blocks.
     """
-    def __init__(self,msg,context):
+    def __init__(self, msg, context):
         """
         BlockException constructor
 
@@ -22,7 +23,8 @@ class BlockException(SALVEException):
             A SALVEContext that identifies the origin of this
             exception.
         """
-        SALVEException.__init__(self,msg,context=context)
+        SALVEException.__init__(self, msg, context=context)
+
 
 class Block(object):
     """
@@ -35,9 +37,9 @@ class Block(object):
 
     # these are the valid types of block, and therefore the valid
     # block identifiers (case insensitive)
-    types = Enum('FILE','MANIFEST','DIRECTORY')
+    types = Enum('FILE', 'MANIFEST', 'DIRECTORY')
 
-    def __init__(self,ty,context):
+    def __init__(self, ty, context):
         """
         Base Block constructor.
 
@@ -61,7 +63,7 @@ class Block(object):
         # in order for the block to be valid
         self.min_attrs = set()
 
-    def set(self,attribute_name,value):
+    def set(self, attribute_name, value):
         """
         Set an attribute of the block to have a specific value. Note
         that this is a destructive overwrite if the attribute had a
@@ -77,7 +79,7 @@ class Block(object):
         """
         self.attrs[attribute_name] = value
 
-    def get(self,attribute_name):
+    def get(self, attribute_name):
         """
         Return the value of a given attribute of the block.
 
@@ -88,7 +90,7 @@ class Block(object):
         """
         return self.attrs[attribute_name]
 
-    def has(self,attribute_name):
+    def has(self, attribute_name):
         """
         Checks if the block has a value associated with a given
         attribute. Returns the T/F value of that check.
@@ -100,7 +102,7 @@ class Block(object):
         """
         return attribute_name in self.attrs
 
-    def ensure_has_attrs(self,*args):
+    def ensure_has_attrs(self, *args):
         """
         Given a list of attributes, checks if the block has each of
         those attributes, and raises a BlockException on the first one
@@ -113,10 +115,10 @@ class Block(object):
         """
         for attr in args:
             if not self.has(attr):
-                raise self.mk_except('Block(ty='+self.block_type+') '+\
-                                          'missing attr "'+attr+'"')
+                raise self.mk_except('Block(ty=' + self.block_type + ') ' +
+                                     'missing attr "' + attr + '"')
 
-    def mk_except(self,msg):
+    def mk_except(self, msg):
         """
         Create a BlockException from the block. Used to easily pass the
         block's context to the exception, and to give any extra
@@ -127,7 +129,7 @@ class Block(object):
             The string message that should be reported by the raised
             exception.
         """
-        exc = BlockException(msg,self.context)
+        exc = BlockException(msg, self.context)
         return exc
 
     @abc.abstractmethod
@@ -139,7 +141,7 @@ class Block(object):
         There is no meaningful implementation of this for an untyped
         block, so it is abstract.
         """
-        return #pragma: no cover
+        return  # pragma: no cover
 
     def expand_file_paths(self, root_dir):
         """
@@ -156,7 +158,7 @@ class Block(object):
         def expand_attr(attrname):
             val = self.get(attrname)
             if not locations.is_abs_or_var(val):
-                self.set(attrname,os.path.join(root_dir,val))
+                self.set(attrname, os.path.join(root_dir, val))
 
         # find the minimal set of path attributes
         min_path_attrs = self.min_attrs.intersection(self.path_attrs)
@@ -173,4 +175,5 @@ class Block(object):
         # then ensure that any of the non-minimal ones that are present
         # are also expanded
         for attr in non_min_path_attrs:
-            if self.has(attr): expand_attr(attr)
+            if self.has(attr):
+                expand_attr(attr)

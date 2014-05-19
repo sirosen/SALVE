@@ -48,7 +48,7 @@ class ScratchContainer(object):
         self.sudouser = 'user1'
         self.userhome = 'home/user1'
         os.makedirs(mock_env['HOME'])
-        self.patches.add(mock.patch.dict('os.environ',mock_env))
+        self.patches.add(mock.patch.dict('os.environ', mock_env))
 
         def get_groupname(user):
             if user == 'user1':
@@ -57,20 +57,22 @@ class ScratchContainer(object):
                 return 'nogroup'
 
         real_expanduser = os.path.expanduser
+
         def expanduser(path):
             if path.strip() == '~user1':
                 return mock_env['HOME']
             else:
                 return real_expanduser(path)
 
-        settings_loc = os.path.join(mock_env['HOME'],'settings.ini')
-        self.write_file(settings_loc,self.default_settings_content)
+        settings_loc = os.path.join(mock_env['HOME'], 'settings.ini')
+        self.write_file(settings_loc, self.default_settings_content)
         real_open = open
-        def mock_open(path,*args,**kwargs):
+
+        def mock_open(path, *args, **kwargs):
             if os.path.abspath(path) == locations.get_default_config():
-                return real_open(settings_loc,*args,**kwargs)
+                return real_open(settings_loc, *args, **kwargs)
             else:
-                return real_open(path,*args,**kwargs)
+                return real_open(path, *args, **kwargs)
 
         self.patches.add(
             mock.patch('src.util.ugo.get_group_from_username',
@@ -82,16 +84,18 @@ class ScratchContainer(object):
         # user
         real_uid = os.geteuid()
         real_gid = os.getegid()
-        self.patches.add(mock.patch('src.util.ugo.name_to_uid',lambda x: real_uid)
+        self.patches.add(mock.patch('src.util.ugo.name_to_uid',
+            lambda x: real_uid)
             )
-        self.patches.add(mock.patch('src.util.ugo.name_to_gid',lambda x: real_gid)
+        self.patches.add(mock.patch('src.util.ugo.name_to_gid',
+            lambda x: real_gid)
             )
 
         self.patches.add(
-            mock.patch('os.path.expanduser',expanduser)
+            mock.patch('os.path.expanduser', expanduser)
             )
         self.patches.add(
-            mock.patch('__builtin__.open',mock_open)
+            mock.patch('__builtin__.open', mock_open)
             )
 
     def mock_io(self):
@@ -99,14 +103,14 @@ class ScratchContainer(object):
         self.stdout = StringIO.StringIO()
 
         self.patches.add(
-            mock.patch('sys.stderr',self.stderr)
+            mock.patch('sys.stderr', self.stderr)
             )
         self.patches.add(
             mock.patch.dict('src.settings.default_globals.defaults',
-                {'run_log':self.stderr})
+                {'run_log': self.stderr})
             )
         self.patches.add(
-            mock.patch('sys.stdout',self.stdout)
+            mock.patch('sys.stdout', self.stdout)
             )
 
     def setUp(self):
@@ -120,9 +124,9 @@ class ScratchContainer(object):
 
     def tearDown(self):
         def recursive_chmod(d):
-            os.chmod(d,0777)
+            os.chmod(d, 0777)
             for f in os.listdir(d):
-                fullname = os.path.join(d,f)
+                fullname = os.path.join(d, f)
                 if os.path.isdir(fullname) and not os.path.islink(fullname):
                     recursive_chmod(fullname)
 
@@ -132,32 +136,32 @@ class ScratchContainer(object):
         for p in self.patches:
             p.stop()
 
-    def get_backup_path(self,backup_dir):
-        return os.path.join(self.get_fullname(backup_dir),'files')
+    def get_backup_path(self, backup_dir):
+        return os.path.join(self.get_fullname(backup_dir), 'files')
 
-    def make_dir(self,relpath):
+    def make_dir(self, relpath):
         full_path = self.get_fullname(relpath)
         # FIXME: should use EAFP style
         if not os.path.exists(full_path):
             os.makedirs(full_path)
 
-    def exists(self,relpath):
+    def exists(self, relpath):
         return os.path.exists(self.get_fullname(relpath))
 
-    def listdir(self,relpath):
+    def listdir(self, relpath):
         return os.listdir(self.get_fullname(relpath))
 
-    def write_file(self,relpath,content):
-        with open(self.get_fullname(relpath),'w') as f:
+    def write_file(self, relpath, content):
+        with open(self.get_fullname(relpath), 'w') as f:
             f.write(content)
 
-    def read_file(self,relpath):
-        filename = os.path.join(self.scratch_dir,relpath)
-        with open(filename,'r') as f:
+    def read_file(self, relpath):
+        filename = os.path.join(self.scratch_dir, relpath)
+        with open(filename, 'r') as f:
             return f.read()
 
-    def get_mode(self,relpath):
+    def get_mode(self, relpath):
         return os.stat(self.get_fullname(relpath)).st_mode & 0777
 
-    def get_fullname(self,relpath):
-        return os.path.join(self.scratch_dir,relpath)
+    def get_fullname(self, relpath):
+        return os.path.join(self.scratch_dir, relpath)
