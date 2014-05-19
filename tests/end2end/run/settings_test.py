@@ -8,6 +8,7 @@ from nose.tools import istest
 
 import tests.end2end.run.common as run_common
 
+
 class TestWithRunLog(run_common.RunScratchContainer):
     default_settings_content = textwrap.dedent(
         """
@@ -44,10 +45,10 @@ class TestWithRunLog(run_common.RunScratchContainer):
         the error, warn, and info output is written to the log.
         """
         content = 'file { action copy source 1.man target 2.man }\n'
-        self.write_file('1.man',content)
+        self.write_file('1.man', content)
         self.run_on_manifest('1.man')
         assert self.exists('2.man')
         s = self.read_file('2.man')
         assert s == content, '%s' % s
-        s = self.read_file(self.userhome+'/run_log')
+        s = self.read_file(self.userhome + '/run_log')
         assert len(s) > 0

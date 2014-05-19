@@ -7,6 +7,7 @@ from nose.tools import istest
 
 import tests.end2end.run.common as run_common
 
+
 class TestWithScratchdir(run_common.RunScratchContainer):
     @istest
     def copy_symlink(self):
@@ -17,11 +18,11 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         the destination link.
         """
         content = 'file { action copy source 1 target 2 }\n'
-        self.write_file('1.man',content)
+        self.write_file('1.man', content)
         fullname1 = self.get_fullname('1')
         fullname2 = self.get_fullname('2')
         man_fullname = self.get_fullname('1.man')
-        os.symlink(man_fullname,fullname1)
+        os.symlink(man_fullname, fullname1)
 
         self.run_on_manifest('1.man')
 

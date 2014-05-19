@@ -6,6 +6,7 @@ from nose.tools import istest
 
 import tests.end2end.run.common as run_common
 
+
 class TestWithScratchdir(run_common.RunScratchContainer):
     @istest
     def copy_empty_dir(self):
@@ -17,7 +18,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         """
         self.make_dir('a')
         content = 'directory { action copy source a target b }\n'
-        self.write_file('1.man',content)
+        self.write_file('1.man', content)
         self.run_on_manifest('1.man')
 
         assert self.exists('b')
@@ -35,7 +36,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         """
         self.make_dir('a')
         content = 'directory { source a target b }\n'
-        self.write_file('1.man',content)
+        self.write_file('1.man', content)
         self.run_on_manifest('1.man')
 
         assert self.exists('b')
@@ -52,7 +53,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         the target is created, and that it is empty as well.
         """
         content = 'directory { action create target a }\n'
-        self.write_file('1.man',content)
+        self.write_file('1.man', content)
         self.run_on_manifest('1.man')
 
         assert self.exists('a')
@@ -68,12 +69,12 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         """
         self.make_dir('a')
         content = 'directory { action create target a mode 700 }\n'
-        self.write_file('1.man',content)
+        self.write_file('1.man', content)
         self.run_on_manifest('1.man')
 
         assert self.exists('a')
         assert len(self.listdir('a')) == 0
-        assert self.get_mode('a') == int('700',8)
+        assert self.get_mode('a') == int('700', 8)
 
     @istest
     def copy_dir_with_file(self):
@@ -86,8 +87,8 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         """
         self.make_dir('p')
         content = 'directory { action copy source p target q }\n'
-        self.write_file('1.man',content)
-        self.write_file('p/alpha','string here!')
+        self.write_file('1.man', content)
+        self.write_file('p/alpha', 'string here!')
         self.run_on_manifest('1.man')
 
         assert self.exists('q')
@@ -111,7 +112,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         """
         self.make_dir('m/n')
         content = 'directory { action copy source m target m_prime }\n'
-        self.write_file('manifest',content)
+        self.write_file('manifest', content)
         self.run_on_manifest('manifest')
 
         assert self.exists('m_prime')
@@ -134,13 +135,13 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         Should result in failure during verification.
         """
         content = 'directory { action copy source 1 target 2/1 }\n'
-        self.write_file('1.man',content)
+        self.write_file('1.man', content)
         self.make_dir('1')
         self.make_dir('2')
 
         fullname = self.get_fullname('2')
         fullname_sub = self.get_fullname('2/1')
-        os.chmod(fullname,0400)
+        os.chmod(fullname, 0400)
 
         self.run_on_manifest('1.man')
 
@@ -149,7 +150,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         assert len(self.listdir('2')) == 0
 
         err = self.stderr.getvalue()
-        expected = ('[WARN] [VERIFICATION] %s, line 1: DirCreate: '+
+        expected = ('[WARN] [VERIFICATION] %s, line 1: DirCreate: ' +
             'Non-Writable target dir "%s"\n'
-            ) % (self.get_fullname('1.man'),fullname_sub)
-        assert err.find(expected) != -1, "%s\ndoesn't contain\n%s" % (err,expected)
+            ) % (self.get_fullname('1.man'), fullname_sub)
+        assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
