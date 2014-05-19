@@ -4,11 +4,15 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from src.util.error import StreamContext
+from src.util.context import SALVEContext, ExecutionContext, StreamContext
 
 import src.execute.action as action
 
-dummy_context = StreamContext('no such file',-1)
+dummy_stream_context = StreamContext('no such file', -1)
+dummy_exec_context = ExecutionContext()
+dummy_context = SALVEContext(stream_context=dummy_stream_context,
+                             exec_context=dummy_exec_context)
+
 
 @istest
 def action_is_abstract():
@@ -16,7 +20,8 @@ def action_is_abstract():
     Action Base Class Is Abstract
     Verifies that instantiating an Action raises an error.
     """
-    ensure_except(TypeError,action.Action)
+    ensure_except(TypeError, action.Action)
+
 
 @istest
 def dynamic_action_is_abstract():
@@ -24,7 +29,8 @@ def dynamic_action_is_abstract():
     Dynamic Action Base Class Is Abstract
     Verifies that instantiating a DynamicAction raises an error.
     """
-    ensure_except(TypeError,action.DynamicAction)
+    ensure_except(TypeError, action.DynamicAction)
+
 
 @istest
 def dynamic_action_execute_fails():
@@ -41,7 +47,8 @@ def dynamic_action_execute_fails():
             pass
 
     act = DummyAction(dummy_context)
-    ensure_except(action.ActionException,act.execute)
+    ensure_except(action.ActionException, act.execute)
+
 
 @istest
 def dynamic_action_call_generates_and_executes():
@@ -56,6 +63,7 @@ def dynamic_action_call_generates_and_executes():
     class DummyAction(action.DynamicAction):
         def generate(self):
             logged_funcs.append('generate')
+
             def execute_replacement():
                 logged_funcs.append('execute_replacement')
             self.execute = execute_replacement
@@ -67,6 +75,7 @@ def dynamic_action_call_generates_and_executes():
     assert logged_funcs[0] == 'generate'
     assert logged_funcs[1] == 'execute_replacement'
 
+
 @istest
 def empty_action_list():
     """
@@ -74,15 +83,17 @@ def empty_action_list():
     Verifies that executing an empty ActionList does nothing.
     """
     done_actions = []
+
     def mock_execute(self):
         done_actions.append(self)
 
     # Just ensuring that an empty action list is valid
-    with mock.patch('src.execute.action.Action.execute',mock_execute):
-        actions = action.ActionList([],dummy_context)
+    with mock.patch('src.execute.action.Action.execute', mock_execute):
+        actions = action.ActionList([], dummy_context)
         actions.execute()
 
     assert len(done_actions) == 0
+
 
 @istest
 def empty_action_list_to_string():
@@ -91,9 +102,10 @@ def empty_action_list_to_string():
 
     Checks the string repr of an empty AL.
     """
-    act = action.ActionList([],dummy_context)
+    act = action.ActionList([], dummy_context)
 
-    assert str(act) == 'ActionList([],context='+str(dummy_context)+')'
+    assert str(act) == 'ActionList([],context=' + str(dummy_context) + ')'
+
 
 @istest
 def action_list_inorder():
@@ -105,15 +117,37 @@ def action_list_inorder():
     done_actions = []
 
     class DummyAction(action.Action):
-        def __init__(self,ctx):
-            action.Action.__init__(self,ctx)
+        def __init__(self, ctx):
+            action.Action.__init__(self, ctx)
+
         def execute(self):
             done_actions.append(self)
 
     a = DummyAction(dummy_context)
     b = DummyAction(dummy_context)
-    al = action.ActionList([a,b],dummy_context)
+    al = action.ActionList([a, b], dummy_context)
     al.execute()
 
     assert done_actions[0] == a
     assert done_actions[1] == b
+
+
+@istest
+def action_verifies_OK():
+    """
+    Action Verification Defaults To OK
+    Verifies that an action verification on an action which does not override
+    verification will produce an OK status.
+    """
+    class DummyAction(action.Action):
+        def __init__(self, ctx):
+            action.Action.__init__(self, ctx)
+
+        def execute(self):
+            pass
+
+    a = DummyAction(dummy_context)
+
+    verify_code = a.verify_can_exec()
+
+    assert verify_code == a.verification_codes.OK

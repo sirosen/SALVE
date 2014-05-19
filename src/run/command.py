@@ -2,6 +2,7 @@
 
 import src.run.cli_parser
 
+
 def run():
     """
     Reads the commandline with a SALVE argument parser, and runs the function

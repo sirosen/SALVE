@@ -3,24 +3,26 @@
 import abc
 
 from src.util.error import SALVEException
+from src.util.context import ExecutionContext
 import src.util.enum as enum
+
 
 class ActionException(SALVEException):
     """
     A SALVE exception specialized for Actions.
     """
-    def __init__(self,msg,ctx):
+    def __init__(self, msg, context):
         """
         ActionException constructor
 
         Args:
             @msg
             A string message that describes the error.
-            @ctx
-            A StreamContext that identifies the origin of this
-            exception.
+            @context
+            A SALVEContext.
         """
-        SALVEException.__init__(self,msg,ctx)
+        SALVEException.__init__(self, msg, context)
+
 
 class Action(object):
     """
@@ -35,16 +37,13 @@ class Action(object):
     # by default, the only verification code is OK
     verification_codes = enum.Enum('OK')
 
-    def __init__(self,context):
+    def __init__(self, context):
         """
         Base Action constructor.
 
         Args:
             @context
-            The StreamContext from which this Action originates. Usually
-            this can be traced directly to a Block that generated the
-            Action. Used to identify the origin of any errors that are
-            tripped during the Action's creation or execution.
+            The SALVEContext.
         """
         self.context = context
 
@@ -55,7 +54,10 @@ class Action(object):
         'OK' indicates that execution can proceed. Anything else is an error
         or warning code specific to the action type.
         """
-        return verification_codes.OK
+        # transition to the action verification phase,
+        # confirming execution will work
+        self.context.transition(ExecutionContext.phases.VERIFICATION)
+        return self.verification_codes.OK
 
     @abc.abstractmethod
     def execute(self):
@@ -65,7 +67,7 @@ class Action(object):
         This is the only essential characteristic of an Action: that
         it can be executed to produce some effect.
         """
-        pass #pragma: no cover
+        pass  # pragma: no cover
 
     def __call__(self, *args, **kwargs):
         """
@@ -74,7 +76,8 @@ class Action(object):
         In a sense, this is a better description of what the "execute"
         attribute is. Calling an Action and executing it are identical.
         """
-        return self.execute(*args,**kwargs)
+        return self.execute(*args, **kwargs)
+
 
 class DynamicAction(Action):
     """
@@ -90,7 +93,7 @@ class DynamicAction(Action):
         self.execute(), for example -- so that when execution takes
         place, it will be valid / possible.
         """
-        pass #pragma: no cover
+        pass  # pragma: no cover
 
     def execute(self):
         """
@@ -110,6 +113,7 @@ class DynamicAction(Action):
         self.generate()
         Action.__call__(self, *args, **kwargs)
 
+
 class ActionList(Action):
     """
     An ActionList, often referred to internally as an "AL", is one of
@@ -126,23 +130,26 @@ class ActionList(Action):
             A list of Action objects. No checking is performed, the
             class assumes that what it is handed is in fact a list of
             Action objects.
+
             @context
-            The StreamContext for the AL.
+            The SALVEContext.
         """
-        Action.__init__(self,context)
+        Action.__init__(self, context)
         self.actions = act_lst
 
     def __iter__(self):
         """
         Iterating over an AL iterates over its sub-actions.
         """
-        for act in self.actions: yield act
+        for act in self.actions:
+            yield act
 
     def __str__(self):
-        return "ActionList(["+",".join(str(a) for a in self.actions)+'],'\
-               "context="+str(self.context)+")"
+        return ("ActionList([" +
+                ",".join(str(a) for a in self.actions) +
+                "],context=" + str(self.context) + ")")
 
-    def append(self,act):
+    def append(self, act):
         """
         Append a new Action to the AL.
 
@@ -153,7 +160,7 @@ class ActionList(Action):
         assert isinstance(act, Action)
         self.actions.append(act)
 
-    def prepend(self,act):
+    def prepend(self, act):
         """
         Prepend a new Action to the AL.
 
@@ -162,11 +169,12 @@ class ActionList(Action):
             The action to prepend.
         """
         assert isinstance(act, Action)
-        self.actions.insert(0,act)
+        self.actions.insert(0, act)
 
     def execute(self):
         """
         Execute the AL. Consists of a walk over the AL executing each
         of its sub-actions.
         """
-        for act in self: act()
+        for act in self:
+            act()

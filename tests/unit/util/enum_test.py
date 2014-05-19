@@ -4,6 +4,7 @@ from nose.tools import istest
 
 import src.util.enum as enum
 
+
 @istest
 def automapping():
     """
@@ -11,10 +12,11 @@ def automapping():
     Tests that the automatic mapping of strings in an enum
     correctly assigns them to themselves.
     """
-    x = enum.Enum('A','B')
+    x = enum.Enum('A', 'B')
     y = x.B
     assert(x.A == 'A')
     assert(x.B is y)
+
 
 @istest
 def explicit_mapping():
@@ -23,11 +25,13 @@ def explicit_mapping():
     Tests that the explicit mapping of attrs in an enum using kwargs
     results in those kwargs being correctly assigned.
     """
-    def func(): pass
-    x = enum.Enum(A=1,B='x.B',C=func)
+    def func():
+        pass
+    x = enum.Enum(A=1, B='x.B', C=func)
     assert(x.A == 1)
     assert(x.B == 'x.B')
     assert(x.C is func)
+
 
 @istest
 def mixed_mapping():
@@ -36,8 +40,9 @@ def mixed_mapping():
     Tests that a mixture of automatic and explicit assignments has the
     desired effect.
     """
-    def func(): pass
-    x = enum.Enum('A',B='x.B',C=func)
+    def func():
+        pass
+    x = enum.Enum('A', B='x.B', C=func)
     assert(x.A == 'A')
     assert(x.B == 'x.B')
     assert(x.C is func)

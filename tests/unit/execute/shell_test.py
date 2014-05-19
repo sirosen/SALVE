@@ -4,20 +4,28 @@ from nose.tools import istest
 import mock
 
 from tests.utils.exceptions import ensure_except
-from src.util.error import StreamContext
+from src.util.context import SALVEContext, ExecutionContext, StreamContext
 
 import src.execute.action as action
 import src.execute.shell as shell
 
+
 class MockProcess(object):
     def __init__(self):
         self.returncode = 0
+
     def wait(self):
         pass
-    def communicate(self):
-        return None,None
 
-dummy_context = StreamContext('no such file',-1)
+    def communicate(self):
+        return None, None
+
+dummy_stream_context = StreamContext('no such file', -1)
+dummy_exec_context = ExecutionContext()
+dummy_exec_context.set('log_level', set())
+dummy_context = SALVEContext(stream_context=dummy_stream_context,
+                             exec_context=dummy_exec_context)
+
 
 @istest
 def shell_action_basic():
@@ -30,16 +38,18 @@ def shell_action_basic():
     # commands passed in
     # instead, commands are stored in the done_commands list
     done_commands = []
+
     def mock_Popen(commands, stdout=None, stderr=None, shell=None):
         done_commands.append(commands)
         return MockProcess()
 
-    with mock.patch('subprocess.Popen',mock_Popen):
-        a = shell.ShellAction('mkdir /a/b',dummy_context)
+    with mock.patch('subprocess.Popen', mock_Popen):
+        a = shell.ShellAction('mkdir /a/b', dummy_context)
         a.execute()
 
     assert len(done_commands) == 1
     assert done_commands[0] == 'mkdir /a/b'
+
 
 @istest
 def failed_shell_action():
@@ -57,6 +67,6 @@ def failed_shell_action():
         p.returncode = 1
         return p
 
-    with mock.patch('subprocess.Popen',mock_Popen):
-        a = shell.ShellAction(['touch /a/b'],dummy_context)
-        ensure_except(action.ActionException,a.execute)
+    with mock.patch('subprocess.Popen', mock_Popen):
+        a = shell.ShellAction(['touch /a/b'], dummy_context)
+        ensure_except(action.ActionException, a.execute)

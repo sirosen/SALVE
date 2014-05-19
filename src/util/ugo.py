@@ -4,6 +4,7 @@ import os
 import grp
 import pwd
 
+
 def get_group_from_username(username):
     """
     Gets the primary group of a user based on NIS.
@@ -14,11 +15,13 @@ def get_group_from_username(username):
     """
     return grp.getgrgid(pwd.getpwnam(username).pw_gid).gr_name
 
+
 def is_root():
     """
     Checks if the process is running as root.
     """
     return os.geteuid() == 0
+
 
 def name_to_uid(username):
     """
@@ -30,6 +33,7 @@ def name_to_uid(username):
     """
     return pwd.getpwnam(username).pw_uid
 
+
 def name_to_gid(groupname):
     """
     Gets the GID for a group, based on NIS.
@@ -39,6 +43,7 @@ def name_to_gid(groupname):
         The group whose GID is desired.
     """
     return grp.getgrnam(groupname).gr_gid
+
 
 def is_owner(path):
     """
