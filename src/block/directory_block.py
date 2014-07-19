@@ -141,7 +141,7 @@ class DirBlock(Block):
 
         return act
 
-    def to_action(self):
+    def compile(self):
         """
         Uses the DirectoryBlock to produce an action.
         The type of action produced depends on the value of the block's

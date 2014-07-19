@@ -2,6 +2,8 @@
 
 import abc
 
+from api.block import CompiledBlock
+
 from src.util.error import SALVEException
 from src.util.context import ExecutionContext
 import src.util.enum as enum
@@ -24,7 +26,7 @@ class ActionException(SALVEException):
         SALVEException.__init__(self, msg, context)
 
 
-class Action(object):
+class Action(CompiledBlock):
     """
     An Action is the basis of execution.
     Actions can perform arbitrary modifications to the OS or filesystem,

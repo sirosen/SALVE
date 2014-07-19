@@ -50,7 +50,7 @@ def run_on_manifest(root_manifest, context, args):
             source=root_manifest)
     root_block.expand_blocks(root_dir, conf)
 
-    root_action = root_block.to_action()
+    root_action = root_block.compile()
     root_action()
 
 

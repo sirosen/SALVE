@@ -3,6 +3,8 @@
 import abc
 import os
 
+from api.block import AbstractBlock
+
 from src.util.enum import Enum
 from src.util.error import SALVEException
 import src.util.locations as locations
@@ -26,7 +28,7 @@ class BlockException(SALVEException):
         SALVEException.__init__(self, msg, context=context)
 
 
-class Block(object):
+class Block(AbstractBlock):
     """
     A block is the basic unit of configuration.
     Typically, blocks describe files, SALVE manifests, patches, etc
@@ -133,7 +135,7 @@ class Block(object):
         return exc
 
     @abc.abstractmethod
-    def to_action(self):
+    def compile(self):
         """
         Converts the Block to an action. Does not modify the block
         itself. In this sense, all Blocks are factories.

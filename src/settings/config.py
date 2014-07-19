@@ -159,7 +159,7 @@ class SALVEConfig(object):
             if key == 'run_log':
                 try:
                     val = open(val, 'w')
-                except:
+                except:  # pragma: no cover
                     raise  # pragma: no cover
 
             # special handling for the log_level

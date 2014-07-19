@@ -93,7 +93,7 @@ class ManifestBlock(Block):
                 config.apply_to_block(b)
                 b.expand_file_paths(root_dir)
 
-    def to_action(self):
+    def compile(self):
         """
         Uses the ManifestBlock to produce an action.
         The action will always be an actionlist of the expansion of
@@ -104,14 +104,14 @@ class ManifestBlock(Block):
 
         # transition to the action conversion phase, converting
         # blocks into actions
-        self.context.transition(ExecutionContext.phases.ACTION_CONVERSION)
+        self.context.transition(ExecutionContext.phases.COMPILATION)
         if self.sub_blocks is None:
             raise self.mk_except('Attempted to convert unexpanded ' +
                                  'manifest to action.')
 
         act = action.ActionList([], self.context)
         for b in self.sub_blocks:
-            subact = b.to_action()
+            subact = b.compile()
             if subact is not None:
                 act.append(subact)
 

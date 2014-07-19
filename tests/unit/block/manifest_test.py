@@ -17,15 +17,15 @@ from src.util.context import SALVEContext, ExecutionContext
 
 
 @istest
-def sourceless_manifest_to_action_error():
+def sourceless_manifest_compile_error():
     """
-    Manifest Block To Action Fails Without Action
+    Manifest Compilation Fails Without Action
     Verifies that a Manifest block raises a BlockException when
     converted to an action if the action attribute is unspecified.
     """
     ctx = _dummy_conf.context
     b = src.block.manifest_block.ManifestBlock(ctx)
-    ensure_except(src.block.base.BlockException, b.to_action)
+    ensure_except(src.block.base.BlockException, b.compile)
 
 
 @istest
@@ -95,9 +95,9 @@ def sub_block_expand():
 
 
 @istest
-def sub_block_to_action():
+def sub_block_compile():
     """
-    Manifest Block SubBlock To Action
+    Manifest Block SubBlock Compile
     Verifies that Manifest block expansion followed by action
     conversion works normally.
     """
@@ -120,7 +120,7 @@ def sub_block_to_action():
     assert file_block.get('target') == target_loc
     with mock.patch('os.path.exists', lambda f: True):
         with mock.patch('os.access', lambda f, p: True):
-            act = b.to_action()
+            act = b.compile()
     assert isinstance(act, src.execute.action.ActionList)
     assert len(act.actions) == 2
     assert isinstance(act.actions[0], src.execute.action.ActionList)

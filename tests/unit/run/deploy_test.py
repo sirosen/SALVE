@@ -74,7 +74,7 @@ def deploy_main():
         def expand_blocks(self, x, y):
             have_run['expand_blocks'] = True
 
-        def to_action(self):
+        def compile(self):
             return MockAction()
 
     with mock.patch('src.block.manifest_block.ManifestBlock', MockManifest), \
@@ -188,7 +188,7 @@ def deploy_action_exception():
     fake_args.manifest = 'root.manifest'
 
     dummy_context = generate_dummy_context(fake_stderr,
-        phase=ExecutionContext.phases.ACTION_CONVERSION)
+        phase=ExecutionContext.phases.COMPILATION)
 
     def mock_run(root_manifest, exec_context, args):
         raise ActionException('message string', dummy_context)
@@ -202,7 +202,7 @@ def deploy_action_exception():
                 log['exit'] == 1
 
     stderr_out = fake_stderr.getvalue()
-    assert stderr_out == ('[ERROR] [ACTION_CONVERSION] ' +
+    assert stderr_out == ('[ERROR] [COMPILATION] ' +
         'no such file, line -1: message string\n'), stderr_out
 
 

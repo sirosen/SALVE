@@ -23,9 +23,9 @@ dummy_context = SALVEContext(exec_context=dummy_exec_context)
 
 
 @istest
-def file_copy_to_action():
+def file_copy_compile():
     """
-    File Block Copy To Action
+    File Block Copy Compile
     Verifies the result of converting a file copy block to an action.
     """
     b = src.block.file_block.FileBlock(dummy_context)
@@ -36,7 +36,7 @@ def file_copy_to_action():
     b.set('group', 'nogroup')
     b.set('mode', '600')
 
-    act = b.to_action()
+    act = b.compile()
 
     assert isinstance(act, action.ActionList)
     assert len(act.actions) == 4
@@ -69,9 +69,9 @@ def file_copy_to_action():
 
 
 @istest
-def file_create_to_action():
+def file_create_compile():
     """
-    File Block Create To Action
+    File Block Create Compile
     Verifies the result of converting a file create block to an action.
     """
     b = src.block.file_block.FileBlock(dummy_context)
@@ -82,7 +82,7 @@ def file_create_to_action():
     b.set('mode', '0600')
     with mock.patch('os.path.exists', lambda f: True), \
          mock.patch('src.util.ugo.is_root', lambda: False):
-        file_act = b.to_action()
+        file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 3
@@ -125,7 +125,7 @@ def file_copy_nouser():
     b.set('mode', '0600')
 
     with mock.patch('src.util.ugo.is_root', lambda: True):
-        file_act = b.to_action()
+        file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 3
@@ -161,7 +161,7 @@ def file_create_nouser():
     # skip backup just to generate a simpler action
     with mock.patch('src.util.ugo.is_root', lambda: True), \
          mock.patch('os.path.exists', lambda f: False):
-        file_act = b.to_action()
+        file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 2
@@ -192,7 +192,7 @@ def file_copy_nogroup():
     # skip backup just to generate a simpler action
     with mock.patch('src.util.ugo.is_root', lambda: True), \
          mock.patch('os.path.exists', lambda f: False):
-        file_act = b.to_action()
+        file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 3
@@ -228,7 +228,7 @@ def file_create_nogroup():
     # skip backup just to generate a simpler action
     with mock.patch('src.util.ugo.is_root', lambda: True), \
          mock.patch('os.path.exists', lambda f: False):
-        file_act = b.to_action()
+        file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 2
@@ -257,7 +257,7 @@ def file_copy_nomode():
     b.set('group', 'nogroup')
     # skip chown, for simplicity
     with mock.patch('src.util.ugo.is_root', lambda: False):
-        file_act = b.to_action()
+        file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 3
@@ -294,7 +294,7 @@ def file_create_nomode():
     # skip chown and backup just to generate a simpler action
     with mock.patch('src.util.ugo.is_root', lambda: False), \
          mock.patch('os.path.exists', lambda f: False):
-        act = b.to_action()
+        act = b.compile()
 
     assert isinstance(act, action.ActionList)
     assert len(act.actions) == 2
@@ -322,13 +322,13 @@ def file_copy_fails_nosource():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '0600')
-    ensure_except(BlockException, b.to_action)
+    ensure_except(BlockException, b.compile)
 
 
 @istest
 def file_copy_fails_notarget():
     """
-    File Block Copy Fails Without Target
+    File Block Copy Compilation Fails Without Target
     Verifies that converting a file copy block to an action when the
     target attribute is unset raises a BlockException.
     """
@@ -338,13 +338,13 @@ def file_copy_fails_notarget():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '0600')
-    ensure_except(BlockException, b.to_action)
+    ensure_except(BlockException, b.compile)
 
 
 @istest
 def file_create_fails_notarget():
     """
-    File Block Create Fails Without Target
+    File Block Create Compilation Fails Without Target
     Verifies that converting a file create block to an action when the
     target attribute is unset raises a BlockException.
     """
@@ -354,7 +354,7 @@ def file_create_fails_notarget():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '0600')
-    ensure_except(BlockException, b.to_action)
+    ensure_except(BlockException, b.compile)
 
 
 @istest

@@ -22,9 +22,9 @@ dummy_context = SALVEContext(exec_context=dummy_exec_context)
 
 
 @istest
-def dir_create_to_action():
+def dir_create_compile():
     """
-    Directory Block Create To Action
+    Directory Block Create Compile
     Verifies the result of converting a Dir Block to an Action.
     """
     b = src.block.directory_block.DirBlock(dummy_context)
@@ -33,7 +33,7 @@ def dir_create_to_action():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
 
-    act = b.to_action()
+    act = b.compile()
     assert isinstance(act, action.ActionList)
     assert len(act.actions) == 2
 
@@ -49,9 +49,9 @@ def dir_create_to_action():
 
 
 @istest
-def dir_create_to_action_chmod():
+def dir_create_compile_chmod():
     """
-    Directory Block Create To Action With Chmod
+    Directory Block Create Compile With Chmod
     Verifies the result of converting a Dir Block to an Action when the
     Block's mode is set.
     """
@@ -62,7 +62,7 @@ def dir_create_to_action_chmod():
     b.set('group', 'nogroup')
     b.set('mode', '755')
 
-    dir_act = b.to_action()
+    dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
     assert len(dir_act.actions) == 3
@@ -85,7 +85,7 @@ def dir_create_to_action_chmod():
 @istest
 def dir_create_chown_as_root():
     """
-    Directory Block Create To Action With Chown
+    Directory Block Create Compile With Chown
     Verifies the result of converting a Dir Block to an Action when the
     user is root and the Block's user and group are set.
     """
@@ -95,7 +95,7 @@ def dir_create_chown_as_root():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     with mock.patch('src.util.ugo.is_root', lambda: True):
-        dir_act = b.to_action()
+        dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
     assert len(dir_act.actions) == 2
@@ -112,9 +112,9 @@ def dir_create_chown_as_root():
 
 
 @istest
-def empty_dir_copy_to_action():
+def empty_dir_copy_compile():
     """
-    Directory Block Copy To Action (Empty Dir)
+    Directory Block Copy Compile (Empty Dir)
     Verifies the result of converting a Dir Block to an Action.
     """
     b = src.block.directory_block.DirBlock(dummy_context)
@@ -122,7 +122,7 @@ def empty_dir_copy_to_action():
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
     with mock.patch('os.walk', lambda d: []):
-        dir_act = b.to_action()
+        dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
     assert len(dir_act.actions) == 1
@@ -136,7 +136,7 @@ def empty_dir_copy_to_action():
 @istest
 def dir_copy_chown_as_root():
     """
-    Directory Block Copy To Action (As Root)
+    Directory Block Copy Compile (As Root)
     Verifies the result of converting a Dir Block to an Action.
     """
     b = src.block.directory_block.DirBlock(dummy_context)
@@ -147,7 +147,7 @@ def dir_copy_chown_as_root():
     b.set('group', 'nogroup')
     with mock.patch('src.util.ugo.is_root', lambda: True):
         with mock.patch('os.walk', lambda d: []):
-            al = b.to_action()
+            al = b.compile()
 
     assert isinstance(al, action.ActionList)
     assert len(al.actions) == 2
@@ -176,13 +176,13 @@ def dir_copy_fails_nosource():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.to_action)
+    ensure_except(BlockException, b.compile)
 
 
 @istest
 def dir_copy_fails_notarget():
     """
-    Directory Block Copy Fails Without Target
+    Directory Block Copy Compilation Fails Without Target
     Verifies that converting a Dir Block to an Action raises a
     BlockException.
     """
@@ -192,13 +192,13 @@ def dir_copy_fails_notarget():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.to_action)
+    ensure_except(BlockException, b.compile)
 
 
 @istest
 def dir_create_fails_notarget():
     """
-    Directory Block Create Fails Without Target
+    Directory Block Create Compilation Fails Without Target
     Verifies that converting a Dir Block to an Action raises a
     BlockException.
     """
@@ -207,7 +207,7 @@ def dir_create_fails_notarget():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.to_action)
+    ensure_except(BlockException, b.compile)
 
 
 @istest
@@ -244,9 +244,9 @@ def dir_path_expand_fail_notarget():
 
 
 @istest
-def dir_to_action_fail_noaction():
+def dir_compile_fail_noaction():
     """
-    Directory Block To Action Fails Without Action
+    Directory Block Compilation Fails Without Action
     Verifies that block to action conversion fails when there is no
     "action" attribute.
     """
@@ -256,13 +256,13 @@ def dir_to_action_fail_noaction():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.to_action)
+    ensure_except(BlockException, b.compile)
 
 
 @istest
-def dir_to_action_fail_unknown_action():
+def dir_compile_fail_unknown_action():
     """
-    Directory Block To Action Fails Unknown Action
+    Directory Block Compilation Fails Unknown Action
     Verifies that block to action conversion fails when the "action"
     attribute has an unrecognized value.
     """
@@ -273,4 +273,4 @@ def dir_to_action_fail_unknown_action():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.to_action)
+    ensure_except(BlockException, b.compile)

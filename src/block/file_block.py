@@ -32,7 +32,7 @@ class FileBlock(Block):
         for attr in ['target']:
             self.min_attrs.add(attr)
 
-    def to_action(self):
+    def compile(self):
         """
         Uses the FileBlock to produce an action.
         The type of action produced depends on the value of the block's
