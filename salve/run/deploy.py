@@ -5,18 +5,18 @@ from __future__ import print_function
 import os
 import sys
 
+import salve
+
 import salve.util.locations as locations
 import salve.block.manifest_block
 
 import salve.settings.config as config
 from salve.util.enum import Enum
 from salve.util.context import SALVEContext, ExecutionContext
-
-import salve.util.log as log
 from salve.util.error import SALVEException
 
 
-def run_on_manifest(root_manifest, context, args):
+def run_on_manifest(root_manifest, args):
     """
     Given a manifest file, loads SALVEConfig, parses and expands the
     root manifest, then executes the actions defined by that manifest.
@@ -31,6 +31,7 @@ def run_on_manifest(root_manifest, context, args):
         @args
         The options, as parsed from the commandline.
     """
+    context = SALVEContext(exec_context=salve.exec_context)
     cfg_file = None
     if args.configfile:
         cfg_file = args.configfile
@@ -58,13 +59,11 @@ def main(args):
     """
     The main method of SALVE deployment. Runs the core program end-to-end.
     """
-    exec_context = ExecutionContext(startphase=ExecutionContext.phases.STARTUP)
-    context = SALVEContext(exec_context=exec_context)
     try:
         assert args.manifest
-        run_on_manifest(args.manifest, context, args)
+        run_on_manifest(args.manifest, args)
     except SALVEException as e:
-        log.error(e.message, e.context)
+        salve.logger.error(e.message, file_context=e.context.stream_context)
         # Normally, sys.exit() is to be avoided, but main() is only
         # invoked if salve is running as a script, and we want to give
         # the right exit status for commandline usage

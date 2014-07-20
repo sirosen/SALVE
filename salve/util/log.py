@@ -7,143 +7,108 @@ import sys
 from salve.util.enum import Enum
 
 
-log_types = Enum('INFO', 'WARN', 'ERROR')
-
-
-def salve_log(message, log_type, context, print_context=True, min_verbosity=0):
+class Logger(object):
     """
-    Print a message if the appropriate logging level is set, including
-    message info about context and log type.
+    A Logger is an object to handle output to stderr or a logfile. It writes
+    all types of output: informational messages, warnings, and errors, in a
+    generic way.
 
-    Args:
-        @message
-        A string to print.
-        @log_type
-        The log_type for the message.
-        @context
-        A SALVEContext used to find the run_log. If the log
-        is not specified in the context, it defaults to stderr.
-        Also included in the logging message.
-
-    KWArgs:
-        @print_context
-        A boolean used to decide whether or not to include the context
-        in the message. Defaults to True, but useful for cases in which
-        the context is not relevant or the caller wants to alter its
-        presentation.
-
-        @min_verbosity
-        The minimum verbosity for this message to print. If that verbosity
-        level is not met, the logging action is a no-op.
+    Allows plugin code which is not aware of the stateful nature of SALVE
+    execution to hook into the existing logging infrastructure.
     """
-    # import takes place here to avoid circular dependency
-    from salve.util.context import context_types
+    log_types = Enum('INFO', 'WARN', 'ERROR')
 
-    assert log_type in log_types
-    assert context.has_context(context_types.EXEC)
+    def __init__(self, exec_context, logfile=sys.stderr):
+        """
+        Initialize a new logger. Needs a context for printing, and a file-like
+        object to write the log messages to.
 
-    ectx = context.exec_context
-    assert ectx.has('log_level')
-    assert ectx.has('run_log')
+        Args:
+            @exec_context
+            An Execution Context which tracks the state of SALVE.
 
-    target = context.exec_context.get('run_log')
+        KWArgs:
+            @logfile
+            A file-like object to which the logger should write it's output.
+            Defaults to stderr, which typically means write to a console.
+        """
+        self.logfile = logfile
+        self.exec_context = exec_context
 
-    # short-circuit our way out of logging if
-    # - we are specifying a type not in the enabled log_levels
-    # - the message requires a higher verbosity level
-    if log_type not in ectx.get('log_level') or \
-       min_verbosity > ectx.get('verbosity'):
-        return
+    def log(self, log_type, message, file_context=None,
+            hide_context=False, min_verbosity=0):
+        """
+        Print a message if the appropriate logging level is set, including
+        message info about context and log type.
 
-    # if print_context is true, prepend it to the message with
-    # a colon separator. Otherwise, it will be omitted
-    if print_context:
-        message = str(context) + ': ' + message
+        Args:
+            @message
+            A string to print.
+            @log_type
+            The log_type for the message.
 
-    # construct message prefix
-    prefix = '[' + log_type + ']'
-    if min_verbosity > 0:
-        prefix = prefix + '[' + str(min_verbosity) + ']'
+        KWArgs:
+            @file_context
+            A Stream Context which contextualizes the logging.
 
-    print(prefix + ' ' + message, file=target)
+            @hide_context
+            A boolean used to decide whether or not to include the context
+            in the message. Defaults to False, but useful for cases in which
+            the context is not relevant or the caller wants to alter its
+            presentation.
 
+            @min_verbosity
+            The minimum verbosity for this message to print. If that verbosity
+            level is not met, the logging action is a no-op.
+        """
+        assert log_type in self.log_types
 
-def warn(message, context, print_context=True, min_verbosity=0):
-    """
-    A lightweight wrapper of salve_log with log_type=WARN
+        ectx = self.exec_context
 
-    Args:
-        @message
-        A string to print.
-        @context
-        A SALVEContext used to find the run_log. If the log
-        is not specified in the context, it defaults to stderr.
-        Also included in the logging message.
+        # short-circuit our way out of logging if
+        # - we are specifying a type not in the enabled log_levels
+        # - the message requires a higher verbosity level
+        if ectx.has('log_level') and \
+           log_type not in ectx.get('log_level'):
+            return
 
-    KWArgs:
-        @print_context
-        A boolean used to decide whether or not to include the context
-        in the message. Defaults to True, but useful for cases in which
-        the context is not relevant or the caller wants to alter its
-        presentation.
+        if ectx.has('verbosity'):
+            if min_verbosity > ectx.get('verbosity'):
+                return
+        else:
+            if min_verbosity > 0:
+                return
 
-        @min_verbosity
-        The minimum verbosity for this message to print. If that verbosity
-        level is not met, the logging action is a no-op.
-    """
-    salve_log(message, log_types.WARN, context,
-              print_context=print_context, min_verbosity=min_verbosity)
+        # if hide_context is false, prepend it to the message with
+        # a colon separator. Otherwise, it will be omitted
+        if not hide_context:
+            ctx_prefix = '[' + str(ectx) + ']'
+            if file_context is not None:
+                ctx_prefix += ' ' + str(file_context)
 
+            message = ctx_prefix + ': ' + message
 
-def info(message, context, print_context=True, min_verbosity=0):
-    """
-    A lightweight wrapper of salve_log with log_type=INFO
+        # construct message prefix
+        ty_prefix = '[' + log_type + ']'
+        if min_verbosity > 0:
+            ty_prefix = ty_prefix + '[' + str(min_verbosity) + ']'
 
-    Args:
-        @message
-        A string to print.
-        @context
-        A SALVEContext used to find the run_log. If the log
-        is not specified in the context, it defaults to stderr.
-        Also included in the logging message.
+        print(ty_prefix + ' ' + message, file=self.logfile)
 
-    KWArgs:
-        @print_context
-        A boolean used to decide whether or not to include the context
-        in the message. Defaults to True, but useful for cases in which
-        the context is not relevant or the caller wants to alter its
-        presentation.
+    def warn(self, *args, **kwargs):
+        """
+        A lightweight wrapper of log with log_type=WARN
+        """
+        self.log(self.log_types.WARN, *args, **kwargs)
 
-        @min_verbosity
-        The minimum verbosity for this message to print. If that verbosity
-        level is not met, the logging action is a no-op.
-    """
-    salve_log(message, log_types.INFO, context,
-              print_context=print_context, min_verbosity=min_verbosity)
+    def info(self, *args, **kwargs):
+        """
+        A lightweight wrapper of log with log_type=INFO
+        """
+        self.log(self.log_types.INFO, *args, **kwargs)
 
-
-def error(message, context, print_context=True, min_verbosity=0):
-    """
-    A lightweight wrapper of salve_log with log_type=ERROR
-
-    Args:
-        @message
-        A string to print.
-        @context
-        A SALVEContext used to find the run_log. If the log
-        is not specified in the context, it defaults to stderr.
-        Also included in the logging message.
-
-    KWArgs:
-        @print_context
-        A boolean used to decide whether or not to include the context
-        in the message. Defaults to True, but useful for cases in which
-        the context is not relevant or the caller wants to alter its
-        presentation.
-
-        @min_verbosity
-        The minimum verbosity for this message to print. If that verbosity
-        level is not met, the logging action is a no-op.
-    """
-    salve_log(message, log_types.ERROR, context,
-              print_context=print_context, min_verbosity=min_verbosity)
+    def error(self, *args, **kwargs):
+        """
+        A lightweight wrapper of log with log_type=ERROR
+        """
+        self.log(self.log_types.ERROR, *args, **kwargs)

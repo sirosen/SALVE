@@ -1,9 +1,8 @@
 #!/usr/bin/python
 
-import salve.util.locations as locations
-import salve.util.log as log
+import salve
 
-from salve.settings.default_globals import apply_exec_context_defaults
+from salve.util import locations
 from salve.util.enum import Enum
 
 context_types = Enum('STREAM', 'EXEC')
@@ -41,7 +40,6 @@ class ExecutionContext(object):
     def __init__(self, startphase=phases.STARTUP):
         self.phase = startphase
         self.vars = {}
-        apply_exec_context_defaults(self)
 
     def __str__(self):
         return self.phase
@@ -96,11 +94,12 @@ class SALVEContext(object):
         return ' '.join(components)
 
     def transition(self, newphase):
+        # import here to avoid circular dependency
         assert self.exec_context is not None
         if newphase != self.exec_context.phase:
             transition_text = ('SALVE Execution Phase Transition ' +
                                '[%s] -> [%s]' %
                                (self.exec_context.phase, newphase))
-            log.info(transition_text, self, print_context=False,
-                 min_verbosity=3)
+            salve.logger.info(transition_text, hide_context=True,
+                    min_verbosity=3)
             self.exec_context.transition(newphase)

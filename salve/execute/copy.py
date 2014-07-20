@@ -5,10 +5,11 @@ import abc
 import os
 import shutil
 
+import salve
+
 import salve.execute.action as action
 import salve.util.enum as enum
 
-import salve.util.log as log
 from salve.util.context import ExecutionContext
 
 
@@ -111,20 +112,23 @@ class FileCopyAction(CopyAction):
             """
             return os.path.islink(self.src)
 
-        log.info('FileCopy: Checking destination is writable, \"%s\"' %
-                self.dst, self.context, min_verbosity=3)
+        salve.logger.info('FileCopy: Checking destination is writable, ' +
+                '\"%s\"' % self.dst, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
 
-        log.info('FileCopy: Checking if source is link, "%s"' % self.src,
-                 self.context, min_verbosity=3)
+        salve.logger.info('FileCopy: Checking if source is link, "%s"' %
+                self.src, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if source_islink():
             return self.verification_codes.OK
 
-        log.info('FileCopy: Checking source is readable, \"%s\"' % self.src,
-                 self.context, min_verbosity=3)
+        salve.logger.info('FileCopy: Checking source is readable, \"%s\"' %
+                self.src, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
@@ -142,19 +146,20 @@ class FileCopyAction(CopyAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "FileCopy: Non-Writable target file \"%s\"" % self.dst
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.context.stream_context)
             return
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
             logstr = "FileCopy: Non-Readable source file \"%s\"" % self.src
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.context.stream_context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing File Copy \"%s\" -> \"%s\"' %
-                (self.src, self.dst), self.context, min_verbosity=1)
+        salve.logger.info('Performing File Copy \"%s\" -> \"%s\"' %
+                (self.src, self.dst), file_context=self.context.stream_context,
+                min_verbosity=1)
 
         if os.path.islink(self.src):
             os.symlink(os.readlink(self.src), self.dst)
@@ -199,8 +204,9 @@ class DirCopyAction(CopyAction):
             """
             return os.access(os.path.dirname(self.dst), os.W_OK)
 
-        log.info('DirCopy: Checking target is writable, \"%s\"' % self.dst,
-                 self.context, min_verbosity=3)
+        salve.logger.info('DirCopy: Checking target is writable, \"%s\"' %
+                self.dst, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -215,13 +221,14 @@ class DirCopyAction(CopyAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "DirCopy: Non-Writable target directory \"%s\"" % self.dst
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.context.stream_context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing Directory Copy \"%s\" -> \"%s\"' %
-                (self.src, self.dst), self.context, min_verbosity=1)
+        salve.logger.info('Performing Directory Copy \"%s\" -> \"%s\"' %
+                (self.src, self.dst), file_context=self.context.stream_context,
+                min_verbosity=1)
 
         shutil.copytree(self.src, self.dst, symlinks=True)

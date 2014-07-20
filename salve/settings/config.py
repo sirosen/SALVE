@@ -5,13 +5,13 @@ import ConfigParser
 import os
 import string
 
+import salve
+
 import salve.block.manifest_block
 import salve.util.locations as locations
 import salve.util.ugo as ugo
 
 from salve.util.error import SALVEException
-import salve.util.log as log
-
 from salve.util.context import context_types, ExecutionContext
 
 SALVE_ENV_PREFIX = 'SALVE_'
@@ -169,7 +169,7 @@ class SALVEConfig(object):
                 # if all appears in the set, replace it with the set of all
                 # defined log types
                 if 'ALL' in val:
-                    val = set(log.log_types)
+                    val = set(salve.logger.log_types)
 
             # verbosity is an integer
             if key == 'verbosity':

@@ -2,7 +2,8 @@
 
 import os
 
-import salve.util.log as log
+import salve
+
 import salve.execute.action as action
 import salve.execute.backup as backup
 import salve.execute.copy as copy
@@ -151,8 +152,8 @@ class DirBlock(Block):
         directory copy that creates the target directories and backs up
         any files that are being overwritten.
         """
-        log.info('Converting DirBlock to DirAction',
-                 self.context, min_verbosity=3)
+        salve.logger.info('Converting DirBlock to DirAction',
+                file_context=self.context.stream_context, min_verbosity=3)
 
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will

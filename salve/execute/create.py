@@ -5,10 +5,11 @@ import os
 import sys
 import shutil
 
+import salve
+
 import salve.execute.action as action
 import salve.util.locations as locations
 
-import salve.util.log as log
 from salve.util.context import ExecutionContext
 
 
@@ -85,8 +86,9 @@ class FileCreateAction(CreateAction):
             # not writable or doesn't exist
             return False
 
-        log.info('FileCreate: Checking target is writable, \"%s\"' % self.dst,
-                 self.context, min_verbosity=3)
+        salve.logger.info('FileCreate: Checking target is writable, \"%s\"' %
+                self.dst, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -103,14 +105,14 @@ class FileCreateAction(CreateAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "FileCreate: Non-Writable target file \"%s\"" % self.dst
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.context.stream_context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing File Creation of \"%s\"' % self.dst, self.context,
-                min_verbosity=1)
+        salve.logger.info('Performing File Creation of \"%s\"' % self.dst,
+                file_context=self.context.stream_context, min_verbosity=1)
 
         if not os.path.exists(self.dst):
             with open(self.dst, 'w') as f:
@@ -152,15 +154,17 @@ class DirCreateAction(CreateAction):
             ancestor = locations.get_existing_prefix(self.dst)
             return os.access(ancestor, os.W_OK)
 
-        log.info('DirCreate: Checking if target exists, \"%s\"' % self.dst,
-                 self.context, min_verbosity=3)
+        salve.logger.info('DirCreate: Checking if target exists, \"%s\"' %
+                self.dst, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         # creation of existing dirs is always OK
         if os.path.exists(self.dst):
             return self.verification_codes.OK
 
-        log.info('DirCreate: Checking target is writable, \"%s\"' % self.dst,
-                 self.context, min_verbosity=3)
+        salve.logger.info('DirCreate: Checking target is writable, \"%s\"' %
+                self.dst, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -175,14 +179,14 @@ class DirCreateAction(CreateAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "DirCreate: Non-Writable target dir \"%s\"" % self.dst
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.context.stream_context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing Directory Creation of \"%s\"' % self.dst,
-                self.context, min_verbosity=1)
+        salve.logger.info('Performing Directory Creation of \"%s\"' % self.dst,
+                file_context=self.context.stream_context, min_verbosity=1)
 
         # have to invoke this check because makedirs fails if the leaf
         # at the destination exists

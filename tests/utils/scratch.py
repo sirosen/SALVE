@@ -106,11 +106,10 @@ class ScratchContainer(object):
             mock.patch('sys.stderr', self.stderr)
             )
         self.patches.add(
-            mock.patch.dict('salve.settings.default_globals.defaults',
-                {'run_log': self.stderr})
+            mock.patch('sys.stdout', self.stdout)
             )
         self.patches.add(
-            mock.patch('sys.stdout', self.stdout)
+            mock.patch('salve.logger.logfile', self.stderr)
             )
 
     def setUp(self):

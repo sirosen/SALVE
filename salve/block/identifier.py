@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import salve
+
 from salve.reader.tokenize import Token
 
 from salve.block.base import BlockException
@@ -7,7 +9,6 @@ import salve.block.file_block
 import salve.block.manifest_block
 import salve.block.directory_block
 
-import salve.util.log as log
 from salve.util.context import SALVEContext
 
 # maps valid identifiers to block constructors
@@ -37,8 +38,9 @@ def block_from_identifier(context, id_token):
                              str(id_token),
                              id_token.context.stream_context)
 
-    log.info('Generating Block From Identifier Token: ' + str(id_token),
-             context, min_verbosity=3)
+    salve.logger.info('Generating Block From Identifier Token: ' +
+            str(id_token), file_context=id_token.context.stream_context,
+            min_verbosity=3)
 
     # if the identifier is not in the map, raise an exception
     val = id_token.value.lower()

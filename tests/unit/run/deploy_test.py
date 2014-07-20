@@ -108,7 +108,7 @@ def deploy_salve_exception():
 
     dummy_context = generate_dummy_context(fake_stderr)
 
-    def mock_run(root_manifest, exec_context, args):
+    def mock_run(root_manifest, args):
         raise SALVEException('message string', dummy_context)
 
     with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
@@ -148,7 +148,7 @@ def deploy_block_exception():
     dummy_context = generate_dummy_context(fake_stderr,
             phase=ExecutionContext.phases.PARSING)
 
-    def mock_run(root_manifest, exec_context, args):
+    def mock_run(root_manifest, args):
         raise BlockException('message string', dummy_context)
 
     with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
@@ -190,7 +190,7 @@ def deploy_action_exception():
     dummy_context = generate_dummy_context(fake_stderr,
         phase=ExecutionContext.phases.COMPILATION)
 
-    def mock_run(root_manifest, exec_context, args):
+    def mock_run(root_manifest, args):
         raise ActionException('message string', dummy_context)
 
     with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
@@ -231,7 +231,7 @@ def deploy_tokenization_exception():
     dummy_context = generate_dummy_context(fake_stderr,
         phase=ExecutionContext.phases.PARSING)
 
-    def mock_run(root_manifest, exec_context, args):
+    def mock_run(root_manifest, args):
         raise TokenizationException('message string', dummy_context)
 
     with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
@@ -272,7 +272,7 @@ def deploy_parsing_exception():
     dummy_context = generate_dummy_context(fake_stderr,
             phase=ExecutionContext.phases.PARSING)
 
-    def mock_run(root_manifest, context, args):
+    def mock_run(root_manifest, args):
         raise ParsingException('message string', dummy_context)
 
     with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
@@ -295,7 +295,7 @@ def deploy_unexpected_exception():
     Checks that running the deploy main function does not catch any
     non-SALVE Exceptions.
     """
-    def mock_run(root_manifest, exec_context, args):
+    def mock_run(root_manifest, args):
         raise StandardError()
 
     fake_args = mock.Mock()

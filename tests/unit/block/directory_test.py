@@ -6,7 +6,6 @@ from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
 from salve.block.base import BlockException
-from salve.util.context import SALVEContext, ExecutionContext
 
 import salve.execute.action as action
 import salve.execute.backup as backup
@@ -14,11 +13,7 @@ import salve.execute.modify as modify
 import salve.execute.create as create
 import salve.block.directory_block
 
-dummy_exec_context = ExecutionContext()
-dummy_exec_context.set('backup_dir', '/m/n')
-dummy_exec_context.set('backup_log', '/m/n.log')
-dummy_exec_context.set('log_level', set())
-dummy_context = SALVEContext(exec_context=dummy_exec_context)
+from tests.unit.block import dummy_context, dummy_logger
 
 
 @istest
@@ -33,7 +28,9 @@ def dir_create_compile():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
 
-    act = b.compile()
+    with mock.patch('salve.logger', dummy_logger):
+        act = b.compile()
+
     assert isinstance(act, action.ActionList)
     assert len(act.actions) == 2
 
@@ -62,7 +59,8 @@ def dir_create_compile_chmod():
     b.set('group', 'nogroup')
     b.set('mode', '755')
 
-    dir_act = b.compile()
+    with mock.patch('salve.logger', dummy_logger):
+        dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
     assert len(dir_act.actions) == 3
@@ -94,7 +92,8 @@ def dir_create_chown_as_root():
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
-    with mock.patch('salve.util.ugo.is_root', lambda: True):
+    with mock.patch('salve.util.ugo.is_root', lambda: True), \
+         mock.patch('salve.logger', dummy_logger):
         dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
@@ -121,7 +120,8 @@ def empty_dir_copy_compile():
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
-    with mock.patch('os.walk', lambda d: []):
+    with mock.patch('os.walk', lambda d: []), \
+         mock.patch('salve.logger', dummy_logger):
         dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
@@ -145,9 +145,10 @@ def dir_copy_chown_as_root():
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
-    with mock.patch('salve.util.ugo.is_root', lambda: True):
-        with mock.patch('os.walk', lambda d: []):
-            al = b.compile()
+    with mock.patch('salve.util.ugo.is_root', lambda: True), \
+         mock.patch('os.walk', lambda d: []), \
+         mock.patch('salve.logger', dummy_logger):
+        al = b.compile()
 
     assert isinstance(al, action.ActionList)
     assert len(al.actions) == 2
@@ -176,7 +177,9 @@ def dir_copy_fails_nosource():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.compile)
+
+    with mock.patch('salve.logger', dummy_logger):
+        ensure_except(BlockException, b.compile)
 
 
 @istest
@@ -192,7 +195,9 @@ def dir_copy_fails_notarget():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.compile)
+
+    with mock.patch('salve.logger', dummy_logger):
+        ensure_except(BlockException, b.compile)
 
 
 @istest
@@ -207,7 +212,9 @@ def dir_create_fails_notarget():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.compile)
+
+    with mock.patch('salve.logger', dummy_logger):
+        ensure_except(BlockException, b.compile)
 
 
 @istest
@@ -256,7 +263,9 @@ def dir_compile_fail_noaction():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.compile)
+
+    with mock.patch('salve.logger', dummy_logger):
+        ensure_except(BlockException, b.compile)
 
 
 @istest
@@ -273,4 +282,6 @@ def dir_compile_fail_unknown_action():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '755')
-    ensure_except(BlockException, b.compile)
+
+    with mock.patch('salve.logger', dummy_logger):
+        ensure_except(BlockException, b.compile)

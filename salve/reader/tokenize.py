@@ -3,7 +3,8 @@
 import string
 import shlex
 
-import salve.util.log as log
+import salve
+
 from salve.util.enum import Enum
 from salve.util.error import SALVEException
 from salve.util.context import SALVEContext, StreamContext
@@ -122,8 +123,8 @@ def tokenize_stream(context, stream):
     tokens = []
     state = states.FREE
 
-    log.info('Beginning Tokenization of \"%s\"' % filename,
-            context, min_verbosity=2)
+    salve.logger.info('Beginning Tokenization of \"%s\"' % filename,
+            file_context=context.stream_context, min_verbosity=2)
     tokenizer = shlex.shlex(stream, posix=True)
     # Basically, everything other than BLOCK_START or BLOCK_END
     # is okay here, we'll let the os library handle it later wrt
@@ -200,7 +201,7 @@ def tokenize_stream(context, stream):
         raise TokenizationException('Tokenizer ended in state ' +
                                      state, ctx)
 
-    log.info('Finished Tokenization of \"%s\"' % filename, context,
+    salve.logger.info('Finished Tokenization of \"%s\"' % filename,
             min_verbosity=2)
 
     return tokens

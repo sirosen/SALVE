@@ -2,8 +2,8 @@
 
 import os
 
-import salve.util.log as log
-import salve.execute.action as action
+import salve
+from salve.execute import action
 
 from salve.util.context import ExecutionContext
 from salve.block.base import Block
@@ -99,8 +99,8 @@ class ManifestBlock(Block):
         The action will always be an actionlist of the expansion of
         the manifest block's sub-blocks.
         """
-        log.info('Converting ManifestBlock to ActionList',
-                 self.context, min_verbosity=3)
+        salve.logger.info('Converting ManifestBlock to ActionList',
+                file_context=self.context.stream_context, min_verbosity=3)
 
         # transition to the action conversion phase, converting
         # blocks into actions

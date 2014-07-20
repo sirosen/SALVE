@@ -7,12 +7,13 @@ import os
 import sys
 import time
 
+import salve
+
 import salve.execute.action as action
 import salve.execute.copy as copy
 import salve.util.locations as locations
 import salve.util.streams
 
-import salve.util.log as log
 from salve.util.context import ExecutionContext
 
 
@@ -116,20 +117,23 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
             """
             return os.access(self.src, os.R_OK)
 
-        log.info('FileBackup: Checking source existence, \"%s\"' % self.src,
-                 self.context, min_verbosity=3)
+        salve.logger.info('FileBackup: Checking source existence, \"%s\"' %
+                self.src, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if not existant_source():
             return self.verification_codes.NONEXISTENT_SOURCE
 
-        log.info('FileBackup: Checking source is readable, \"%s\"' % self.src,
-                 self.context, min_verbosity=3)
+        salve.logger.info('FileBackup: Checking source is readable, \"%s\"' %
+                self.src, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
 
-        log.info('FileBackup: Checking destination is writable, \"%s\"' %
-                self.dst, self.context, min_verbosity=3)
+        salve.logger.info('FileBackup: Checking destination is writable, ' +
+                '\"%s\"' % self.dst, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -147,22 +151,22 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
             logstr = "FileBackup: Non-Readable source file \"%s\"" % self.src
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.context.stream_context)
             return
         if vcode == self.verification_codes.NONEXISTENT_SOURCE:
             logstr = "FileBackup: Non-Existent source file \"%s\"" % self.src
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.context.stream_context)
             return
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "FileBackup: Non-Writable target dir \"%s\"" % self.dst
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.context.stream_context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing File Backup of \"%s\"' % self.src,
-                self.context, min_verbosity=1)
+        salve.logger.info('Performing File Backup of \"%s\"' % self.src,
+                file_context=self.context.stream_context, min_verbosity=1)
 
         # FIXME: change to EAFP style
         if not os.path.exists(self.dst):
@@ -221,8 +225,9 @@ class DirBackupAction(action.ActionList, BackupAction):
         # confirming execution will work
         self.context.transition(ExecutionContext.phases.VERIFICATION)
 
-        log.info('DirBackup: Checking destination is writable, \"%s\"' %
-                self.dst, self.context, min_verbosity=3)
+        salve.logger.info('DirBackup: Checking destination is writable, ' +
+                '\"%s\"' % self.dst, file_context=self.context.stream_context,
+                min_verbosity=3)
 
         if not os.path.exists(self.src):
             return self.verification_codes.NONEXISTENT_SOURCE
@@ -239,14 +244,14 @@ class DirBackupAction(action.ActionList, BackupAction):
 
         if vcode == self.verification_codes.NONEXISTENT_SOURCE:
             logstr = "DirBackup: Non-Existent source dir \"%s\"" % self.src
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.context.stream_context)
             return
 
         # transition to the execution phase
         self.context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing Directory Backup of \"%s\"' % self.src,
-                self.context, min_verbosity=1)
+        salve.logger.info('Performing Directory Backup of \"%s\"' % self.src,
+                file_context=self.context.stream_context, min_verbosity=1)
 
         # append a file backup for each file in @src
         for dirname, subdirs, files in os.walk(self.src):

@@ -7,18 +7,13 @@ from nose.tools import istest
 from tests.utils.exceptions import ensure_except
 from salve.block.base import BlockException
 from salve.reader.tokenize import Token
-from salve.util.context import SALVEContext, StreamContext, ExecutionContext
 
 import salve.block.file_block
 import salve.block.manifest_block
 import salve.block.directory_block
 import salve.block.identifier
 
-dummy_stream_context = StreamContext('no such file', -1)
-dummy_exec_context = ExecutionContext()
-dummy_exec_context.set('log_level', set())
-dummy_context = SALVEContext(stream_context=dummy_stream_context,
-                             exec_context=dummy_exec_context)
+from tests.unit.block import dummy_context, dummy_stream_context, dummy_logger
 
 
 @istest
@@ -30,9 +25,11 @@ def invalid_block_id1():
     """
     invalid_id = Token('invalid_block_id', Token.types.IDENTIFIER,
             dummy_context)
-    ensure_except(BlockException,
-                  salve.block.identifier.block_from_identifier,
-                  dummy_context, invalid_id)
+
+    with mock.patch('salve.logger', dummy_logger):
+        ensure_except(BlockException,
+                      salve.block.identifier.block_from_identifier,
+                      dummy_context, invalid_id)
 
 
 @istest
@@ -44,9 +41,11 @@ def invalid_block_id2():
     """
     invalid_id = Token('invalid_block_id', Token.types.TEMPLATE,
                        dummy_context)
-    ensure_except(BlockException,
-                  salve.block.identifier.block_from_identifier,
-                  dummy_context, invalid_id)
+
+    with mock.patch('salve.logger', dummy_logger):
+        ensure_except(BlockException,
+                      salve.block.identifier.block_from_identifier,
+                      dummy_context, invalid_id)
 
 
 @istest
@@ -56,8 +55,9 @@ def valid_file_id():
     Checks that an identifier 'file' creates a file block.
     """
     file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
-    file_block = salve.block.identifier.block_from_identifier(dummy_context,
-        file_id)
+    with mock.patch('salve.logger', dummy_logger):
+        file_block = salve.block.identifier.block_from_identifier(
+                dummy_context, file_id)
     assert isinstance(file_block, salve.block.file_block.FileBlock)
 
 
@@ -68,8 +68,9 @@ def valid_manifest_id():
     Checks that an identifier 'manifest' creates a manifest block.
     """
     manifest_id = Token('manifest', Token.types.IDENTIFIER, dummy_context)
-    manifest_block = salve.block.identifier.block_from_identifier(
-        dummy_context, manifest_id)
+    with mock.patch('salve.logger', dummy_logger):
+        manifest_block = salve.block.identifier.block_from_identifier(
+            dummy_context, manifest_id)
     assert isinstance(manifest_block, salve.block.manifest_block.ManifestBlock)
 
 
@@ -80,6 +81,7 @@ def valid_directory_id():
     Checks that an identifier 'directory' creates a directory block.
     """
     manifest_id = Token('directory', Token.types.IDENTIFIER, dummy_context)
-    dir_block = salve.block.identifier.block_from_identifier(dummy_context,
-        manifest_id)
+    with mock.patch('salve.logger', dummy_logger):
+        dir_block = salve.block.identifier.block_from_identifier(dummy_context,
+            manifest_id)
     assert isinstance(dir_block, salve.block.directory_block.DirBlock)
