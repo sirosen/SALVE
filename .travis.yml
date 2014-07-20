@@ -6,4 +6,4 @@ python:
 install:
   - pip install -r tests/requirements.txt
 script:
-  - nosetests -v --with-coverage --cover-package=src
+  - nosetests -v --with-coverage --cover-package=salve

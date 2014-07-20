@@ -5,14 +5,14 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from src.block.base import BlockException
-from src.reader.tokenize import Token
-from src.util.context import SALVEContext, StreamContext, ExecutionContext
+from salve.block.base import BlockException
+from salve.reader.tokenize import Token
+from salve.util.context import SALVEContext, StreamContext, ExecutionContext
 
-import src.block.file_block
-import src.block.manifest_block
-import src.block.directory_block
-import src.block.identifier
+import salve.block.file_block
+import salve.block.manifest_block
+import salve.block.directory_block
+import salve.block.identifier
 
 dummy_stream_context = StreamContext('no such file', -1)
 dummy_exec_context = ExecutionContext()
@@ -31,7 +31,7 @@ def invalid_block_id1():
     invalid_id = Token('invalid_block_id', Token.types.IDENTIFIER,
             dummy_context)
     ensure_except(BlockException,
-                  src.block.identifier.block_from_identifier,
+                  salve.block.identifier.block_from_identifier,
                   dummy_context, invalid_id)
 
 
@@ -45,7 +45,7 @@ def invalid_block_id2():
     invalid_id = Token('invalid_block_id', Token.types.TEMPLATE,
                        dummy_context)
     ensure_except(BlockException,
-                  src.block.identifier.block_from_identifier,
+                  salve.block.identifier.block_from_identifier,
                   dummy_context, invalid_id)
 
 
@@ -56,9 +56,9 @@ def valid_file_id():
     Checks that an identifier 'file' creates a file block.
     """
     file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
-    file_block = src.block.identifier.block_from_identifier(dummy_context,
+    file_block = salve.block.identifier.block_from_identifier(dummy_context,
         file_id)
-    assert isinstance(file_block, src.block.file_block.FileBlock)
+    assert isinstance(file_block, salve.block.file_block.FileBlock)
 
 
 @istest
@@ -68,9 +68,9 @@ def valid_manifest_id():
     Checks that an identifier 'manifest' creates a manifest block.
     """
     manifest_id = Token('manifest', Token.types.IDENTIFIER, dummy_context)
-    manifest_block = src.block.identifier.block_from_identifier(dummy_context,
-        manifest_id)
-    assert isinstance(manifest_block, src.block.manifest_block.ManifestBlock)
+    manifest_block = salve.block.identifier.block_from_identifier(
+        dummy_context, manifest_id)
+    assert isinstance(manifest_block, salve.block.manifest_block.ManifestBlock)
 
 
 @istest
@@ -80,6 +80,6 @@ def valid_directory_id():
     Checks that an identifier 'directory' creates a directory block.
     """
     manifest_id = Token('directory', Token.types.IDENTIFIER, dummy_context)
-    dir_block = src.block.identifier.block_from_identifier(dummy_context,
+    dir_block = salve.block.identifier.block_from_identifier(dummy_context,
         manifest_id)
-    assert isinstance(dir_block, src.block.directory_block.DirBlock)
+    assert isinstance(dir_block, salve.block.directory_block.DirBlock)

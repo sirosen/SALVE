@@ -4,7 +4,7 @@ import mock
 from nose.tools import istest
 from tests.utils.exceptions import ensure_except
 
-import src.util.context as context
+import salve.util.context as context
 
 
 @istest

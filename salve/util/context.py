@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-import src.util.locations as locations
-import src.util.log as log
+import salve.util.locations as locations
+import salve.util.log as log
 
-from src.settings.default_globals import apply_exec_context_defaults
-from src.util.enum import Enum
+from salve.settings.default_globals import apply_exec_context_defaults
+from salve.util.enum import Enum
 
 context_types = Enum('STREAM', 'EXEC')
 

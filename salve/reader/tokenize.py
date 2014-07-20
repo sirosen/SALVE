@@ -3,11 +3,11 @@
 import string
 import shlex
 
-import src.util.log as log
-from src.util.enum import Enum
-from src.util.error import SALVEException
-from src.util.context import SALVEContext, StreamContext
-from src.util.streams import get_filename
+import salve.util.log as log
+from salve.util.enum import Enum
+from salve.util.error import SALVEException
+from salve.util.context import SALVEContext, StreamContext
+from salve.util.streams import get_filename
 
 
 class TokenizationException(SALVEException):

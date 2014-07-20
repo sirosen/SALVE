@@ -2,7 +2,7 @@
 
 from nose.tools import istest
 
-import src.util.enum as enum
+import salve.util.enum as enum
 
 
 @istest

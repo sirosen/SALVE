@@ -4,10 +4,10 @@ import os
 import mock
 from nose.tools import istest
 
-from src.util.context import SALVEContext, ExecutionContext, StreamContext
+from salve.util.context import SALVEContext, ExecutionContext, StreamContext
 
-import src.execute.action as action
-import src.execute.create as create
+import salve.execute.action as action
+import salve.execute.create as create
 import tests.utils.scratch as scratch
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')

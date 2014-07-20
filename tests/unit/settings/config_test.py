@@ -6,10 +6,10 @@ from nose.tools import istest, with_setup
 from os.path import dirname, abspath, join as pjoin
 
 from tests.utils.exceptions import ensure_except
-from src.util.context import SALVEContext, ExecutionContext
-from src.util.error import SALVEException
+from salve.util.context import SALVEContext, ExecutionContext
+from salve.util.error import SALVEException
 
-import src.settings.config as config
+import salve.settings.config as config
 
 _testfile_dir = pjoin(dirname(__file__), 'files')
 _homes_dir = pjoin(dirname(__file__), 'homes')
@@ -73,7 +73,7 @@ def setup_os1():
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = mock.patch('src.util.ugo.get_group_from_username',
+    group_patch = mock.patch('salve.util.ugo.get_group_from_username',
                              mock_get_group)
 
     # put the patches in place
@@ -99,7 +99,7 @@ def setup_os2():
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = mock.patch('src.util.ugo.get_group_from_username',
+    group_patch = mock.patch('salve.util.ugo.get_group_from_username',
                         mock_get_group)
 
     setup_patches(mock.patch.dict('os.environ', mock_env),
@@ -124,7 +124,7 @@ def setup_os3():
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = mock.patch('src.util.ugo.get_group_from_username',
+    group_patch = mock.patch('salve.util.ugo.get_group_from_username',
                              mock_get_group)
 
     setup_patches(mock.patch.dict('os.environ', mock_env),

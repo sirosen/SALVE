@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import src.util.locations as locations
+import salve.util.locations as locations
 
 
 class SALVEException(StandardError):

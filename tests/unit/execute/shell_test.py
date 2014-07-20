@@ -4,10 +4,10 @@ from nose.tools import istest
 import mock
 
 from tests.utils.exceptions import ensure_except
-from src.util.context import SALVEContext, ExecutionContext, StreamContext
+from salve.util.context import SALVEContext, ExecutionContext, StreamContext
 
-import src.execute.action as action
-import src.execute.shell as shell
+import salve.execute.action as action
+import salve.execute.shell as shell
 
 
 class MockProcess(object):

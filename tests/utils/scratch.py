@@ -9,7 +9,7 @@ import StringIO
 import textwrap
 import string
 
-import src.util.locations as locations
+import salve.util.locations as locations
 
 
 class ScratchContainer(object):
@@ -75,7 +75,7 @@ class ScratchContainer(object):
                 return real_open(path, *args, **kwargs)
 
         self.patches.add(
-            mock.patch('src.util.ugo.get_group_from_username',
+            mock.patch('salve.util.ugo.get_group_from_username',
                        get_groupname)
             )
 
@@ -84,10 +84,10 @@ class ScratchContainer(object):
         # user
         real_uid = os.geteuid()
         real_gid = os.getegid()
-        self.patches.add(mock.patch('src.util.ugo.name_to_uid',
+        self.patches.add(mock.patch('salve.util.ugo.name_to_uid',
             lambda x: real_uid)
             )
-        self.patches.add(mock.patch('src.util.ugo.name_to_gid',
+        self.patches.add(mock.patch('salve.util.ugo.name_to_gid',
             lambda x: real_gid)
             )
 
@@ -106,7 +106,7 @@ class ScratchContainer(object):
             mock.patch('sys.stderr', self.stderr)
             )
         self.patches.add(
-            mock.patch.dict('src.settings.default_globals.defaults',
+            mock.patch.dict('salve.settings.default_globals.defaults',
                 {'run_log': self.stderr})
             )
         self.patches.add(

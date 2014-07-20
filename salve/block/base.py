@@ -3,11 +3,11 @@
 import abc
 import os
 
-from api.block import AbstractBlock
+from salve.api.block import AbstractBlock
 
-from src.util.enum import Enum
-from src.util.error import SALVEException
-import src.util.locations as locations
+from salve.util.enum import Enum
+from salve.util.error import SALVEException
+import salve.util.locations as locations
 
 
 class BlockException(SALVEException):

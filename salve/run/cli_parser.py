@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import src.run.deploy
-import src.run.backup
+import salve.run.deploy
+import salve.run.backup
 import argparse
 
 
@@ -21,7 +21,7 @@ def add_backup_args(parser):
     parser.add_argument('-f', '--filename', dest='filename', default=None,
         required=True, help='The absolute path to the file to act upon.')
 
-    parser.set_defaults(func=src.run.backup.main)
+    parser.set_defaults(func=salve.run.backup.main)
 
 
 def add_deploy_args(parser):
@@ -35,7 +35,7 @@ def add_deploy_args(parser):
     parser.add_argument('-d', '--directory', dest='directory', default=None,
         help='The directory to which relative paths in manifests refer.')
 
-    parser.set_defaults(func=src.run.deploy.main)
+    parser.set_defaults(func=salve.run.deploy.main)
 
 
 def get_parser():

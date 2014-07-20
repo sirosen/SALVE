@@ -5,14 +5,14 @@ import ConfigParser
 import os
 import string
 
-import src.block.manifest_block
-import src.util.locations as locations
-import src.util.ugo as ugo
+import salve.block.manifest_block
+import salve.util.locations as locations
+import salve.util.ugo as ugo
 
-from src.util.error import SALVEException
-import src.util.log as log
+from salve.util.error import SALVEException
+import salve.util.log as log
 
-from src.util.context import context_types, ExecutionContext
+from salve.util.context import context_types, ExecutionContext
 
 SALVE_ENV_PREFIX = 'SALVE_'
 

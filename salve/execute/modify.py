@@ -5,10 +5,10 @@ import os
 import sys
 import shutil
 
-import src.execute.action as action
-import src.util.ugo as ugo
-import src.util.log as log
-from src.util.context import ExecutionContext
+import salve.execute.action as action
+import salve.util.ugo as ugo
+import salve.util.log as log
+from salve.util.context import ExecutionContext
 
 
 class ModifyAction(action.Action):

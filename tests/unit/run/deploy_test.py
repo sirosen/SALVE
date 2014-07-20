@@ -9,17 +9,17 @@ from nose.tools import istest
 from unittest import SkipTest
 from tests.utils.exceptions import ensure_except
 
-import src.run.command as command
-import src.run.deploy as deploy
-import src.util.locations as locations
+import salve.run.command as command
+import salve.run.deploy as deploy
+import salve.util.locations as locations
 
-from src.block.base import BlockException
-from src.util.error import SALVEException
-from src.util.context import SALVEContext, ExecutionContext, StreamContext
+from salve.block.base import BlockException
+from salve.util.error import SALVEException
+from salve.util.context import SALVEContext, ExecutionContext, StreamContext
 
 
 def generate_dummy_context(fake_stderr, phase=ExecutionContext.phases.STARTUP):
-    with mock.patch.dict('src.settings.default_globals.defaults',
+    with mock.patch.dict('salve.settings.default_globals.defaults',
                          {'run_log': fake_stderr}):
         dummy_stream_context = StreamContext('no such file', -1)
         dummy_exec_context = ExecutionContext(startphase=phase)
@@ -77,8 +77,8 @@ def deploy_main():
         def compile(self):
             return MockAction()
 
-    with mock.patch('src.block.manifest_block.ManifestBlock', MockManifest), \
-         mock.patch('src.settings.config.SALVEConfig', mock.Mock()):
+    with mock.patch('salve.block.manifest_block.ManifestBlock', MockManifest),\
+         mock.patch('salve.settings.config.SALVEConfig', mock.Mock()):
         deploy.main(fake_args)
 
     assert have_run['action_execute']
@@ -111,7 +111,7 @@ def deploy_salve_exception():
     def mock_run(root_manifest, exec_context, args):
         raise SALVEException('message string', dummy_context)
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
+    with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
          mock.patch('sys.exit', mock_exit):
         try:
             deploy.main(fake_args)
@@ -151,7 +151,7 @@ def deploy_block_exception():
     def mock_run(root_manifest, exec_context, args):
         raise BlockException('message string', dummy_context)
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
+    with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
          mock.patch('sys.stderr', fake_stderr), \
          mock.patch('sys.exit', mock_exit):
         try:
@@ -172,7 +172,7 @@ def deploy_action_exception():
     Checks that running the deploy main function catches and pretty
     prints any thrown ActionExceptions.
     """
-    from src.execute.action import ActionException
+    from salve.execute.action import ActionException
     log = {
         'exit': None
     }
@@ -193,7 +193,7 @@ def deploy_action_exception():
     def mock_run(root_manifest, exec_context, args):
         raise ActionException('message string', dummy_context)
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
+    with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
          mock.patch('sys.exit', mock_exit):
         try:
             deploy.main(fake_args)
@@ -213,7 +213,7 @@ def deploy_tokenization_exception():
     Checks that running the deploy main function catches and pretty
     prints any thrown TokenizationExceptions.
     """
-    from src.reader.tokenize import TokenizationException
+    from salve.reader.tokenize import TokenizationException
     log = {
         'exit': None
     }
@@ -234,7 +234,7 @@ def deploy_tokenization_exception():
     def mock_run(root_manifest, exec_context, args):
         raise TokenizationException('message string', dummy_context)
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
+    with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
          mock.patch('sys.exit', mock_exit):
         try:
             deploy.main(fake_args)
@@ -254,7 +254,7 @@ def deploy_parsing_exception():
     Checks that running the deploy main function catches and pretty
     prints any thrown ParsingExceptions.
     """
-    from src.reader.parse import ParsingException
+    from salve.reader.parse import ParsingException
     log = {
         'exit': None
     }
@@ -275,7 +275,7 @@ def deploy_parsing_exception():
     def mock_run(root_manifest, context, args):
         raise ParsingException('message string', dummy_context)
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
+    with mock.patch('salve.run.deploy.run_on_manifest', mock_run), \
          mock.patch('sys.exit', mock_exit):
         try:
             deploy.main(fake_args)
@@ -301,5 +301,5 @@ def deploy_unexpected_exception():
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run):
+    with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
         ensure_except(StandardError, deploy.main, fake_args)

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import src.util.ugo as ugo
+import salve.util.ugo as ugo
 
 from nose.tools import istest
 import mock

@@ -5,11 +5,11 @@ import abc
 import os
 import shutil
 
-import src.execute.action as action
-import src.util.enum as enum
+import salve.execute.action as action
+import salve.util.enum as enum
 
-import src.util.log as log
-from src.util.context import ExecutionContext
+import salve.util.log as log
+from salve.util.context import ExecutionContext
 
 
 class CopyAction(action.Action):

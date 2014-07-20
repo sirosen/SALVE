@@ -4,10 +4,10 @@ import os
 import mock
 from nose.tools import istest
 
-from src.util.context import SALVEContext, ExecutionContext, StreamContext
+from salve.util.context import SALVEContext, ExecutionContext, StreamContext
 
-import src.execute.action as action
-import src.execute.copy as copy
+import salve.execute.action as action
+import salve.execute.copy as copy
 import tests.utils.scratch as scratch
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
@@ -190,7 +190,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         unwritable_target_code = \
                 copy.DirCopyAction.verification_codes.UNWRITABLE_TARGET
-        with mock.patch('src.execute.copy.DirCopyAction.verify_can_exec',
+        with mock.patch('salve.execute.copy.DirCopyAction.verify_can_exec',
                 lambda x: unwritable_target_code):
             dcp = copy.DirCopyAction('a', 'b/c', dummy_context)
             dcp.execute()

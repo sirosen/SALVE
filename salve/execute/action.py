@@ -2,11 +2,11 @@
 
 import abc
 
-from api.block import CompiledBlock
+from salve.api.block import CompiledBlock
 
-from src.util.error import SALVEException
-from src.util.context import ExecutionContext
-import src.util.enum as enum
+from salve.util.error import SALVEException
+from salve.util.context import ExecutionContext
+import salve.util.enum as enum
 
 
 class ActionException(SALVEException):

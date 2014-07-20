@@ -5,9 +5,9 @@ import mock
 from nose.tools import istest
 from tests.utils.exceptions import ensure_except
 
-import src.block.base
-import src.settings.config
-from src.util.context import SALVEContext, ExecutionContext
+import salve.block.base
+import salve.settings.config
+from salve.util.context import SALVEContext, ExecutionContext
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 
@@ -26,7 +26,7 @@ def mock_expanduser(string):
 _dummy_conf = None
 with mock.patch('os.path.expanduser', mock_expanduser):
     dummy_exec_context = ExecutionContext()
-    _dummy_conf = src.settings.config.SALVEConfig(
+    _dummy_conf = salve.settings.config.SALVEConfig(
         SALVEContext(exec_context=dummy_exec_context)
         )
     dummy_exec_context.set('log_level', set())
@@ -38,4 +38,4 @@ def block_is_abstract():
     Block Base Class Is Abstract
     Ensures that a Block cannot be instantiated.
     """
-    ensure_except(TypeError, src.block.base.Block)
+    ensure_except(TypeError, salve.block.base.Block)

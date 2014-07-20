@@ -2,11 +2,11 @@
 
 import os
 
-import src.util.log as log
-import src.execute.action as action
+import salve.util.log as log
+import salve.execute.action as action
 
-from src.util.context import ExecutionContext
-from src.block.base import Block
+from salve.util.context import ExecutionContext
+from salve.block.base import Block
 
 
 class ManifestBlock(Block):
@@ -60,7 +60,7 @@ class ManifestBlock(Block):
         # This import must take place inside of the function because
         # there is a circular dependency between ManifestBlocks and the
         # parser
-        import src.reader.parse as parse
+        import salve.reader.parse as parse
         # ensure that this block has config applied and paths expanded
         # this guarantees that 'source' is accurate
         config.apply_to_block(self)

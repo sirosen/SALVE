@@ -5,15 +5,15 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from src.block.base import BlockException
-from src.util.context import SALVEContext, ExecutionContext
+from salve.block.base import BlockException
+from salve.util.context import SALVEContext, ExecutionContext
 
-import src.execute.action as action
-import src.execute.backup as backup
-import src.execute.create as create
-import src.execute.modify as modify
-import src.execute.copy as copy
-import src.block.file_block
+import salve.execute.action as action
+import salve.execute.backup as backup
+import salve.execute.create as create
+import salve.execute.modify as modify
+import salve.execute.copy as copy
+import salve.block.file_block
 
 dummy_exec_context = ExecutionContext()
 dummy_exec_context.set('backup_dir', '/m/n')
@@ -28,7 +28,7 @@ def file_copy_compile():
     File Block Copy Compile
     Verifies the result of converting a file copy block to an action.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
@@ -74,14 +74,14 @@ def file_create_compile():
     File Block Create Compile
     Verifies the result of converting a file create block to an action.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'create')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '0600')
     with mock.patch('os.path.exists', lambda f: True), \
-         mock.patch('src.util.ugo.is_root', lambda: False):
+         mock.patch('salve.util.ugo.is_root', lambda: False):
         file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
@@ -117,14 +117,14 @@ def file_copy_nouser():
     Verifies that converting a file copy block to an action when the
     user attribute is unset skips the chown subaction, even as root.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
     b.set('group', 'nogroup')
     b.set('mode', '0600')
 
-    with mock.patch('src.util.ugo.is_root', lambda: True):
+    with mock.patch('salve.util.ugo.is_root', lambda: True):
         file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
@@ -152,14 +152,14 @@ def file_create_nouser():
     Verifies that converting a file create block to an action when the
     user attribute is unset leaves out the chown.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'create')
     b.set('target', '/p/q/r')
     b.set('group', 'nogroup')
     b.set('mode', '0600')
 
     # skip backup just to generate a simpler action
-    with mock.patch('src.util.ugo.is_root', lambda: True), \
+    with mock.patch('salve.util.ugo.is_root', lambda: True), \
          mock.patch('os.path.exists', lambda f: False):
         file_act = b.compile()
 
@@ -182,7 +182,7 @@ def file_copy_nogroup():
     Verifies that converting a file copy block to an action when the
     group attribute is unset raises a BlockException.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
@@ -190,7 +190,7 @@ def file_copy_nogroup():
     b.set('mode', '0600')
 
     # skip backup just to generate a simpler action
-    with mock.patch('src.util.ugo.is_root', lambda: True), \
+    with mock.patch('salve.util.ugo.is_root', lambda: True), \
          mock.patch('os.path.exists', lambda f: False):
         file_act = b.compile()
 
@@ -219,14 +219,14 @@ def file_create_nogroup():
     Verifies that converting a file create block to an action when the
     group attribute is unset raises a BlockException.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'create')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('mode', '0600')
 
     # skip backup just to generate a simpler action
-    with mock.patch('src.util.ugo.is_root', lambda: True), \
+    with mock.patch('salve.util.ugo.is_root', lambda: True), \
          mock.patch('os.path.exists', lambda f: False):
         file_act = b.compile()
 
@@ -249,14 +249,14 @@ def file_copy_nomode():
     Verifies that converting a file copy block to an action when the
     mode attribute is unset raises a BlockException.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     # skip chown, for simplicity
-    with mock.patch('src.util.ugo.is_root', lambda: False):
+    with mock.patch('salve.util.ugo.is_root', lambda: False):
         file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
@@ -286,13 +286,13 @@ def file_create_nomode():
     Verifies that converting a file create block to an action when the
     mode attribute is unset raises a BlockException.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'create')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     # skip chown and backup just to generate a simpler action
-    with mock.patch('src.util.ugo.is_root', lambda: False), \
+    with mock.patch('salve.util.ugo.is_root', lambda: False), \
          mock.patch('os.path.exists', lambda f: False):
         act = b.compile()
 
@@ -316,7 +316,7 @@ def file_copy_fails_nosource():
     Verifies that converting a file copy block to an action when the
     source attribute is unset raises a BlockException.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'copy')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
@@ -332,7 +332,7 @@ def file_copy_fails_notarget():
     Verifies that converting a file copy block to an action when the
     target attribute is unset raises a BlockException.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('user', 'user1')
@@ -348,7 +348,7 @@ def file_create_fails_notarget():
     Verifies that converting a file create block to an action when the
     target attribute is unset raises a BlockException.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'create')
     b.set('source', '/a/b/c')
     b.set('user', 'user1')
@@ -363,7 +363,7 @@ def file_path_expand():
     File Block Path Expand
     Tests the results of expanding relative paths in a File block.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('source', 'p/q/r/s')
     b.set('target', 't/u/v/w/x/y/z/1/2/3/../3')
     root_dir = 'file/root/directory'
@@ -381,7 +381,7 @@ def file_path_expand_fail_notarget():
     Verifies that a File Block with the target attribute unset raises
     a BlockException when paths are expanded.
     """
-    b = src.block.file_block.FileBlock(dummy_context)
+    b = salve.block.file_block.FileBlock(dummy_context)
     b.set('action', 'create')
     b.set('source', 'p/q/r/s')
     b.set('user', 'user1')

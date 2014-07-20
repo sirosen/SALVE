@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-import src.util.log as log
-import src.block.identifier
-from src.util.streams import get_filename
-from src.util.error import SALVEException
-from src.reader.tokenize import Token, tokenize_stream
+import salve.util.log as log
+import salve.block.identifier
+from salve.util.streams import get_filename
+from salve.util.error import SALVEException
+from salve.reader.tokenize import Token, tokenize_stream
 
 
 class ParsingException(SALVEException):
@@ -63,7 +63,7 @@ def parse_tokens(context, tokens):
         # be an identifier, so we can use it to construct a new block
         elif not current_block:
             try:
-                b_from_id = src.block.identifier.block_from_identifier
+                b_from_id = salve.block.identifier.block_from_identifier
                 current_block = b_from_id(context, token)
             except:
                 raise ParsingException('Invalid block id ' +

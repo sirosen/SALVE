@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys
-import src.util.log as log
+import salve.util.log as log
 
 defaults = {
     'verbosity': 0,

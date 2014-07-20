@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import sys
 
-from src.util.enum import Enum
+from salve.util.enum import Enum
 
 
 log_types = Enum('INFO', 'WARN', 'ERROR')
@@ -37,7 +37,7 @@ def salve_log(message, log_type, context, print_context=True, min_verbosity=0):
         level is not met, the logging action is a no-op.
     """
     # import takes place here to avoid circular dependency
-    from src.util.context import context_types
+    from salve.util.context import context_types
 
     assert log_type in log_types
     assert context.has_context(context_types.EXEC)

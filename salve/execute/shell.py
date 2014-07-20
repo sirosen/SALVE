@@ -2,8 +2,8 @@
 
 import subprocess
 
-from src.execute.action import Action, ActionException
-from src.util.context import ExecutionContext
+from salve.execute.action import Action, ActionException
+from salve.util.context import ExecutionContext
 
 
 class ShellAction(Action):

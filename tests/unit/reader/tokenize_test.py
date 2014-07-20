@@ -5,9 +5,9 @@ from os.path import dirname, join as pjoin
 
 from tests.utils.exceptions import ensure_except
 
-from src.util.context import SALVEContext, StreamContext, ExecutionContext
-import src.reader.tokenize as tokenize
-import src.util.locations as locations
+from salve.util.context import SALVEContext, StreamContext, ExecutionContext
+import salve.reader.tokenize as tokenize
+import salve.util.locations as locations
 
 _testfile_dir = pjoin(dirname(__file__), 'files')
 

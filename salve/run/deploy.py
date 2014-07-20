@@ -5,15 +5,15 @@ from __future__ import print_function
 import os
 import sys
 
-import src.util.locations as locations
-import src.block.manifest_block
+import salve.util.locations as locations
+import salve.block.manifest_block
 
-import src.settings.config as config
-from src.util.enum import Enum
-from src.util.context import SALVEContext, ExecutionContext
+import salve.settings.config as config
+from salve.util.enum import Enum
+from salve.util.context import SALVEContext, ExecutionContext
 
-import src.util.log as log
-from src.util.error import SALVEException
+import salve.util.log as log
+from salve.util.error import SALVEException
 
 
 def run_on_manifest(root_manifest, context, args):
@@ -46,7 +46,7 @@ def run_on_manifest(root_manifest, context, args):
 
     # root_block is a synthetic manifest block containing the root
     # manifest
-    root_block = src.block.manifest_block.ManifestBlock(context,
+    root_block = salve.block.manifest_block.ManifestBlock(context,
             source=root_manifest)
     root_block.expand_blocks(root_dir, conf)
 

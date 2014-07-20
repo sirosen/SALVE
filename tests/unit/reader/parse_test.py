@@ -3,12 +3,12 @@
 from nose.tools import istest
 from os.path import dirname, join as pjoin
 
-import src.block.file_block
-import src.reader.parse as parse
-from src.reader.tokenize import Token
-from src.util.context import SALVEContext, ExecutionContext, StreamContext
-import src.util.locations as locations
-from src.settings.default_globals import apply_exec_context_defaults
+import salve.block.file_block
+import salve.reader.parse as parse
+from salve.reader.tokenize import Token
+from salve.util.context import SALVEContext, ExecutionContext, StreamContext
+import salve.util.locations as locations
+from salve.settings.default_globals import apply_exec_context_defaults
 
 from tests.utils.exceptions import ensure_except
 
@@ -207,7 +207,7 @@ def empty_block():
     """
     blocks = parse_filename(get_full_path('valid2.manifest'))
     assert len(blocks) == 1
-    assert isinstance(blocks[0], src.block.file_block.FileBlock)
+    assert isinstance(blocks[0], salve.block.file_block.FileBlock)
     assert len(blocks[0].attrs) == 0
 
 
@@ -220,5 +220,5 @@ def attribute_with_spaces():
     """
     blocks = parse_filename(get_full_path('valid3.manifest'))
     assert len(blocks) == 1
-    assert isinstance(blocks[0], src.block.file_block.FileBlock)
+    assert isinstance(blocks[0], salve.block.file_block.FileBlock)
     assert len(blocks[0].attrs) == 2

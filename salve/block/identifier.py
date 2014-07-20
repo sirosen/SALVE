@@ -1,20 +1,20 @@
 #!/usr/bin/python
 
-from src.reader.tokenize import Token
+from salve.reader.tokenize import Token
 
-from src.block.base import BlockException
-import src.block.file_block
-import src.block.manifest_block
-import src.block.directory_block
+from salve.block.base import BlockException
+import salve.block.file_block
+import salve.block.manifest_block
+import salve.block.directory_block
 
-import src.util.log as log
-from src.util.context import SALVEContext
+import salve.util.log as log
+from salve.util.context import SALVEContext
 
 # maps valid identifiers to block constructors
 identifier_map = {
-    'file': src.block.file_block.FileBlock,
-    'manifest': src.block.manifest_block.ManifestBlock,
-    'directory': src.block.directory_block.DirBlock
+    'file': salve.block.file_block.FileBlock,
+    'manifest': salve.block.manifest_block.ManifestBlock,
+    'directory': salve.block.directory_block.DirBlock
 }
 
 

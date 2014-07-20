@@ -8,7 +8,7 @@ from nose.tools import istest
 from tests.utils.exceptions import ensure_except
 import tests.end2end.run.common as run_common
 
-import src.run.command
+import salve.run.command
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), '../testfiles')
 
@@ -21,9 +21,9 @@ def except_from_args(argv):
     stderr = StringIO.StringIO()
     with mock.patch('sys.argv', argv), \
          mock.patch('sys.stderr', stderr), \
-         mock.patch.dict('src.settings.default_globals.defaults',
+         mock.patch.dict('salve.settings.default_globals.defaults',
                          {'run_log': stderr}):
-            e = ensure_except(SystemExit, src.run.command.run)
+            e = ensure_except(SystemExit, salve.run.command.run)
 
     return (e, stderr)
 

@@ -4,9 +4,9 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from src.util.context import SALVEContext, ExecutionContext, StreamContext
+from salve.util.context import SALVEContext, ExecutionContext, StreamContext
 
-import src.execute.action as action
+import salve.execute.action as action
 
 dummy_stream_context = StreamContext('no such file', -1)
 dummy_exec_context = ExecutionContext()
@@ -88,7 +88,7 @@ def empty_action_list():
         done_actions.append(self)
 
     # Just ensuring that an empty action list is valid
-    with mock.patch('src.execute.action.Action.execute', mock_execute):
+    with mock.patch('salve.execute.action.Action.execute', mock_execute):
         actions = action.ActionList([], dummy_context)
         actions.execute()
 

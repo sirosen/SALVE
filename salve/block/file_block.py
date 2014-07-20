@@ -2,14 +2,14 @@
 
 import os
 
-import src.util.log as log
-import src.execute.action as action
-import src.execute.backup as backup
-import src.execute.copy as copy
-import src.execute.create as create
-import src.execute.modify as modify
+import salve.util.log as log
+import salve.execute.action as action
+import salve.execute.backup as backup
+import salve.execute.copy as copy
+import salve.execute.create as create
+import salve.execute.modify as modify
 
-from src.block.base import Block, BlockException
+from salve.block.base import Block, BlockException
 
 
 class FileBlock(Block):
