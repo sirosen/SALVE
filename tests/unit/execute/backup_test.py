@@ -247,6 +247,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that verification of a DirBackupAction identifies missing
         source dir during execution.
         """
+        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+
         dirname = get_full_path('no such dir')
         act = backup.DirBackupAction(dirname, dummy_context)
         # check this here so that we abort the test if this condition is
@@ -255,6 +257,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
             assert isinstance(subact, backup.FileBackupAction)
 
         act.execute()
-        assert self.stderr.getvalue() ==\
-                "[WARN] [VERIFICATION] no such file, line -1: " +\
-                "DirBackup: Non-Existent source dir \"%s\"\n" % dirname
+        assert self.stderr.getvalue() == ("[WARN] [VERIFICATION] " +
+                "no such file, line -1: DirBackup: Non-Existent source dir " +
+                '"%s"\n' % dirname), self.stderr.getvalue()

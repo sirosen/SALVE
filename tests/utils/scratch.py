@@ -5,14 +5,15 @@ import tempfile
 import shutil
 
 import mock
-import StringIO
 import textwrap
 import string
 
 import salve.util.locations as locations
 
+from tests.utils import MockedGlobals
 
-class ScratchContainer(object):
+
+class ScratchContainer(MockedGlobals):
     default_settings_content = textwrap.dedent(
         """
         [global]
@@ -38,7 +39,12 @@ class ScratchContainer(object):
         """
     )
 
-    def mock_env(self):
+    def __init__(self):
+        MockedGlobals.__init__(self)
+
+        self.patches = set()
+        self.scratch_dir = tempfile.mkdtemp()
+
         mock_env = {
             'SUDO_USER': 'user1',
             'USER': 'user1',
@@ -98,30 +104,14 @@ class ScratchContainer(object):
             mock.patch('__builtin__.open', mock_open)
             )
 
-    def mock_io(self):
-        self.stderr = StringIO.StringIO()
-        self.stdout = StringIO.StringIO()
-
-        self.patches.add(
-            mock.patch('sys.stderr', self.stderr)
-            )
-        self.patches.add(
-            mock.patch('sys.stdout', self.stdout)
-            )
-        self.patches.add(
-            mock.patch('salve.logger.logfile', self.stderr)
-            )
-
     def setUp(self):
-        self.scratch_dir = tempfile.mkdtemp()
-        self.patches = set()
-        self.mock_env()
-        self.mock_io()
-
+        MockedGlobals.setUp(self)
         for p in self.patches:
             p.start()
 
     def tearDown(self):
+        MockedGlobals.tearDown(self)
+
         def recursive_chmod(d):
             os.chmod(d, 0777)
             for f in os.listdir(d):

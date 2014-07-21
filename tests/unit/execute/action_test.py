@@ -4,14 +4,9 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from salve.util.context import SALVEContext, ExecutionContext, StreamContext
+from tests.unit.execute import dummy_context, dummy_logger
 
 import salve.execute.action as action
-
-dummy_stream_context = StreamContext('no such file', -1)
-dummy_exec_context = ExecutionContext()
-dummy_context = SALVEContext(stream_context=dummy_stream_context,
-                             exec_context=dummy_exec_context)
 
 
 @istest
@@ -148,6 +143,7 @@ def action_verifies_OK():
 
     a = DummyAction(dummy_context)
 
-    verify_code = a.verify_can_exec()
+    with mock.patch('salve.logger', dummy_logger):
+        verify_code = a.verify_can_exec()
 
     assert verify_code == a.verification_codes.OK

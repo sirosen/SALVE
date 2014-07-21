@@ -12,7 +12,8 @@ import salve.block.manifest_block
 import salve.block.base
 import salve.util.locations as locations
 
-from tests.unit.block import dummy_context, dummy_conf, get_full_path
+from tests.unit.block import get_full_path
+from tests.unit.block import dummy_context, dummy_conf, dummy_logger
 
 
 @istest
@@ -22,8 +23,9 @@ def sourceless_manifest_compile_error():
     Verifies that a Manifest block raises a BlockException when
     compiled if the action attribute is unspecified.
     """
-    b = salve.block.manifest_block.ManifestBlock(dummy_context)
-    ensure_except(salve.block.base.BlockException, b.compile)
+    with mock.patch('salve.logger', dummy_logger):
+        b = salve.block.manifest_block.ManifestBlock(dummy_context)
+        ensure_except(salve.block.base.BlockException, b.compile)
 
 
 @istest
@@ -33,11 +35,12 @@ def sourceless_manifest_expand_error():
     Verifies that a Manifest block raises a BlockException when paths
     are expanded if the source attribute is unspecified.
     """
-    b = salve.block.manifest_block.ManifestBlock(dummy_context)
-    ensure_except(salve.block.base.BlockException,
-                  b.expand_blocks,
-                  locations.get_salve_root(),
-                  dummy_conf)
+    with mock.patch('salve.logger', dummy_logger):
+        b = salve.block.manifest_block.ManifestBlock(dummy_context)
+        ensure_except(salve.block.base.BlockException,
+                      b.expand_blocks,
+                      locations.get_salve_root(),
+                      dummy_conf)
 
 
 @istest
@@ -47,9 +50,10 @@ def empty_manifest_expand():
     Verifies that a Manifest block with no sub-blocks expands without
     errors.
     """
-    b = salve.block.manifest_block.ManifestBlock(dummy_context,
-        source=get_full_path('valid1.manifest'))
-    b.expand_blocks(locations.get_salve_root(), dummy_conf)
+    with mock.patch('salve.logger', dummy_logger):
+        b = salve.block.manifest_block.ManifestBlock(dummy_context,
+            source=get_full_path('valid1.manifest'))
+        b.expand_blocks(locations.get_salve_root(), dummy_conf)
     assert len(b.sub_blocks) == 0
 
 
@@ -60,12 +64,13 @@ def recursive_manifest_error():
     Verifies that a Manifest block which includes itself raises a
     BlockException when expanded.
     """
-    b = salve.block.manifest_block.ManifestBlock(dummy_context,
-        source=get_full_path('invalid1.manifest'))
-    ensure_except(salve.block.base.BlockException,
-                  b.expand_blocks,
-                  locations.get_salve_root(),
-                  dummy_conf)
+    with mock.patch('salve.logger', dummy_logger):
+        b = salve.block.manifest_block.ManifestBlock(dummy_context,
+            source=get_full_path('invalid1.manifest'))
+        ensure_except(salve.block.base.BlockException,
+                      b.expand_blocks,
+                      locations.get_salve_root(),
+                      dummy_conf)
 
 
 @istest
@@ -74,9 +79,10 @@ def sub_block_expand():
     Manifest Block SubBlock Expand
     Verifies that Manifest block expansion works normally.
     """
-    b = salve.block.manifest_block.ManifestBlock(dummy_context,
-        source=get_full_path('valid2.manifest'))
-    b.expand_blocks(locations.get_salve_root(), dummy_conf)
+    with mock.patch('salve.logger', dummy_logger):
+        b = salve.block.manifest_block.ManifestBlock(dummy_context,
+            source=get_full_path('valid2.manifest'))
+        b.expand_blocks(locations.get_salve_root(), dummy_conf)
     assert len(b.sub_blocks) == 2
     man_block = b.sub_blocks[0]
     file_block = b.sub_blocks[1]
@@ -95,9 +101,10 @@ def sub_block_compile():
     Verifies that Manifest block expansion followed by action
     conversion works normally.
     """
-    b = salve.block.manifest_block.ManifestBlock(dummy_context,
-        source=get_full_path('valid2.manifest'))
-    b.expand_blocks(locations.get_salve_root(), dummy_conf)
+    with mock.patch('salve.logger', dummy_logger):
+        b = salve.block.manifest_block.ManifestBlock(dummy_context,
+            source=get_full_path('valid2.manifest'))
+        b.expand_blocks(locations.get_salve_root(), dummy_conf)
     assert len(b.sub_blocks) == 2
     man_block = b.sub_blocks[0]
     file_block = b.sub_blocks[1]
@@ -107,8 +114,9 @@ def sub_block_compile():
     assert file_block.get('source') == get_full_path('valid1.manifest')
     target_loc = os.path.join(locations.get_salve_root(), 'a/b/c')
     assert file_block.get('target') == target_loc
-    with mock.patch('os.path.exists', lambda f: True):
-        with mock.patch('os.access', lambda f, p: True):
+    with mock.patch('salve.logger', dummy_logger), \
+         mock.patch('os.path.exists', lambda f: True), \
+         mock.patch('os.access', lambda f, p: True):
             act = b.compile()
     assert isinstance(act, salve.execute.action.ActionList)
     assert len(act.actions) == 2

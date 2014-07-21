@@ -16,16 +16,13 @@ _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 def get_full_path(filename):
     return os.path.join(_testfile_dir, filename)
 
-dummy_stream_context = StreamContext('no such file', -1)
-dummy_exec_context = ExecutionContext()
-dummy_context = SALVEContext(stream_context=dummy_stream_context,
-                             exec_context=dummy_exec_context)
-
 
 class TestWithScratchdir(scratch.ScratchContainer):
-    def setUp(self):
-        scratch.ScratchContainer.setUp(self)
-        dummy_exec_context.set('run_log', self.stderr)
+    def __init__(self):
+        scratch.ScratchContainer.__init__(self)
+        dummy_stream_context = StreamContext('no such file', -1)
+        self.ctx = SALVEContext(stream_context=dummy_stream_context,
+                             exec_context=self.exec_context)
 
     @istest
     def filecopy_execute(self):
@@ -40,7 +37,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         fcp = copy.FileCopyAction(a_name,
                                   os.path.join(b_name, 'c'),
-                                  dummy_context)
+                                  self.ctx)
         fcp()
 
         assert content == self.read_file('b/c')
@@ -61,7 +58,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         os.chmod(b_name, 0444)
         fcp = copy.FileCopyAction(a_name, b_name,
-                                  dummy_context)
+                                  self.ctx)
 
         assert fcp.verify_can_exec() == \
                 fcp.verification_codes.UNWRITABLE_TARGET
@@ -84,7 +81,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         os.chmod(b_name, 0000)
         fcp = copy.FileCopyAction(a_name, c_name,
-                                  dummy_context)
+                                  self.ctx)
 
         vcode = fcp.verify_can_exec()
 
@@ -106,7 +103,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         os.chmod(a_name, 0000)
         fcp = copy.FileCopyAction(a_name, b_name,
-                                  dummy_context)
+                                  self.ctx)
 
         assert fcp.verify_can_exec() == \
                 fcp.verification_codes.UNREADABLE_SOURCE
@@ -127,7 +124,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         c_name = self.get_fullname('b/c')
         dcp = copy.DirCopyAction(a_name, c_name,
-                                  dummy_context)
+                                  self.ctx)
 
         assert dcp.verify_can_exec() == \
                 dcp.verification_codes.UNWRITABLE_TARGET
@@ -137,12 +134,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         File Copy Action String Conversion
         """
-        fcp = copy.FileCopyAction('a',
-                                  'b/c',
-                                  dummy_context)
+        fcp = copy.FileCopyAction('a', 'b/c', self.ctx)
 
         assert str(fcp) == ('FileCopyAction(src=a,dst=b/c,context=' +
-                            str(dummy_context) + ')')
+                            str(self.ctx) + ')')
 
     @istest
     def dircopy_to_str(self):
@@ -151,10 +146,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         dcp = copy.DirCopyAction('a',
                                  'b/c',
-                                 dummy_context)
+                                 self.ctx)
 
         assert str(dcp) == ('DirCopyAction(src=a,dst=b/c,context=' +
-                           str(dummy_context) + ')')
+                           str(self.ctx) + ')')
 
     @istest
     def dircopy_execute(self):
@@ -178,7 +173,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
              mock.patch('os.access', lambda x, y: True):
             dcp = copy.DirCopyAction('a',
                                       'b/c',
-                                      dummy_context)
+                                      self.ctx)
             dcp()
 
         assert log['mock_cp'] == ('a', 'b/c', True)
@@ -188,11 +183,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         Unit: Directory Copy Action Execution, Unwritable Target
         """
+        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+
         unwritable_target_code = \
                 copy.DirCopyAction.verification_codes.UNWRITABLE_TARGET
         with mock.patch('salve.execute.copy.DirCopyAction.verify_can_exec',
                 lambda x: unwritable_target_code):
-            dcp = copy.DirCopyAction('a', 'b/c', dummy_context)
+            dcp = copy.DirCopyAction('a', 'b/c', self.ctx)
             dcp.execute()
 
         err = self.stderr.getvalue()

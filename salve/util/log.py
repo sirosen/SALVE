@@ -93,7 +93,9 @@ class Logger(object):
         if min_verbosity > 0:
             ty_prefix = ty_prefix + '[' + str(min_verbosity) + ']'
 
-        print(ty_prefix + ' ' + message, file=self.logfile)
+        # to make every Python happy, make sure "print" is given a unicode
+        # argument
+        print(unicode(ty_prefix + ' ' + message), file=self.logfile)
 
     def warn(self, *args, **kwargs):
         """
