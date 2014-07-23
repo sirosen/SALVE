@@ -170,7 +170,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             except SystemExit as e:
                 assert self.mocked_exitval == 1
 
-        stderr_out = fake_stderr.getvalue()
+        stderr_out = self.stderr.getvalue()
         assert stderr_out == ('[ERROR] [COMPILATION] ' +
             'no such file, line -1: message string\n'), stderr_out
 

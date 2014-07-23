@@ -8,7 +8,6 @@ import salve.reader.parse as parse
 from salve.reader.tokenize import Token
 from salve.util.context import SALVEContext, ExecutionContext, StreamContext
 import salve.util.locations as locations
-from salve.settings.default_globals import apply_exec_context_defaults
 
 from tests.utils.exceptions import ensure_except
 
@@ -18,7 +17,6 @@ dummy_exec_context = ExecutionContext(
     startphase=ExecutionContext.phases.PARSING
 )
 dummy_exec_context.set('log_level', set())
-apply_exec_context_defaults(dummy_exec_context)
 dummy_context = SALVEContext(stream_context=dummy_stream_context,
                              exec_context=dummy_exec_context)
 

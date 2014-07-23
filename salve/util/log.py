@@ -114,3 +114,14 @@ class Logger(object):
         A lightweight wrapper of log with log_type=ERROR
         """
         self.log(self.log_types.ERROR, *args, **kwargs)
+
+    def change_logfile(self, logfile):
+        """
+        Switch the target of all logging.
+
+        Args:
+            @logfile
+            A file descriptor or other file-like object that is a valid target
+            for logging information.
+        """
+        self.logfile = logfile

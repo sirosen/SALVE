@@ -147,7 +147,6 @@ class SALVEConfig(object):
                     subdict[subkey] = salve_env[key]
 
     def _set_context_globals(self):
-        ctx = self.context.exec_context
         # set globals in the execution context as shared variables
         for key in self.attributes['global']:
             # do templating to the string value to put environment
@@ -159,6 +158,7 @@ class SALVEConfig(object):
             if key == 'run_log':
                 try:
                     val = open(val, 'w')
+                    salve.logger.change_logfile(val)
                 except:  # pragma: no cover
                     raise  # pragma: no cover
 
@@ -175,7 +175,7 @@ class SALVEConfig(object):
             if key == 'verbosity':
                 val = int(val)
 
-            ctx.set(key, val)
+            salve.exec_context.set(key, val)
 
     def template(self, template_string):
         """

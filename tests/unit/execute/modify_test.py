@@ -213,9 +213,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
             act()
 
         assert len(lchown_args) == 0
-        assert ((self.stderr.getvalue() == ('[WARN] [EXECUTION]: ' +
-            'DirChown: Cannot Chown as Non-Root User\n')),
-            self.stderr.getvalue())
+        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION]: ' +
+            'DirChown: Cannot Chown as Non-Root User\n')), \
+            self.stderr.getvalue()
 
     @istest
     def dirchmod_execute_nonowner(self):
@@ -264,9 +264,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
             act()
 
         assert len(lchown_args) == 0
-        assert ((self.stderr.getvalue() == ('[WARN] [EXECUTION]: ' +
-            'DirChown: Cannot Chown as Non-Root User\n')),
-            self.stderr.getvalue())
+        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION]: ' +
+            'DirChown: Cannot Chown as Non-Root User\n')), \
+            self.stderr.getvalue()
 
     @istest
     def dirchmod_execute_nonrecursive_nonroot_nonowner(self):
