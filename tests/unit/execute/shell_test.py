@@ -4,10 +4,10 @@ from nose.tools import istest
 import mock
 
 from tests.utils.exceptions import ensure_except
-from salve.util.context import SALVEContext, ExecutionContext, StreamContext
+from salve.util.context import ExecutionContext, FileContext
 
-import salve.execute.action as action
-import salve.execute.shell as shell
+from salve.execute import action
+from salve.execute import shell
 
 
 class MockProcess(object):
@@ -20,11 +20,9 @@ class MockProcess(object):
     def communicate(self):
         return None, None
 
-dummy_stream_context = StreamContext('no such file', -1)
+dummy_file_context = FileContext('no such file')
 dummy_exec_context = ExecutionContext()
 dummy_exec_context.set('log_level', set())
-dummy_context = SALVEContext(stream_context=dummy_stream_context,
-                             exec_context=dummy_exec_context)
 
 
 @istest
@@ -44,7 +42,7 @@ def shell_action_basic():
         return MockProcess()
 
     with mock.patch('subprocess.Popen', mock_Popen):
-        a = shell.ShellAction('mkdir /a/b', dummy_context)
+        a = shell.ShellAction('mkdir /a/b', dummy_file_context)
         a.execute()
 
     assert len(done_commands) == 1
@@ -68,5 +66,5 @@ def failed_shell_action():
         return p
 
     with mock.patch('subprocess.Popen', mock_Popen):
-        a = shell.ShellAction(['touch /a/b'], dummy_context)
+        a = shell.ShellAction(['touch /a/b'], dummy_file_context)
         ensure_except(action.ActionException, a.execute)

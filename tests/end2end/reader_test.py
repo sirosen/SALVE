@@ -10,18 +10,15 @@ import salve.reader.parse
 
 import salve.util.locations as locations
 
-from salve.util.context import SALVEContext, ExecutionContext
 import tests.utils.scratch
 from tests.utils.exceptions import ensure_except
 
 _testfile_dir = pjoin(dirname(__file__), 'testfiles')
-dummy_exec_context = ExecutionContext()
-dummy_context = SALVEContext(exec_context=dummy_exec_context)
 
 
 def parse_filename(filename):
     with open(filename) as f:
-        return salve.reader.parse.parse_stream(dummy_context, f)
+        return salve.reader.parse.parse_stream(f)
 
 
 def get_full_path(filename):
@@ -106,7 +103,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 4
         assert sctx.filename == path
 
@@ -122,7 +119,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 5
         assert sctx.filename == path
 
@@ -138,7 +135,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 5
         assert sctx.filename == path
 
@@ -154,7 +151,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 3
         assert sctx.filename == path
 
@@ -170,7 +167,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 5
         assert sctx.filename == path
 
@@ -186,7 +183,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 3
         assert sctx.filename == path
 
@@ -202,6 +199,6 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         e = ensure_except(salve.reader.parse.ParsingException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 7
         assert sctx.filename == path

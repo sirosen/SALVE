@@ -26,17 +26,17 @@ class CreateAction(action.Action):
     verification_codes = \
         action.Action.verification_codes.extend('UNWRITABLE_TARGET')
 
-    def __init__(self, dst, context):
+    def __init__(self, dst, file_context):
         """
         CreateAction constructor.
 
         Args:
             @dst
             The destination path (being copied to).
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        action.Action.__init__(self, context)
+        action.Action.__init__(self, file_context)
         self.dst = dst
 
 
@@ -44,21 +44,21 @@ class FileCreateAction(CreateAction):
     """
     An action to create a single file.
     """
-    def __init__(self, dst, context):
+    def __init__(self, dst, file_context):
         """
         FileCreateAction constructor.
 
         Args:
             @dst
             Destination path.
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        CreateAction.__init__(self, dst, context)
+        CreateAction.__init__(self, dst, file_context)
 
     def __str__(self):
         return ("FileCreateAction(dst=" + str(self.dst) +
-            ",context=" + str(self.context) + ")")
+            ",context=" + repr(self.file_context) + ")")
 
     def verify_can_exec(self):
         """
@@ -67,7 +67,7 @@ class FileCreateAction(CreateAction):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        self.context.transition(ExecutionContext.phases.VERIFICATION)
+        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         def writable_target():
             """
@@ -87,7 +87,7 @@ class FileCreateAction(CreateAction):
             return False
 
         salve.logger.info('FileCreate: Checking target is writable, \"%s\"' %
-                self.dst, file_context=self.context.stream_context,
+                self.dst, file_context=self.file_context,
                 min_verbosity=3)
 
         if not writable_target():
@@ -105,14 +105,14 @@ class FileCreateAction(CreateAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "FileCreate: Non-Writable target file \"%s\"" % self.dst
-            salve.logger.warn(logstr, file_context=self.context.stream_context)
+            salve.logger.warn(logstr, file_context=self.file_context)
             return
 
         # transition to the execution phase
-        self.context.transition(ExecutionContext.phases.EXECUTION)
+        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing File Creation of \"%s\"' % self.dst,
-                file_context=self.context.stream_context, min_verbosity=1)
+                file_context=self.file_context, min_verbosity=1)
 
         if not os.path.exists(self.dst):
             with open(self.dst, 'w') as f:
@@ -123,21 +123,21 @@ class DirCreateAction(CreateAction):
     """
     An action to create a directory.
     """
-    def __init__(self, dst, context):
+    def __init__(self, dst, file_context):
         """
         DirCreateAction constructor.
 
         Args:
             @dst
             Destination path.
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        CreateAction.__init__(self, dst, context)
+        CreateAction.__init__(self, dst, file_context)
 
     def __str__(self):
         return ("DirCreateAction(dst=" + str(self.dst) + ",context=" +
-                str(self.context) + ")")
+                repr(self.file_context) + ")")
 
     def verify_can_exec(self):
         """
@@ -145,7 +145,7 @@ class DirCreateAction(CreateAction):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        self.context.transition(ExecutionContext.phases.VERIFICATION)
+        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         def writable_target():
             """
@@ -155,7 +155,7 @@ class DirCreateAction(CreateAction):
             return os.access(ancestor, os.W_OK)
 
         salve.logger.info('DirCreate: Checking if target exists, \"%s\"' %
-                self.dst, file_context=self.context.stream_context,
+                self.dst, file_context=self.file_context,
                 min_verbosity=3)
 
         # creation of existing dirs is always OK
@@ -163,7 +163,7 @@ class DirCreateAction(CreateAction):
             return self.verification_codes.OK
 
         salve.logger.info('DirCreate: Checking target is writable, \"%s\"' %
-                self.dst, file_context=self.context.stream_context,
+                self.dst, file_context=self.file_context,
                 min_verbosity=3)
 
         if not writable_target():
@@ -179,14 +179,14 @@ class DirCreateAction(CreateAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "DirCreate: Non-Writable target dir \"%s\"" % self.dst
-            salve.logger.warn(logstr, file_context=self.context.stream_context)
+            salve.logger.warn(logstr, file_context=self.file_context)
             return
 
         # transition to the execution phase
-        self.context.transition(ExecutionContext.phases.EXECUTION)
+        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing Directory Creation of \"%s\"' % self.dst,
-                file_context=self.context.stream_context, min_verbosity=1)
+                file_context=self.file_context, min_verbosity=1)
 
         # have to invoke this check because makedirs fails if the leaf
         # at the destination exists

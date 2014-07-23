@@ -13,7 +13,7 @@ import salve.block.manifest_block
 import salve.block.directory_block
 import salve.block.identifier
 
-from tests.unit.block import dummy_context, dummy_stream_context, dummy_logger
+from tests.unit.block import dummy_file_context, dummy_logger
 
 
 @istest
@@ -24,12 +24,12 @@ def invalid_block_id1():
     type IDENTIFIER.
     """
     invalid_id = Token('invalid_block_id', Token.types.IDENTIFIER,
-            dummy_context)
+            dummy_file_context)
 
     with mock.patch('salve.logger', dummy_logger):
         ensure_except(BlockException,
                       salve.block.identifier.block_from_identifier,
-                      dummy_context, invalid_id)
+                      invalid_id)
 
 
 @istest
@@ -40,12 +40,12 @@ def invalid_block_id2():
     fails block creation.
     """
     invalid_id = Token('invalid_block_id', Token.types.TEMPLATE,
-                       dummy_context)
+                       dummy_file_context)
 
     with mock.patch('salve.logger', dummy_logger):
         ensure_except(BlockException,
                       salve.block.identifier.block_from_identifier,
-                      dummy_context, invalid_id)
+                      invalid_id)
 
 
 @istest
@@ -54,10 +54,9 @@ def valid_file_id():
     Block Identifier File Identifier To Block
     Checks that an identifier 'file' creates a file block.
     """
-    file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
+    file_id = Token('file', Token.types.IDENTIFIER, dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
-        file_block = salve.block.identifier.block_from_identifier(
-                dummy_context, file_id)
+        file_block = salve.block.identifier.block_from_identifier(file_id)
     assert isinstance(file_block, salve.block.file_block.FileBlock)
 
 
@@ -67,10 +66,10 @@ def valid_manifest_id():
     Block Identifier Manifest Identifier To Block
     Checks that an identifier 'manifest' creates a manifest block.
     """
-    manifest_id = Token('manifest', Token.types.IDENTIFIER, dummy_context)
+    manifest_id = Token('manifest', Token.types.IDENTIFIER, dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
         manifest_block = salve.block.identifier.block_from_identifier(
-            dummy_context, manifest_id)
+                manifest_id)
     assert isinstance(manifest_block, salve.block.manifest_block.ManifestBlock)
 
 
@@ -80,8 +79,8 @@ def valid_directory_id():
     Block Identifier Directory Identifier To Block
     Checks that an identifier 'directory' creates a directory block.
     """
-    manifest_id = Token('directory', Token.types.IDENTIFIER, dummy_context)
+    manifest_id = Token('directory', Token.types.IDENTIFIER,
+            dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
-        dir_block = salve.block.identifier.block_from_identifier(dummy_context,
-            manifest_id)
+        dir_block = salve.block.identifier.block_from_identifier(manifest_id)
     assert isinstance(dir_block, salve.block.directory_block.DirBlock)

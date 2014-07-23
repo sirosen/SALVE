@@ -4,7 +4,7 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from tests.unit.execute import dummy_context, dummy_logger
+from tests.unit.execute import dummy_file_context, dummy_logger
 
 import salve.execute.action as action
 
@@ -41,7 +41,7 @@ def dynamic_action_execute_fails():
         def generate(self):
             pass
 
-    act = DummyAction(dummy_context)
+    act = DummyAction(dummy_file_context)
     ensure_except(action.ActionException, act.execute)
 
 
@@ -63,7 +63,7 @@ def dynamic_action_call_generates_and_executes():
                 logged_funcs.append('execute_replacement')
             self.execute = execute_replacement
 
-    act = DummyAction(dummy_context)
+    act = DummyAction(dummy_file_context)
     act()
 
     assert len(logged_funcs) == 2
@@ -84,7 +84,7 @@ def empty_action_list():
 
     # Just ensuring that an empty action list is valid
     with mock.patch('salve.execute.action.Action.execute', mock_execute):
-        actions = action.ActionList([], dummy_context)
+        actions = action.ActionList([], dummy_file_context)
         actions.execute()
 
     assert len(done_actions) == 0
@@ -97,9 +97,10 @@ def empty_action_list_to_string():
 
     Checks the string repr of an empty AL.
     """
-    act = action.ActionList([], dummy_context)
+    act = action.ActionList([], dummy_file_context)
 
-    assert str(act) == 'ActionList([],context=' + str(dummy_context) + ')'
+    assert str(act) == ('ActionList([],context=' +
+            repr(dummy_file_context) + ')')
 
 
 @istest
@@ -118,9 +119,9 @@ def action_list_inorder():
         def execute(self):
             done_actions.append(self)
 
-    a = DummyAction(dummy_context)
-    b = DummyAction(dummy_context)
-    al = action.ActionList([a, b], dummy_context)
+    a = DummyAction(dummy_file_context)
+    b = DummyAction(dummy_file_context)
+    al = action.ActionList([a, b], dummy_file_context)
     al.execute()
 
     assert done_actions[0] == a
@@ -141,7 +142,7 @@ def action_verifies_OK():
         def execute(self):
             pass
 
-    a = DummyAction(dummy_context)
+    a = DummyAction(dummy_file_context)
 
     with mock.patch('salve.logger', dummy_logger):
         verify_code = a.verify_can_exec()

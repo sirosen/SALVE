@@ -18,16 +18,15 @@ class FileBlock(Block):
     A file block describes an action performed on a file.
     This includes creation, deletion, and string append.
     """
-    def __init__(self, context):
+    def __init__(self, file_context):
         """
         File Block constructor
 
         Args:
-            @context
-            The SALVEContext for this block.
+            @file_context
+            The FileContext for this block.
         """
-        assert context.has_context('EXEC')
-        Block.__init__(self, Block.types.FILE, context)
+        Block.__init__(self, Block.types.FILE, file_context)
         for attr in ['target', 'source']:
             self.path_attrs.add(attr)
         for attr in ['target']:
@@ -43,7 +42,7 @@ class FileBlock(Block):
         by an attempt to back up the file being overwritten.
         """
         salve.logger.info('Converting FileBlock to FileAction',
-                file_context=self.context.stream_context, min_verbosity=3)
+                file_context=self.file_context, min_verbosity=3)
 
         self.ensure_has_attrs('action')
 
@@ -88,7 +87,7 @@ class FileBlock(Block):
             # it into one if it is not
             if not isinstance(file_act, action.ActionList):
                 file_act = action.ActionList([file_act],
-                                             self.context)
+                                             self.file_context)
             if prepend:
                 file_act.prepend(new)
             else:
@@ -104,11 +103,11 @@ class FileBlock(Block):
             ensure_abspath_attrs('source', 'target')
             file_action = copy.FileCopyAction(self.get('source'),
                                               self.get('target'),
-                                              self.context)
+                                              self.file_context)
         elif self.get('action') == 'create':
             ensure_abspath_attrs('target')
             file_action = create.FileCreateAction(self.get('target'),
-                                                  self.context)
+                                                  self.file_context)
         else:
             raise self.mk_except(
                     'Unsupported FileBlock action.')  # pragma: no cover
@@ -117,7 +116,7 @@ class FileBlock(Block):
         if self.has('mode'):
             chmod = modify.FileChmodAction(self.get('target'),
                                            self.get('mode'),
-                                           self.context)
+                                           self.file_context)
             file_action = add_action(file_action, chmod)
 
         # if 'user' and 'group' are set, append a chwon action
@@ -125,14 +124,14 @@ class FileBlock(Block):
             chown = modify.FileChownAction(self.get('target'),
                                            self.get('user'),
                                            self.get('group'),
-                                           self.context)
+                                           self.file_context)
             file_action = add_action(file_action, chown)
 
         # if the action triggers a backup, add a backup action
         if self.get('action') in triggers_backup:
             backup_action = backup.FileBackupAction(
                 self.get('target'),
-                self.context)
+                self.file_context)
             file_action = add_action(file_action,
                                      backup_action,
                                      prepend=True)

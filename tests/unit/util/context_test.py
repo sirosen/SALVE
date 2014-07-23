@@ -4,16 +4,16 @@ import mock
 from nose.tools import istest
 from tests.utils.exceptions import ensure_except
 
-import salve.util.context as context
+from salve.util import context
 
 
 @istest
-def streamctx_tostring():
+def filectx_tostring():
     """
-    StreamContext to String
-    Tests the conversion from a StreamContext to a string.
+    FileContext to String
+    Tests the conversion from a FileContext to a string.
     """
-    ctx = context.StreamContext('/a/b/c', 10)
+    ctx = context.FileContext('/a/b/c', lineno=10)
     assert str(ctx) == '/a/b/c, line 10', str(ctx)
 
 
@@ -29,45 +29,6 @@ def execctx_tostring():
 
 
 @istest
-def salvectx_tostring():
-    """
-    SALVEContext to String
-    Tests the conversion from an SALVEContext to a string.
-    """
-    stream_ctx = context.StreamContext('p/q', 2)
-    exec_ctx = context.ExecutionContext(
-        startphase=context.ExecutionContext.phases.STARTUP)
-    ctx = context.SALVEContext(stream_context=stream_ctx,
-                               exec_context=exec_ctx)
-    assert str(ctx) == '[STARTUP] p/q, line 2'
-
-
-@istest
-def salvectx_tostring_noexec():
-    """
-    SALVEContext to String (no exec)
-    Tests the conversion from an SALVEContext to a string without an
-    ExecutionContext.
-    """
-    stream_ctx = context.StreamContext('p/q', 2)
-    ctx = context.SALVEContext(stream_context=stream_ctx)
-    assert str(ctx) == 'p/q, line 2'
-
-
-@istest
-def salvectx_tostring_nostream():
-    """
-    SALVEContext to String (no stream)
-    Tests the conversion from an SALVEContext to a string without a
-    StreamContext.
-    """
-    exec_ctx = context.ExecutionContext(
-        startphase=context.ExecutionContext.phases.STARTUP)
-    ctx = context.SALVEContext(exec_context=exec_ctx)
-    assert str(ctx) == '[STARTUP]'
-
-
-@istest
 def execctx_transition():
     """
     ExecutionContext Phase Transition
@@ -75,9 +36,9 @@ def execctx_transition():
     """
     ctx = context.ExecutionContext(
         startphase=context.ExecutionContext.phases.STARTUP)
-    ctx.transition(context.ExecutionContext.phases.EXECUTION)
+    ctx.transition(context.ExecutionContext.phases.EXECUTION, quiet=True)
     assert ctx.phase == 'EXECUTION'
-    ctx.transition('STARTUP')
+    ctx.transition('STARTUP', quiet=True)
     assert ctx.phase == 'STARTUP'
 
 
@@ -90,77 +51,3 @@ def execctx_transition_failure_nonexistent():
     ctx = context.ExecutionContext(
         startphase=context.ExecutionContext.phases.STARTUP)
     ensure_except(AssertionError, ctx.transition, 'STARTUP2')
-
-
-@istest
-def salvectx_has_streamctx():
-    """
-    SALVEContext Has StreamContext (positive)
-    Tests the has_context() check for a SALVEContext with a StreamContext.
-    """
-    stream_ctx = context.StreamContext('p/q', 2)
-    ctx = context.SALVEContext(stream_context=stream_ctx)
-    assert ctx.has_context(context.context_types.STREAM)
-
-
-@istest
-def salvectx_not_has_streamctx():
-    """
-    SALVEContext Has StreamContext (negative)
-    Tests the has_context() check for a SALVEContext without a StreamContext.
-    """
-    ctx = context.SALVEContext()
-    assert not ctx.has_context(context.context_types.STREAM)
-
-
-@istest
-def salvectx_has_execctx():
-    """
-    SALVEContext Has ExecutionContext (positive)
-    Tests the has_context() check for a SALVEContext with an ExecutionContext.
-    """
-    exec_ctx = context.ExecutionContext(
-        startphase=context.ExecutionContext.phases.STARTUP)
-    ctx = context.SALVEContext(exec_context=exec_ctx)
-    assert ctx.has_context(context.context_types.EXEC)
-
-
-@istest
-def salvectx_not_has_execctx():
-    """
-    SALVEContext Has ExecutionContext (negative)
-    Tests the has_context() check for a SALVEContext without an
-    ExecutionContext.
-    """
-    ctx = context.SALVEContext()
-    assert not ctx.has_context(context.context_types.EXEC)
-
-
-@istest
-def salvectx_not_has_invalidctx():
-    """
-    SALVEContext Does Not Have Invalid Context Type
-    Tests the has_context() check for a SALVEContext with an invalid context
-    type.
-    """
-    ctx = context.SALVEContext()
-    assert not ctx.has_context('INVALID CTX TYPE')
-
-
-@istest
-def salvectx_shallow_copy():
-    """
-    SALVEContext Shallow Copy
-    Tests that a shallow copy of a SALVEContext contains the same contexts, but
-    is not a ref to the same object.
-    """
-    stream_ctx = context.StreamContext('p/q', 2)
-    exec_ctx = context.ExecutionContext(
-        startphase=context.ExecutionContext.phases.STARTUP)
-    ctx = context.SALVEContext(stream_context=stream_ctx,
-                               exec_context=exec_ctx)
-    ctx2 = ctx.shallow_copy()
-
-    assert ctx is not ctx2
-    assert ctx.stream_context is ctx2.stream_context
-    assert ctx.exec_context is ctx2.exec_context

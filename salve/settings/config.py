@@ -8,11 +8,10 @@ import string
 import salve
 
 import salve.block.manifest_block
-import salve.util.locations as locations
-import salve.util.ugo as ugo
-
+from salve.util import locations
+from salve.util import ugo
+from salve.util.context import FileContext
 from salve.util.error import SALVEException
-from salve.util.context import context_types, ExecutionContext
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -60,14 +59,9 @@ class SALVEConfig(object):
     of guaranteeing that the configuration values are as desired
     without inspecting the files.
     """
-    def __init__(self, context, filename=None):
+    def __init__(self, filename=None):
         """
         SALVEConfig constructor.
-
-        Args:
-            @context
-            The SALVEContext, which must contain an execution
-            context for phase tracking and globals.
 
         KWArgs:
             @filename
@@ -75,10 +69,6 @@ class SALVEConfig(object):
             None, which indicates that the defaults and ~/.salverc
             should be used without any supplement.
         """
-        assert context.has_context(context_types.EXEC)
-        # store a ref to the exec context in the config
-        self.context = context
-
         # get the user that we're running as, even if invoked with sudo
         user = os.environ['USER']
         if 'SUDO_USER' in os.environ:
@@ -108,7 +98,8 @@ class SALVEConfig(object):
             conf = SALVEConfigParser(userhome, filename)
         except ConfigParser.Error as e:
             raise SALVEException('Encountered an error while parsing your ' +
-                    'configuration file(s).\n%s' % e.message, context)
+                    'configuration file(s).\n%s' % e.message,
+                    FileContext(filename))
         sections = conf.sections()
         # the loaded configuration is stored in the config object as a
         # dict mapping section names to a dict of (key,value) items

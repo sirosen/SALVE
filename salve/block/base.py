@@ -14,18 +14,18 @@ class BlockException(SALVEException):
     """
     A SALVE exception specialized for blocks.
     """
-    def __init__(self, msg, context):
+    def __init__(self, msg, file_context):
         """
         BlockException constructor
 
         Args:
             @msg
             A string message that describes the error or exception.
-            @context
-            A SALVEContext that identifies the origin of this
+            @file_context
+            A FileContext that identifies the origin of this
             exception.
         """
-        SALVEException.__init__(self, msg, context=context)
+        SALVEException.__init__(self, msg, file_context=file_context)
 
 
 class Block(AbstractBlock):
@@ -41,7 +41,7 @@ class Block(AbstractBlock):
     # block identifiers (case insensitive)
     types = Enum('FILE', 'MANIFEST', 'DIRECTORY')
 
-    def __init__(self, ty, context):
+    def __init__(self, ty, file_context):
         """
         Base Block constructor.
 
@@ -49,12 +49,12 @@ class Block(AbstractBlock):
             @ty
             An element of Block.types, the type of the block.
 
-            @context
-            The SALVEContext of this Block. Used to pass globals and
+            @file_context
+            The FileContext of this Block. Used to pass globals and
             state information to and from the block.
         """
         self.block_type = ty
-        self.context = context
+        self.file_context = file_context
         # every block holds a hashmap of attribute names to values,
         # always initialized as empty
         self.attrs = {}
@@ -131,19 +131,8 @@ class Block(AbstractBlock):
             The string message that should be reported by the raised
             exception.
         """
-        exc = BlockException(msg, self.context)
+        exc = BlockException(msg, self.file_context)
         return exc
-
-    @abc.abstractmethod
-    def compile(self):
-        """
-        Converts the Block to an action. Does not modify the block
-        itself. In this sense, all Blocks are factories.
-
-        There is no meaningful implementation of this for an untyped
-        block, so it is abstract.
-        """
-        return  # pragma: no cover
 
     def expand_file_paths(self, root_dir):
         """

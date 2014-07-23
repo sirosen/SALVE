@@ -7,7 +7,7 @@ import salve
 
 from salve.util.enum import Enum
 from salve.util.error import SALVEException
-from salve.util.context import SALVEContext, StreamContext
+from salve.util.context import FileContext
 from salve.util.streams import get_filename
 
 
@@ -15,17 +15,17 @@ class TokenizationException(SALVEException):
     """
     A SALVE exception specialized for tokenization.
     """
-    def __init__(self, msg, context):
+    def __init__(self, msg, file_context):
         """
         TokenizationException constructor
 
         Args:
             @msg
             A string message that describes the error.
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        SALVEException.__init__(self, msg, context)
+        SALVEException.__init__(self, msg, file_context)
 
 
 class Token(object):
@@ -39,7 +39,7 @@ class Token(object):
     # these are the valid token types
     types = Enum('IDENTIFIER', 'BLOCK_START', 'BLOCK_END', 'TEMPLATE')
 
-    def __init__(self, value, ty, context):
+    def __init__(self, value, ty, file_context):
         """
         Token constructor
 
@@ -49,25 +49,25 @@ class Token(object):
             the input stream.
             @ty
             The type of this token. Determined from context and content.
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
         self.value = value
         self.ty = ty
-        self.context = context
+        self.file_context = file_context
 
     def __str__(self):
         """
         stringify a Token
         """
         attrs = ['value=' + self.value, 'ty=' + self.ty,
-                 'lineno=' + str(self.context.stream_context.lineno)]
-        if self.context.stream_context.filename:
-            attrs.append('filename=' + self.context.stream_context.filename)
+                 'lineno=' + str(self.file_context.lineno)]
+        if self.file_context.filename:
+            attrs.append('filename=' + self.file_context.filename)
         return 'Token(' + ','.join(attrs) + ')'
 
 
-def tokenize_stream(context, stream):
+def tokenize_stream(stream):
     """
     Convert an input stream into a list of Tokens.
 
@@ -89,7 +89,7 @@ def tokenize_stream(context, stream):
         """
         return token == '{' or token == '}'
 
-    def unexpected_token(token_str, expected, context):
+    def unexpected_token(token_str, expected, file_context):
         """
         Raise an exception due to an unexpected Token being fund in the
         input stream. Usually means that there are out of order tokens.
@@ -99,12 +99,12 @@ def tokenize_stream(context, stream):
             Not a Token, but a string that was found in the stream.
             @expected
             The expected type(s) of the Token.
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
         raise TokenizationException('Unexpected token: ' + token_str +
             ' Expected ' + str(expected) + ' instead.',
-            context)
+            file_context)
 
     """
     State definitions
@@ -124,7 +124,7 @@ def tokenize_stream(context, stream):
     state = states.FREE
 
     salve.logger.info('Beginning Tokenization of \"%s\"' % filename,
-            file_context=context.stream_context, min_verbosity=2)
+            min_verbosity=2)
     tokenizer = shlex.shlex(stream, posix=True)
     # Basically, everything other than BLOCK_START or BLOCK_END
     # is okay here, we'll let the os library handle it later wrt
@@ -132,7 +132,7 @@ def tokenize_stream(context, stream):
     tokenizer.wordchars = string.letters + string.digits + \
                           '_-+=^&@`/\|~$()[].,<>*?!%#'
 
-    def add_token(tok, ty, context):
+    def add_token(tok, ty, file_context):
         """
         Add a token to the list in progress.
 
@@ -141,21 +141,18 @@ def tokenize_stream(context, stream):
             The string that was tokenized.
             @ty
             The Token type of @tok
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        tokens.append(Token(tok, ty, context))
+        tokens.append(Token(tok, ty, file_context))
 
     # The tokenizer acts as a state machine, reading tokens and making
     # state transitions based on the token values
     # get the first Maybe(Token)
     current = tokenizer.get_token()
     while current is not None:
-        # generate a new SALVEContext with the same exec_context (shared ref)
-        # but a new StreamContext
-        ctx = SALVEContext(exec_context=context.exec_context,
-                           stream_context=StreamContext(filename,
-                               tokenizer.lineno))
+        # generate a new FileContext
+        ctx = FileContext(filename, lineno=tokenizer.lineno)
         # if we have not found a block, the expectation is that we will
         # find a block identifier as the first token
         if state is states.FREE:

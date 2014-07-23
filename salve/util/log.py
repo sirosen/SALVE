@@ -49,7 +49,7 @@ class Logger(object):
 
         KWArgs:
             @file_context
-            A Stream Context which contextualizes the logging.
+            A FileContext which contextualizes the logging.
 
             @hide_context
             A boolean used to decide whether or not to include the context

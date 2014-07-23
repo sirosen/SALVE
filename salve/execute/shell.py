@@ -2,6 +2,8 @@
 
 import subprocess
 
+import salve
+
 from salve.execute.action import Action, ActionException
 from salve.util.context import ExecutionContext
 
@@ -11,7 +13,7 @@ class ShellAction(Action):
     A ShellAction is one of the basic Action types, used to invoke
     shell subprocesses.
     """
-    def __init__(self, command, context):
+    def __init__(self, command, file_context):
         """
         ShellAction constructor.
 
@@ -19,10 +21,10 @@ class ShellAction(Action):
             @command
             A string that defines the shell command to execute when the
             ShellAction is invoked.
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        Action.__init__(self, context)
+        Action.__init__(self, file_context)
         self.cmd = command
 
     def __str__(self):
@@ -36,7 +38,7 @@ class ShellAction(Action):
         nonzero exit code, and returns its stdout and stderr.
         """
         # transition to the execution phase
-        self.context.transition(ExecutionContext.phases.EXECUTION)
+        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         # run the command, passing output to PIPE
         process = subprocess.Popen(self.cmd,
@@ -49,6 +51,6 @@ class ShellAction(Action):
         if process.returncode != 0:
             raise ActionException(str(self) +
                 ' failed with exit code ' + str(process.returncode),
-                self.context)
+                self.file_context)
 
         return process.communicate()

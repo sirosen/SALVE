@@ -7,13 +7,11 @@ import sys
 
 import salve
 
-import salve.util.locations as locations
-import salve.block.manifest_block
-
-import salve.settings.config as config
-from salve.util.enum import Enum
-from salve.util.context import SALVEContext, ExecutionContext
+from salve.util.context import FileContext
 from salve.util.error import SALVEException
+from salve.util import locations
+from salve.block import manifest_block
+from salve.settings import config
 
 
 def run_on_manifest(root_manifest, args):
@@ -25,21 +23,17 @@ def run_on_manifest(root_manifest, args):
         @root_manifest
         The manifest at the root of the manifest tree, and starting
         point for manifest execution.
-        @context
-        The SALVEContext containing execution context. Does not include
-        a StreamContext, as that is not yet relevant.
         @args
         The options, as parsed from the commandline.
     """
-    context = SALVEContext(exec_context=salve.exec_context)
     cfg_file = None
     if args.configfile:
         cfg_file = args.configfile
-    conf = config.SALVEConfig(context, filename=cfg_file)
+    conf = config.SALVEConfig(filename=cfg_file)
 
     # must be done after config is loaded to have correct override behavior
     if args.verbosity:
-        context.exec_context.set('verbosity', args.verbosity)
+        salve.exec_context.set('verbosity', args.verbosity)
 
     root_dir = locations.get_salve_root()
     if args.directory:
@@ -47,7 +41,7 @@ def run_on_manifest(root_manifest, args):
 
     # root_block is a synthetic manifest block containing the root
     # manifest
-    root_block = salve.block.manifest_block.ManifestBlock(context,
+    root_block = manifest_block.ManifestBlock(FileContext('no such file'),
             source=root_manifest)
     root_block.expand_blocks(root_dir, conf)
 
@@ -63,7 +57,7 @@ def main(args):
         assert args.manifest
         run_on_manifest(args.manifest, args)
     except SALVEException as e:
-        salve.logger.error(e.message, file_context=e.context.stream_context)
+        salve.logger.error(e.message, file_context=e.file_context)
         # Normally, sys.exit() is to be avoided, but main() is only
         # invoked if salve is running as a script, and we want to give
         # the right exit status for commandline usage

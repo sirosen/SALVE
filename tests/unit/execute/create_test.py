@@ -4,7 +4,7 @@ import os
 import mock
 from nose.tools import istest
 
-from salve.util.context import SALVEContext, ExecutionContext, StreamContext
+from salve.util.context import ExecutionContext, FileContext
 
 import salve.execute.action as action
 import salve.execute.create as create
@@ -16,10 +16,8 @@ _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 def get_full_path(filename):
     return os.path.join(_testfile_dir, filename)
 
-dummy_stream_context = StreamContext('no such file', -1)
+dummy_file_context = FileContext('no such file')
 dummy_exec_context = ExecutionContext()
-dummy_context = SALVEContext(stream_context=dummy_stream_context,
-                             exec_context=dummy_exec_context)
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
@@ -35,7 +33,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with mock.patch('__builtin__.open', mock_open, create=True), \
              mock.patch('os.access', lambda x, y: True):
-            fc = create.FileCreateAction(a_name, dummy_context)
+            fc = create.FileCreateAction(a_name, dummy_file_context)
             fc()
 
         mock_open.assert_called_once_with(a_name, 'w')
@@ -54,7 +52,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with mock.patch('os.makedirs', mock_mkdirs), \
              mock.patch('os.access', lambda x, y: True):
-            dc = create.DirCreateAction(a_name, dummy_context)
+            dc = create.DirCreateAction(a_name, dummy_file_context)
             dc()
 
         mock_mkdirs.assert_called_once_with(a_name)
@@ -65,10 +63,10 @@ def filecreate_to_str():
     """
     File Create Action String Conversion
     """
-    fc = create.FileCreateAction('a', dummy_context)
+    fc = create.FileCreateAction('a', dummy_file_context)
 
     assert str(fc) == ('FileCreateAction(dst=a,context=' +
-                       str(dummy_context) + ')')
+                       repr(dummy_file_context) + ')')
 
 
 @istest
@@ -76,7 +74,7 @@ def dircreate_to_str():
     """
     Directory Create Action String Conversion
     """
-    dc = create.DirCreateAction('a', dummy_context)
+    dc = create.DirCreateAction('a', dummy_file_context)
 
     assert str(dc) == ('DirCreateAction(dst=a,context=' +
-                       str(dummy_context) + ')')
+                       repr(dummy_file_context) + ')')

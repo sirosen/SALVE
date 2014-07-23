@@ -15,20 +15,20 @@ class ParsingException(SALVEException):
     A ParsingException (PE) often carres the token that tripped the
     exception in its message.
     """
-    def __init__(self, msg, context):
+    def __init__(self, msg, file_context):
         """
         ParsingException constructor
 
         Args:
             @msg
             A string message that describes the error.
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        SALVEException.__init__(self, msg, context)
+        SALVEException.__init__(self, msg, file_context)
 
 
-def parse_tokens(context, tokens):
+def parse_tokens(tokens):
     """
     Converts a token list to a block list.
     This is not entirely stateless, but unlike the tokenizer,
@@ -48,7 +48,7 @@ def parse_tokens(context, tokens):
         raise ParsingException('Invalid token.' +
             'Expected a token of types ' + str(expected_types) +
             ' but got token ' + token.value + ' of type ' + token.ty +
-            ' instead.', token.context)
+            ' instead.', token.file_context)
 
     # track the expected next token(s)
     expected_token_types = [Token.types.IDENTIFIER]
@@ -65,10 +65,10 @@ def parse_tokens(context, tokens):
         elif not current_block:
             try:
                 b_from_id = salve.block.identifier.block_from_identifier
-                current_block = b_from_id(context, token)
+                current_block = b_from_id(token)
             except:
                 raise ParsingException('Invalid block id ' +
-                    token.value, token.context)
+                    token.value, token.file_context)
             expected_token_types = [Token.types.BLOCK_START]
         else:
             # if the token is a block start, do nothing
@@ -101,14 +101,14 @@ def parse_tokens(context, tokens):
         # this PE carries no token because it is the absence of a token
         # that triggers it
         raise ParsingException('Incomplete block in token stream!',
-            current_block.context)
+            current_block.file_context)
 
     salve.logger.info('Finished Parsing Token Stream', min_verbosity=2)
 
     return blocks
 
 
-def parse_stream(context, stream):
+def parse_stream(stream):
     """
     Parse a stream or file object into blocks.
 
@@ -118,4 +118,4 @@ def parse_stream(context, stream):
         Parsing a stream is just tokenizing it, and then handing those
         tokens to the parser.
     """
-    return parse_tokens(context, tokenize_stream(context, stream))
+    return parse_tokens(tokenize_stream(stream))

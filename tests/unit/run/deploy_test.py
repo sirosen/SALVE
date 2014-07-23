@@ -14,7 +14,7 @@ from salve.util import locations
 
 from salve.block.base import BlockException
 from salve.util.error import SALVEException
-from salve.util.context import SALVEContext, ExecutionContext, StreamContext
+from salve.util.context import ExecutionContext, FileContext
 
 
 @istest
@@ -78,9 +78,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
     def __init__(self):
         scratch.ScratchContainer.__init__(self)
         self.exec_context.set('log_level', set(('WARN', 'ERROR')))
-        dummy_stream_context = StreamContext('no such file', -1)
-        self.ctx = SALVEContext(stream_context=dummy_stream_context,
-                exec_context=self.exec_context)
+        dummy_file_context = FileContext('no such file', -1)
+        self.ctx = dummy_file_context
 
         self.mocked_exitval = None
         real_exit = sys.exit

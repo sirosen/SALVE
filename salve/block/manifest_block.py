@@ -16,13 +16,13 @@ class ManifestBlock(Block):
     execution. For example, if a manifest's blocks can be executed
     in parallel, or if its execution is conditional on a file existing.
     """
-    def __init__(self, context, source=None):
+    def __init__(self, file_context, source=None):
         """
         Manifest Block constructor.
 
         Args:
-            @context
-            The SALVEContext for this block.
+            @file_context
+            The FileContext for this block.
 
         KWArgs:
             @source
@@ -30,8 +30,8 @@ class ManifestBlock(Block):
         """
         # transition to the parsing/block expansion phase, converting
         # files into blocks
-        context.transition(ExecutionContext.phases.PARSING)
-        Block.__init__(self, Block.types.MANIFEST, context)
+        salve.exec_context.transition(ExecutionContext.phases.PARSING)
+        Block.__init__(self, Block.types.MANIFEST, file_context)
         self.sub_blocks = None
         if source:
             self.set('source', source)
@@ -79,7 +79,7 @@ class ManifestBlock(Block):
 
         # parse the manifest source
         with open(filename) as man:
-            self.sub_blocks = parse.parse_stream(self.context, man)
+            self.sub_blocks = parse.parse_stream(man)
         for b in self.sub_blocks:
             # recursively apply to manifest blocks
             if isinstance(b, ManifestBlock):
@@ -100,16 +100,16 @@ class ManifestBlock(Block):
         the manifest block's sub-blocks.
         """
         salve.logger.info('Converting ManifestBlock to ActionList',
-                file_context=self.context.stream_context, min_verbosity=3)
+                file_context=self.file_context, min_verbosity=3)
 
         # transition to the action conversion phase, converting
         # blocks into actions
-        self.context.transition(ExecutionContext.phases.COMPILATION)
+        salve.exec_context.transition(ExecutionContext.phases.COMPILATION)
         if self.sub_blocks is None:
             raise self.mk_except('Attempted to convert unexpanded ' +
                                  'manifest to action.')
 
-        act = action.ActionList([], self.context)
+        act = action.ActionList([], self.file_context)
         for b in self.sub_blocks:
             subact = b.compile()
             if subact is not None:

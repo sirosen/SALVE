@@ -5,24 +5,16 @@ from os.path import dirname, join as pjoin
 
 from tests.utils.exceptions import ensure_except
 
-from salve.util.context import SALVEContext, StreamContext, ExecutionContext
-import salve.reader.tokenize as tokenize
-import salve.util.locations as locations
+from salve.util.context import FileContext
+from salve.reader import tokenize
+from salve.util import locations
 
 _testfile_dir = pjoin(dirname(__file__), 'files')
-
-dummy_stream_context = StreamContext('no such file', -1)
-dummy_exec_context = ExecutionContext(
-    startphase=ExecutionContext.phases.PARSING
-)
-dummy_exec_context.set('log_level', set())
-dummy_context = SALVEContext(stream_context=dummy_stream_context,
-                             exec_context=dummy_exec_context)
 
 
 def tokenize_filename(filename):
     with open(filename) as f:
-        return tokenize.tokenize_stream(dummy_context, f)
+        return tokenize.tokenize_stream(f)
 
 
 def get_full_path(filename):
@@ -34,7 +26,7 @@ def ensure_TokenizationException(filename):
     e = ensure_except(tokenize.TokenizationException,
                       tokenize_filename,
                       full_path)
-    assert e.context.stream_context.filename == full_path
+    assert e.file_context.filename == full_path
 
 #failure tests
 
@@ -163,7 +155,7 @@ def token_to_string():
     Tokenizer Token To String
     Checks the result of invoking Token.__str__
     """
-    ctx = SALVEContext(stream_context=StreamContext('a/b/c', 2))
+    ctx = FileContext('a/b/c', 2)
     file_tok = tokenize.Token('file', tokenize.Token.types.IDENTIFIER, ctx)
     assert str(file_tok) == \
             'Token(value=file,ty=IDENTIFIER,lineno=2,filename=a/b/c)'

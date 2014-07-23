@@ -5,11 +5,10 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from salve.util.context import SALVEContext, ExecutionContext, StreamContext
-import tests.utils.scratch as scratch
-
-import salve.execute.action as action
-import salve.execute.backup as backup
+from salve.util.context import ExecutionContext, FileContext
+from tests.utils import scratch
+from salve.execute import action
+from salve.execute import backup
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 
@@ -17,18 +16,15 @@ _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 def get_full_path(filename):
     return os.path.join(_testfile_dir, filename)
 
-dummy_stream_context = StreamContext('no such file', -1)
-dummy_exec_context = ExecutionContext()
-dummy_exec_context.set('backup_dir', '/etc/salve/backup')
-dummy_exec_context.set('backup_log', '/etc/salve/backup.log')
-dummy_context = SALVEContext(stream_context=dummy_stream_context,
-                             exec_context=dummy_exec_context)
+dummy_file_context = FileContext('no such file')
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
-        dummy_exec_context.set('run_log', self.stderr)
+        self.exec_context.set('run_log', self.stderr)
+        self.exec_context.set('backup_dir', '/etc/salve/backup')
+        self.exec_context.set('backup_log', '/etc/salve/backup.log')
 
     @istest
     def file_target_name(self):
@@ -54,7 +50,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 return False
 
         act = backup.FileBackupAction(filename,
-                                      dummy_context)
+                                      dummy_file_context)
 
         with mock.patch('salve.execute.copy.FileCopyAction.execute', mock_cp),\
              mock.patch(
@@ -97,7 +93,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 return False
 
         act = backup.FileBackupAction(linkname,
-                                      dummy_context)
+                                      dummy_file_context)
 
         with mock.patch('salve.execute.copy.FileCopyAction.execute', mock_cp),\
              mock.patch('salve.execute.backup.FileBackupAction.write_log',
@@ -131,7 +127,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         filename = get_full_path('file1.txt')
         act = backup.FileBackupAction(filename,
-                                      dummy_context)
+                                      dummy_file_context)
         assert act.dst == '/etc/salve/backup/files'
 
     @istest
@@ -143,11 +139,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         filename = get_full_path('file1.txt')
         act = backup.FileBackupAction(filename,
-                                      dummy_context)
+                                      dummy_file_context)
         assert str(act) == \
             ('FileBackupAction(src=' + filename + ',backup_dir=' +
              '/etc/salve/backup,backup_log=/etc/salve/backup.log' +
-             ',context=' + str(dummy_context) + ')')
+             ',context=' + str(dummy_file_context) + ')')
 
     @istest
     def file_write_log(self):
@@ -158,7 +154,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         filename = get_full_path('file1.txt')
         act = backup.FileBackupAction(filename,
-                                      dummy_context)
+                                      dummy_file_context)
         act.hash_val = 'abc'
 
         mo = mock.mock_open()
@@ -180,7 +176,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         dirname = get_full_path('dir1')
         act = backup.DirBackupAction(dirname,
-                                     dummy_context)
+                                     dummy_file_context)
 
         def mock_execute(self):
             pass
@@ -207,7 +203,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         each of the files in the directory.
         """
         dirname = get_full_path('dir1')
-        act = backup.DirBackupAction(dirname, dummy_context)
+        act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
         for subact in act.actions:
@@ -231,7 +227,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         source dir.
         """
         dirname = get_full_path('no such dir')
-        act = backup.DirBackupAction(dirname, dummy_context)
+        act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
         for subact in act.actions:
@@ -250,7 +246,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         dirname = get_full_path('no such dir')
-        act = backup.DirBackupAction(dirname, dummy_context)
+        act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
         for subact in act.actions:
@@ -258,5 +254,5 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         act.execute()
         assert self.stderr.getvalue() == ("[WARN] [VERIFICATION] " +
-                "no such file, line -1: DirBackup: Non-Existent source dir " +
+                "no such file: DirBackup: Non-Existent source dir " +
                 '"%s"\n' % dirname), self.stderr.getvalue()

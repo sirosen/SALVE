@@ -7,16 +7,16 @@ class SALVEException(StandardError):
     """
     A specialized exception for errors specific to SALVE.
     """
-    def __init__(self, message, context):
+    def __init__(self, message, file_context):
         """
         SALVEException constructor.
 
         Args:
             @message
             The string to be reported by the error.
-            @context
-            A SALVEContext to be included in the error message.
+            @file_context
+            A FileContext to be included in the error message.
         """
         StandardError.__init__(self, message)
         self.message = message
-        self.context = context
+        self.file_context = file_context

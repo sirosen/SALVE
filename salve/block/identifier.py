@@ -9,8 +9,6 @@ import salve.block.file_block
 import salve.block.manifest_block
 import salve.block.directory_block
 
-from salve.util.context import SALVEContext
-
 # maps valid identifiers to block constructors
 identifier_map = {
     'file': salve.block.file_block.FileBlock,
@@ -19,7 +17,7 @@ identifier_map = {
 }
 
 
-def block_from_identifier(context, id_token):
+def block_from_identifier(id_token):
     """
     Given an identifier, constructs a block of the appropriate
     type and returns it.
@@ -33,22 +31,18 @@ def block_from_identifier(context, id_token):
     """
     # assert failures indicate an internal error (invalid state)
     assert isinstance(id_token, Token)
+    ctx = id_token.file_context
     if id_token.ty != Token.types.IDENTIFIER:
         raise BlockException('Cannot create block from non-identifier: ' +
-                             str(id_token),
-                             id_token.context.stream_context)
+                             str(id_token), ctx)
 
     salve.logger.info('Generating Block From Identifier Token: ' +
-            str(id_token), file_context=id_token.context.stream_context,
+            str(id_token), file_context=ctx,
             min_verbosity=3)
 
     # if the identifier is not in the map, raise an exception
     val = id_token.value.lower()
-    ctx = SALVEContext(exec_context=context.exec_context,
-                       stream_context=id_token.context.stream_context)
     try:
         return identifier_map[val](ctx)
     except KeyError:
         raise BlockException('Unknown block identifier ' + val, ctx)
-    except:  # pragma: no cover
-        raise  # pragma: no cover
