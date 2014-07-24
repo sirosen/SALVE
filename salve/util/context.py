@@ -35,7 +35,7 @@ class FileContext(object):
     def __repr__(self):
         contents = 'filename=' + self.filename
         if self.lineno is not None:
-            contents = ',lineno=' + self.lineno
+            contents = contents + ',lineno=' + str(self.lineno)
         return 'FileContext(' + contents + ')'
 
 

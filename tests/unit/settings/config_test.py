@@ -225,7 +225,7 @@ def invalid_file():
     try:
         conf = config.SALVEConfig(
                 filename=pjoin(_testfile_dir, 'invalid1.ini'))
-    except SALVEException, e:
+    except SALVEException as e:
         assert isinstance(e, SALVEException)
         assert ('Encountered an error while parsing' +
                 ' your configuration file(s).') in e.message

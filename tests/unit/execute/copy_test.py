@@ -54,7 +54,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         a_name = self.get_fullname('a')
         b_name = self.get_fullname('b')
 
-        os.chmod(b_name, 0444)
+        os.chmod(b_name, 0o444)
         fcp = copy.FileCopyAction(a_name, b_name,
                                   self.dummy_file_context)
 
@@ -77,7 +77,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         b_name = self.get_fullname('b')
         c_name = self.get_fullname('b/c')
 
-        os.chmod(b_name, 0000)
+        os.chmod(b_name, 0o000)
         fcp = copy.FileCopyAction(a_name, c_name,
                                   self.dummy_file_context)
 
@@ -99,7 +99,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         a_name = self.get_fullname('a')
         b_name = self.get_fullname('b')
 
-        os.chmod(a_name, 0000)
+        os.chmod(a_name, 0o000)
         fcp = copy.FileCopyAction(a_name, b_name,
                                   self.dummy_file_context)
 
@@ -118,7 +118,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         a_name = self.get_fullname('a')
         b_name = self.get_fullname('b')
-        os.chmod(b_name, 0444)
+        os.chmod(b_name, 0o444)
 
         c_name = self.get_fullname('b/c')
         dcp = copy.DirCopyAction(a_name, c_name,

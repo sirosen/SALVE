@@ -31,7 +31,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_open = mock.mock_open()
         a_name = self.get_fullname('a')
 
-        with mock.patch('__builtin__.open', mock_open, create=True), \
+        try:
+            import builtins
+            builtin_patch = mock.patch('builtins.open', mock_open, create=True)
+        except ImportError:
+            import __builtin__ as builtins
+            builtin_patch = mock.patch('__builtin__.open', mock_open,
+                    create=True)
+
+        with builtin_patch, \
              mock.patch('os.access', lambda x, y: True):
             fc = create.FileCreateAction(a_name, dummy_file_context)
             fc()

@@ -141,7 +141,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
 
         fullname = self.get_fullname('2')
         fullname_sub = self.get_fullname('2/1')
-        os.chmod(fullname, 0400)
+        os.chmod(fullname, 0o400)
 
         self.run_on_manifest('1.man')
 

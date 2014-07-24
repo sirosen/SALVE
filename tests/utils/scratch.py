@@ -100,9 +100,20 @@ class ScratchContainer(MockedGlobals):
         self.patches.add(
             mock.patch('os.path.expanduser', expanduser)
             )
-        self.patches.add(
-            mock.patch('__builtin__.open', mock_open)
-            )
+
+        # use the builtins import to check if we are in Py3
+        # more foolproof than using sys.version_info
+        try:
+            import builtins
+            self.patches.add(
+                mock.patch('builtins.open', mock_open)
+                )
+        # if it fails with an import error, we are in Py2
+        except ImportError:
+            import __builtin__ as builtins
+            self.patches.add(
+                mock.patch('__builtin__.open', mock_open)
+                )
 
     def setUp(self):
         MockedGlobals.setUp(self)
@@ -113,7 +124,7 @@ class ScratchContainer(MockedGlobals):
         MockedGlobals.tearDown(self)
 
         def recursive_chmod(d):
-            os.chmod(d, 0777)
+            os.chmod(d, 0o777)
             for f in os.listdir(d):
                 fullname = os.path.join(d, f)
                 if os.path.isdir(fullname) and not os.path.islink(fullname):
@@ -150,7 +161,7 @@ class ScratchContainer(MockedGlobals):
             return f.read()
 
     def get_mode(self, relpath):
-        return os.stat(self.get_fullname(relpath)).st_mode & 0777
+        return os.stat(self.get_fullname(relpath)).st_mode & 0o777
 
     def get_fullname(self, relpath):
         return os.path.join(self.scratch_dir, relpath)

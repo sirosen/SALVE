@@ -6,6 +6,13 @@ import sys
 
 from salve.util.enum import Enum
 
+# check if unicode is defined
+try:  # pragma: no cover
+    unicode
+# if it isn't, we're in Py3, so define it as str
+except:  # pragma: no cover
+    unicode = str
+
 
 class Logger(object):
     """
@@ -93,8 +100,7 @@ class Logger(object):
         if min_verbosity > 0:
             ty_prefix = ty_prefix + '[' + str(min_verbosity) + ']'
 
-        # to make every Python happy, make sure "print" is given a unicode
-        # argument
+        # to make every Python happy, make sure "print" is given a string
         print(unicode(ty_prefix + ' ' + message), file=self.logfile)
 
     def warn(self, *args, **kwargs):

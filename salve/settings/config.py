@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 import os
 import string
@@ -16,7 +19,7 @@ from salve.util.error import SALVEException
 SALVE_ENV_PREFIX = 'SALVE_'
 
 
-class SALVEConfigParser(ConfigParser.ConfigParser):
+class SALVEConfigParser(configparser.ConfigParser):
     """
     The SALVE configuration parser.
     Loads default values, then attempts to look up
@@ -36,7 +39,7 @@ class SALVEConfigParser(ConfigParser.ConfigParser):
             The name of a specific config file to load.
         """
         # create a config parser
-        ConfigParser.ConfigParser.__init__(self)
+        configparser.ConfigParser.__init__(self)
 
         # first read the defaults
         # either read the user's rc file, if not given a filename
@@ -96,7 +99,7 @@ class SALVEConfig(object):
         # no file
         try:
             conf = SALVEConfigParser(userhome, filename)
-        except ConfigParser.Error as e:
+        except configparser.Error as e:
             raise SALVEException('Encountered an error while parsing your ' +
                     'configuration file(s).\n%s' % e.message,
                     FileContext(filename))
