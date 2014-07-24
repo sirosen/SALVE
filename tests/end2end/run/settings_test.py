@@ -8,6 +8,8 @@ from nose.tools import istest
 
 import tests.end2end.run.common as run_common
 
+import salve
+
 
 class TestWithRunLog(run_common.RunScratchContainer):
     default_settings_content = textwrap.dedent(
@@ -50,5 +52,6 @@ class TestWithRunLog(run_common.RunScratchContainer):
         assert self.exists('2.man')
         s = self.read_file('2.man')
         assert s == content, '%s' % s
-        s = self.read_file(self.userhome + '/run_log')
+        salve.logger.logfile.flush()
+        s = self.read_file(os.path.join(self.userhome, 'run_log'))
         assert len(s) > 0

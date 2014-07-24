@@ -2,30 +2,19 @@
 
 import os
 import sys
-import StringIO
 import mock
 
 from nose.tools import istest
-from unittest import SkipTest
 from tests.utils.exceptions import ensure_except
+from tests.utils import scratch
 
-import src.run.command as command
-import src.run.deploy as deploy
-import src.util.locations as locations
+from salve.run import command
+from salve.run import deploy
+from salve.util import locations
 
-from src.block.base import BlockException
-from src.util.error import SALVEException
-from src.util.context import SALVEContext, ExecutionContext, StreamContext
-
-
-def generate_dummy_context(fake_stderr, phase=ExecutionContext.phases.STARTUP):
-    with mock.patch.dict('src.settings.default_globals.defaults',
-                         {'run_log': fake_stderr}):
-        dummy_stream_context = StreamContext('no such file', -1)
-        dummy_exec_context = ExecutionContext(startphase=phase)
-        dummy_exec_context.set('log_level', set(('WARN', 'ERROR')))
-        return SALVEContext(stream_context=dummy_stream_context,
-                            exec_context=dummy_exec_context)
+from salve.block.base import BlockException
+from salve.util.error import SALVEException
+from salve.util.context import ExecutionContext, FileContext
 
 
 @istest
@@ -74,218 +63,169 @@ def deploy_main():
         def expand_blocks(self, x, y):
             have_run['expand_blocks'] = True
 
-        def to_action(self):
+        def compile(self):
             return MockAction()
 
-    with mock.patch('src.block.manifest_block.ManifestBlock', MockManifest), \
-         mock.patch('src.settings.config.SALVEConfig', mock.Mock()):
+    with mock.patch('salve.block.manifest_block.ManifestBlock', MockManifest),\
+         mock.patch('salve.settings.config.SALVEConfig', mock.Mock()):
         deploy.main(fake_args)
 
     assert have_run['action_execute']
     assert have_run['expand_blocks']
 
 
-@istest
-def deploy_salve_exception():
-    """
-    Deploy Command Catch SALVE Exception
-    Checks that running the deploy main function catches and pretty
-    prints any thrown SALVEExceptions.
-    """
-    log = {
-        'exit': None
-    }
+class TestWithScratchdir(scratch.ScratchContainer):
+    def __init__(self):
+        scratch.ScratchContainer.__init__(self)
+        self.exec_context.set('log_level', set(('WARN', 'ERROR')))
+        dummy_file_context = FileContext('no such file', -1)
+        self.ctx = dummy_file_context
 
-    real_exit = sys.exit
+        self.mocked_exitval = None
+        real_exit = sys.exit
 
-    def mock_exit(n):
-        log['exit'] = n
-        real_exit(n)
+        def mock_exit(n):
+            self.mocked_exitval = n
+            real_exit(n)
 
-    fake_stderr = StringIO.StringIO()
-    fake_args = mock.Mock()
-    fake_args.manifest = 'root.manifest'
+        self.exit_patch = mock.patch('sys.exit', mock_exit)
 
-    dummy_context = generate_dummy_context(fake_stderr)
+    def setUp(self):
+        scratch.ScratchContainer.setUp(self)
+        self.exit_patch.start()
 
-    def mock_run(root_manifest, exec_context, args):
-        raise SALVEException('message string', dummy_context)
+    def tearDown(self):
+        scratch.ScratchContainer.tearDown(self)
+        self.exit_patch.stop()
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
-         mock.patch('sys.exit', mock_exit):
-        try:
-            deploy.main(fake_args)
-        except SystemExit as e:
-            assert log['exit'] is not None and \
-                log['exit'] == 1
+    @istest
+    def deploy_salve_exception(self):
+        """
+        Deploy Command Catch SALVE Exception
+        Checks that running the deploy main function catches and pretty
+        prints any thrown SALVEExceptions.
+        """
+        fake_args = mock.Mock()
+        fake_args.manifest = 'root.manifest'
 
-    stderr_out = fake_stderr.getvalue()
-    assert stderr_out == ('[ERROR] [STARTUP] no such file, line -1: ' +
-                          'message string\n')
+        def mock_run(root_manifest, args):
+            raise SALVEException('message string', self.ctx)
 
+        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+            try:
+                deploy.main(fake_args)
+            except SystemExit as e:
+                assert self.mocked_exitval == 1
 
-@istest
-def deploy_block_exception():
-    """
-    Deploy Command Catch BlockException
-    Checks that running the deploy main function catches and pretty
-    prints any thrown BlockExceptions.
-    """
-    log = {
-        'exit': None
-    }
+        stderr_out = self.stderr.getvalue()
+        assert stderr_out == ('[ERROR] [STARTUP] no such file, line -1: ' +
+                              'message string\n')
 
-    real_exit = sys.exit
+    @istest
+    def deploy_block_exception(self):
+        """
+        Deploy Command Catch BlockException
+        Checks that running the deploy main function catches and pretty
+        prints any thrown BlockExceptions.
+        """
+        self.exec_context.transition(ExecutionContext.phases.PARSING)
 
-    def mock_exit(n):
-        log['exit'] = n
-        real_exit(n)
+        fake_args = mock.Mock()
+        fake_args.manifest = 'root.manifest'
 
-    fake_stderr = StringIO.StringIO()
-    fake_args = mock.Mock()
-    fake_args.manifest = 'root.manifest'
+        def mock_run(root_manifest, args):
+            raise BlockException('message string', self.ctx)
 
-    dummy_context = generate_dummy_context(fake_stderr,
-            phase=ExecutionContext.phases.PARSING)
+        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+            try:
+                deploy.main(fake_args)
+            except SystemExit as e:
+                assert self.mocked_exitval == 1
 
-    def mock_run(root_manifest, exec_context, args):
-        raise BlockException('message string', dummy_context)
+        stderr_out = self.stderr.getvalue()
+        assert stderr_out == ('[ERROR] [PARSING] no such file, line -1: ' +
+                              'message string\n')
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
-         mock.patch('sys.stderr', fake_stderr), \
-         mock.patch('sys.exit', mock_exit):
-        try:
-            deploy.main(fake_args)
-        except SystemExit as e:
-            assert log['exit'] is not None and \
-                log['exit'] == 1
+    @istest
+    def deploy_action_exception(self):
+        """
+        Deploy Command Catch ActionException
+        Checks that running the deploy main function catches and pretty
+        prints any thrown ActionExceptions.
+        """
+        from salve.execute.action import ActionException
 
-    stderr_out = fake_stderr.getvalue()
-    assert stderr_out == ('[ERROR] [PARSING] no such file, line -1: ' +
-                          'message string\n')
+        self.exec_context.transition(ExecutionContext.phases.COMPILATION)
 
+        fake_args = mock.Mock()
+        fake_args.manifest = 'root.manifest'
 
-@istest
-def deploy_action_exception():
-    """
-    Deploy Command Catch ActionException
-    Checks that running the deploy main function catches and pretty
-    prints any thrown ActionExceptions.
-    """
-    from src.execute.action import ActionException
-    log = {
-        'exit': None
-    }
+        def mock_run(root_manifest, args):
+            raise ActionException('message string', self.ctx)
 
-    real_exit = sys.exit
+        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+            try:
+                deploy.main(fake_args)
+            except SystemExit as e:
+                assert self.mocked_exitval == 1
 
-    def mock_exit(n):
-        log['exit'] = n
-        real_exit(n)
+        stderr_out = self.stderr.getvalue()
+        assert stderr_out == ('[ERROR] [COMPILATION] ' +
+            'no such file, line -1: message string\n'), stderr_out
 
-    fake_stderr = StringIO.StringIO()
-    fake_args = mock.Mock()
-    fake_args.manifest = 'root.manifest'
+    @istest
+    def deploy_tokenization_exception(self):
+        """
+        Deploy Command Catch TokenizationException
+        Checks that running the deploy main function catches and pretty
+        prints any thrown TokenizationExceptions.
+        """
+        from salve.reader.tokenize import TokenizationException
 
-    dummy_context = generate_dummy_context(fake_stderr,
-        phase=ExecutionContext.phases.ACTION_CONVERSION)
+        self.exec_context.transition(ExecutionContext.phases.PARSING)
 
-    def mock_run(root_manifest, exec_context, args):
-        raise ActionException('message string', dummy_context)
+        fake_args = mock.Mock()
+        fake_args.manifest = 'root.manifest'
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
-         mock.patch('sys.exit', mock_exit):
-        try:
-            deploy.main(fake_args)
-        except SystemExit as e:
-            assert log['exit'] is not None and \
-                log['exit'] == 1
+        def mock_run(root_manifest, args):
+            raise TokenizationException('message string', self.ctx)
 
-    stderr_out = fake_stderr.getvalue()
-    assert stderr_out == ('[ERROR] [ACTION_CONVERSION] ' +
-        'no such file, line -1: message string\n'), stderr_out
+        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+            try:
+                deploy.main(fake_args)
+            except SystemExit as e:
+                assert self.mocked_exitval == 1
 
+        stderr_out = self.stderr.getvalue()
+        assert stderr_out == ('[ERROR] [PARSING] no such file, line -1: ' +
+                'message string\n'), stderr_out
 
-@istest
-def deploy_tokenization_exception():
-    """
-    Deploy Command Catch TokenizationException
-    Checks that running the deploy main function catches and pretty
-    prints any thrown TokenizationExceptions.
-    """
-    from src.reader.tokenize import TokenizationException
-    log = {
-        'exit': None
-    }
+    @istest
+    def deploy_parsing_exception(self):
+        """
+        Deploy Command Catch ParsingException
+        Checks that running the deploy main function catches and pretty
+        prints any thrown ParsingExceptions.
+        """
+        from salve.reader.parse import ParsingException
 
-    real_exit = sys.exit
+        self.exec_context.transition(ExecutionContext.phases.PARSING)
 
-    def mock_exit(n):
-        log['exit'] = n
-        real_exit(n)
+        fake_args = mock.Mock()
+        fake_args.manifest = 'root.manifest'
 
-    fake_stderr = StringIO.StringIO()
-    fake_args = mock.Mock()
-    fake_args.manifest = 'root.manifest'
+        def mock_run(root_manifest, args):
+            raise ParsingException('message string', self.ctx)
 
-    dummy_context = generate_dummy_context(fake_stderr,
-        phase=ExecutionContext.phases.PARSING)
+        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+            try:
+                deploy.main(fake_args)
+            except SystemExit as e:
+                assert self.mocked_exitval == 1
 
-    def mock_run(root_manifest, exec_context, args):
-        raise TokenizationException('message string', dummy_context)
-
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
-         mock.patch('sys.exit', mock_exit):
-        try:
-            deploy.main(fake_args)
-        except SystemExit as e:
-            assert log['exit'] is not None and \
-                log['exit'] == 1
-
-    stderr_out = fake_stderr.getvalue()
-    assert stderr_out == ('[ERROR] [PARSING] no such file, line -1: ' +
-            'message string\n'), stderr_out
-
-
-@istest
-def deploy_parsing_exception():
-    """
-    Deploy Command Catch ParsingException
-    Checks that running the deploy main function catches and pretty
-    prints any thrown ParsingExceptions.
-    """
-    from src.reader.parse import ParsingException
-    log = {
-        'exit': None
-    }
-
-    real_exit = sys.exit
-
-    def mock_exit(n):
-        log['exit'] = n
-        real_exit(n)
-
-    fake_args = mock.Mock()
-    fake_args.manifest = 'root.manifest'
-    fake_stderr = StringIO.StringIO()
-
-    dummy_context = generate_dummy_context(fake_stderr,
-            phase=ExecutionContext.phases.PARSING)
-
-    def mock_run(root_manifest, context, args):
-        raise ParsingException('message string', dummy_context)
-
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run), \
-         mock.patch('sys.exit', mock_exit):
-        try:
-            deploy.main(fake_args)
-        except SystemExit as e:
-            assert log['exit'] is not None and \
-                log['exit'] == 1
-
-    stderr_out = fake_stderr.getvalue()
-    assert stderr_out == ('[ERROR] [PARSING] no such file, line -1: ' +
-            'message string\n'), stderr_out
+        stderr_out = self.stderr.getvalue()
+        assert stderr_out == ('[ERROR] [PARSING] no such file, line -1: ' +
+                'message string\n'), stderr_out
 
 
 @istest
@@ -295,11 +235,11 @@ def deploy_unexpected_exception():
     Checks that running the deploy main function does not catch any
     non-SALVE Exceptions.
     """
-    def mock_run(root_manifest, exec_context, args):
+    def mock_run(root_manifest, args):
         raise StandardError()
 
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
 
-    with mock.patch('src.run.deploy.run_on_manifest', mock_run):
+    with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
         ensure_except(StandardError, deploy.main, fake_args)

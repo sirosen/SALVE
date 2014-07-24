@@ -5,11 +5,12 @@ import abc
 import os
 import shutil
 
-import src.execute.action as action
-import src.util.enum as enum
+import salve
 
-import src.util.log as log
-from src.util.context import ExecutionContext
+import salve.execute.action as action
+import salve.util.enum as enum
+
+from salve.util.context import ExecutionContext
 
 
 class CopyAction(action.Action):
@@ -24,7 +25,7 @@ class CopyAction(action.Action):
     verification_codes = \
         action.Action.verification_codes.extend('UNWRITABLE_TARGET')
 
-    def __init__(self, src, dst, context):
+    def __init__(self, src, dst, file_context):
         """
         CopyAction constructor.
 
@@ -33,10 +34,10 @@ class CopyAction(action.Action):
             The source path (file being copied).
             @dst
             The destination path (being copied to).
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        action.Action.__init__(self, context)
+        action.Action.__init__(self, file_context)
         self.src = src
         self.dst = dst
 
@@ -48,7 +49,7 @@ class FileCopyAction(CopyAction):
     verification_codes = \
         CopyAction.verification_codes.extend('UNREADABLE_SOURCE')
 
-    def __init__(self, src, dst, context):
+    def __init__(self, src, dst, file_context):
         """
         FileCopyAction constructor.
 
@@ -57,17 +58,17 @@ class FileCopyAction(CopyAction):
             Source path.
             @dst
             Destination path.
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        CopyAction.__init__(self, src, dst, context)
+        CopyAction.__init__(self, src, dst, file_context)
 
     def __str__(self):
         """
         Stringification into type, source, dst, and context.
         """
         return ("FileCopyAction(src=" + str(self.src) + ",dst=" +
-                str(self.dst) + ",context=" + str(self.context) + ")")
+                str(self.dst) + ",context=" + repr(self.file_context) + ")")
 
     def verify_can_exec(self):
         """
@@ -77,7 +78,7 @@ class FileCopyAction(CopyAction):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        self.context.transition(ExecutionContext.phases.VERIFICATION)
+        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         def writable_target():
             """
@@ -111,20 +112,23 @@ class FileCopyAction(CopyAction):
             """
             return os.path.islink(self.src)
 
-        log.info('FileCopy: Checking destination is writable, \"%s\"' %
-                self.dst, self.context, min_verbosity=3)
+        salve.logger.info('FileCopy: Checking destination is writable, ' +
+                '\"%s\"' % self.dst, file_context=self.file_context,
+                min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
 
-        log.info('FileCopy: Checking if source is link, "%s"' % self.src,
-                 self.context, min_verbosity=3)
+        salve.logger.info('FileCopy: Checking if source is link, "%s"' %
+                self.src, file_context=self.file_context,
+                min_verbosity=3)
 
         if source_islink():
             return self.verification_codes.OK
 
-        log.info('FileCopy: Checking source is readable, \"%s\"' % self.src,
-                 self.context, min_verbosity=3)
+        salve.logger.info('FileCopy: Checking source is readable, \"%s\"' %
+                self.src, file_context=self.file_context,
+                min_verbosity=3)
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
@@ -142,19 +146,20 @@ class FileCopyAction(CopyAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "FileCopy: Non-Writable target file \"%s\"" % self.dst
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.file_context)
             return
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
             logstr = "FileCopy: Non-Readable source file \"%s\"" % self.src
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.file_context)
             return
 
         # transition to the execution phase
-        self.context.transition(ExecutionContext.phases.EXECUTION)
+        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing File Copy \"%s\" -> \"%s\"' %
-                (self.src, self.dst), self.context, min_verbosity=1)
+        salve.logger.info('Performing File Copy \"%s\" -> \"%s\"' %
+                (self.src, self.dst), file_context=self.file_context,
+                min_verbosity=1)
 
         if os.path.islink(self.src):
             os.symlink(os.readlink(self.src), self.dst)
@@ -166,7 +171,7 @@ class DirCopyAction(CopyAction):
     """
     An action to copy a directory tree.
     """
-    def __init__(self, src, dst, context):
+    def __init__(self, src, dst, file_context):
         """
         DirCopyAction constructor.
 
@@ -175,14 +180,14 @@ class DirCopyAction(CopyAction):
             Source path.
             @dst
             Destination path.
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        CopyAction.__init__(self, src, dst, context)
+        CopyAction.__init__(self, src, dst, file_context)
 
     def __str__(self):
         return ("DirCopyAction(src=" + str(self.src) + ",dst=" +
-                str(self.dst) + ",context=" + str(self.context) + ")")
+                str(self.dst) + ",context=" + repr(self.file_context) + ")")
 
     def verify_can_exec(self):
         """
@@ -191,7 +196,7 @@ class DirCopyAction(CopyAction):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        self.context.transition(ExecutionContext.phases.VERIFICATION)
+        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         def writable_target():
             """
@@ -199,8 +204,9 @@ class DirCopyAction(CopyAction):
             """
             return os.access(os.path.dirname(self.dst), os.W_OK)
 
-        log.info('DirCopy: Checking target is writable, \"%s\"' % self.dst,
-                 self.context, min_verbosity=3)
+        salve.logger.info('DirCopy: Checking target is writable, \"%s\"' %
+                self.dst, file_context=self.file_context,
+                min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -215,13 +221,14 @@ class DirCopyAction(CopyAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "DirCopy: Non-Writable target directory \"%s\"" % self.dst
-            log.warn(logstr, self.context)
+            salve.logger.warn(logstr, file_context=self.file_context)
             return
 
         # transition to the execution phase
-        self.context.transition(ExecutionContext.phases.EXECUTION)
+        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
-        log.info('Performing Directory Copy \"%s\" -> \"%s\"' %
-                (self.src, self.dst), self.context, min_verbosity=1)
+        salve.logger.info('Performing Directory Copy \"%s\" -> \"%s\"' %
+                (self.src, self.dst), file_context=self.file_context,
+                min_verbosity=1)
 
         shutil.copytree(self.src, self.dst, symlinks=True)

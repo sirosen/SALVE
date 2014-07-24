@@ -2,14 +2,15 @@
 
 import os
 
-import src.util.log as log
-import src.execute.action as action
-import src.execute.backup as backup
-import src.execute.copy as copy
-import src.execute.create as create
-import src.execute.modify as modify
+import salve
 
-from src.block.base import Block, BlockException
+import salve.execute.action as action
+import salve.execute.backup as backup
+import salve.execute.copy as copy
+import salve.execute.create as create
+import salve.execute.modify as modify
+
+from salve.block.base import Block, BlockException
 
 
 class DirBlock(Block):
@@ -17,15 +18,15 @@ class DirBlock(Block):
     A directory block describes an action performed on a directory.
     This includes creation, deletion, and copying from source.
     """
-    def __init__(self, context):
+    def __init__(self, file_context):
         """
         Directory Block constructor.
 
         Args:
-            @context
-            The SALVEContext for this block.
+            @file_context
+            The FileContext for this block.
         """
-        Block.__init__(self, Block.types.DIRECTORY, context)
+        Block.__init__(self, Block.types.DIRECTORY, file_context)
         for attr in ['target', 'source']:
             self.path_attrs.add(attr)
         for attr in ['target']:
@@ -42,12 +43,12 @@ class DirBlock(Block):
             The path to the directory to be created. Should be an
             absolute path in order to ensure correctness.
         """
-        act = create.DirCreateAction(dirname, self.context)
+        act = create.DirCreateAction(dirname, self.file_context)
         if self.has('mode'):
-            act = action.ActionList([act], self.context)
+            act = action.ActionList([act], self.file_context)
             act.append(modify.DirChmodAction(dirname,
                                              self.get('mode'),
-                                             self.context))
+                                             self.file_context))
         return act
 
     def create_action(self):
@@ -66,11 +67,11 @@ class DirBlock(Block):
         # but not its children
         if self.has('user') and self.has('group'):
             if not isinstance(act, action.ActionList):
-                act = action.ActionList([act], self.context)
+                act = action.ActionList([act], self.file_context)
             act.append(modify.DirChownAction(self.get('target'),
                                              self.get('user'),
                                              self.get('group'),
-                                             self.context))
+                                             self.file_context))
 
         return act
 
@@ -88,7 +89,7 @@ class DirBlock(Block):
         # simplicity when adding actions to it
         act = self._mkdir(self.get('target'))
         if not isinstance(act, action.ActionList):
-            act = action.ActionList([act], self.context)
+            act = action.ActionList([act], self.file_context)
 
         # walk over all files and subdirs in the directory, creating
         # directories and copying files
@@ -112,18 +113,18 @@ class DirBlock(Block):
                              )
                 target_fname = os.path.join(target_dir, f)
                 backup_act = backup.FileBackupAction(target_fname,
-                                                     self.context)
+                                                     self.file_context)
                 copy_act = copy.FileCopyAction(fname,
                                                target_fname,
-                                               self.context)
+                                               self.file_context)
                 file_act = action.ActionList([backup_act, copy_act],
-                                             self.context)
+                                             self.file_context)
                 act.append(file_act)
 
         if self.has('mode'):
             act.append(modify.DirChmodAction(self.get('target'),
                                              self.get('mode'),
-                                             self.context,
+                                             self.file_context,
                                              recursive=True))
 
         # if 'user' and 'group' are set, recursively apply permissions
@@ -135,13 +136,13 @@ class DirBlock(Block):
             chown_dir = modify.DirChownAction(self.get('target'),
                                               self.get('user'),
                                               self.get('group'),
-                                              self.context,
+                                              self.file_context,
                                               recursive=True)
             act.append(chown_dir)
 
         return act
 
-    def to_action(self):
+    def compile(self):
         """
         Uses the DirectoryBlock to produce an action.
         The type of action produced depends on the value of the block's
@@ -151,8 +152,8 @@ class DirBlock(Block):
         directory copy that creates the target directories and backs up
         any files that are being overwritten.
         """
-        log.info('Converting DirBlock to DirAction',
-                 self.context, min_verbosity=3)
+        salve.logger.info('Converting DirBlock to DirAction',
+                file_context=self.file_context, min_verbosity=3)
 
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will

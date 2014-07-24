@@ -5,14 +5,15 @@ import tempfile
 import shutil
 
 import mock
-import StringIO
 import textwrap
 import string
 
-import src.util.locations as locations
+import salve.util.locations as locations
+
+from tests.utils import MockedGlobals
 
 
-class ScratchContainer(object):
+class ScratchContainer(MockedGlobals):
     default_settings_content = textwrap.dedent(
         """
         [global]
@@ -38,7 +39,12 @@ class ScratchContainer(object):
         """
     )
 
-    def mock_env(self):
+    def __init__(self):
+        MockedGlobals.__init__(self)
+
+        self.patches = set()
+        self.scratch_dir = tempfile.mkdtemp()
+
         mock_env = {
             'SUDO_USER': 'user1',
             'USER': 'user1',
@@ -75,7 +81,7 @@ class ScratchContainer(object):
                 return real_open(path, *args, **kwargs)
 
         self.patches.add(
-            mock.patch('src.util.ugo.get_group_from_username',
+            mock.patch('salve.util.ugo.get_group_from_username',
                        get_groupname)
             )
 
@@ -84,10 +90,10 @@ class ScratchContainer(object):
         # user
         real_uid = os.geteuid()
         real_gid = os.getegid()
-        self.patches.add(mock.patch('src.util.ugo.name_to_uid',
+        self.patches.add(mock.patch('salve.util.ugo.name_to_uid',
             lambda x: real_uid)
             )
-        self.patches.add(mock.patch('src.util.ugo.name_to_gid',
+        self.patches.add(mock.patch('salve.util.ugo.name_to_gid',
             lambda x: real_gid)
             )
 
@@ -98,31 +104,14 @@ class ScratchContainer(object):
             mock.patch('__builtin__.open', mock_open)
             )
 
-    def mock_io(self):
-        self.stderr = StringIO.StringIO()
-        self.stdout = StringIO.StringIO()
-
-        self.patches.add(
-            mock.patch('sys.stderr', self.stderr)
-            )
-        self.patches.add(
-            mock.patch.dict('src.settings.default_globals.defaults',
-                {'run_log': self.stderr})
-            )
-        self.patches.add(
-            mock.patch('sys.stdout', self.stdout)
-            )
-
     def setUp(self):
-        self.scratch_dir = tempfile.mkdtemp()
-        self.patches = set()
-        self.mock_env()
-        self.mock_io()
-
+        MockedGlobals.setUp(self)
         for p in self.patches:
             p.start()
 
     def tearDown(self):
+        MockedGlobals.tearDown(self)
+
         def recursive_chmod(d):
             os.chmod(d, 0777)
             for f in os.listdir(d):

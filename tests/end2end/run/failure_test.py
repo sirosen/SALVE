@@ -2,13 +2,12 @@
 
 import os
 import mock
-import StringIO
 
 from nose.tools import istest
 from tests.utils.exceptions import ensure_except
 import tests.end2end.run.common as run_common
 
-import src.run.command
+import salve.run.command
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), '../testfiles')
 
@@ -18,14 +17,10 @@ def get_full_path(filename):
 
 
 def except_from_args(argv):
-    stderr = StringIO.StringIO()
-    with mock.patch('sys.argv', argv), \
-         mock.patch('sys.stderr', stderr), \
-         mock.patch.dict('src.settings.default_globals.defaults',
-                         {'run_log': stderr}):
-            e = ensure_except(SystemExit, src.run.command.run)
+    with mock.patch('sys.argv', argv):
+        e = ensure_except(SystemExit, salve.run.command.run)
 
-    return (e, stderr)
+    return e
 
 
 class TestWithScratchdir(run_common.RunScratchContainer):
@@ -40,12 +35,12 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         path = get_full_path('unclosed_block.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
-        (e, stderr) = except_from_args(argv)
+        e = except_from_args(argv)
 
-        assert stderr.getvalue() ==\
+        assert self.stderr.getvalue() ==\
             "[ERROR] [PARSING] %s, line 4: " % rpath +\
             "Tokenizer ended in state BLOCK\n", \
-            stderr.getvalue()
+            self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
     @istest
@@ -59,12 +54,12 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         path = get_full_path('missing_open.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
-        (e, stderr) = except_from_args(argv)
+        e = except_from_args(argv)
 
-        assert stderr.getvalue() ==\
+        assert self.stderr.getvalue() ==\
             "[ERROR] [PARSING] %s, line 5: " % rpath +\
             "Unexpected token: } Expected BLOCK_START instead.\n", \
-            stderr.getvalue()
+            self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
     @istest
@@ -78,12 +73,12 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         path = get_full_path('double_id.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
-        (e, stderr) = except_from_args(argv)
+        e = except_from_args(argv)
 
-        assert stderr.getvalue() ==\
+        assert self.stderr.getvalue() ==\
             "[ERROR] [PARSING] %s, line 5: " % rpath +\
             "Unexpected token: file Expected BLOCK_START instead.\n", \
-            stderr.getvalue()
+            self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
     @istest
@@ -97,12 +92,12 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         path = get_full_path('missing_id.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
-        (e, stderr) = except_from_args(argv)
+        e = except_from_args(argv)
 
-        assert stderr.getvalue() ==\
+        assert self.stderr.getvalue() ==\
             "[ERROR] [PARSING] %s, line 3: " % rpath +\
             "Unexpected token: { Expected IDENTIFIER instead.\n", \
-            stderr.getvalue()
+            self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
     @istest
@@ -116,12 +111,12 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         path = get_full_path('missing_attr_val.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
-        (e, stderr) = except_from_args(argv)
+        e = except_from_args(argv)
 
-        assert stderr.getvalue() ==\
+        assert self.stderr.getvalue() ==\
             "[ERROR] [PARSING] %s, line 5: " % rpath +\
             "Unexpected token: } Expected TEMPLATE instead.\n", \
-            stderr.getvalue()
+            self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
     @istest
@@ -135,11 +130,12 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         path = get_full_path('double_open.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
-        (e, stderr) = except_from_args(argv)
+        e = except_from_args(argv)
 
-        assert stderr.getvalue() == ("[ERROR] [PARSING] %s, line 3: " % rpath +
+        assert (self.stderr.getvalue() ==
+            ("[ERROR] [PARSING] %s, line 3: " % rpath +
             "Unexpected token: { Expected ['BLOCK_END', 'IDENTIFIER'] " +
-            "instead.\n"), stderr.getvalue()
+            "instead.\n")), self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
     @istest
@@ -153,10 +149,10 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         path = get_full_path('invalid_block_id.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
-        (e, stderr) = except_from_args(argv)
+        e = except_from_args(argv)
 
-        assert stderr.getvalue() ==\
+        assert self.stderr.getvalue() ==\
             "[ERROR] [PARSING] %s, line 7: " % rpath +\
             "Invalid block id invalid_block_id\n", \
-            stderr.getvalue()
+            self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code

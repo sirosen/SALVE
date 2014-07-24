@@ -3,19 +3,16 @@
 import os
 import mock
 from nose.tools import istest, with_setup
-from os.path import dirname, abspath, join as pjoin
+from os.path import dirname, abspath, relpath, join as pjoin
 
 from tests.utils.exceptions import ensure_except
-from src.util.context import SALVEContext, ExecutionContext
-from src.util.error import SALVEException
+from salve.util.error import SALVEException
 
-import src.settings.config as config
+import salve.settings.config as config
 
 _testfile_dir = pjoin(dirname(__file__), 'files')
 _homes_dir = pjoin(dirname(__file__), 'homes')
 _active_patches = set()
-
-dummy_context = SALVEContext(exec_context=ExecutionContext())
 
 
 def setup_patches(*patches):
@@ -64,22 +61,19 @@ def setup_os1():
                'USER': 'root',
                'HOME': home_map['user1']}
 
-    # mock the whole os.path module
-    mock_path = mock.Mock()
-    mock_path.expanduser = make_mock_expanduser(mock_env, home_map)
-    mock_path.join = pjoin
-    mock_path.dirname = dirname
-    mock_path.abspath = abspath
+    # mock the expanduser function to use the mock env
+    mock_expanduser = make_mock_expanduser(mock_env, home_map)
+    expanduser_patch = mock.patch('os.path.expanduser', mock_expanduser)
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = mock.patch('src.util.ugo.get_group_from_username',
+    group_patch = mock.patch('salve.util.ugo.get_group_from_username',
                              mock_get_group)
 
     # put the patches in place
     setup_patches(mock.patch.dict('os.environ', mock_env),
-                  mock.patch('os.path', mock_path),
-                  group_patch)
+                  group_patch,
+                  expanduser_patch)
 
 
 def setup_os2():
@@ -90,20 +84,17 @@ def setup_os2():
                'HOME': home_map['user1'],
                'SALVE_METADATA_PATH': '/etc/meta/'}
 
-    # mock os.path
-    mock_path = mock.Mock()
-    mock_path.expanduser = make_mock_expanduser(mock_env, home_map)
-    mock_path.join = pjoin
-    mock_path.dirname = dirname
-    mock_path.abspath = abspath
+    # mock the expanduser function to use the mock env
+    mock_expanduser = make_mock_expanduser(mock_env, home_map)
+    expanduser_patch = mock.patch('os.path.expanduser', mock_expanduser)
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = mock.patch('src.util.ugo.get_group_from_username',
+    group_patch = mock.patch('salve.util.ugo.get_group_from_username',
                         mock_get_group)
 
     setup_patches(mock.patch.dict('os.environ', mock_env),
-                  mock.patch('os.path', mock_path),
+                  expanduser_patch,
                   group_patch)
 
 
@@ -116,19 +107,15 @@ def setup_os3():
                'SALVE_META_DATA_PATH': '/etc/meta/'}
 
     # mock os.path
-    mock_path = mock.Mock()
-    mock_path.expanduser = make_mock_expanduser(mock_env, home_map)
-    mock_path.join = pjoin
-    mock_path.dirname = dirname
-    mock_path.abspath = abspath
+    mock_expanduser = make_mock_expanduser(mock_env, home_map)
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = mock.patch('src.util.ugo.get_group_from_username',
+    group_patch = mock.patch('salve.util.ugo.get_group_from_username',
                              mock_get_group)
 
     setup_patches(mock.patch.dict('os.environ', mock_env),
-                  mock.patch('os.path', mock_path),
+                  mock.patch('os.path.expanduser', mock_expanduser),
                   group_patch)
 
 
@@ -140,7 +127,7 @@ def sudo_user_replace():
     Tests the replacement of USER with SUDO_USER
     """
     orig_user = os.environ['USER']
-    conf = config.SALVEConfig(dummy_context)
+    conf = config.SALVEConfig()
     assert conf.env['USER'] == 'user1'
     assert os.environ['USER'] == orig_user
 
@@ -153,7 +140,7 @@ def sudo_homedir_resolution():
     Tests the replacement of HOME with an expanded ~USER
     """
     orig_home = os.environ['HOME']
-    conf = config.SALVEConfig(dummy_context)
+    conf = config.SALVEConfig()
     assert conf.env['HOME'] == pjoin(_homes_dir, 'user1')
     assert os.environ['HOME'] == orig_home
 
@@ -165,8 +152,7 @@ def valid_config1():
     Configuration Valid Config File
     Tests that parsing a specified config file works.
     """
-    conf = config.SALVEConfig(dummy_context,
-                              filename=pjoin(_testfile_dir, 'valid1.ini'))
+    conf = config.SALVEConfig(filename=pjoin(_testfile_dir, 'valid1.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
 
 
@@ -177,7 +163,7 @@ def load_rc_file():
     Configuration Load RC File
     Tests that, by default, the user's ~/.salverc is used for config.
     """
-    conf = config.SALVEConfig(dummy_context)
+    conf = config.SALVEConfig()
     assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
 
 
@@ -189,8 +175,7 @@ def overload_from_env():
     Ensures that overloads in the environment take precedence over
     config file settings.
     """
-    conf = config.SALVEConfig(dummy_context,
-                              filename=pjoin(_testfile_dir, 'valid1.ini'))
+    conf = config.SALVEConfig(filename=pjoin(_testfile_dir, 'valid1.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/meta/'
 
 
@@ -203,8 +188,7 @@ def multiple_env_overload():
     settings if they happen to match badly. This is the expected
     behavior, as the alternatives are inconsistent and unpredictable.
     """
-    conf = config.SALVEConfig(dummy_context,
-                              filename=pjoin(_testfile_dir, 'valid2.ini'))
+    conf = config.SALVEConfig(filename=pjoin(_testfile_dir, 'valid2.ini'))
     assert conf.attributes['meta_data']['path'] == '/etc/meta/'
     assert conf.attributes['meta']['data_path'] == '/etc/meta/'
 
@@ -217,9 +201,8 @@ def missing_config():
     Checks that with a missing config file specified, the default is
     still loaded and works as if no config were specified.
     """
-    conf = config.SALVEConfig(dummy_context,
+    conf = config.SALVEConfig(
             filename=pjoin(_testfile_dir, 'NONEXISTENT_FILE'))
-    dummy_context
 
     assert conf.attributes['file']['action'] == 'copy'
     assert conf.attributes['file']['mode'] == '644'
@@ -240,7 +223,7 @@ def invalid_file():
     error is converted into a SALVEException.
     """
     try:
-        conf = config.SALVEConfig(dummy_context,
+        conf = config.SALVEConfig(
                 filename=pjoin(_testfile_dir, 'invalid1.ini'))
     except SALVEException, e:
         assert isinstance(e, SALVEException)
@@ -256,7 +239,7 @@ def template_sub_keyerror():
     Tests that templating throws an error when there is a nonexistent
     variable specified.
     """
-    conf = config.SALVEConfig(dummy_context)
+    conf = config.SALVEConfig()
     ensure_except(KeyError, conf.template, '$NONEXISTENT_VAR')
 
 
@@ -267,7 +250,7 @@ def template_sub():
     Configuration Variable Substitution
     Tests the normal functioning of variable substitution.
     """
-    conf = config.SALVEConfig(dummy_context)
+    conf = config.SALVEConfig()
     assert conf.template('$USER') == 'user1'
     assert conf.template('$HOME') == pjoin(_homes_dir, 'user1')
     assert conf.template('$HOME/bin/program') == pjoin(_homes_dir,

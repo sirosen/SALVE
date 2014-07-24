@@ -4,7 +4,7 @@ import mock
 import StringIO
 from nose.tools import istest
 
-import src.run.cli_parser as cli_parser
+import salve.run.cli_parser as cli_parser
 from tests.utils.exceptions import ensure_except
 
 

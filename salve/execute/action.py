@@ -2,29 +2,32 @@
 
 import abc
 
-from src.util.error import SALVEException
-from src.util.context import ExecutionContext
-import src.util.enum as enum
+import salve
+from salve.api.block import CompiledBlock
+
+from salve.util.error import SALVEException
+from salve.util.context import ExecutionContext
+from salve.util import enum
 
 
 class ActionException(SALVEException):
     """
     A SALVE exception specialized for Actions.
     """
-    def __init__(self, msg, context):
+    def __init__(self, msg, file_context):
         """
         ActionException constructor
 
         Args:
             @msg
             A string message that describes the error.
-            @context
-            A SALVEContext.
+            @file_context
+            A FileContext.
         """
-        SALVEException.__init__(self, msg, context)
+        SALVEException.__init__(self, msg, file_context)
 
 
-class Action(object):
+class Action(CompiledBlock):
     """
     An Action is the basis of execution.
     Actions can perform arbitrary modifications to the OS or filesystem,
@@ -37,15 +40,15 @@ class Action(object):
     # by default, the only verification code is OK
     verification_codes = enum.Enum('OK')
 
-    def __init__(self, context):
+    def __init__(self, file_context):
         """
         Base Action constructor.
 
         Args:
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        self.context = context
+        self.file_context = file_context
 
     def verify_can_exec(self):
         """
@@ -56,7 +59,7 @@ class Action(object):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        self.context.transition(ExecutionContext.phases.VERIFICATION)
+        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
         return self.verification_codes.OK
 
     @abc.abstractmethod
@@ -102,7 +105,7 @@ class DynamicAction(Action):
         This needs to be overwritten during generation in most cases.
         """
         raise ActionException('Uninstantiated DynamicAction',
-                              self.context)
+                              self.file_context)
 
     def __call__(self, *args, **kwargs):
         """
@@ -121,7 +124,7 @@ class ActionList(Action):
 
     It is used to provide a sequential list of other actions to execute.
     """
-    def __init__(self, act_lst, context):
+    def __init__(self, act_lst, file_context):
         """
         ActionList constructor.
 
@@ -131,10 +134,10 @@ class ActionList(Action):
             class assumes that what it is handed is in fact a list of
             Action objects.
 
-            @context
-            The SALVEContext.
+            @file_context
+            The FileContext.
         """
-        Action.__init__(self, context)
+        Action.__init__(self, file_context)
         self.actions = act_lst
 
     def __iter__(self):
@@ -147,7 +150,7 @@ class ActionList(Action):
     def __str__(self):
         return ("ActionList([" +
                 ",".join(str(a) for a in self.actions) +
-                "],context=" + str(self.context) + ")")
+                "],context=" + repr(self.file_context) + ")")
 
     def append(self, act):
         """
