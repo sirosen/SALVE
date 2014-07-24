@@ -236,10 +236,10 @@ def deploy_unexpected_exception():
     non-SALVE Exceptions.
     """
     def mock_run(root_manifest, args):
-        raise StandardError()
+        raise Exception()
 
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
 
     with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
-        ensure_except(StandardError, deploy.main, fake_args)
+        ensure_except(Exception, deploy.main, fake_args)
