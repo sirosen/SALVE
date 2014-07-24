@@ -113,7 +113,7 @@ class ScratchContainer(MockedGlobals):
         MockedGlobals.tearDown(self)
 
         def recursive_chmod(d):
-            os.chmod(d, 0777)
+            os.chmod(d, 0o777)
             for f in os.listdir(d):
                 fullname = os.path.join(d, f)
                 if os.path.isdir(fullname) and not os.path.islink(fullname):
@@ -150,7 +150,7 @@ class ScratchContainer(MockedGlobals):
             return f.read()
 
     def get_mode(self, relpath):
-        return os.stat(self.get_fullname(relpath)).st_mode & 0777
+        return os.stat(self.get_fullname(relpath)).st_mode & 0o777
 
     def get_fullname(self, relpath):
         return os.path.join(self.scratch_dir, relpath)
