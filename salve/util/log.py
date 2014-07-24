@@ -7,10 +7,10 @@ import sys
 from salve.util.enum import Enum
 
 # check if unicode is defined
-try:
+try:  # pragma: no cover
     unicode
 # if it isn't, we're in Py3, so define it as str
-except:
+except:  # pragma: no cover
     unicode = str
 
 

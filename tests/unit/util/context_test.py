@@ -18,6 +18,16 @@ def filectx_tostring():
 
 
 @istest
+def filectx_repr():
+    """
+    FileContext Invoke repr()
+    Tests the conversion from a FileContext to a string using __repr__
+    """
+    ctx = context.FileContext('/a/b/c', lineno=10)
+    assert repr(ctx) == 'FileContext(filename=/a/b/c,lineno=10)', repr(ctx)
+
+
+@istest
 def execctx_tostring():
     """
     ExecutionContext to String
