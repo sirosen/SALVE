@@ -100,9 +100,20 @@ class ScratchContainer(MockedGlobals):
         self.patches.add(
             mock.patch('os.path.expanduser', expanduser)
             )
-        self.patches.add(
-            mock.patch('__builtin__.open', mock_open)
-            )
+
+        # use the builtins import to check if we are in Py3
+        # more foolproof than using sys.version_info
+        try:
+            import builtins
+            self.patches.add(
+                mock.patch('builtins.open', mock_open)
+                )
+        # if it fails with an import error, we are in Py2
+        except ImportError:
+            import __builtin__ as builtins
+            self.patches.add(
+                mock.patch('__builtin__.open', mock_open)
+                )
 
     def setUp(self):
         MockedGlobals.setUp(self)
