@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/sirosen/SALVE.svg?branch=dev)](https://travis-ci.org/sirosen/SALVE)
+[![Coverage Status](https://coveralls.io/repos/sirosen/SALVE/badge.png?branch=dev)](https://coveralls.io/r/sirosen/SALVE?branch=dev)
 
 SALVE
 =====
