@@ -129,8 +129,8 @@ def tokenize_stream(stream):
     # Basically, everything other than BLOCK_START or BLOCK_END
     # is okay here, we'll let the os library handle it later wrt
     # whether or not a path is valid
-    tokenizer.wordchars = string.letters + string.digits + \
-                          '_-+=^&@`/\|~$()[].,<>*?!%#'
+    tokenizer.wordchars = (string.ascii_letters + string.digits +
+                          '_-+=^&@`/\|~$()[].,<>*?!%#')
 
     def add_token(tok, ty, file_context):
         """

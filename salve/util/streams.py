@@ -28,7 +28,7 @@ def sha_512(stream):
     """
     hash = hashlib.sha512()
     while True:
-        string = stream.read(2 ** 20)
+        string = stream.read(2 ** 20).encode('utf-8')
         if string:
             hash.update(string)
         else:
@@ -37,7 +37,7 @@ def sha_512(stream):
 
 def hash_by_filename(fname):
     if os.path.islink(fname):
-        link_contents = os.readlink(fname)
+        link_contents = os.readlink(fname).encode('utf-8')
         return hashlib.sha256(link_contents).hexdigest()
     else:
         with open(fname) as f:
