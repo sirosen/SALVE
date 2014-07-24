@@ -24,7 +24,7 @@ def containing_dir(path, depth=1):
         The number of directories up the tree to look.
     """
     d = os.path.abspath(path)
-    for i in xrange(depth):
+    for i in range(depth):
         d = os.path.dirname(d)
     return d
 
