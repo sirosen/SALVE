@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import unicode_literals
+
 import salve.run.deploy
 import salve.run.backup
 import argparse
