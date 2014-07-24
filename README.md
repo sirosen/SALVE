@@ -1,11 +1,13 @@
+[![Build Status](https://travis-ci.org/sirosen/SALVE.svg?branch=dev)](https://travis-ci.org/sirosen/SALVE)
+
 SALVE
 =====
 
 Authors: Stephen Rosen
 
-Version: 2.1.0
+Version: 2.2.0
 
-For a detailed description of the project, please visit the [SALVE Official Site](http://salve.sirosen.net/ "SALVE")
+More information is available at [SALVE Official Site](http://salve.sirosen.net/ "SALVE")
 
 What can SALVE do?
 ==================
