@@ -6,5 +6,8 @@ python:
   - "3.4"
 install:
   - pip install -r tests/requirements.txt
+  - pip install python-coveralls
 script:
   - nosetests -v --with-coverage --cover-package=salve
+after_success:
+  - coveralls
