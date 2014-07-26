@@ -89,11 +89,11 @@ class Logger(object):
         # if hide_context is false, prepend it to the message with
         # a colon separator. Otherwise, it will be omitted
         if not hide_context:
-            ctx_prefix = '[' + str(ectx) + ']'
+            ctx_prefix = '[' + str(ectx) + '] '
             if file_context is not None:
-                ctx_prefix += ' ' + str(file_context)
+                ctx_prefix += str(file_context) + ': '
 
-            message = ctx_prefix + ': ' + message
+            message = ctx_prefix + message
 
         # construct message prefix
         ty_prefix = '[' + log_type + ']'
