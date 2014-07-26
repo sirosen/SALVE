@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
 import mock
-import StringIO
+import io
 from nose.tools import istest
 
-import src.run.cli_parser as cli_parser
+import salve.run.cli_parser as cli_parser
 from tests.utils.exceptions import ensure_except
 
 
@@ -67,7 +67,7 @@ def parse_cmd4():
     Confirms that omitting the manifest option causes a hard abort.
     """
     fake_argv = ['./salve.py', 'deploy', '-c', 'p/q']
-    stderr = StringIO.StringIO()
+    stderr = io.StringIO()
 
     parser = cli_parser.get_parser()
     with mock.patch('sys.argv', fake_argv), \

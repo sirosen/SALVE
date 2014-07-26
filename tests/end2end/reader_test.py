@@ -3,25 +3,22 @@
 from nose.tools import istest
 from os.path import dirname, join as pjoin
 
-import src.block.file_block
+import salve.block.file_block
 
-import src.reader.tokenize
-import src.reader.parse
+import salve.reader.tokenize
+import salve.reader.parse
 
-import src.util.locations as locations
+import salve.util.locations as locations
 
-from src.util.context import SALVEContext, ExecutionContext
 import tests.utils.scratch
 from tests.utils.exceptions import ensure_except
 
 _testfile_dir = pjoin(dirname(__file__), 'testfiles')
-dummy_exec_context = ExecutionContext()
-dummy_context = SALVEContext(exec_context=dummy_exec_context)
 
 
 def parse_filename(filename):
     with open(filename) as f:
-        return src.reader.parse.parse_stream(dummy_context, f)
+        return salve.reader.parse.parse_stream(f)
 
 
 def get_full_path(filename):
@@ -49,7 +46,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('empty_block.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, src.block.file_block.FileBlock)
+        assert isinstance(fblock, salve.block.file_block.FileBlock)
 
     @istest
     def single_attr_block(self):
@@ -61,7 +58,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('single_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, src.block.file_block.FileBlock)
+        assert isinstance(fblock, salve.block.file_block.FileBlock)
         assert fblock.get('source') == '/a/b/c'
 
     @istest
@@ -75,7 +72,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('two_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, src.block.file_block.FileBlock)
+        assert isinstance(fblock, salve.block.file_block.FileBlock)
         assert fblock.get('source') == '/a/b/c'
         assert fblock.get('target') == '/d/e'
 
@@ -90,7 +87,7 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('spaced_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, src.block.file_block.FileBlock)
+        assert isinstance(fblock, salve.block.file_block.FileBlock)
         assert fblock.get('source') == '/a/b/c'
         assert fblock.get('target') == '/d/e f/g'
 
@@ -103,10 +100,10 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         verifies the context of the raised exception.
         """
         path = get_full_path('unclosed_block.manifest')
-        e = ensure_except(src.reader.tokenize.TokenizationException,
+        e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 4
         assert sctx.filename == path
 
@@ -119,10 +116,10 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         verifies the context of the raised exception.
         """
         path = get_full_path('missing_open.manifest')
-        e = ensure_except(src.reader.tokenize.TokenizationException,
+        e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 5
         assert sctx.filename == path
 
@@ -135,10 +132,10 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         verifies the context of the raised exception.
         """
         path = get_full_path('double_id.manifest')
-        e = ensure_except(src.reader.tokenize.TokenizationException,
+        e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 5
         assert sctx.filename == path
 
@@ -151,10 +148,10 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         verifies the context of the raised exception.
         """
         path = get_full_path('missing_id.manifest')
-        e = ensure_except(src.reader.tokenize.TokenizationException,
+        e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 3
         assert sctx.filename == path
 
@@ -167,10 +164,10 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         verifies the context of the raised exception.
         """
         path = get_full_path('missing_attr_val.manifest')
-        e = ensure_except(src.reader.tokenize.TokenizationException,
+        e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 5
         assert sctx.filename == path
 
@@ -183,10 +180,10 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         verifies the context of the raised exception.
         """
         path = get_full_path('double_open.manifest')
-        e = ensure_except(src.reader.tokenize.TokenizationException,
+        e = ensure_except(salve.reader.tokenize.TokenizationException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 3
         assert sctx.filename == path
 
@@ -199,9 +196,9 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         verifies the context of the raised exception.
         """
         path = get_full_path('invalid_block_id.manifest')
-        e = ensure_except(src.reader.parse.ParsingException,
+        e = ensure_except(salve.reader.parse.ParsingException,
                           parse_filename,
                           path)
-        sctx = e.context.stream_context
+        sctx = e.file_context
         assert sctx.lineno == 7
         assert sctx.filename == path

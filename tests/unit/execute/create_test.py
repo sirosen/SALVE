@@ -4,10 +4,10 @@ import os
 import mock
 from nose.tools import istest
 
-from src.util.context import SALVEContext, ExecutionContext, StreamContext
+from salve.util.context import ExecutionContext, FileContext
 
-import src.execute.action as action
-import src.execute.create as create
+import salve.execute.action as action
+import salve.execute.create as create
 import tests.utils.scratch as scratch
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
@@ -16,10 +16,8 @@ _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 def get_full_path(filename):
     return os.path.join(_testfile_dir, filename)
 
-dummy_stream_context = StreamContext('no such file', -1)
+dummy_file_context = FileContext('no such file')
 dummy_exec_context = ExecutionContext()
-dummy_context = SALVEContext(stream_context=dummy_stream_context,
-                             exec_context=dummy_exec_context)
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
@@ -33,9 +31,17 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_open = mock.mock_open()
         a_name = self.get_fullname('a')
 
-        with mock.patch('__builtin__.open', mock_open, create=True), \
+        try:
+            import builtins
+            builtin_patch = mock.patch('builtins.open', mock_open, create=True)
+        except ImportError:
+            import __builtin__ as builtins
+            builtin_patch = mock.patch('__builtin__.open', mock_open,
+                    create=True)
+
+        with builtin_patch, \
              mock.patch('os.access', lambda x, y: True):
-            fc = create.FileCreateAction(a_name, dummy_context)
+            fc = create.FileCreateAction(a_name, dummy_file_context)
             fc()
 
         mock_open.assert_called_once_with(a_name, 'w')
@@ -54,7 +60,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with mock.patch('os.makedirs', mock_mkdirs), \
              mock.patch('os.access', lambda x, y: True):
-            dc = create.DirCreateAction(a_name, dummy_context)
+            dc = create.DirCreateAction(a_name, dummy_file_context)
             dc()
 
         mock_mkdirs.assert_called_once_with(a_name)
@@ -65,10 +71,10 @@ def filecreate_to_str():
     """
     File Create Action String Conversion
     """
-    fc = create.FileCreateAction('a', dummy_context)
+    fc = create.FileCreateAction('a', dummy_file_context)
 
     assert str(fc) == ('FileCreateAction(dst=a,context=' +
-                       str(dummy_context) + ')')
+                       repr(dummy_file_context) + ')')
 
 
 @istest
@@ -76,7 +82,7 @@ def dircreate_to_str():
     """
     Directory Create Action String Conversion
     """
-    dc = create.DirCreateAction('a', dummy_context)
+    dc = create.DirCreateAction('a', dummy_file_context)
 
     assert str(dc) == ('DirCreateAction(dst=a,context=' +
-                       str(dummy_context) + ')')
+                       repr(dummy_file_context) + ')')

@@ -159,7 +159,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         self.write_file('2', '')
 
         fullname = self.get_fullname('2')
-        os.chmod(fullname, 0400)
+        os.chmod(fullname, 0o400)
 
         self.run_on_manifest('1.man')
         assert self.exists('2')
@@ -185,7 +185,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         self.write_file('1', '')
 
         fullname = self.get_fullname('1')
-        os.chmod(fullname, 0200)
+        os.chmod(fullname, 0o200)
 
         self.run_on_manifest('1.man')
         assert not self.exists('2')
@@ -210,7 +210,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         self.write_file('a', '')
 
         fullname = self.get_fullname('a')
-        os.chmod(fullname, 0400)
+        os.chmod(fullname, 0o400)
 
         self.run_on_manifest('1.man')
 
@@ -235,7 +235,7 @@ class TestWithScratchdir(run_common.RunScratchContainer):
 
         fullname = self.get_fullname('a')
         fullname_b = self.get_fullname('a/b')
-        os.chmod(fullname, 0400)
+        os.chmod(fullname, 0o400)
 
         self.run_on_manifest('1.man')
 
