@@ -188,7 +188,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert log['chmod'] is None
         assert (self.stderr.getvalue() ==
-            ('[WARN] [VERIFICATION]: ' +
+            ('[WARN] [VERIFICATION] ' +
              'FileChmod: Unowned target file "a"\n')), self.stderr.getvalue()
 
     @istest
@@ -214,7 +214,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             act()
 
         assert len(lchown_args) == 0
-        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION]: ' +
+        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
             'DirChown: Cannot Chown as Non-Root User\n')), \
             self.stderr.getvalue()
 
@@ -241,7 +241,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             act()
 
         assert len(chmod_args) == 0
-        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION]: ' +
+        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
              'DirChmod: Unowned target dir "a"\n')), self.stderr.getvalue()
 
     @istest
@@ -266,7 +266,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             act()
 
         assert len(lchown_args) == 0
-        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION]: ' +
+        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
             'DirChown: Cannot Chown as Non-Root User\n')), \
             self.stderr.getvalue()
 
@@ -295,7 +295,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             act()
 
         assert len(chmod_args) == 0
-        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION]: ' +
+        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
              'DirChmod: Unowned target dir "a"\n')), self.stderr.getvalue()
 
     @istest
