@@ -1,0 +1,5 @@
+# a single file block with a primary attr
+
+file "/d/e/f/g" {
+    source /a/b/c
+}

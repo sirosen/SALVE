@@ -3,13 +3,15 @@
 from nose.tools import istest
 from os.path import dirname, join as pjoin
 
-import salve.block.file_block
 from salve.reader import parse
 from salve.reader.tokenize import Token
 from salve.util.context import FileContext
 from salve.util import locations
 
 from tests.utils.exceptions import ensure_except
+
+import salve.block.file_block
+import salve.block.manifest_block
 
 _testfile_dir = pjoin(dirname(__file__), 'files')
 dummy_context = FileContext('no such file')
@@ -217,11 +219,44 @@ def attribute_with_spaces():
 def file_primary_attr_assigned():
     """
     Unit: Parser File Block Primary Attr
-    Checks that parsing an attribute that contains spaces in quotes
-    does not raise an error and correctly assigns to the attribute.
+    Checks that parsing a Primary Attribute style file block does not raise any
+    errors.
     """
     blocks = parse_filename(get_full_path('valid4.manifest'))
     assert len(blocks) == 1
     assert isinstance(blocks[0], salve.block.file_block.FileBlock)
     assert len(blocks[0].attrs) == 2
     assert blocks[0].get(blocks[0].primary_attr) == "/d/e/f/g"
+
+
+@istest
+def primary_attr_followed_by_block():
+    """
+    Unit: Parser Primary Attribute Block Followed By Normal Block
+    Checks that there are no errors parsing a Primary Attribute style block
+    followed by an ordinary block.
+    """
+    blocks = parse_filename(get_full_path('valid5.manifest'))
+    assert len(blocks) == 2
+    assert isinstance(blocks[0], salve.block.manifest_block.ManifestBlock)
+    assert len(blocks[0].attrs) == 1
+    assert blocks[0].get(blocks[0].primary_attr) == "man man"
+    assert isinstance(blocks[1], salve.block.file_block.FileBlock)
+    assert len(blocks[1].attrs) == 2
+    assert blocks[1].get('source') == "potato"
+    assert blocks[1].get('target') == "mango"
+
+
+@istest
+def file_primary_attr_with_body():
+    """
+    Unit: Parser File Block Primary Attr And Block Body
+    Checks that parsing is successful on a primary attr block with a nonempty
+    body.
+    """
+    blocks = parse_filename(get_full_path('valid8.manifest'))
+    assert len(blocks) == 1
+    assert isinstance(blocks[0], salve.block.file_block.FileBlock)
+    assert len(blocks[0].attrs) == 2
+    assert blocks[0].get(blocks[0].primary_attr) == "lobster"
+    assert blocks[0].get('source') == "salad"

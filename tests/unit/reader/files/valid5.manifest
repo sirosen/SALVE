@@ -1,0 +1,8 @@
+# primary_attr block, followed by non-primary_attr block
+
+manifest "man man"
+
+file {
+    source "potato"
+    target "mango"
+}
