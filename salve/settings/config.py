@@ -127,8 +127,8 @@ class SALVEConfig(object):
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
-        prefixes = {(SALVE_ENV_PREFIX + s.upper()): s
-                    for s in self.attributes}
+        prefixes = dict((SALVE_ENV_PREFIX + s.upper(), s)
+                    for s in self.attributes)
 
         for key in salve_env:
             for p in prefixes:

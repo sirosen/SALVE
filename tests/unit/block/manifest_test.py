@@ -115,11 +115,13 @@ def sub_block_compile():
     assert file_block.get('source') == get_full_path('valid1.manifest')
     target_loc = os.path.join(locations.get_salve_root(), 'a/b/c')
     assert file_block.get('target') == target_loc
-    with mock.patch('salve.logger', dummy_logger), \
-         mock.patch('salve.exec_context', dummy_exec_context), \
-         mock.patch('os.path.exists', lambda f: True), \
-         mock.patch('os.access', lambda f, p: True):
-            act = b.compile()
+
+    with mock.patch('salve.logger', dummy_logger):
+        with mock.patch('salve.exec_context', dummy_exec_context):
+            with mock.patch('os.path.exists', lambda f: True):
+                with mock.patch('os.access', lambda f, p: True):
+                    act = b.compile()
+
     assert isinstance(act, salve.execute.action.ActionList)
     assert len(act.actions) == 2
     assert isinstance(act.actions[0], salve.execute.action.ActionList)

@@ -167,12 +167,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_name_to_gid(groupname):
             return 2
 
-        with mock.patch('shutil.copytree', mock_copytree), \
-             mock.patch('os.access', lambda x, y: True):
-            dcp = copy.DirCopyAction('a',
-                                      'b/c',
-                                      self.dummy_file_context)
-            dcp()
+        with mock.patch('shutil.copytree', mock_copytree):
+            with mock.patch('os.access', lambda x, y: True):
+                dcp = copy.DirCopyAction('a',
+                                          'b/c',
+                                          self.dummy_file_context)
+                dcp()
 
         assert log['mock_cp'] == ('a', 'b/c', True)
 

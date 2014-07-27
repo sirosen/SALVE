@@ -52,14 +52,17 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = backup.FileBackupAction(filename,
                                       dummy_file_context)
 
-        with mock.patch('salve.execute.copy.FileCopyAction.execute', mock_cp),\
-             mock.patch(
-                 'salve.execute.backup.FileBackupAction.verify_can_exec',
-                 lambda self: self.verification_codes.OK), \
-             mock.patch('salve.execute.backup.FileBackupAction.write_log',
-                        lambda self: None), \
-             mock.patch('os.path.exists', mock_exists):
-            act()
+        cp_exec_name = 'salve.execute.copy.FileCopyAction.execute'
+        backup_verify_name = \
+                'salve.execute.backup.FileBackupAction.verify_can_exec'
+        backup_writelog_name = \
+                'salve.execute.backup.FileBackupAction.write_log'
+        with mock.patch(cp_exec_name, mock_cp):
+            with mock.patch(backup_verify_name, lambda self:
+                    self.verification_codes.OK):
+                with mock.patch(backup_writelog_name, lambda self: None):
+                    with mock.patch('os.path.exists', mock_exists):
+                        act()
 
         assert os.path.basename(act.dst) == ('9bfabef5ffd7f5df84171393643' +
                                              'e7ceeba916e64876ace612ca8d2' +
@@ -95,14 +98,17 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = backup.FileBackupAction(linkname,
                                       dummy_file_context)
 
-        with mock.patch('salve.execute.copy.FileCopyAction.execute', mock_cp),\
-             mock.patch('salve.execute.backup.FileBackupAction.write_log',
-                        lambda self: None), \
-             mock.patch(
-                 'salve.execute.backup.FileBackupAction.verify_can_exec',
-                 lambda self: self.verification_codes.OK), \
-             mock.patch('os.path.exists', mock_exists):
-            act()
+        cp_exec_name = 'salve.execute.copy.FileCopyAction.execute'
+        backup_writelog_name = \
+                'salve.execute.backup.FileBackupAction.write_log'
+        backup_verify_name = \
+                'salve.execute.backup.FileBackupAction.verify_can_exec'
+        with mock.patch(cp_exec_name, mock_cp):
+            with mock.patch(backup_writelog_name, lambda self: None):
+                with mock.patch(backup_verify_name,
+                        lambda self: self.verification_codes.OK):
+                    with mock.patch('os.path.exists', mock_exists):
+                        act()
 
         assert os.path.basename(act.dst) == ('55ae75d991c770d8f3ef07cbfde' +
                                              '124ffce9c420da5db6203afab70' +
@@ -159,10 +165,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         mo = mock.mock_open()
         mm = mock.MagicMock()
-        with mock.patch('salve.execute.backup.open', mo, create=True), \
-             mock.patch('salve.execute.backup.print', mm, create=True), \
-             mock.patch('time.strftime', lambda s: 'NOW'):
-            act.write_log()
+        with mock.patch('salve.execute.backup.open', mo, create=True):
+            with mock.patch('salve.execute.backup.print', mm, create=True):
+                with mock.patch('time.strftime', lambda s: 'NOW'):
+                    act.write_log()
 
         mo.assert_called_once_with('/etc/salve/backup.log', 'a')
         assert mm.call_args[0][0] == ('NOW abc ' + filename)

@@ -43,8 +43,8 @@ def add_deploy_args(parser):
 def get_parser():
     """
     Produces a command line option parser for SALVE using argparse.
-    Since we require python 2.7+, and 2.6 is not a target, we can move
-    off of optparse.
+
+    We only support Python 2.6 when argparse is installed.
     """
     class SALVESharedParser(argparse.ArgumentParser):
         def __init__(self, *args, **kwargs):

@@ -39,10 +39,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
             builtin_patch = mock.patch('__builtin__.open', mock_open,
                     create=True)
 
-        with builtin_patch, \
-             mock.patch('os.access', lambda x, y: True):
-            fc = create.FileCreateAction(a_name, dummy_file_context)
-            fc()
+        with builtin_patch:
+            with mock.patch('os.access', lambda x, y: True):
+                fc = create.FileCreateAction(a_name, dummy_file_context)
+                fc()
 
         mock_open.assert_called_once_with(a_name, 'w')
         handle = mock_open()
@@ -58,10 +58,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_mkdirs = mock.Mock()
         a_name = self.get_fullname('a')
 
-        with mock.patch('os.makedirs', mock_mkdirs), \
-             mock.patch('os.access', lambda x, y: True):
-            dc = create.DirCreateAction(a_name, dummy_file_context)
-            dc()
+        with mock.patch('os.makedirs', mock_mkdirs):
+            with mock.patch('os.access', lambda x, y: True):
+                dc = create.DirCreateAction(a_name, dummy_file_context)
+                dc()
 
         mock_mkdirs.assert_called_once_with(a_name)
 
