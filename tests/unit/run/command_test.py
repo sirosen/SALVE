@@ -20,8 +20,8 @@ def run_on_backup_subcommand():
     def fake_main(args):
         log['main'] = True
 
-    with mock.patch('sys.argv', fake_argv), \
-         mock.patch('salve.run.backup.main', fake_main):
-        command.run()
+    with mock.patch('sys.argv', fake_argv):
+        with mock.patch('salve.run.backup.main', fake_main):
+            command.run()
 
     assert log['main']

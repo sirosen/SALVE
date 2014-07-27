@@ -27,10 +27,10 @@ dummy_file_context = FileContext('no such file')
 dummy_exec_context = ExecutionContext()
 dummy_logger = Logger(dummy_exec_context)
 
-with mock.patch('os.path.expanduser', mock_expanduser), \
-     mock.patch('salve.exec_context', dummy_exec_context), \
-     mock.patch('salve.logger', dummy_logger):
-    dummy_conf = salve.settings.config.SALVEConfig()
+with mock.patch('os.path.expanduser', mock_expanduser):
+    with mock.patch('salve.exec_context', dummy_exec_context):
+        with mock.patch('salve.logger', dummy_logger):
+            dummy_conf = salve.settings.config.SALVEConfig()
 
 # must be set after conf is created, otherwise they will be overidden by
 # config initialization

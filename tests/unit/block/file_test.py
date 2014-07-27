@@ -32,9 +32,9 @@ def file_copy_compile():
     b.set('group', 'nogroup')
     b.set('mode', '600')
 
-    with mock.patch('salve.logger', dummy_logger), \
-         mock.patch('salve.exec_context', dummy_exec_context):
-        act = b.compile()
+    with mock.patch('salve.logger', dummy_logger):
+        with mock.patch('salve.exec_context', dummy_exec_context):
+            act = b.compile()
 
     assert isinstance(act, action.ActionList)
     assert len(act.actions) == 4
@@ -78,10 +78,10 @@ def file_create_compile():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
     b.set('mode', '0600')
-    with mock.patch('os.path.exists', lambda f: True), \
-         mock.patch('salve.util.ugo.is_root', lambda: False), \
-         mock.patch('salve.logger', dummy_logger):
-        file_act = b.compile()
+    with mock.patch('os.path.exists', lambda f: True):
+        with mock.patch('salve.util.ugo.is_root', lambda: False):
+            with mock.patch('salve.logger', dummy_logger):
+                file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 3
@@ -123,10 +123,10 @@ def file_copy_nouser():
     b.set('group', 'nogroup')
     b.set('mode', '0600')
 
-    with mock.patch('salve.util.ugo.is_root', lambda: True), \
-         mock.patch('salve.exec_context', dummy_exec_context), \
-         mock.patch('salve.logger', dummy_logger):
-        file_act = b.compile()
+    with mock.patch('salve.util.ugo.is_root', lambda: True):
+        with mock.patch('salve.exec_context', dummy_exec_context):
+            with mock.patch('salve.logger', dummy_logger):
+                file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 3
@@ -160,10 +160,10 @@ def file_create_nouser():
     b.set('mode', '0600')
 
     # skip backup just to generate a simpler action
-    with mock.patch('salve.util.ugo.is_root', lambda: True), \
-         mock.patch('os.path.exists', lambda f: False), \
-         mock.patch('salve.logger', dummy_logger):
-        file_act = b.compile()
+    with mock.patch('salve.util.ugo.is_root', lambda: True):
+        with mock.patch('os.path.exists', lambda f: False):
+            with mock.patch('salve.logger', dummy_logger):
+                file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 2
@@ -192,11 +192,11 @@ def file_copy_nogroup():
     b.set('mode', '0600')
 
     # skip backup just to generate a simpler action
-    with mock.patch('salve.util.ugo.is_root', lambda: True), \
-         mock.patch('os.path.exists', lambda f: False), \
-         mock.patch('salve.exec_context', dummy_exec_context), \
-         mock.patch('salve.logger', dummy_logger):
-        file_act = b.compile()
+    with mock.patch('salve.util.ugo.is_root', lambda: True):
+        with mock.patch('os.path.exists', lambda f: False):
+            with mock.patch('salve.exec_context', dummy_exec_context):
+                with mock.patch('salve.logger', dummy_logger):
+                    file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 3
@@ -230,10 +230,10 @@ def file_create_nogroup():
     b.set('mode', '0600')
 
     # skip backup just to generate a simpler action
-    with mock.patch('salve.util.ugo.is_root', lambda: True), \
-         mock.patch('os.path.exists', lambda f: False), \
-         mock.patch('salve.logger', dummy_logger):
-        file_act = b.compile()
+    with mock.patch('salve.util.ugo.is_root', lambda: True):
+        with mock.patch('os.path.exists', lambda f: False):
+            with mock.patch('salve.logger', dummy_logger):
+                file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 2
@@ -260,11 +260,12 @@ def file_copy_nomode():
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
+
     # skip chown, for simplicity
-    with mock.patch('salve.util.ugo.is_root', lambda: False), \
-         mock.patch('salve.logger', dummy_logger), \
-         mock.patch('salve.exec_context', dummy_exec_context):
-        file_act = b.compile()
+    with mock.patch('salve.util.ugo.is_root', lambda: False):
+        with mock.patch('salve.logger', dummy_logger):
+            with mock.patch('salve.exec_context', dummy_exec_context):
+                file_act = b.compile()
 
     assert isinstance(file_act, action.ActionList)
     assert len(file_act.actions) == 3
@@ -298,11 +299,12 @@ def file_create_nomode():
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
+
     # skip chown and backup just to generate a simpler action
-    with mock.patch('salve.util.ugo.is_root', lambda: False), \
-         mock.patch('os.path.exists', lambda f: False), \
-         mock.patch('salve.logger', dummy_logger):
-        act = b.compile()
+    with mock.patch('salve.util.ugo.is_root', lambda: False):
+        with mock.patch('os.path.exists', lambda f: False):
+            with mock.patch('salve.logger', dummy_logger):
+                act = b.compile()
 
     assert isinstance(act, action.ActionList)
     assert len(act.actions) == 2

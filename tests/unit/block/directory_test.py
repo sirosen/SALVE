@@ -92,9 +92,9 @@ def dir_create_chown_as_root():
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
-    with mock.patch('salve.util.ugo.is_root', lambda: True), \
-         mock.patch('salve.logger', dummy_logger):
-        dir_act = b.compile()
+    with mock.patch('salve.util.ugo.is_root', lambda: True):
+        with mock.patch('salve.logger', dummy_logger):
+            dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
     assert len(dir_act.actions) == 2
@@ -120,9 +120,9 @@ def empty_dir_copy_compile():
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
-    with mock.patch('os.walk', lambda d: []), \
-         mock.patch('salve.logger', dummy_logger):
-        dir_act = b.compile()
+    with mock.patch('os.walk', lambda d: []):
+        with mock.patch('salve.logger', dummy_logger):
+            dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
     assert len(dir_act.actions) == 1
@@ -145,10 +145,11 @@ def dir_copy_chown_as_root():
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
-    with mock.patch('salve.util.ugo.is_root', lambda: True), \
-         mock.patch('os.walk', lambda d: []), \
-         mock.patch('salve.logger', dummy_logger):
-        al = b.compile()
+
+    with mock.patch('salve.util.ugo.is_root', lambda: True):
+        with mock.patch('os.walk', lambda d: []):
+            with mock.patch('salve.logger', dummy_logger):
+                al = b.compile()
 
     assert isinstance(al, action.ActionList)
     assert len(al.actions) == 2

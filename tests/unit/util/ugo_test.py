@@ -24,9 +24,9 @@ def group_from_username():
     mock_pw = namedtuple('mock_pw', ['pw_gid'])
     mock_getpwnam.return_value = mock_pw(21)
 
-    with mock.patch('pwd.getpwnam', mock_getpwnam), \
-         mock.patch('grp.getgrgid', mock_getgrgid):
-        grp = ugo.get_group_from_username('user1')
+    with mock.patch('pwd.getpwnam', mock_getpwnam):
+        with mock.patch('grp.getgrgid', mock_getgrgid):
+            grp = ugo.get_group_from_username('user1')
 
     assert grp == 'group1'
     mock_getgrgid.assert_called_once_with(21)

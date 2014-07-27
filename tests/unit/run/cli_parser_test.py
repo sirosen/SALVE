@@ -70,6 +70,6 @@ def parse_cmd4():
     stderr = io.StringIO()
 
     parser = cli_parser.get_parser()
-    with mock.patch('sys.argv', fake_argv), \
-         mock.patch('sys.stderr', stderr):
-        ensure_except(SystemExit, parser.parse_args)
+    with mock.patch('sys.argv', fake_argv):
+        with mock.patch('sys.stderr', stderr):
+            ensure_except(SystemExit, parser.parse_args)
