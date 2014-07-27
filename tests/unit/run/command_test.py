@@ -9,7 +9,7 @@ import salve.run.command as command
 @istest
 def run_on_backup_subcommand():
     """
-    Run With Backup Subcommand
+    Unit: Run With Backup Subcommand
     Verifies that running on arguments starting with "backup" correctly invokes
     the backup main method.
     """

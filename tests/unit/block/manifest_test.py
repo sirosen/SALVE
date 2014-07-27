@@ -20,7 +20,7 @@ from tests.unit.block import dummy_conf, dummy_logger
 @istest
 def sourceless_manifest_compile_error():
     """
-    Manifest Compilation Fails Without Action
+    Unit: Manifest Compilation Fails Without Action
     Verifies that a Manifest block raises a BlockException when
     compiled if the action attribute is unspecified.
     """
@@ -32,7 +32,7 @@ def sourceless_manifest_compile_error():
 @istest
 def sourceless_manifest_expand_error():
     """
-    Manifest Block Path Expand Fails Without Source
+    Unit: Manifest Block Path Expand Fails Without Source
     Verifies that a Manifest block raises a BlockException when paths
     are expanded if the source attribute is unspecified.
     """
@@ -47,7 +47,7 @@ def sourceless_manifest_expand_error():
 @istest
 def empty_manifest_expand():
     """
-    Manifest Block SubBlock Expand Empty List
+    Unit: Manifest Block SubBlock Expand Empty List
     Verifies that a Manifest block with no sub-blocks expands without
     errors.
     """
@@ -61,7 +61,7 @@ def empty_manifest_expand():
 @istest
 def recursive_manifest_error():
     """
-    Manifest Block Self-Inclusion Error
+    Unit: Manifest Block Self-Inclusion Error
     Verifies that a Manifest block which includes itself raises a
     BlockException when expanded.
     """
@@ -77,7 +77,7 @@ def recursive_manifest_error():
 @istest
 def sub_block_expand():
     """
-    Manifest Block SubBlock Expand
+    Unit: Manifest Block SubBlock Expand
     Verifies that Manifest block expansion works normally.
     """
     with mock.patch('salve.logger', dummy_logger):
@@ -98,7 +98,7 @@ def sub_block_expand():
 @istest
 def sub_block_compile():
     """
-    Manifest Block SubBlock Compile
+    Unit: Manifest Block SubBlock Compile
     Verifies that Manifest block expansion followed by action
     conversion works normally.
     """

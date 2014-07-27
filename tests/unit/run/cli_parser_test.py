@@ -11,7 +11,7 @@ from tests.utils.exceptions import ensure_except
 @istest
 def parse_cmd1():
     """
-    Command Line Parse Deploy Manifest File Specified
+    Unit: Command Line Parse Deploy Manifest File Specified
     Verifies that attempting to run from the commandline successfully
     parses manifest file specification in sys.argv
     """
@@ -28,7 +28,7 @@ def parse_cmd1():
 @istest
 def parse_cmd2():
     """
-    Command Line Parse Deploy Config File Other Order
+    Unit: Command Line Parse Deploy Config File Other Order
     Verifies that attempting to run from the commandline successfully
     parses config file specification in sys.argv after the deploy subcommand
     """
@@ -45,7 +45,7 @@ def parse_cmd2():
 @istest
 def parse_cmd3():
     """
-    Command Line Parse Deploy Config Option Override
+    Unit: Command Line Parse Deploy Config Option Override
     Confirms that passsing an option to a subparser overrides the value it was
     given in the parent
     """
@@ -63,7 +63,7 @@ def parse_cmd3():
 @istest
 def parse_cmd4():
     """
-    Command Line Parse Deploy No Manifest
+    Unit: Command Line Parse Deploy No Manifest
     Confirms that omitting the manifest option causes a hard abort.
     """
     fake_argv = ['./salve.py', 'deploy', '-c', 'p/q']

@@ -25,7 +25,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filecopy_execute(self):
         """
-        File Copy Action Execution
+        Unit: File Copy Action Execution
         """
         content = 'a b c d \n e f g'
         self.write_file('a', content)
@@ -43,7 +43,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def canexec_unwritable_target(self):
         """
-        File Copy Action Verify Unwritable Target
+        Unit: File Copy Action Verify Unwritable Target
         Checks the results of a verification check when the target
         is an unwritable file.
         """
@@ -64,7 +64,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def canexec_unwritable_target_dir(self):
         """
-        File Copy Action Verify Unwritable Target Directory
+        Unit: File Copy Action Verify Unwritable Target Directory
         Checks the results of a verification check when the target
         is in an unwritable directory.
         """
@@ -88,7 +88,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def canexec_unreadable_source(self):
         """
-        File Copy Action Verify Unreadable Source
+        Unit: File Copy Action Verify Unreadable Source
         Checks the results of a verification check when the source
         is an unreadable file.
         """
@@ -109,7 +109,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dir_canexec_unwritable_target(self):
         """
-        Dir Copy Action Verify Unwritable Target
+        Unit: Dir Copy Action Verify Unwritable Target
         Checks the results of a verification check when the target
         is an unwritable directory.
         """
@@ -130,7 +130,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filecopy_to_str(self):
         """
-        File Copy Action String Conversion
+        Unit: File Copy Action String Conversion
         """
         fcp = copy.FileCopyAction('a', 'b/c', self.dummy_file_context)
 
@@ -140,7 +140,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dircopy_to_str(self):
         """
-        Directory Copy Action String Conversion
+        Unit: Directory Copy Action String Conversion
         """
         dcp = copy.DirCopyAction('a',
                                  'b/c',
@@ -152,7 +152,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dircopy_execute(self):
         """
-        Directory Copy Action Execution
+        Unit: Directory Copy Action Execution
         """
         log = {
             'mock_cp': None

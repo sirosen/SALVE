@@ -9,7 +9,7 @@ import salve.util.locations
 @istest
 def get_salve_root():
     """
-    Locations Util Get SALVE Root Dir
+    Unit: Locations Util Get SALVE Root Dir
     Tests the path searching code for the SALVE root.
     This is always relative to locations' __file__ attribute.
     """
@@ -21,7 +21,7 @@ def get_salve_root():
 @istest
 def get_default_config():
     """
-    Locations Util Get Default Config File
+    Unit: Locations Util Get Default Config File
     Tests finding the settings ini file.
     This is, like the SALVE root, always relative to locations.__file__
     """

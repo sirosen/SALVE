@@ -28,7 +28,7 @@ dummy_exec_context.set('log_level', set())
 @istest
 def shell_action_basic():
     """
-    Action Shell Singleton Command List
+    Unit: Action Shell Singleton Command List
     Verifies that executing a ShellAction with one command runs that
     command.
     """
@@ -52,7 +52,7 @@ def shell_action_basic():
 @istest
 def failed_shell_action():
     """
-    Action Shell Failure Raises Exception
+    Unit: Action Shell Failure Raises Exception
     Verifies that executing a ShellAction raises an exception if one of
     the commands in it returns a nonzero status.
     """

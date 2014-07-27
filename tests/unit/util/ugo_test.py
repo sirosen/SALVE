@@ -11,7 +11,7 @@ from collections import namedtuple
 @istest
 def group_from_username():
     """
-    Fetch Group From Username
+    Unit: Fetch Group From Username
 
     Tests the behavior of get_group_from_username using mocked values
     for getpwnam and getgrgid.
@@ -36,7 +36,7 @@ def group_from_username():
 @istest
 def is_root_check():
     """
-    Check Root Status
+    Unit: Check Root Status
 
     Confirms that is_root matches the result of os.geteuid.
     """
@@ -56,7 +56,7 @@ def is_root_check():
 @istest
 def name_to_uid():
     """
-    UUID From Username
+    Unit: UUID From Username
 
     Checks the result of name_to_uid using getpwnam.
     """
@@ -74,7 +74,7 @@ def name_to_uid():
 @istest
 def name_to_gid():
     """
-    GID From Username
+    Unit: GID From Username
 
     Checks the result of name_to_gid using getgrnam.
     """

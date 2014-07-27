@@ -24,7 +24,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filecreate_execute(self):
         """
-        File Create Action Execution
+        Unit: File Create Action Execution
         Needs to be in a scratchdir to ensure that there is no file
         named 'a' in the target dir.
         """
@@ -51,7 +51,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dircreate_execute(self):
         """
-        Directory Create Action Execution
+        Unit: Directory Create Action Execution
         Needs to be in a scratchdir to ensure that there is no directory
         named 'a' in the target dir.
         """
@@ -69,7 +69,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 @istest
 def filecreate_to_str():
     """
-    File Create Action String Conversion
+    Unit: File Create Action String Conversion
     """
     fc = create.FileCreateAction('a', dummy_file_context)
 
@@ -80,7 +80,7 @@ def filecreate_to_str():
 @istest
 def dircreate_to_str():
     """
-    Directory Create Action String Conversion
+    Unit: Directory Create Action String Conversion
     """
     dc = create.DirCreateAction('a', dummy_file_context)
 
