@@ -150,6 +150,45 @@ def attribute_with_spaces():
 
 
 @istest
+def primary_attr_block_followed_by_block():
+    """
+    Unit: Tokenizer Primary Attribute Block Followed By Normal Block
+    Verifies that tokenization proceeds correctly when a "Primary Attribute"
+    style block is followed by an ordinary block.
+    """
+    tokens = tokenize_filename(get_full_path('valid5.manifest'))
+    assert len(tokens) == 9
+    assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[1].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[2].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[3].ty == tokenize.Token.types.BLOCK_START
+    assert tokens[4].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[5].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[6].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[7].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[8].ty == tokenize.Token.types.BLOCK_END
+
+
+@istest
+def primary_attr_block_series():
+    """
+    Unit: Tokenizer Multiple Primary Attribute Blocks
+    Verifies that tokenization proceeds correctly when a group of "Primary
+    Attribute" style blocks are given in series
+    """
+    tokens = tokenize_filename(get_full_path('valid6.manifest'))
+    assert len(tokens) == 8
+    assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[1].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[2].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[3].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[4].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[5].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[6].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[7].ty == tokenize.Token.types.TEMPLATE
+
+
+@istest
 def token_to_string():
     """
     Unit: Tokenizer Token To String
