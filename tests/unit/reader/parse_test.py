@@ -4,10 +4,10 @@ from nose.tools import istest
 from os.path import dirname, join as pjoin
 
 import salve.block.file_block
-import salve.reader.parse as parse
+from salve.reader import parse
 from salve.reader.tokenize import Token
 from salve.util.context import FileContext
-import salve.util.locations as locations
+from salve.util import locations
 
 from tests.utils.exceptions import ensure_except
 
@@ -211,3 +211,17 @@ def attribute_with_spaces():
     assert len(blocks) == 1
     assert isinstance(blocks[0], salve.block.file_block.FileBlock)
     assert len(blocks[0].attrs) == 2
+
+
+@istest
+def file_primary_attr_assigned():
+    """
+    Unit: Parser File Block Primary Attr
+    Checks that parsing an attribute that contains spaces in quotes
+    does not raise an error and correctly assigns to the attribute.
+    """
+    blocks = parse_filename(get_full_path('valid4.manifest'))
+    assert len(blocks) == 1
+    assert isinstance(blocks[0], salve.block.file_block.FileBlock)
+    assert len(blocks[0].attrs) == 2
+    assert blocks[0].get(blocks[0].primary_attr) == "/d/e/f/g"

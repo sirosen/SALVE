@@ -64,6 +64,9 @@ class Block(AbstractBlock):
         # this is a set of attribute identifiers which must be present
         # in order for the block to be valid
         self.min_attrs = set()
+        # the primary attribute of a block is the one handled outside of the
+        # typically block body parsing, following the block identifier
+        self.primary_attr = None
 
     def set(self, attribute_name, value):
         """

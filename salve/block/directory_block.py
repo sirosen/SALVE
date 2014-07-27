@@ -31,6 +31,7 @@ class DirBlock(Block):
             self.path_attrs.add(attr)
         for attr in ['target']:
             self.min_attrs.add(attr)
+        self.primary_attr = 'target'
 
     def _mkdir(self, dirname):
         """

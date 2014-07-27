@@ -1,5 +1,3 @@
-#double-identifier, no block
+# block close following primary attr
 
-file
-
-file {}
+file primary_attr_val }
