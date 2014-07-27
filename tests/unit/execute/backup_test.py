@@ -29,7 +29,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def file_target_name(self):
         """
-        File Backup Action Destination File
+        Unit: File Backup Action Destination File
         Verifies that a file's abspath followed by its SHA512 hash is its
         destination file when backed up.
         """
@@ -75,7 +75,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def file_symlink_target_name(self):
         """
-        File Backup Action Symlink Destination File
+        Unit: File Backup Action Symlink Destination File
         Verifies that a symlink's abspath followed by its SHA256 hash is its
         destination file when backed up.
         """
@@ -119,7 +119,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def backupaction_is_abstract(self):
         """
-        Backup Action Base Class Is Abstract
+        Unit: Backup Action Base Class Is Abstract
         Checks that instantiating a BackupAction raises an error.
         """
         ensure_except(TypeError, backup.BackupAction)
@@ -127,7 +127,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def file_dst_dir(self):
         """
-        File Backup Action Destination Directory
+        Unit: File Backup Action Destination Directory
         Verifies that a file's abspath becomes its storage directory under
         the backup dir.
         """
@@ -139,7 +139,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def file_to_str(self):
         """
-        File Backup Action to String
+        Unit: File Backup Action to String
 
         Checks the result of converting a file backup action to a string.
         """
@@ -154,7 +154,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def file_write_log(self):
         """
-        File Backup Action Write Log
+        Unit: File Backup Action Write Log
         Verifies that on a successful backup action, the logfile is written
         with the date, hash, and filename.
         """
@@ -176,7 +176,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dir_expand(self):
         """
-        Directory Backup Action Expand Dir
+        Unit: Directory Backup Action Expand Dir
         Checks the expansion of a directory into its constituent files for
         directory backups.
         """
@@ -204,7 +204,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dir_execute(self):
         """
-        Directory Backup Action Execute
+        Unit: Directory Backup Action Execute
         Verifies that executing a DirBackupAction runs a FileBackupAction on
         each of the files in the directory.
         """
@@ -228,7 +228,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dir_verify_no_source(self):
         """
-        Directory Backup Action Verify (No Source)
+        Unit: Directory Backup Action Verify (No Source)
         Verifies that verification of a DirBackupAction identifies missing
         source dir.
         """
@@ -245,7 +245,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dir_execute_no_source(self):
         """
-        Directory Backup Action Execute (No Source)
+        Unit: Directory Backup Action Execute (No Source)
         Verifies that verification of a DirBackupAction identifies missing
         source dir during execution.
         """

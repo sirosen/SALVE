@@ -10,7 +10,7 @@ from salve.util import context
 @istest
 def filectx_tostring():
     """
-    FileContext to String
+    Unit: FileContext to String
     Tests the conversion from a FileContext to a string.
     """
     ctx = context.FileContext('/a/b/c', lineno=10)
@@ -20,7 +20,7 @@ def filectx_tostring():
 @istest
 def filectx_repr():
     """
-    FileContext Invoke repr()
+    Unit: FileContext Invoke repr()
     Tests the conversion from a FileContext to a string using __repr__
     """
     ctx = context.FileContext('/a/b/c', lineno=10)
@@ -30,7 +30,7 @@ def filectx_repr():
 @istest
 def execctx_tostring():
     """
-    ExecutionContext to String
+    Unit: ExecutionContext to String
     Tests the conversion from an ExecutionContext to a string.
     """
     ctx = context.ExecutionContext(
@@ -41,7 +41,7 @@ def execctx_tostring():
 @istest
 def execctx_transition():
     """
-    ExecutionContext Phase Transition
+    Unit: ExecutionContext Phase Transition
     Tests that phase transitions have the expected result.
     """
     ctx = context.ExecutionContext(
@@ -55,7 +55,7 @@ def execctx_transition():
 @istest
 def execctx_transition_failure_nonexistent():
     """
-    ExecutionContext Phase Transition Failure (Non-Existent Phase)
+    Unit: ExecutionContext Phase Transition Failure (Non-Existent Phase)
     Tests that phase transitions fail if given a nonexistent phase.
     """
     ctx = context.ExecutionContext(

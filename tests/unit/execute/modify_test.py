@@ -39,7 +39,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filechown_verify_nonroot(self):
         """
-        File Chown Action Verify as Non-Root
+        Unit: File Chown Action Verify as Non-Root
         """
         self.write_file('a', '')
         a_name = self.get_fullname('a')
@@ -60,7 +60,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filechown_execute_nonroot(self):
         """
-        File Chown Action Execute as Non-Root
+        Unit: File Chown Action Execute as Non-Root
         """
         self.write_file('a', '')
         a_name = self.get_fullname('a')
@@ -169,7 +169,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filechmod_execute_nonowner(self):
         """
-        File Chmod Action Execute as Non-Owner
+        Unit: File Chmod Action Execute as Non-Owner
         """
         log = {'chmod': None}
 
@@ -194,7 +194,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchown_execute_nonroot(self):
         """
-        Directory Chown Action Execute as Non-Root
+        Unit: Dir Chown Action Execute as Non-Root
         """
         lchown_args = []
 
@@ -221,7 +221,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchmod_execute_nonowner(self):
         """
-        Directory Chmod Action Execute as Non-Owner
+        Unit: Dir Chmod Action Execute as Non-Owner
         """
         chmod_args = []
 
@@ -248,7 +248,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchown_execute_nonrecursive_nonroot(self):
         """
-        Directory Chown Action Execute Non-Recursive as Non-Root
+        Unit: Dir Chown Action Execute Non-Recursive as Non-Root
         """
         lchown_args = []
 
@@ -274,7 +274,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchmod_execute_nonrecursive_nonroot_nonowner(self):
         """
-        Directory Chmod Action Execute Non-Recursive as Non-Root, Non-Owner
+        Unit: Dir Chmod Action Execute Non-Recursive as Non-Root, Non-Owner
         """
         chmod_args = []
 
@@ -302,7 +302,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filechown_to_str(self):
         """
-        File Chown Action String Conversion
+        Unit: File Chown Action String Conversion
         """
         act = modify.FileChownAction('a', 'user1', 'nogroup',
                 self.file_context)
@@ -314,7 +314,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filechmod_to_str(self):
         """
-        File Chmod Action String Conversion
+        Unit: File Chmod Action String Conversion
         """
         act = modify.FileChmodAction('a', '600', self.file_context)
 
@@ -324,7 +324,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchown_to_str(self):
         """
-        Directory Chown Action String Conversion
+        Unit: Directory Chown Action String Conversion
         """
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
 
@@ -335,7 +335,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchmod_to_str(self):
         """
-        Directory Chmod Action String Conversion
+        Unit: Directory Chmod Action String Conversion
         """
         act = modify.DirChmodAction('a', '600', self.file_context)
 
@@ -397,7 +397,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filechown_execute(self):
         """
-        File Chown Action Execute
+        Unit: File Chown Action Execute
         """
         act = modify.FileChownAction('a', 'user1', 'nogroup',
                 self.file_context)
@@ -425,7 +425,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def filechmod_execute(self):
         """
-        File Chmod Action Execute
+        Unit: File Chmod Action Execute
         """
         act = modify.FileChmodAction('a', '600', self.file_context)
 
@@ -446,7 +446,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchown_execute(self):
         """
-        Directory Chown Action Execute
+        Unit: Directory Chown Action Execute
         """
         lchown_args = []
 
@@ -484,7 +484,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchmod_recursive_execute(self):
         """
-        Directory Chmod Action Recursive Execute
+        Unit: Directory Chmod Action Recursive Execute
         """
         chmod_args = []
 
@@ -523,7 +523,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchown_execute_nonrecursive(self):
         """
-        Directory Chown Action Execute Non-Recursive
+        Unit: Directory Chown Action Execute Non-Recursive
         """
         lchown_args = []
 
@@ -548,7 +548,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def dirchmod_execute_nonrecursive_owner(self):
         """
-        Directory Chmod Action Execute Non-Recursive
+        Unit: Directory Chmod Action Execute Non-Recursive
         """
         chmod_args = []
 

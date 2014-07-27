@@ -20,7 +20,7 @@ from salve.util.context import ExecutionContext, FileContext
 @istest
 def no_manifest_error():
     """
-    Deploy Command No Manifest Fails
+    Unit: Deploy Command No Manifest Fails
     Verifies that attempting to run the deploy command fails if there
     is no manifest specified.
     """
@@ -33,7 +33,7 @@ def no_manifest_error():
 @istest
 def deploy_main():
     """
-    Deploy Command Dummy Manifest Block Expand And Run
+    Unit: Deploy Command Dummy Manifest Block Expand And Run
     Checks that running the deploy main function expands and runs
     a dummy manifest block with the root manifest as the source.
     """
@@ -101,7 +101,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def deploy_salve_exception(self):
         """
-        Deploy Command Catch SALVE Exception
+        Unit: Deploy Command Catch SALVE Exception
         Checks that running the deploy main function catches and pretty
         prints any thrown SALVEExceptions.
         """
@@ -124,7 +124,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def deploy_block_exception(self):
         """
-        Deploy Command Catch BlockException
+        Unit: Deploy Command Catch BlockException
         Checks that running the deploy main function catches and pretty
         prints any thrown BlockExceptions.
         """
@@ -149,7 +149,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def deploy_action_exception(self):
         """
-        Deploy Command Catch ActionException
+        Unit: Deploy Command Catch ActionException
         Checks that running the deploy main function catches and pretty
         prints any thrown ActionExceptions.
         """
@@ -176,7 +176,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def deploy_tokenization_exception(self):
         """
-        Deploy Command Catch TokenizationException
+        Unit: Deploy Command Catch TokenizationException
         Checks that running the deploy main function catches and pretty
         prints any thrown TokenizationExceptions.
         """
@@ -203,7 +203,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def deploy_parsing_exception(self):
         """
-        Deploy Command Catch ParsingException
+        Unit: Deploy Command Catch ParsingException
         Checks that running the deploy main function catches and pretty
         prints any thrown ParsingExceptions.
         """
@@ -231,7 +231,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 @istest
 def deploy_unexpected_exception():
     """
-    Deploy Command Don't Catch Unexpected Exception
+    Unit: Deploy Command Don't Catch Unexpected Exception
     Checks that running the deploy main function does not catch any
     non-SALVE Exceptions.
     """

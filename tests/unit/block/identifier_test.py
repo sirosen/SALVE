@@ -19,7 +19,7 @@ from tests.unit.block import dummy_file_context, dummy_logger
 @istest
 def invalid_block_id1():
     """
-    Block Identifier Invalid Identifier Fails (1)
+    Unit: Block Identifier Invalid Identifier Fails (1)
     Checks that an invalid block identifier fails, even when it is of
     type IDENTIFIER.
     """
@@ -35,7 +35,7 @@ def invalid_block_id1():
 @istest
 def invalid_block_id2():
     """
-    Block Identifier Invalid Identifier Fails (2)
+    Unit: Block Identifier Invalid Identifier Fails (2)
     Checks that an invalid block identifier with a non-IDENTIFIER type
     fails block creation.
     """
@@ -51,7 +51,7 @@ def invalid_block_id2():
 @istest
 def valid_file_id():
     """
-    Block Identifier File Identifier To Block
+    Unit: Block Identifier File Identifier To Block
     Checks that an identifier 'file' creates a file block.
     """
     file_id = Token('file', Token.types.IDENTIFIER, dummy_file_context)
@@ -63,7 +63,7 @@ def valid_file_id():
 @istest
 def valid_manifest_id():
     """
-    Block Identifier Manifest Identifier To Block
+    Unit: Block Identifier Manifest Identifier To Block
     Checks that an identifier 'manifest' creates a manifest block.
     """
     manifest_id = Token('manifest', Token.types.IDENTIFIER, dummy_file_context)
@@ -76,7 +76,7 @@ def valid_manifest_id():
 @istest
 def valid_directory_id():
     """
-    Block Identifier Directory Identifier To Block
+    Unit: Block Identifier Directory Identifier To Block
     Checks that an identifier 'directory' creates a directory block.
     """
     manifest_id = Token('directory', Token.types.IDENTIFIER,

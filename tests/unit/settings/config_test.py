@@ -123,7 +123,7 @@ def setup_os3():
 @with_setup(setup_os1, teardown_patches)
 def sudo_user_replace():
     """
-    Configuration SUDO_USER Replacement
+    Unit: Configuration SUDO_USER Replacement
     Tests the replacement of USER with SUDO_USER
     """
     orig_user = os.environ['USER']
@@ -136,7 +136,7 @@ def sudo_user_replace():
 @with_setup(setup_os1, teardown_patches)
 def sudo_homedir_resolution():
     """
-    Configuration HOME Replacement
+    Unit: Configuration HOME Replacement
     Tests the replacement of HOME with an expanded ~USER
     """
     orig_home = os.environ['HOME']
@@ -149,7 +149,7 @@ def sudo_homedir_resolution():
 @with_setup(setup_os1, teardown_patches)
 def valid_config1():
     """
-    Configuration Valid Config File
+    Unit: Configuration Valid Config File
     Tests that parsing a specified config file works.
     """
     conf = config.SALVEConfig(filename=pjoin(_testfile_dir, 'valid1.ini'))
@@ -160,7 +160,7 @@ def valid_config1():
 @with_setup(setup_os1, teardown_patches)
 def load_rc_file():
     """
-    Configuration Load RC File
+    Unit: Configuration Load RC File
     Tests that, by default, the user's ~/.salverc is used for config.
     """
     conf = config.SALVEConfig()
@@ -171,7 +171,7 @@ def load_rc_file():
 @with_setup(setup_os2, teardown_patches)
 def overload_from_env():
     """
-    Configuration Overload From Environment
+    Unit: Configuration Overload From Environment
     Ensures that overloads in the environment take precedence over
     config file settings.
     """
@@ -183,7 +183,7 @@ def overload_from_env():
 @with_setup(setup_os3, teardown_patches)
 def multiple_env_overload():
     """
-    Configuration Multiple Overload From Environment Variable
+    Unit: Configuration Multiple Overload From Environment Variable
     Checks that environment variables can be used to overload multiple
     settings if they happen to match badly. This is the expected
     behavior, as the alternatives are inconsistent and unpredictable.
@@ -197,7 +197,7 @@ def multiple_env_overload():
 @with_setup(setup_os1, teardown_patches)
 def missing_config():
     """
-    Configuration Missing Config File
+    Unit: Configuration Missing Config File
     Checks that with a missing config file specified, the default is
     still loaded and works as if no config were specified.
     """
@@ -218,7 +218,7 @@ def missing_config():
 @with_setup(setup_os1, teardown_patches)
 def invalid_file():
     """
-    Configuration Invalid Config File
+    Unit: Configuration Invalid Config File
     Checks that with a invalid config file specified, the ConfigParser
     error is converted into a SALVEException.
     """
@@ -235,7 +235,7 @@ def invalid_file():
 @with_setup(setup_os1, teardown_patches)
 def template_sub_keyerror():
     """
-    Configuration Missing Variable
+    Unit: Configuration Missing Variable
     Tests that templating throws an error when there is a nonexistent
     variable specified.
     """
@@ -247,7 +247,7 @@ def template_sub_keyerror():
 @with_setup(setup_os1, teardown_patches)
 def template_sub():
     """
-    Configuration Variable Substitution
+    Unit: Configuration Variable Substitution
     Tests the normal functioning of variable substitution.
     """
     conf = config.SALVEConfig()

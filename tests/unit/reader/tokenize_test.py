@@ -34,7 +34,7 @@ def ensure_TokenizationException(filename):
 @istest
 def unclosed_block():
     """
-    Tokenizer Unclosed Block Fails
+    Unit: Tokenizer Unclosed Block Fails
     Ensures that an unclosed block raises a TokenizationException.
     """
     ensure_TokenizationException('invalid1.manifest')
@@ -43,7 +43,7 @@ def unclosed_block():
 @istest
 def missing_open():
     """
-    Tokenizer Missing Block Open Fails
+    Unit: Tokenizer Missing Block Open Fails
     Ensures that a missing { raises a TokenizationException.
     """
     ensure_TokenizationException('invalid2.manifest')
@@ -52,7 +52,7 @@ def missing_open():
 @istest
 def double_identifier():
     """
-    Tokenizer Double Identifier Fails
+    Unit: Tokenizer Double Identifier Fails
     Ensures that two successive block ids raise a TokenizationException.
     """
     ensure_TokenizationException('invalid3.manifest')
@@ -61,7 +61,7 @@ def double_identifier():
 @istest
 def missing_block_identifier():
     """
-    Tokenizer Missing Identifier Fails
+    Unit: Tokenizer Missing Identifier Fails
     Ensures that a missing block id raises a TokenizationException.
     """
     ensure_TokenizationException('invalid4.manifest')
@@ -70,7 +70,7 @@ def missing_block_identifier():
 @istest
 def missing_attribute_value():
     """
-    Tokenizer Missing Attribute Value Fails
+    Unit: Tokenizer Missing Attribute Value Fails
     Ensures that a block attribute without a value raises a
     TokenizationException.
     """
@@ -80,7 +80,7 @@ def missing_attribute_value():
 @istest
 def double_open():
     """
-    Tokenizer Double Open Fails
+    Unit: Tokenizer Double Open Fails
     Ensures that repeated '{'s raise a TokenizationException.
     """
     ensure_TokenizationException('invalid7.manifest')
@@ -91,7 +91,7 @@ def double_open():
 @istest
 def empty_manifest():
     """
-    Tokenizer Empty Manifest
+    Unit: Tokenizer Empty Manifest
     Verifies that tokenizing an empty file produces an empty token list.
     """
     tokens = tokenize_filename(get_full_path('valid1.manifest'))
@@ -101,7 +101,7 @@ def empty_manifest():
 @istest
 def empty_block():
     """
-    Tokenizer Empty Block
+    Unit: Tokenizer Empty Block
     Verifies that tokenizing an empty block produces a token list
     containing the identifier, a block open, and a block close.
     """
@@ -115,7 +115,7 @@ def empty_block():
 @istest
 def invalid_id_nofail():
     """
-    Tokenizer Invalid Identifier (No Fail)
+    Unit: Tokenizer Invalid Identifier (No Fail)
     Ensures that no exception is raised if the tokenizer encounters an
     unknown block identifier.
     """
@@ -134,7 +134,7 @@ def invalid_id_nofail():
 @istest
 def attribute_with_spaces():
     """
-    Tokenizer Attribute With Spaces
+    Unit: Tokenizer Attribute With Spaces
     Verifies that tokenization proceeds correctly when an attribute
     value is a quoted string containing spaces.
     """
@@ -152,7 +152,7 @@ def attribute_with_spaces():
 @istest
 def token_to_string():
     """
-    Tokenizer Token To String
+    Unit: Tokenizer Token To String
     Checks the result of invoking Token.__str__
     """
     ctx = FileContext('a/b/c', 2)

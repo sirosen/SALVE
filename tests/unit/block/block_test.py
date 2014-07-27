@@ -9,7 +9,7 @@ import salve.block.base
 @istest
 def block_is_abstract():
     """
-    Block Base Class Is Abstract
+    Unit: Block Base Class Is Abstract
     Ensures that a Block cannot be instantiated.
     """
     ensure_except(TypeError, salve.block.base.Block)

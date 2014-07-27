@@ -21,7 +21,7 @@ from tests.unit.block import dummy_logger
 @istest
 def file_copy_compile():
     """
-    File Block Copy Compile
+    Unit: File Block Copy Compile
     Verifies the result of converting a file copy block to an action.
     """
     b = salve.block.file_block.FileBlock(dummy_file_context)
@@ -69,7 +69,7 @@ def file_copy_compile():
 @istest
 def file_create_compile():
     """
-    File Block Create Compile
+    Unit: File Block Create Compile
     Verifies the result of converting a file create block to an action.
     """
     b = salve.block.file_block.FileBlock(dummy_file_context)
@@ -112,7 +112,7 @@ def file_create_compile():
 @istest
 def file_copy_nouser():
     """
-    File Block Copy Without User Skips Chown
+    Unit: File Block Copy Without User Skips Chown
     Verifies that converting a file copy block to an action when the
     user attribute is unset skips the chown subaction, even as root.
     """
@@ -149,7 +149,7 @@ def file_copy_nouser():
 @istest
 def file_create_nouser():
     """
-    File Block Create Without User Skips Chown
+    Unit: File Block Create Without User Skips Chown
     Verifies that converting a file create block to an action when the
     user attribute is unset leaves out the chown.
     """
@@ -180,7 +180,7 @@ def file_create_nouser():
 @istest
 def file_copy_nogroup():
     """
-    File Block Copy Without Group Skips Chown
+    Unit: File Block Copy Without Group Skips Chown
     Verifies that converting a file copy block to an action when the
     group attribute is unset raises a BlockException.
     """
@@ -219,7 +219,7 @@ def file_copy_nogroup():
 @istest
 def file_create_nogroup():
     """
-    File Block Create Without Group Skips Chown
+    Unit: File Block Create Without Group Skips Chown
     Verifies that converting a file create block to an action when the
     group attribute is unset raises a BlockException.
     """
@@ -250,7 +250,7 @@ def file_create_nogroup():
 @istest
 def file_copy_nomode():
     """
-    File Block Copy Without Mode Skips Chmod
+    Unit: File Block Copy Without Mode Skips Chmod
     Verifies that converting a file copy block to an action when the
     mode attribute is unset raises a BlockException.
     """
@@ -290,7 +290,7 @@ def file_copy_nomode():
 @istest
 def file_create_nomode():
     """
-    File Block Create Without Mode Skips Chmod
+    Unit: File Block Create Without Mode Skips Chmod
     Verifies that converting a file create block to an action when the
     mode attribute is unset raises a BlockException.
     """
@@ -322,7 +322,7 @@ def file_create_nomode():
 @istest
 def file_copy_fails_nosource():
     """
-    File Block Copy Fails Without Source
+    Unit: File Block Copy Fails Without Source
     Verifies that converting a file copy block to an action when the
     source attribute is unset raises a BlockException.
     """
@@ -340,7 +340,7 @@ def file_copy_fails_nosource():
 @istest
 def file_copy_fails_notarget():
     """
-    File Block Copy Compilation Fails Without Target
+    Unit: File Block Copy Compilation Fails Without Target
     Verifies that converting a file copy block to an action when the
     target attribute is unset raises a BlockException.
     """
@@ -358,7 +358,7 @@ def file_copy_fails_notarget():
 @istest
 def file_create_fails_notarget():
     """
-    File Block Create Compilation Fails Without Target
+    Unit: File Block Create Compilation Fails Without Target
     Verifies that converting a file create block to an action when the
     target attribute is unset raises a BlockException.
     """
@@ -376,7 +376,7 @@ def file_create_fails_notarget():
 @istest
 def file_path_expand():
     """
-    File Block Path Expand
+    Unit: File Block Path Expand
     Tests the results of expanding relative paths in a File block.
     """
     b = salve.block.file_block.FileBlock(dummy_file_context)
@@ -393,7 +393,7 @@ def file_path_expand():
 @istest
 def file_path_expand_fail_notarget():
     """
-    File Block Path Expand Fails Without Target
+    Unit: File Block Path Expand Fails Without Target
     Verifies that a File Block with the target attribute unset raises
     a BlockException when paths are expanded.
     """

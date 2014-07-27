@@ -19,7 +19,7 @@ from tests.unit.block import dummy_file_context, dummy_logger
 @istest
 def dir_create_compile():
     """
-    Directory Block Create Compile
+    Unit: Directory Block Create Compile
     Verifies the result of converting a Dir Block to an Action.
     """
     b = salve.block.directory_block.DirBlock(dummy_file_context)
@@ -48,7 +48,7 @@ def dir_create_compile():
 @istest
 def dir_create_compile_chmod():
     """
-    Directory Block Create Compile With Chmod
+    Unit: Directory Block Create Compile With Chmod
     Verifies the result of converting a Dir Block to an Action when the
     Block's mode is set.
     """
@@ -83,7 +83,7 @@ def dir_create_compile_chmod():
 @istest
 def dir_create_chown_as_root():
     """
-    Directory Block Create Compile With Chown
+    Unit: Directory Block Create Compile With Chown
     Verifies the result of converting a Dir Block to an Action when the
     user is root and the Block's user and group are set.
     """
@@ -113,7 +113,7 @@ def dir_create_chown_as_root():
 @istest
 def empty_dir_copy_compile():
     """
-    Directory Block Copy Compile (Empty Dir)
+    Unit: Directory Block Copy Compile (Empty Dir)
     Verifies the result of converting a Dir Block to an Action.
     """
     b = salve.block.directory_block.DirBlock(dummy_file_context)
@@ -136,7 +136,7 @@ def empty_dir_copy_compile():
 @istest
 def dir_copy_chown_as_root():
     """
-    Directory Block Copy Compile (As Root)
+    Unit: Directory Block Copy Compile (As Root)
     Verifies the result of converting a Dir Block to an Action.
     """
     b = salve.block.directory_block.DirBlock(dummy_file_context)
@@ -168,7 +168,7 @@ def dir_copy_chown_as_root():
 @istest
 def dir_copy_fails_nosource():
     """
-    Directory Block Copy Fails Without Source
+    Unit: Directory Block Copy Fails Without Source
     Verifies that converting a Dir Block to an Action raises a
     BlockException.
     """
@@ -186,7 +186,7 @@ def dir_copy_fails_nosource():
 @istest
 def dir_copy_fails_notarget():
     """
-    Directory Block Copy Compilation Fails Without Target
+    Unit: Directory Block Copy Compilation Fails Without Target
     Verifies that converting a Dir Block to an Action raises a
     BlockException.
     """
@@ -204,7 +204,7 @@ def dir_copy_fails_notarget():
 @istest
 def dir_create_fails_notarget():
     """
-    Directory Block Create Compilation Fails Without Target
+    Unit: Directory Block Create Compilation Fails Without Target
     Verifies that converting a Dir Block to an Action raises a
     BlockException.
     """
@@ -221,7 +221,7 @@ def dir_create_fails_notarget():
 @istest
 def dir_path_expand():
     """
-    Directory Block Path Expand
+    Unit: Directory Block Path Expand
     Verifies the results of path expansion in a Dir block.
     """
     b = salve.block.directory_block.DirBlock(dummy_file_context)
@@ -238,7 +238,7 @@ def dir_path_expand():
 @istest
 def dir_path_expand_fail_notarget():
     """
-    Directory Block Path Expand Fails Without Target
+    Unit: Directory Block Path Expand Fails Without Target
     Verifies that path expansion fails when there is no "target"
     attribute.
     """
@@ -254,7 +254,7 @@ def dir_path_expand_fail_notarget():
 @istest
 def dir_compile_fail_noaction():
     """
-    Directory Block Compilation Fails Without Action
+    Unit: Directory Block Compilation Fails Without Action
     Verifies that block to action conversion fails when there is no
     "action" attribute.
     """
@@ -272,7 +272,7 @@ def dir_compile_fail_noaction():
 @istest
 def dir_compile_fail_unknown_action():
     """
-    Directory Block Compilation Fails Unknown Action
+    Unit: Directory Block Compilation Fails Unknown Action
     Verifies that block to action conversion fails when the "action"
     attribute has an unrecognized value.
     """

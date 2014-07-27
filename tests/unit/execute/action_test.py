@@ -12,7 +12,7 @@ import salve.execute.action as action
 @istest
 def action_is_abstract():
     """
-    Action Base Class Is Abstract
+    Unit: Action Base Class Is Abstract
     Verifies that instantiating an Action raises an error.
     """
     ensure_except(TypeError, action.Action)
@@ -21,7 +21,7 @@ def action_is_abstract():
 @istest
 def dynamic_action_is_abstract():
     """
-    Dynamic Action Base Class Is Abstract
+    Unit: Dynamic Action Base Class Is Abstract
     Verifies that instantiating a DynamicAction raises an error.
     """
     ensure_except(TypeError, action.DynamicAction)
@@ -30,7 +30,7 @@ def dynamic_action_is_abstract():
 @istest
 def dynamic_action_execute_fails():
     """
-    Dynamic Action Invocation Generates & Executes
+    Unit: Dynamic Action Invocation Generates & Executes
     Verifies that calling a DynamicAction invokes its generation
     function and then its execution function, even when generation
     rewrites execution.
@@ -48,7 +48,7 @@ def dynamic_action_execute_fails():
 @istest
 def dynamic_action_call_generates_and_executes():
     """
-    Dynamic Action Invocation Generates & Executes
+    Unit: Dynamic Action Invocation Generates & Executes
     Verifies that calling a DynamicAction invokes its generation
     function and then its execution function, even when generation
     rewrites execution.
@@ -74,7 +74,7 @@ def dynamic_action_call_generates_and_executes():
 @istest
 def empty_action_list():
     """
-    Action List Empty List Is No-Op
+    Unit: Action List Empty List Is No-Op
     Verifies that executing an empty ActionList does nothing.
     """
     done_actions = []
@@ -93,7 +93,7 @@ def empty_action_list():
 @istest
 def empty_action_list_to_string():
     """
-    Action List Empty List String Representation
+    Unit: Action List Empty List String Representation
 
     Checks the string repr of an empty AL.
     """
@@ -106,7 +106,7 @@ def empty_action_list_to_string():
 @istest
 def action_list_inorder():
     """
-    Action List Execute In Order
+    Unit: Action List Execute In Order
     Verifies that executing an ActionList runs the actions in it in the
     specified order.
     """
@@ -131,7 +131,7 @@ def action_list_inorder():
 @istest
 def action_verifies_OK():
     """
-    Action Verification Defaults To OK
+    Unit: Action Verification Defaults To OK
     Verifies that an action verification on an action which does not override
     verification will produce an OK status.
     """

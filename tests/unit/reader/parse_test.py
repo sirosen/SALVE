@@ -46,7 +46,7 @@ def ensure_ParsingException(tokens=None, filename=None):
 @istest
 def invalid_block_id():
     """
-    Parser Invalid Block Identifier
+    Unit: Parser Invalid Block Identifier
     Verifies that attempting to parse a token stream containing an
     unknown block identifier raises a ParsingException.
     """
@@ -58,7 +58,7 @@ def invalid_block_id():
 @istest
 def invalid_block_id_from_file():
     """
-    Parser Invalid Block Identifier From File
+    Unit: Parser Invalid Block Identifier From File
     Verifies that attempting to parse a file containing an unknown
     block identifier raises a ParsingException.
     """
@@ -68,7 +68,7 @@ def invalid_block_id_from_file():
 @istest
 def empty_token_list():
     """
-    Parser Empty Token List
+    Unit: Parser Empty Token List
     Checks that parsing an empty token list produces an empty list of
     blocks.
     """
@@ -78,7 +78,7 @@ def empty_token_list():
 @istest
 def unexpected_token():
     """
-    Parser Unexpected Token
+    Unit: Parser Unexpected Token
     Checks that parsing a token list with a token that violates the
     SALVE grammar raises a ParsingException.
     """
@@ -89,7 +89,7 @@ def unexpected_token():
 @istest
 def unclosed_block1():
     """
-    Parser Partial Block Fails (No Open)
+    Unit: Parser Partial Block Fails (No Open)
     Checks that parsing a token list with an unclosed block raises a
     ParsingException.
     """
@@ -100,7 +100,7 @@ def unclosed_block1():
 @istest
 def unclosed_block2():
     """
-    Parser Partial Block Fails (No Close)
+    Unit: Parser Partial Block Fails (No Close)
     Checks that parsing a token list with an unclosed block raises a
     ParsingException.
     """
@@ -112,7 +112,7 @@ def unclosed_block2():
 @istest
 def unassigned_attr():
     """
-    Parser Unassigned Attribute Fails
+    Unit: Parser Unassigned Attribute Fails
     Checks that parsing a block with an attribute that is declared but
     is followed by a block close raises a ParsingException.
     """
@@ -126,7 +126,7 @@ def unassigned_attr():
 @istest
 def empty_block():
     """
-    Parser Empty Block
+    Unit: Parser Empty Block
     Checks that parsing an empty block raises no errors.
     """
     file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
@@ -138,7 +138,7 @@ def empty_block():
 @istest
 def single_attr_block():
     """
-    Parser Empty Block
+    Unit: Parser Empty Block
     Checks that parsing a block with one attribute raises no errors.
     """
     file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
@@ -157,7 +157,7 @@ def single_attr_block():
 @istest
 def multiple_attr_block():
     """
-    Parser Empty Block
+    Unit: Parser Empty Block
     Checks that parsing a block with several attributes raises no
     errors.
     """
@@ -181,7 +181,7 @@ def multiple_attr_block():
 @istest
 def empty_manifest():
     """
-    Parser Empty File
+    Unit: Parser Empty File
     Checks that parsing an empty file produces an empty block list.
     """
     blocks = parse_filename(get_full_path('valid1.manifest'))
@@ -191,7 +191,7 @@ def empty_manifest():
 @istest
 def empty_block():
     """
-    Parser Empty Block In File
+    Unit: Parser Empty Block In File
     Checks that parsing a file with an empty block is valid.
     """
     blocks = parse_filename(get_full_path('valid2.manifest'))
@@ -203,7 +203,7 @@ def empty_block():
 @istest
 def attribute_with_spaces():
     """
-    Parser Attribute With Spaces
+    Unit: Parser Attribute With Spaces
     Checks that parsing an attribute that contains spaces in quotes
     does not raise an error and correctly assigns to the attribute.
     """
