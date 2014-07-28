@@ -1,0 +1,5 @@
+# primary_attr block with other attrs
+
+file "lobster" {
+    source "salad"
+}

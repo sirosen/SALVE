@@ -56,28 +56,10 @@ class TestWithScratchdir(run_common.RunScratchContainer):
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
 
-        assert self.stderr.getvalue() ==\
-            "[ERROR] [PARSING] %s, line 5: " % rpath +\
-            "Unexpected token: } Expected BLOCK_START instead.\n", \
-            self.stderr.getvalue()
-        assert e.code == 1, "incorrect error code: %d" % e.code
-
-    @istest
-    def double_identifier_fails(self):
-        """
-        E2E: Run on File With Double Identifier Fails
-
-        Not only validates that a SystemExit occurs, but also
-        verifies the exit code and message of the raised exception.
-        """
-        path = get_full_path('double_id.manifest')
-        rpath = os.path.relpath(path, '.')
-        argv = ['./salve.py', 'deploy', '-m', path]
-        e = except_from_args(argv)
-
-        assert self.stderr.getvalue() ==\
-            "[ERROR] [PARSING] %s, line 5: " % rpath +\
-            "Unexpected token: file Expected BLOCK_START instead.\n", \
+        assert self.stderr.getvalue() == (
+                "[ERROR] [PARSING] %s, line 5: " % rpath +
+                "Unexpected token: } " +
+                "Expected ['BLOCK_START', 'TEMPLATE'] instead.\n"), \
             self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 

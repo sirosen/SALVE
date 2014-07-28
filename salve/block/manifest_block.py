@@ -37,6 +37,7 @@ class ManifestBlock(Block):
             self.set('source', source)
         self.path_attrs.add('source')
         self.min_attrs.add('source')
+        self.primary_attr = 'source'
 
     def expand_blocks(self, root_dir, config, ancestors=None):
         """

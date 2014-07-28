@@ -124,22 +124,6 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         assert sctx.filename == path
 
     @istest
-    def double_identifier_raises_TE(self):
-        """
-        E2E: Parse File With Repeated Block ID Raises Tokenization Exception
-
-        Not only validates that a Tokenization Exception occurs, but also
-        verifies the context of the raised exception.
-        """
-        path = get_full_path('double_id.manifest')
-        e = ensure_except(salve.reader.tokenize.TokenizationException,
-                          parse_filename,
-                          path)
-        sctx = e.file_context
-        assert sctx.lineno == 5
-        assert sctx.filename == path
-
-    @istest
     def missing_identifier_raises_TE(self):
         """
         E2E: Parse File With Missing Block ID Raises Tokenization Exception

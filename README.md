@@ -6,7 +6,7 @@ SALVE
 
 Authors: Stephen Rosen
 
-Version: 2.2.0
+Version: 2.3.0
 
 More information is available at [SALVE Official Site](http://salve.sirosen.net/ "SALVE")
 
@@ -39,8 +39,6 @@ Features
  - Plugin framework
  - Variable and attribute definition in manifest blocks to propogate down the block tree as defaults
  - Automatic file backup recovery using dates, generation numbers, and so forth
- - "Lightweight" block definitions based on a primary attribute, default
-     assignation of primary attribute for an ordinary block definition
 
 Fixes
 -----
@@ -50,6 +48,9 @@ Fixes
 
 Changelog
 =========
+ * 2.3.0
+    * Added support for Python 2.6 (with argparse installed)
+    * Added Primary Attribute style blocks
  * 2.2.0
     * Added Travis and Coveralls integration
     * Improved internal logging and context handling

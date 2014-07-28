@@ -50,10 +50,11 @@ def missing_open():
 
 
 @istest
-def double_identifier():
+def missing_open_primary_attr():
     """
-    Unit: Tokenizer Double Identifier Fails
-    Ensures that two successive block ids raise a TokenizationException.
+    Unit: Tokenizer Missing Block Open (Primary Attribute Block) Fails
+    Ensures that a missing { raises a TokenizationException even on block's
+    with a Primary Attribute setting.
     """
     ensure_TokenizationException('invalid3.manifest')
 
@@ -75,6 +76,16 @@ def missing_attribute_value():
     TokenizationException.
     """
     ensure_TokenizationException('invalid5.manifest')
+
+
+@istest
+def bare_identifier():
+    """
+    Unit: Tokenizer Bare Identifier Fails
+    Ensures that a block without body or primary attr value raises a
+    TokenizationException.
+    """
+    ensure_TokenizationException('invalid8.manifest')
 
 
 @istest
@@ -147,6 +158,60 @@ def attribute_with_spaces():
     assert tokens[4].ty == tokenize.Token.types.IDENTIFIER
     assert tokens[5].ty == tokenize.Token.types.TEMPLATE
     assert tokens[6].ty == tokenize.Token.types.BLOCK_END
+
+
+@istest
+def primary_attr_block_followed_by_block():
+    """
+    Unit: Tokenizer Primary Attribute Block Followed By Normal Block
+    Verifies that tokenization proceeds correctly when a "Primary Attribute"
+    style block is followed by an ordinary block.
+    """
+    tokens = tokenize_filename(get_full_path('valid5.manifest'))
+    assert len(tokens) == 9
+    assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[1].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[2].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[3].ty == tokenize.Token.types.BLOCK_START
+    assert tokens[4].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[5].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[6].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[7].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[8].ty == tokenize.Token.types.BLOCK_END
+
+
+@istest
+def primary_attr_block_series():
+    """
+    Unit: Tokenizer Multiple Primary Attribute Blocks
+    Verifies that tokenization proceeds correctly when a group of "Primary
+    Attribute" style blocks are given in series
+    """
+    tokens = tokenize_filename(get_full_path('valid6.manifest'))
+    assert len(tokens) == 8
+    assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[1].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[2].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[3].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[4].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[5].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[6].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[7].ty == tokenize.Token.types.TEMPLATE
+
+
+@istest
+def primary_attr_block_empty_body():
+    """
+    Unit: Tokenizer Primary Attribute Block Empty Body
+    Verifies that tokenization proceeds correctly when a "Primary Attribute"
+    style block is given a "{}" body
+    """
+    tokens = tokenize_filename(get_full_path('valid7.manifest'))
+    assert len(tokens) == 4
+    assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
+    assert tokens[1].ty == tokenize.Token.types.TEMPLATE
+    assert tokens[2].ty == tokenize.Token.types.BLOCK_START
+    assert tokens[3].ty == tokenize.Token.types.BLOCK_END
 
 
 @istest
