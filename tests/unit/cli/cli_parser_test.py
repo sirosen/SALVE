@@ -4,7 +4,7 @@ import mock
 import io
 from nose.tools import istest
 
-import salve.run.cli_parser as cli_parser
+from salve.cli import parser as cli_parser
 from tests.utils.exceptions import ensure_except
 
 

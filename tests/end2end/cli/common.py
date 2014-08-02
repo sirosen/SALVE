@@ -3,13 +3,13 @@
 import mock
 
 import tests.utils.scratch
-import salve.run.command
+import salve.cli
 
 
 class RunScratchContainer(tests.utils.scratch.ScratchContainer):
     def run_on_args(self, argv):
         with mock.patch('sys.argv', argv):
-            return salve.run.command.run()
+            return salve.cli.run()
 
     def run_on_manifest(self, manifest):
         man_path = self.get_fullname(manifest)

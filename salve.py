@@ -15,5 +15,5 @@ import sys
 if sys.version_info < (2, 6):
     sys.exit(1)
 
-from salve.run.command import run
+from salve.cli import run
 run()

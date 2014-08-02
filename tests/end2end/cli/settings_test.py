@@ -6,12 +6,12 @@ import shlex
 import textwrap
 from nose.tools import istest
 
-import tests.end2end.run.common as run_common
+from tests.end2end.cli import common
 
 import salve
 
 
-class TestWithRunLog(run_common.RunScratchContainer):
+class TestWithRunLog(common.RunScratchContainer):
     default_settings_content = textwrap.dedent(
         """
         [global]

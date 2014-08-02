@@ -8,8 +8,7 @@ from nose.tools import istest
 from tests.utils.exceptions import ensure_except
 from tests.utils import scratch
 
-from salve.run import command
-from salve.run import deploy
+from salve.cli import deploy
 from salve.util import locations
 
 from salve.block import BlockException
@@ -111,7 +110,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_run(root_manifest, args):
             raise SALVEException('message string', self.ctx)
 
-        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+        with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
             except SystemExit as e:
@@ -136,7 +135,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_run(root_manifest, args):
             raise BlockException('message string', self.ctx)
 
-        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+        with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
             except SystemExit as e:
@@ -163,7 +162,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_run(root_manifest, args):
             raise ActionException('message string', self.ctx)
 
-        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+        with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
             except SystemExit as e:
@@ -190,7 +189,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_run(root_manifest, args):
             raise TokenizationException('message string', self.ctx)
 
-        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+        with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
             except SystemExit as e:
@@ -217,7 +216,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_run(root_manifest, args):
             raise ParsingException('message string', self.ctx)
 
-        with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+        with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
             except SystemExit as e:
@@ -241,5 +240,5 @@ def deploy_unexpected_exception():
     fake_args = mock.Mock()
     fake_args.manifest = 'root.manifest'
 
-    with mock.patch('salve.run.deploy.run_on_manifest', mock_run):
+    with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
         ensure_except(Exception, deploy.main, fake_args)
