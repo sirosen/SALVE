@@ -6,7 +6,7 @@ import salve
 from salve.execute import action
 
 from salve.util.context import ExecutionContext
-from salve.block.base import Block
+from salve.block import Block
 
 
 class ManifestBlock(Block):

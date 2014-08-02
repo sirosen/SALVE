@@ -12,7 +12,7 @@ from salve.run import command
 from salve.run import deploy
 from salve.util import locations
 
-from salve.block.base import BlockException
+from salve.block import BlockException
 from salve.util.error import SALVEException
 from salve.util.context import ExecutionContext, FileContext
 

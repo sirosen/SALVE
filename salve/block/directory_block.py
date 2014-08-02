@@ -10,7 +10,7 @@ import salve.execute.copy as copy
 import salve.execute.create as create
 import salve.execute.modify as modify
 
-from salve.block.base import Block, BlockException
+from salve.block import Block, BlockException
 
 
 class DirBlock(Block):

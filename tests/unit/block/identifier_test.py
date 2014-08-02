@@ -5,7 +5,7 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from salve.block.base import BlockException
+from salve.block import BlockException
 from salve.reader.tokenize import Token
 
 import salve.block.file_block

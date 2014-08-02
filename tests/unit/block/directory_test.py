@@ -5,7 +5,7 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from salve.block.base import BlockException
+from salve.block import BlockException
 
 import salve.execute.action as action
 import salve.execute.backup as backup

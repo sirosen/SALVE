@@ -9,7 +9,7 @@ import salve.execute.action
 import salve.execute.backup
 import salve.execute.copy
 import salve.block.manifest_block
-import salve.block.base
+import salve.block
 import salve.util.locations as locations
 
 from tests.unit.block import get_full_path
@@ -26,7 +26,7 @@ def sourceless_manifest_compile_error():
     """
     with mock.patch('salve.logger', dummy_logger):
         b = salve.block.manifest_block.ManifestBlock(dummy_file_context)
-        ensure_except(salve.block.base.BlockException, b.compile)
+        ensure_except(salve.block.BlockException, b.compile)
 
 
 @istest
@@ -38,7 +38,7 @@ def sourceless_manifest_expand_error():
     """
     with mock.patch('salve.logger', dummy_logger):
         b = salve.block.manifest_block.ManifestBlock(dummy_file_context)
-        ensure_except(salve.block.base.BlockException,
+        ensure_except(salve.block.BlockException,
                       b.expand_blocks,
                       locations.get_salve_root(),
                       dummy_conf)
@@ -68,7 +68,7 @@ def recursive_manifest_error():
     with mock.patch('salve.logger', dummy_logger):
         b = salve.block.manifest_block.ManifestBlock(dummy_file_context,
             source=get_full_path('invalid1.manifest'))
-        ensure_except(salve.block.base.BlockException,
+        ensure_except(salve.block.BlockException,
                       b.expand_blocks,
                       locations.get_salve_root(),
                       dummy_conf)

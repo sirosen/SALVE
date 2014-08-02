@@ -4,7 +4,7 @@ import salve
 
 from salve.reader.tokenize import Token
 
-from salve.block.base import BlockException
+from salve.block import BlockException
 import salve.block.file_block
 import salve.block.manifest_block
 import salve.block.directory_block
