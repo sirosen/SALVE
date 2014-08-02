@@ -66,7 +66,7 @@ def deploy_main():
             return MockAction()
 
     with mock.patch('salve.block.manifest_block.ManifestBlock', MockManifest):
-        with mock.patch('salve.settings.config.SALVEConfig', mock.Mock()):
+        with mock.patch('salve.config.SALVEConfig', mock.Mock()):
             deploy.main(fake_args)
 
     assert have_run['action_execute']

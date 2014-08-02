@@ -3,7 +3,7 @@
 import os
 import mock
 
-import salve.settings.config
+import salve.config
 from salve.util.context import FileContext, ExecutionContext
 from salve.util.log import Logger
 
@@ -30,7 +30,7 @@ dummy_logger = Logger(dummy_exec_context)
 with mock.patch('os.path.expanduser', mock_expanduser):
     with mock.patch('salve.exec_context', dummy_exec_context):
         with mock.patch('salve.logger', dummy_logger):
-            dummy_conf = salve.settings.config.SALVEConfig()
+            dummy_conf = salve.config.SALVEConfig()
 
 # must be set after conf is created, otherwise they will be overidden by
 # config initialization
