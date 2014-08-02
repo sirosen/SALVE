@@ -7,8 +7,8 @@ import shutil
 
 import salve
 
-import salve.execute.action as action
-import salve.util.ugo as ugo
+from salve import action
+from salve.util import ugo
 from salve.util.context import ExecutionContext
 
 

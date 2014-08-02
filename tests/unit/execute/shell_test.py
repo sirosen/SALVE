@@ -6,8 +6,8 @@ import mock
 from tests.utils.exceptions import ensure_except
 from salve.util.context import ExecutionContext, FileContext
 
-from salve.execute import action
-from salve.execute import shell
+from salve import action
+from salve.action import shell
 
 
 class MockProcess(object):

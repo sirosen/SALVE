@@ -7,8 +7,8 @@ import shutil
 
 import salve
 
-import salve.execute.action as action
-import salve.util.enum as enum
+from salve import action
+from salve.util import enum
 
 from salve.util.context import ExecutionContext
 

@@ -4,11 +4,12 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.utils.exceptions import ensure_except
+from salve import action
+from salve.action import backup
 from salve.util.context import ExecutionContext, FileContext
+
+from tests.utils.exceptions import ensure_except
 from tests.utils import scratch
-from salve.execute import action
-from salve.execute import backup
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 
@@ -52,11 +53,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = backup.FileBackupAction(filename,
                                       dummy_file_context)
 
-        cp_exec_name = 'salve.execute.copy.FileCopyAction.execute'
+        cp_exec_name = 'salve.action.copy.FileCopyAction.execute'
         backup_verify_name = \
-                'salve.execute.backup.FileBackupAction.verify_can_exec'
+                'salve.action.backup.FileBackupAction.verify_can_exec'
         backup_writelog_name = \
-                'salve.execute.backup.FileBackupAction.write_log'
+                'salve.action.backup.FileBackupAction.write_log'
         with mock.patch(cp_exec_name, mock_cp):
             with mock.patch(backup_verify_name, lambda self:
                     self.verification_codes.OK):
@@ -98,11 +99,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = backup.FileBackupAction(linkname,
                                       dummy_file_context)
 
-        cp_exec_name = 'salve.execute.copy.FileCopyAction.execute'
+        cp_exec_name = 'salve.action.copy.FileCopyAction.execute'
         backup_writelog_name = \
-                'salve.execute.backup.FileBackupAction.write_log'
+                'salve.action.backup.FileBackupAction.write_log'
         backup_verify_name = \
-                'salve.execute.backup.FileBackupAction.verify_can_exec'
+                'salve.action.backup.FileBackupAction.verify_can_exec'
         with mock.patch(cp_exec_name, mock_cp):
             with mock.patch(backup_writelog_name, lambda self: None):
                 with mock.patch(backup_verify_name,
@@ -165,8 +166,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         mo = mock.mock_open()
         mm = mock.MagicMock()
-        with mock.patch('salve.execute.backup.open', mo, create=True):
-            with mock.patch('salve.execute.backup.print', mm, create=True):
+        with mock.patch('salve.action.backup.open', mo, create=True):
+            with mock.patch('salve.action.backup.print', mm, create=True):
                 with mock.patch('time.strftime', lambda s: 'NOW'):
                     act.write_log()
 
@@ -186,7 +187,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         def mock_execute(self):
             pass
-        with mock.patch('salve.execute.action.ActionList.execute',
+        with mock.patch('salve.action.ActionList.execute',
                         mock_execute):
             act()
 
@@ -217,7 +218,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         seen_files = set()
         mock_execute = lambda self: seen_files.add(self.src)
 
-        with mock.patch('salve.execute.backup.FileBackupAction.execute',
+        with mock.patch('salve.action.backup.FileBackupAction.execute',
                         mock_execute):
             act()
 

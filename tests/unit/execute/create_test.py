@@ -6,9 +6,8 @@ from nose.tools import istest
 
 from salve.util.context import ExecutionContext, FileContext
 
-import salve.execute.action as action
-import salve.execute.create as create
-import tests.utils.scratch as scratch
+from salve.action import create
+from tests.utils import scratch
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 

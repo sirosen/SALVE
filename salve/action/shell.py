@@ -4,7 +4,7 @@ import subprocess
 
 import salve
 
-from salve.execute.action import Action, ActionException
+from salve.action import Action, ActionException
 from salve.util.context import ExecutionContext
 
 

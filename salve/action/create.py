@@ -7,8 +7,8 @@ import shutil
 
 import salve
 
-import salve.execute.action as action
-import salve.util.locations as locations
+from salve import action
+from salve.util import locations
 
 from salve.util.context import ExecutionContext
 

@@ -153,7 +153,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown ActionExceptions.
         """
-        from salve.execute.action import ActionException
+        from salve.action import ActionException
 
         self.exec_context.transition(ExecutionContext.phases.COMPILATION)
 
