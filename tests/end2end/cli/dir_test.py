@@ -4,10 +4,10 @@ import os
 import mock
 from nose.tools import istest
 
-import tests.end2end.run.common as run_common
+from tests.end2end.cli import common
 
 
-class TestWithScratchdir(run_common.RunScratchContainer):
+class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def copy_empty_dir(self):
         """

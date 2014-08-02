@@ -9,11 +9,11 @@ import time
 
 import salve
 
-import salve.execute.action as action
-import salve.execute.copy as copy
-import salve.util.locations as locations
-import salve.util.streams
+from salve import action
+from salve.action import copy
 
+from salve.util import locations
+from salve.util import streams
 from salve.util.context import ExecutionContext
 
 
@@ -172,7 +172,7 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
         if not os.path.exists(self.dst):
             os.makedirs(self.dst)
 
-        self.hash_val = salve.util.streams.hash_by_filename(self.src)
+        self.hash_val = streams.hash_by_filename(self.src)
 
         # update dst so that the FileCopyAction can run correctly
         self.dst = os.path.join(self.dst, self.hash_val)

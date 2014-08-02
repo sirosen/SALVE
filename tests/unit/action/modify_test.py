@@ -7,8 +7,8 @@ from nose.tools import istest
 
 from salve.util.context import ExecutionContext, FileContext
 
-from salve.execute import action
-from salve.execute import modify
+from salve import action
+from salve.action import modify
 from salve.util import ugo
 
 from tests.utils import scratch
@@ -182,7 +182,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         act = modify.FileChmodAction('a', '600', self.file_context)
 
-        with mock.patch('salve.execute.modify.FileChmodAction.verify_can_exec',
+        with mock.patch('salve.action.modify.FileChmodAction.verify_can_exec',
                 lambda x: x.verification_codes.UNOWNED_TARGET):
             act()
 
@@ -208,7 +208,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context,
                 recursive=True)
 
-        with mock.patch('salve.execute.modify.DirChownAction.verify_can_exec',
+        with mock.patch('salve.action.modify.DirChownAction.verify_can_exec',
                 lambda x: modify.DirChownAction.verification_codes.NOT_ROOT):
             with mock.patch('os.lchown', mock_lchown):
                 act()
@@ -236,7 +236,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 recursive=True)
         with mock.patch('os.walk', mock_os_walk):
             with mock.patch(
-                    'salve.execute.modify.DirChmodAction.verify_can_exec',
+                    'salve.action.modify.DirChmodAction.verify_can_exec',
                     lambda self: self.verification_codes.UNOWNED_TARGET):
                 with mock.patch('os.chmod', mock_chmod):
                     act()
@@ -260,7 +260,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
-        with mock.patch('salve.execute.modify.DirChownAction.verify_can_exec',
+        with mock.patch('salve.action.modify.DirChownAction.verify_can_exec',
                         lambda self: self.verification_codes.NOT_ROOT):
             with mock.patch('os.walk', mock_os_walk):
                 with mock.patch('os.lchown', mock_lchown):
@@ -289,7 +289,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         unowned_target_code = \
                 modify.DirChmodAction.verification_codes.UNOWNED_TARGET
-        with mock.patch('salve.execute.modify.DirChmodAction.verify_can_exec',
+        with mock.patch('salve.action.modify.DirChmodAction.verify_can_exec',
                 lambda x: unowned_target_code):
             with mock.patch('os.walk', mock_os_walk):
                 with mock.patch('os.chmod', mock_chmod):
@@ -408,7 +408,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             log['lchown'] = (f, uid, gid)
 
         chown_verify_name = \
-                'salve.execute.modify.FileChownAction.verify_can_exec'
+                'salve.action.modify.FileChownAction.verify_can_exec'
         mocked_verify_code = modify.FileChownAction.verification_codes.OK
         with mock.patch('os.lchown', mock_lchown):
             with mock.patch('os.access', lambda x, y: True):
@@ -456,9 +456,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context,
                 recursive=True)
 
-        dir_verify_name = 'salve.execute.modify.DirChownAction.verify_can_exec'
+        dir_verify_name = 'salve.action.modify.DirChownAction.verify_can_exec'
         file_verify_name = \
-                'salve.execute.modify.FileChownAction.verify_can_exec'
+                'salve.action.modify.FileChownAction.verify_can_exec'
         with mock.patch('os.walk', mock_os_walk):
             with mock.patch('salve.util.ugo.name_to_uid', lambda x: 1):
                 with mock.patch('salve.util.ugo.name_to_gid', lambda x: 2):
@@ -497,9 +497,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.DirChmodAction('a', '755', self.file_context,
                 recursive=True)
 
-        dir_verify_name = 'salve.execute.modify.DirChmodAction.verify_can_exec'
+        dir_verify_name = 'salve.action.modify.DirChmodAction.verify_can_exec'
         file_verify_name = \
-                'salve.execute.modify.FileChmodAction.verify_can_exec'
+                'salve.action.modify.FileChmodAction.verify_can_exec'
         with mock.patch('os.walk', mock_os_walk):
             with mock.patch(dir_verify_name,
                     lambda x: modify.DirChmodAction.verification_codes.OK):
@@ -532,7 +532,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
 
-        dir_verify_name = 'salve.execute.modify.DirChownAction.verify_can_exec'
+        dir_verify_name = 'salve.action.modify.DirChownAction.verify_can_exec'
         with mock.patch('os.walk', mock_os_walk):
             with mock.patch('salve.util.ugo.name_to_uid', lambda x: 1):
                 with mock.patch('salve.util.ugo.name_to_gid', lambda x: 2):
@@ -559,7 +559,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_stat_result.st_uid = os.getuid()
 
         act = modify.DirChmodAction('a', '755', self.file_context)
-        with mock.patch('salve.execute.modify.DirChmodAction.verify_can_exec',
+        with mock.patch('salve.action.modify.DirChmodAction.verify_can_exec',
                     lambda x: modify.DirChmodAction.verification_codes.OK):
             with mock.patch('os.chmod', mock_chmod):
                 act()

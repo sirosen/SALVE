@@ -4,13 +4,13 @@ import os
 
 import salve
 
-import salve.execute.action as action
-import salve.execute.backup as backup
-import salve.execute.copy as copy
-import salve.execute.create as create
-import salve.execute.modify as modify
+from salve import action
+from salve.action import backup
+from salve.action import copy
+from salve.action import create
+from salve.action import modify
 
-from salve.block.base import Block, BlockException
+from salve.block import Block, BlockException
 
 
 class FileBlock(Block):

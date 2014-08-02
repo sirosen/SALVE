@@ -5,9 +5,9 @@ import mock
 
 from nose.tools import istest
 from tests.utils.exceptions import ensure_except
-import tests.end2end.run.common as run_common
+from tests.end2end.cli import common
 
-import salve.run.command
+from salve import cli
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), '../testfiles')
 
@@ -18,12 +18,12 @@ def get_full_path(filename):
 
 def except_from_args(argv):
     with mock.patch('sys.argv', argv):
-        e = ensure_except(SystemExit, salve.run.command.run)
+        e = ensure_except(SystemExit, cli.run)
 
     return e
 
 
-class TestWithScratchdir(run_common.RunScratchContainer):
+class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def unclosed_block_fails(self):
         """

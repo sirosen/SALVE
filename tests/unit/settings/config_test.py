@@ -8,7 +8,7 @@ from os.path import dirname, abspath, relpath, join as pjoin
 from tests.utils.exceptions import ensure_except
 from salve.util.error import SALVEException
 
-import salve.settings.config as config
+from salve import config
 
 _testfile_dir = pjoin(dirname(__file__), 'files')
 _homes_dir = pjoin(dirname(__file__), 'homes')

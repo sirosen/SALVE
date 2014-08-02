@@ -11,7 +11,7 @@ from salve.util.context import FileContext
 from salve.util.error import SALVEException
 from salve.util import locations
 from salve.block import manifest_block
-from salve.settings import config
+from salve import config
 
 
 def run_on_manifest(root_manifest, args):

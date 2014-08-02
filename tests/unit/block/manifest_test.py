@@ -5,12 +5,14 @@ import mock
 from nose.tools import istest
 from tests.utils.exceptions import ensure_except
 
-import salve.execute.action
-import salve.execute.backup
-import salve.execute.copy
-import salve.block.manifest_block
-import salve.block.base
-import salve.util.locations as locations
+from salve import action
+from salve.action import backup
+from salve.action import copy
+
+from salve.block import manifest_block
+from salve.block import file_block
+from salve import block
+from salve.util import locations
 
 from tests.unit.block import get_full_path
 from tests.unit.block import dummy_file_context, dummy_exec_context
@@ -25,8 +27,8 @@ def sourceless_manifest_compile_error():
     compiled if the action attribute is unspecified.
     """
     with mock.patch('salve.logger', dummy_logger):
-        b = salve.block.manifest_block.ManifestBlock(dummy_file_context)
-        ensure_except(salve.block.base.BlockException, b.compile)
+        b = manifest_block.ManifestBlock(dummy_file_context)
+        ensure_except(block.BlockException, b.compile)
 
 
 @istest
@@ -37,8 +39,8 @@ def sourceless_manifest_expand_error():
     are expanded if the source attribute is unspecified.
     """
     with mock.patch('salve.logger', dummy_logger):
-        b = salve.block.manifest_block.ManifestBlock(dummy_file_context)
-        ensure_except(salve.block.base.BlockException,
+        b = manifest_block.ManifestBlock(dummy_file_context)
+        ensure_except(block.BlockException,
                       b.expand_blocks,
                       locations.get_salve_root(),
                       dummy_conf)
@@ -52,7 +54,7 @@ def empty_manifest_expand():
     errors.
     """
     with mock.patch('salve.logger', dummy_logger):
-        b = salve.block.manifest_block.ManifestBlock(dummy_file_context,
+        b = manifest_block.ManifestBlock(dummy_file_context,
             source=get_full_path('valid1.manifest'))
         b.expand_blocks(locations.get_salve_root(), dummy_conf)
     assert len(b.sub_blocks) == 0
@@ -66,9 +68,9 @@ def recursive_manifest_error():
     BlockException when expanded.
     """
     with mock.patch('salve.logger', dummy_logger):
-        b = salve.block.manifest_block.ManifestBlock(dummy_file_context,
+        b = manifest_block.ManifestBlock(dummy_file_context,
             source=get_full_path('invalid1.manifest'))
-        ensure_except(salve.block.base.BlockException,
+        ensure_except(block.BlockException,
                       b.expand_blocks,
                       locations.get_salve_root(),
                       dummy_conf)
@@ -81,18 +83,18 @@ def sub_block_expand():
     Verifies that Manifest block expansion works normally.
     """
     with mock.patch('salve.logger', dummy_logger):
-        b = salve.block.manifest_block.ManifestBlock(dummy_file_context,
+        b = manifest_block.ManifestBlock(dummy_file_context,
             source=get_full_path('valid2.manifest'))
         b.expand_blocks(locations.get_salve_root(), dummy_conf)
     assert len(b.sub_blocks) == 2
-    man_block = b.sub_blocks[0]
-    file_block = b.sub_blocks[1]
-    assert isinstance(man_block, salve.block.manifest_block.ManifestBlock)
-    assert isinstance(file_block, salve.block.file_block.FileBlock)
-    assert man_block.get('source') == get_full_path('valid1.manifest')
-    assert file_block.get('source') == get_full_path('valid1.manifest')
+    mblock = b.sub_blocks[0]
+    fblock = b.sub_blocks[1]
+    assert isinstance(mblock, manifest_block.ManifestBlock)
+    assert isinstance(fblock, file_block.FileBlock)
+    assert mblock.get('source') == get_full_path('valid1.manifest')
+    assert fblock.get('source') == get_full_path('valid1.manifest')
     target_loc = os.path.join(locations.get_salve_root(), 'a/b/c')
-    assert file_block.get('target') == target_loc
+    assert fblock.get('target') == target_loc
 
 
 @istest
@@ -103,18 +105,18 @@ def sub_block_compile():
     conversion works normally.
     """
     with mock.patch('salve.logger', dummy_logger):
-        b = salve.block.manifest_block.ManifestBlock(dummy_file_context,
+        b = manifest_block.ManifestBlock(dummy_file_context,
             source=get_full_path('valid2.manifest'))
         b.expand_blocks(locations.get_salve_root(), dummy_conf)
     assert len(b.sub_blocks) == 2
-    man_block = b.sub_blocks[0]
-    file_block = b.sub_blocks[1]
-    assert isinstance(man_block, salve.block.manifest_block.ManifestBlock)
-    assert isinstance(file_block, salve.block.file_block.FileBlock)
-    assert man_block.get('source') == get_full_path('valid1.manifest')
-    assert file_block.get('source') == get_full_path('valid1.manifest')
+    mblock = b.sub_blocks[0]
+    fblock = b.sub_blocks[1]
+    assert isinstance(mblock, manifest_block.ManifestBlock)
+    assert isinstance(fblock, file_block.FileBlock)
+    assert mblock.get('source') == get_full_path('valid1.manifest')
+    assert fblock.get('source') == get_full_path('valid1.manifest')
     target_loc = os.path.join(locations.get_salve_root(), 'a/b/c')
-    assert file_block.get('target') == target_loc
+    assert fblock.get('target') == target_loc
 
     with mock.patch('salve.logger', dummy_logger):
         with mock.patch('salve.exec_context', dummy_exec_context):
@@ -122,13 +124,13 @@ def sub_block_compile():
                 with mock.patch('os.access', lambda f, p: True):
                     act = b.compile()
 
-    assert isinstance(act, salve.execute.action.ActionList)
+    assert isinstance(act, action.ActionList)
     assert len(act.actions) == 2
-    assert isinstance(act.actions[0], salve.execute.action.ActionList)
+    assert isinstance(act.actions[0], action.ActionList)
     assert len(act.actions[0].actions) == 0
     file_act = act.actions[1]
-    assert isinstance(file_act, salve.execute.action.ActionList)
+    assert isinstance(file_act, action.ActionList)
     assert isinstance(file_act.actions[0],
-                      salve.execute.backup.FileBackupAction)
+                      backup.FileBackupAction)
     assert isinstance(file_act.actions[1],
-                      salve.execute.copy.FileCopyAction)
+                      copy.FileCopyAction)

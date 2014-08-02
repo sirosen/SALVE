@@ -3,7 +3,7 @@
 import mock
 from nose.tools import istest
 
-import salve.run.command as command
+from salve import cli
 
 
 @istest
@@ -21,7 +21,7 @@ def run_on_backup_subcommand():
         log['main'] = True
 
     with mock.patch('sys.argv', fake_argv):
-        with mock.patch('salve.run.backup.main', fake_main):
-            command.run()
+        with mock.patch('salve.cli.backup.main', fake_main):
+            cli.run()
 
     assert log['main']

@@ -4,9 +4,9 @@ import mock
 from nose.tools import istest
 
 from tests.utils.exceptions import ensure_except
-from tests.unit.execute import dummy_file_context, dummy_logger
+from tests.unit.action import dummy_file_context, dummy_logger
 
-import salve.execute.action as action
+from salve import action
 
 
 @istest
@@ -83,7 +83,7 @@ def empty_action_list():
         done_actions.append(self)
 
     # Just ensuring that an empty action list is valid
-    with mock.patch('salve.execute.action.Action.execute', mock_execute):
+    with mock.patch('salve.action.Action.execute', mock_execute):
         actions = action.ActionList([], dummy_file_context)
         actions.execute()
 
