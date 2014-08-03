@@ -5,7 +5,7 @@ import os
 from contextlib import contextmanager
 
 
-class AbstractFileOrDir(object):
+class FilesysElement(object):
     """
     This is an abstraction layer to make interactions with a real and mocked
     files and directories uniform. Implementation should not know when it is
@@ -24,6 +24,8 @@ class AbstractFileOrDir(object):
         """
         Preform an access check as with os.access, returning True or False
         depending on the type of access available.
+        Follows symlinks, assuming (as on Linux platforms) that symlink
+        permissions are those of the destination.
 
         Args:
             @mode
@@ -36,7 +38,6 @@ class AbstractFileOrDir(object):
             When operating on a real file, arguments are presumably passed
             transparently through to the os.access() function
         """
-        pass
 
     @abc.abstractmethod
     def stat(self, *args, **kwargs):  # pragma: no cover
@@ -64,10 +65,86 @@ class AbstractFileOrDir(object):
         other processing at play. In other words, don't call os.lstat on the
         underlying file and expect the same things to happen.
         """
-        pass
+
+    @abc.abstractmethod
+    def chmod(self, mode, *args, **kwargs):  # pragma: no cover
+        """
+        Chmods the file or directory to a given mode, in the form of an octal
+        int. Follows symlinks.
+
+        On real files and directories, should behave like
+
+        >>> os.chmod(self.path)
+
+        Args:
+            @mode
+            An octal int for ugo-style permissions, as in 0o777 or 0o644
+        """
+
+    @abc.abstractmethod
+    def chown(self, uid, gid, *args, **kwargs):  # pragma: no cover
+        """
+        Chowns the file or directory to a given user in the form of a uid and a
+        given group in the form of a gid. Does not follow symlinks.
+
+        On real files and directories, should behave like
+
+        >>> os.lchown(self.path, uid, gid)
+
+        If one of the values is not changing, this can be handled through a
+        stat() call, a la
+
+        >>> self.chown(new_uid, self.stat().st_gid)
+
+        or
+
+        >>> self.chown(self.stat().st_uid, new_gid)
+
+        Args:
+            @uid
+            The integer uid to set on the file or directory.
+
+            @gid
+            The integer gid to set on the file or directory.
+        """
+
+    @abc.abstractmethod
+    def exists(self, *args, **kwargs):  # pragma: no cover
+        """
+        Returns true if the file/dir exists, and false if it does not.
+
+        This is meaningful in general, as creating an abstract file or
+        directory to refer to a location does not necessarily indicate that any
+        file or directory creation has taken place. That would require an
+        explicit creation action, which in the case of a virtualized filesys
+        means (more or less) flipping a boolean flag, and in the case of a real
+        filesystem means applying a mkdir or touch operation.
+
+        Does not follow symlinks, so this is not equivalent to an invocation of
+
+        >>> self.access(os.F_OK)
+
+        but instead will behave much like
+
+        >>> os.lexists(self.path)
+
+        in which broken symlinks still appear as "present"
+        """
+
+    @abc.abstractmethod
+    def hash(self, *args, **kwargs):  # pragma: no cover
+        """
+        Get a hash of the contents of the FilesysElement.
+        Generally used for quick comparison of files and symlinks, much like a
+        symbol table for fast string comparisons. This will be a sha512 hash of
+        any files, and a sha256 hash of any symlinks' paths (not the contents
+        of the linked file).
+        The hash() operation has no significance on directories, and its
+        behavior on them is undefined.
+        """
 
 
-class AbstractFile(AbstractFileOrDir):
+class File(FilesysElement):
     """
     This is an abstraction layer to make interactions with a real and mocked
     files uniform. The implementation of actions, loggers, and other
@@ -92,10 +169,40 @@ class AbstractFile(AbstractFileOrDir):
         >>>         yield f
         >>>     exit()
         """
-        pass
+
+    @abc.abstractmethod
+    def touch(self, *args, **kwargs):  # pragma: no cover
+        """
+        Create the file, using the default system umask (whatever it is) and
+        the current euid and egid values. Doesn't do any fancy logic about
+        chmoding or chowning the file after creation -- simply brings it into
+        the world in whatever state is sensible.
+        """
 
 
-class AbstractDir(AbstractFileOrDir):
+class Link(FilesysElement):
+    """
+    This is an abstraction layer to make interactions with a real and mocked
+    symlinks uniform.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def symlink(self, path, *args, **kwargs):  # pragma: no cover
+        """
+        Creates a symlink at self.path to @path
+
+        Like File.touch(), this does not do any special logic on
+        ownership &c, but simply creates the symlink with whatever settings are
+        applied by the current effective uid and gid.
+
+        Args:
+            @path
+            The destination path to which the symlink points
+        """
+
+
+class Dir(FilesysElement):
     """
     This is an abstraction layer to make interactions with a real and mocked
     directories uniform. Client code using subclasses of this should be able to
@@ -121,4 +228,68 @@ class AbstractDir(AbstractFileOrDir):
         single iteration with (name, [], []), as would be given if it were an
         existing empty directory.
         """
-        pass
+
+    @abc.abstractmethod
+    def mkdir(self, recursive=True, *args, **kwargs):  # pragma: no cover
+        """
+        Create the directory. Behaves very much like File.touch(),
+        using the current umask and not performing any special logic on the
+        resulting directory.
+
+        KWArgs:
+            @recursive=True
+            When true, create all parent directories necessary for a directory
+            to exist. When false, if an ancestor directory does not exist, an
+            OSError will be thrown.
+        """
+
+
+class Filesys(object):
+    """
+    This defines the properties of the filesystem layer, through which
+    interactions with the underlying files and directories take place. This
+    includes fetching the FilesysElement objects that represent the
+    files/directories at certain paths.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def register(self, elem, *args, **kwargs):  # pragma: no cover
+        """
+        Registers a FilesysElement in the Filesys representation. Future
+        lookups for the element's path will return the registered element. May
+        override an existing registered element.
+
+        Args:
+            @elem
+            The filesys element to register, using @elem.path
+        """
+
+    @abc.abstractmethod
+    def lookup(self, path, *args, **kwargs):  # pragma: no cover
+        """
+        Return the FilesysElement registered to @path. May implicitly create an
+        element to return, if able.
+        Returns None if there is no element for the path and one cannot be
+        created.
+        Note that the FilesysElement for a given path is fixed, and multiple
+        invocations will return refs to the same underlying object.
+
+        Args:
+            @path
+            The path to the file, directory, or symlink to inspect.
+        """
+
+    @abc.abstractmethod
+    def copy(self, src, dst, *args, **kwargs):  # pragma: no cover
+        """
+        Copies a file or directory (recursive) from the source to the
+        destination, given as paths.
+
+        Args:
+            @src
+            The source file, as a path.
+
+            @dst
+            The destination file, as a path.
+        """
