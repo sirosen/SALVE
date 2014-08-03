@@ -10,14 +10,14 @@ import salve
 from salve import action
 from salve.util import ugo
 from salve.util.context import ExecutionContext
+from salve.util.six import with_metaclass
 
 
-class ModifyAction(action.Action):
+class ModifyAction(with_metaclass(abc.ABCMeta, action.Action)):
     """
     The base class for all Actions that modify existing files and
     directories.
     """
-    __metaclass__ = abc.ABCMeta
     verification_codes = \
         action.Action.verification_codes.extend('NONEXISTENT_TARGET')
 
@@ -35,15 +35,13 @@ class ModifyAction(action.Action):
         self.target = target
 
 
-class DirModifyAction(ModifyAction):
+class DirModifyAction(with_metaclass(abc.ABCMeta, ModifyAction)):
     """
     The base class for Modify Actions on directories.
     Primarily used to carry information about the recursivity of the
     modification.
     Is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, target, recursive, file_context):
         """
         DirModifyAction constructor.
@@ -61,12 +59,11 @@ class DirModifyAction(ModifyAction):
         self.recursive = recursive
 
 
-class ChownAction(ModifyAction):
+class ChownAction(with_metaclass(abc.ABCMeta, ModifyAction)):
     """
     The base class for ChownActions.
     Is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
     verification_codes = \
         ModifyAction.verification_codes.extend('NOT_ROOT',
                                                'SKIP_EXEC')
@@ -116,12 +113,11 @@ class ChownAction(ModifyAction):
         return self.verification_codes.OK
 
 
-class ChmodAction(ModifyAction):
+class ChmodAction(with_metaclass(abc.ABCMeta, ModifyAction)):
     """
     The base class for ChmodActions.
     Is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
     verification_codes = \
         ModifyAction.verification_codes.extend('UNOWNED_TARGET')
 

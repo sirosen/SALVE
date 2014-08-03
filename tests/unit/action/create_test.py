@@ -43,7 +43,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 fc = create.FileCreateAction(a_name, dummy_file_context)
                 fc()
 
-        mock_open.assert_called_once_with(a_name, 'w')
+        mock_open.assert_called_once_with(a_name, 'a')
         handle = mock_open()
         assert len(handle.write.mock_calls) == 0
 

@@ -4,8 +4,10 @@ import abc
 import os
 from contextlib import contextmanager
 
+from salve.util.six import with_metaclass
 
-class FilesysElement(object):
+
+class FilesysElement(with_metaclass(abc.ABCMeta)):
     """
     This is an abstraction layer to make interactions with a real and mocked
     files and directories uniform. Implementation should not know when it is
@@ -14,10 +16,39 @@ class FilesysElement(object):
     There are common properties to files and directories that must be defined,
     this abstract class that specifies those properties.
     """
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, path):
+    def __init__(self, path):  # pragma: no cover
+        """
+        Although typically an abstract class has no initializer specified, this
+        one is being used to clarify that the initializer for a FilesysElement
+        must assign a value to self.path, since that is the main data being
+        held in the FilesysElement.
+        """
         self.path = path
+
+    def __str__(self):
+        """
+        A string representation of a filesys element is just its path.
+        """
+        return self.path
+
+    def parent_path(self):
+        """
+        Every FilesysElement has a parent directory in its path structure.
+        The only exception is '/' which has itself as a parent, but this is
+        already handled by os.path.dirname, so this is just a transparent call
+        to dirname on the underlying path.
+        """
+        return os.path.dirname(self.path)
+
+    @abc.abstractmethod
+    def create(self, *args, **kwargs):  # pragma: no cover
+        """
+        Create the element, could be any of the various element types. Note
+        that creation may require additional arguments or additional
+        specifications given by object attributes.
+        This is an agnostic version of the underlying mkdir, symlink, and touch
+        methods of the File, Dir, and Link types.
+        """
 
     @abc.abstractmethod
     def access(self, mode, *args, **kwargs):  # pragma: no cover
@@ -144,7 +175,7 @@ class FilesysElement(object):
         """
 
 
-class File(FilesysElement):
+class File(with_metaclass(abc.ABCMeta, FilesysElement)):
     """
     This is an abstraction layer to make interactions with a real and mocked
     files uniform. The implementation of actions, loggers, and other
@@ -152,8 +183,6 @@ class File(FilesysElement):
     the underlying files are real, but have no knowledge that they are not
     operating on a real filesystem when the files are in-memory mocks.
     """
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     @contextmanager
     def open(self, *args, **kwargs):  # pragma: no cover
@@ -179,14 +208,18 @@ class File(FilesysElement):
         the world in whatever state is sensible.
         """
 
+    def create(self, *args, **kwargs):
+        """
+        Pass through to touch()
+        """
+        self.touch(*args, **kwargs)
 
-class Link(FilesysElement):
+
+class Link(with_metaclass(abc.ABCMeta, FilesysElement)):
     """
     This is an abstraction layer to make interactions with a real and mocked
     symlinks uniform.
     """
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def symlink(self, path, *args, **kwargs):  # pragma: no cover
         """
@@ -201,16 +234,20 @@ class Link(FilesysElement):
             The destination path to which the symlink points
         """
 
+    def create(self, *args, **kwargs):
+        """
+        Pass through to symlink()
+        """
+        self.symlink(*args, **kwargs)
 
-class Dir(FilesysElement):
+
+class Dir(with_metaclass(abc.ABCMeta, FilesysElement)):
     """
     This is an abstraction layer to make interactions with a real and mocked
     directories uniform. Client code using subclasses of this should be able to
     write ambiguously, not knowing if they operate on a real or mocked
     filesystem.
     """
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def walk(self, *args, **kwargs):  # pragma: no cover
         """
@@ -243,16 +280,20 @@ class Dir(FilesysElement):
             OSError will be thrown.
         """
 
+    def create(self, *args, **kwargs):
+        """
+        Pass through to mkdir()
+        """
+        self.mkdir(*args, **kwargs)
 
-class Filesys(object):
+
+class Filesys(with_metaclass(abc.ABCMeta)):
     """
     This defines the properties of the filesystem layer, through which
     interactions with the underlying files and directories take place. This
     includes fetching the FilesysElement objects that represent the
     files/directories at certain paths.
     """
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def register(self, elem, *args, **kwargs):  # pragma: no cover
         """
@@ -266,7 +307,8 @@ class Filesys(object):
         """
 
     @abc.abstractmethod
-    def lookup(self, path, *args, **kwargs):  # pragma: no cover
+    def lookup(self, path, elem_type=None,
+            *args, **kwargs):  # pragma: no cover
         """
         Return the FilesysElement registered to @path. May implicitly create an
         element to return, if able.
@@ -278,6 +320,15 @@ class Filesys(object):
         Args:
             @path
             The path to the file, directory, or symlink to inspect.
+
+            @elem_type
+            A type used for FilesysElement construction in the event that the
+            lookup fails. This is used if there is no registered element and
+            the lookup still wants to succeed.
+            If the type is abstract, it is up to the discretion of the concrete
+            class to determine which constructor to call. For example, if a
+            salve.filesys.abstract.File is given, it suggests to the concrete
+            lookup implementation that a file is desired.
         """
 
     @abc.abstractmethod

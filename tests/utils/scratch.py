@@ -141,9 +141,14 @@ class ScratchContainer(MockedGlobals):
 
     def make_dir(self, relpath):
         full_path = self.get_fullname(relpath)
-        # FIXME: should use EAFP style
-        if not os.path.exists(full_path):
+        try:
             os.makedirs(full_path)
+        except OSError as e:
+            # 'File exists' errno
+            if e.errno == 17:
+                return
+            else:
+                raise
 
     def exists(self, relpath):
         return os.path.exists(self.get_fullname(relpath))

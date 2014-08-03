@@ -15,7 +15,7 @@ def action_is_abstract():
     Unit: Action Base Class Is Abstract
     Verifies that instantiating an Action raises an error.
     """
-    ensure_except(TypeError, action.Action)
+    ensure_except(TypeError, action.Action, dummy_file_context)
 
 
 @istest
@@ -24,7 +24,7 @@ def dynamic_action_is_abstract():
     Unit: Dynamic Action Base Class Is Abstract
     Verifies that instantiating a DynamicAction raises an error.
     """
-    ensure_except(TypeError, action.DynamicAction)
+    ensure_except(TypeError, action.DynamicAction, dummy_file_context)
 
 
 @istest

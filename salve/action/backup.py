@@ -15,9 +15,10 @@ from salve.action import copy
 from salve.util import locations
 from salve.util import streams
 from salve.util.context import ExecutionContext
+from salve.util.six import with_metaclass
 
 
-class BackupAction(copy.CopyAction):
+class BackupAction(with_metaclass(abc.ABCMeta, copy.CopyAction)):
     """
     The base class for all BackupActions, all of which are types of
     CopyActions.
@@ -25,8 +26,6 @@ class BackupAction(copy.CopyAction):
     A BackupAction takes a file to backup, a backup directory and
     logfile, and performs the mechanics of a backup operation.
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, src, file_context):
         """
         BackupAction constructor.

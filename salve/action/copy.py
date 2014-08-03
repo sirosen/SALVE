@@ -11,9 +11,10 @@ from salve import action
 from salve.util import enum
 
 from salve.util.context import ExecutionContext
+from salve.util.six import with_metaclass
 
 
-class CopyAction(action.Action):
+class CopyAction(with_metaclass(abc.ABCMeta, action.Action)):
     """
     The base class for all CopyActions.
 
@@ -21,7 +22,6 @@ class CopyAction(action.Action):
     source to the destination. The meanings of a Copy vary between
     files and directories, so this is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
     verification_codes = \
         action.Action.verification_codes.extend('UNWRITABLE_TARGET')
 

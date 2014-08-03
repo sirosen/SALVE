@@ -123,7 +123,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Unit: Backup Action Base Class Is Abstract
         Checks that instantiating a BackupAction raises an error.
         """
-        ensure_except(TypeError, backup.BackupAction)
+        ensure_except(TypeError, backup.BackupAction, '/a/b/c',
+                dummy_file_context)
 
     @istest
     def file_dst_dir(self):

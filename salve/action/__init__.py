@@ -8,6 +8,7 @@ from salve.api.block import CompiledBlock
 from salve.util.error import SALVEException
 from salve.util.context import ExecutionContext
 from salve.util import enum
+from salve.util.six import with_metaclass
 
 
 class ActionException(SALVEException):
@@ -27,7 +28,7 @@ class ActionException(SALVEException):
         SALVEException.__init__(self, msg, file_context)
 
 
-class Action(CompiledBlock):
+class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
     """
     An Action is the basis of execution.
     Actions can perform arbitrary modifications to the OS or filesystem,
@@ -35,8 +36,6 @@ class Action(CompiledBlock):
     directories explicitly.
     There is no meaningful generic Action, so this is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
-
     # by default, the only verification code is OK
     verification_codes = enum.Enum('OK')
 
@@ -82,13 +81,11 @@ class Action(CompiledBlock):
         return self.execute(*args, **kwargs)
 
 
-class DynamicAction(Action):
+class DynamicAction(with_metaclass(abc.ABCMeta, Action)):
     """
     DynamicActions are actions that may not be executable at the time
     that they are instantiated. Is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def generate(self):
         """
