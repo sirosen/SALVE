@@ -8,7 +8,7 @@ import shutil
 import salve
 
 from salve import action
-from salve import filesys
+from salve.filesys import real_fs
 from salve.util import locations
 
 from salve.util.context import ExecutionContext
@@ -41,10 +41,10 @@ class FileCreateAction(CreateAction):
             The FileContext.
         """
         action.Action.__init__(self, file_context)
-        self.dst = filesys.real_fs.lookup(dst, elem_type=filesys.File)
+        self.dst = dst
 
     def __str__(self):
-        return ("FileCreateAction(dst=" + str(self.dst) +
+        return ("FileCreateAction(dst=" + self.dst +
             ",context=" + repr(self.file_context) + ")")
 
     def verify_can_exec(self):
@@ -60,15 +60,15 @@ class FileCreateAction(CreateAction):
             """
             Checks if the target is in a writable directory.
             """
-            if self.dst.access(os.W_OK):
+            if real_fs.access(self.dst, os.W_OK):
                 return True
-            if self.dst.access(os.F_OK):
+            if real_fs.access(self.dst, os.F_OK):
                 return False
             # file is now known not to exist
-            assert not self.dst.exists()
+            assert not real_fs.exists(self.dst)
 
-            parent = filesys.real_fs.lookup(self.dst.parent_path())
-            if parent is not None and parent.access(os.W_OK):
+            parent = os.path.dirname(self.dst)
+            if real_fs.access(parent, os.W_OK):
                 return True
 
             # the file is doesn't exist and the containing dir is
@@ -76,7 +76,7 @@ class FileCreateAction(CreateAction):
             return False
 
         salve.logger.info('FileCreate: Checking target is writable, \"%s\"' %
-                str(self.dst), file_context=self.file_context,
+                self.dst, file_context=self.file_context,
                 min_verbosity=3)
 
         if not writable_target():
@@ -94,18 +94,18 @@ class FileCreateAction(CreateAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = ("FileCreate: Non-Writable target file \"%s\""
-                    % str(self.dst))
+                    % self.dst)
             salve.logger.warn(logstr, file_context=self.file_context)
             return
 
         # transition to the execution phase
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
-        salve.logger.info('Performing File Creation of \"%s\"' % str(self.dst),
+        salve.logger.info('Performing File Creation of \"%s\"' % self.dst,
                 file_context=self.file_context, min_verbosity=1)
 
         # touch the file
-        self.dst.create()
+        real_fs.touch(self.dst)
 
 
 class DirCreateAction(CreateAction):
@@ -123,10 +123,10 @@ class DirCreateAction(CreateAction):
             The FileContext.
         """
         action.Action.__init__(self, file_context)
-        self.dst = filesys.real_fs.lookup(dst, elem_type=filesys.Dir)
+        self.dst = dst
 
     def __str__(self):
-        return ("DirCreateAction(dst=" + str(self.dst) + ",context=" +
+        return ("DirCreateAction(dst=" + self.dst + ",context=" +
                 repr(self.file_context) + ")")
 
     def verify_can_exec(self):
@@ -141,20 +141,19 @@ class DirCreateAction(CreateAction):
             """
             Checks if the target is in a writable directory.
             """
-            ancestor = locations.get_existing_prefix(str(self.dst))
-            ancestor = filesys.real_fs.lookup(ancestor, elem_type=filesys.Dir)
-            return ancestor.access(os.W_OK)
+            ancestor = real_fs.get_existing_ancestor(self.dst)
+            return real_fs.access(ancestor, os.W_OK)
 
         salve.logger.info('DirCreate: Checking if target exists, \"%s\"' %
-                str(self.dst), file_context=self.file_context,
+                self.dst, file_context=self.file_context,
                 min_verbosity=3)
 
         # creation of existing dirs is always OK
-        if self.dst.exists():
+        if real_fs.exists(self.dst):
             return self.verification_codes.OK
 
         salve.logger.info('DirCreate: Checking target is writable, \"%s\"' %
-                str(self.dst), file_context=self.file_context,
+                self.dst, file_context=self.file_context,
                 min_verbosity=3)
 
         if not writable_target():
@@ -170,7 +169,7 @@ class DirCreateAction(CreateAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = ("DirCreate: Non-Writable target dir \"%s\"" %
-                    str(self.dst))
+                    self.dst)
             salve.logger.warn(logstr, file_context=self.file_context)
             return
 
@@ -178,8 +177,8 @@ class DirCreateAction(CreateAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing Directory Creation of \"%s\"'
-                % str(self.dst), file_context=self.file_context,
+                % self.dst, file_context=self.file_context,
                 min_verbosity=1)
 
         # make the directory
-        self.dst.create(recursive=True)
+        real_fs.mkdir(self.dst)

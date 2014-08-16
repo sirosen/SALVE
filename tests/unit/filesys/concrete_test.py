@@ -13,201 +13,53 @@ from salve.filesys import concrete
 from salve.filesys import abstract
 
 
-@istest
-def filesyselement_is_abstract():
-    """
-    Unit: Filesys Concrete FilesysElement Base Class Is Abstract
-    Ensures that a Concrete FilesysElement cannot be instantiated.
-    """
-    ensure_except(TypeError, concrete.FilesysElement, '/dummy/path')
-
-
 class TestWithScratchdir(ScratchContainer):
     @istest
     def missing_file_lookup(self):
         """
-        Unit: Filesys Concrete Missing File Lookup Is None
-        Verifies that attempting to lookup a file that does not exist in a
-        Concrete Filesystem will return None.
+        Unit: Filesys Concrete Missing File Lookup Type Is None
+        Verifies that attempting to lookup the type of a file that does not
+        exist in a Concrete Filesystem will return None.
         """
         fs = concrete.Filesys()
-        elem = fs.lookup(self.get_fullname('a'))
-        assert elem is None
+        ty = fs.lookup_type(self.get_fullname('a'))
+        assert ty is None
 
     @istest
-    def registered_elem_lookup_generator(self):
+    def file_lookup_type(self):
         """
-        Validate registered element lookups with each concrete type.
-        They should always return the registered element (not a new element).
+        Unit: Filesys Concrete File Lookup Type Is FILE
+        Validate that type lookups always produce the correct type.
         """
-        # map types to names for test names
-        tynames = {
-                concrete.File: 'File',
-                concrete.Link: 'Link',
-                concrete.Dir: 'Dir'
-                }
-
-        for ty in tynames:
-            def func():
-                full_path = self.get_fullname('a')
-                elem = ty(full_path)
-                fs = concrete.Filesys()
-                fs.register(elem)
-                elem2 = fs.lookup(full_path)
-
-                assert elem2 is not None
-                assert isinstance(elem2, ty)
-                assert elem is elem2
-
-            name = tynames[ty]
-            func.description = ('Unit: Filesys Concrete Registered ' +
-                    '%s Lookup Succeeds' % name)
-
-            yield func
+        full_path = self.get_fullname('a')
+        self.write_file('a', 'abcdefg')
+        fs = concrete.Filesys()
+        ty = fs.lookup_type(full_path)
+        assert ty is fs.element_types.FILE
 
     @istest
-    def unregistered_file_lookup_generator(self):
+    def dir_lookup_type(self):
         """
-        Validate file element lookups on an existing (unregistered) file with
-        each concrete type's Constructor, and with no constructor.
-        They should always return a new element.
+        Unit: Filesys Concrete Dir Lookup Type Is DIR
+        Validate that type lookups always produce the correct type.
         """
-        # map types to names for test names
-        tynames = {
-                concrete.File: ' (With File Constructor)',
-                concrete.Link: ' (With Link Constructor)',
-                concrete.Dir: ' (With Dir Constructor)',
-                abstract.File: ' (With Abstract File Constructor)',
-                abstract.Link: ' (With Abstract Link Constructor)',
-                abstract.Dir: ' (With Abstract Dir Constructor)',
-                None: ''
-                }
-
-        for ty in tynames:
-            def func():
-                full_path = self.get_fullname('a')
-                self.write_file('a', 'nonsense')
-
-                fs = concrete.Filesys()
-                elem = fs.lookup(full_path, elem_type=ty)
-
-                assert elem is not None
-                assert elem.path == full_path
-                assert isinstance(elem, concrete.File)
-
-            constructor_string = tynames[ty]
-            func.description = ('Unit: Filesys Concrete Unregistered ' +
-                    'File Lookup%s Succeeds' % constructor_string)
-
-            yield func
+        full_path = self.get_fullname('a')
+        self.make_dir('a')
+        fs = concrete.Filesys()
+        ty = fs.lookup_type(full_path)
+        assert ty is fs.element_types.DIR
 
     @istest
-    def unregistered_symlink_lookup_generator(self):
+    def link_lookup_type(self):
         """
-        Validate link element lookups on an existing (unregistered) link with
-        each concrete type's Constructor, and with no constructor.
-        They should always return a new element.
+        Unit: Filesys Concrete Link Lookup Is LINK
+        Validate that type lookups always produce the correct type.
         """
-        # map types to names for test names
-        tynames = {
-                concrete.File: ' (With File Constructor)',
-                concrete.Link: ' (With Link Constructor)',
-                concrete.Dir: ' (With Dir Constructor)',
-                abstract.File: ' (With Abstract File Constructor)',
-                abstract.Link: ' (With Abstract Link Constructor)',
-                abstract.Dir: ' (With Abstract Dir Constructor)',
-                None: ''
-                }
-
-        for ty in tynames:
-            def func():
-                full_path = self.get_fullname('a')
-                os.symlink('nowhere', full_path)
-
-                fs = concrete.Filesys()
-                elem = fs.lookup(full_path, elem_type=ty)
-
-                assert elem is not None
-                assert elem.path == full_path
-                assert isinstance(elem, concrete.Link)
-
-                # no magic cleanup happens in generators
-                os.remove(full_path)
-
-            constructor_string = tynames[ty]
-            func.description = ('Unit: Filesys Concrete Unregistered ' +
-                    'Link Lookup%s Succeeds' % constructor_string)
-
-            yield func
-
-    @istest
-    def unregistered_dir_lookup_generator(self):
-        """
-        Validate dir element lookups on an existing (unregistered) dir with
-        each concrete type's Constructor, and with no constructor.
-        They should always return a new element.
-        """
-        # map types to names for test names
-        tynames = {
-                concrete.File: ' (With File Constructor)',
-                concrete.Link: ' (With Link Constructor)',
-                concrete.Dir: ' (With Dir Constructor)',
-                abstract.File: ' (With Abstract File Constructor)',
-                abstract.Link: ' (With Abstract Link Constructor)',
-                abstract.Dir: ' (With Abstract Dir Constructor)',
-                None: ''
-                }
-
-        for ty in tynames:
-            def func():
-                full_path = self.get_fullname('a')
-                self.make_dir('a')
-
-                fs = concrete.Filesys()
-                elem = fs.lookup(full_path, elem_type=ty)
-
-                assert elem is not None
-                assert elem.path == full_path
-                assert isinstance(elem, concrete.Dir)
-
-                # no magic cleanup happens in generators
-                os.rmdir(full_path)
-
-            constructor_string = tynames[ty]
-            func.description = ('Unit: Filesys Concrete Unregistered ' +
-                    'Dir Lookup%s Succeeds' % constructor_string)
-
-            yield func
-
-    @istest
-    def unregistered_missing_elem_lookup_generator(self):
-        """
-        Validate unregistered element lookups with each concrete type when the
-        object is missing from the underlying filesystem.
-        They should always return a new element.
-        """
-        # map types to names for test names
-        tynames = {
-                concrete.File: 'File',
-                concrete.Link: 'Link',
-                concrete.Dir: 'Dir'
-                }
-
-        for ty in tynames:
-            def func():
-                full_path = self.get_fullname('a')
-                fs = concrete.Filesys()
-                elem = fs.lookup(full_path, elem_type=ty)
-
-                assert elem.path == full_path
-                assert not elem.exists()
-                assert isinstance(elem, ty)
-
-            name = tynames[ty]
-            func.description = ('Unit: Filesys Concrete Unregistered ' +
-                    'Missing %s Lookup (With Creation) Succeeds' % name)
-
-            yield func
+        full_path = self.get_fullname('a')
+        os.symlink('nowhere', full_path)
+        fs = concrete.Filesys()
+        ty = fs.lookup_type(full_path)
+        assert ty is fs.element_types.LINK
 
     @istest
     def copy_file(self):
@@ -276,23 +128,8 @@ class TestWithScratchdir(ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        f = concrete.File(full_path)
-        f.touch()
-
-        assert os.path.isfile(full_path)
-        assert '' == self.read_file('a')
-
-    @istest
-    def agnostic_create_file(self):
-        """
-        Unit: Filesys Concrete File Agnostic Create
-        Creating an empty file must always work (when the path is valid), and
-        should be identical to touch()
-        """
-        full_path = self.get_fullname('a')
-
-        f = concrete.File(full_path)
-        f.create()
+        fs = concrete.Filesys()
+        fs.touch(full_path)
 
         assert os.path.isfile(full_path)
         assert '' == self.read_file('a')
@@ -306,24 +143,8 @@ class TestWithScratchdir(ScratchContainer):
         full_path = self.get_fullname('a')
         link_target = 'b'
 
-        l = concrete.Link(full_path)
-        l.symlink(link_target)
-
-        assert os.path.islink(full_path)
-        assert link_target == os.readlink(full_path)
-
-    @istest
-    def agnostic_create_link(self):
-        """
-        Unit: Filesys Concrete Link Agnostic Create
-        Creating a symlink must always work, even if it is a broken link,
-        should be identical to symlink()
-        """
-        full_path = self.get_fullname('a')
-        link_target = 'b'
-
-        l = concrete.Link(full_path)
-        l.create(link_target)
+        fs = concrete.Filesys()
+        fs.symlink(link_target, full_path)
 
         assert os.path.islink(full_path)
         assert link_target == os.readlink(full_path)
@@ -336,8 +157,8 @@ class TestWithScratchdir(ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        d = concrete.Dir(full_path)
-        d.mkdir(recursive=False)
+        fs = concrete.Filesys()
+        fs.mkdir(full_path, recursive=False)
 
         assert os.path.isdir(full_path)
         assert len(os.listdir(full_path)) == 0
@@ -351,39 +172,8 @@ class TestWithScratchdir(ScratchContainer):
         """
         full_path = self.get_fullname('a/b/c')
 
-        d = concrete.Dir(full_path)
-        d.mkdir(recursive=True)
-
-        assert os.path.isdir(full_path)
-        assert len(os.listdir(full_path)) == 0
-
-    @istest
-    def agnostic_create_dir_nonrecursive(self):
-        """
-        Unit: Filesys Concrete Dir Agnostic Create (Non-Recursive)
-        Creating a single level of a directory tree should always succeed
-        Should be identical to mkdir()
-        """
-        full_path = self.get_fullname('a')
-
-        d = concrete.Dir(full_path)
-        d.create(recursive=False)
-
-        assert os.path.isdir(full_path)
-        assert len(os.listdir(full_path)) == 0
-
-    @istest
-    def agnostic_create_dir_recursive(self):
-        """
-        Unit: Filesys Concrete Dir Agnostic Create (Recursive)
-        Creating a path of a directory tree should always succeed if recursive
-        is set.
-        Should be identical to mkdir()
-        """
-        full_path = self.get_fullname('a/b/c')
-
-        d = concrete.Dir(full_path)
-        d.create(recursive=True)
+        fs = concrete.Filesys()
+        fs.mkdir(full_path, recursive=True)
 
         assert os.path.isdir(full_path)
         assert len(os.listdir(full_path)) == 0
@@ -396,9 +186,9 @@ class TestWithScratchdir(ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        d = concrete.Dir(full_path)
-        d.mkdir(recursive=False)
-        d.mkdir(recursive=False)
+        fs = concrete.Filesys()
+        fs.mkdir(full_path, recursive=False)
+        fs.mkdir(full_path, recursive=False)
 
         assert os.path.isdir(full_path)
         assert len(os.listdir(full_path)) == 0
@@ -412,8 +202,8 @@ class TestWithScratchdir(ScratchContainer):
         """
         full_path = self.get_fullname('a/b')
 
-        d = concrete.Dir(full_path)
-        e = ensure_except(OSError, d.mkdir, recursive=False)
+        fs = concrete.Filesys()
+        e = ensure_except(OSError, fs.mkdir, full_path, recursive=False)
 
         assert e.errno == 2
         assert not os.path.isdir(full_path)
@@ -426,10 +216,10 @@ class TestWithScratchdir(ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        f = concrete.File(full_path)
-        f.touch()
+        fs = concrete.Filesys()
+        fs.touch(full_path)
 
-        with f.open('w') as fd:
+        with fs.open(full_path, 'w') as fd:
             fd.write('xyz')
             ensure_except(IOError, fd.read)
 
@@ -445,9 +235,10 @@ class TestWithScratchdir(ScratchContainer):
         full_path = self.get_fullname('a')
         self.write_file('a', 'xyz')
 
-        f = concrete.File(full_path)
+        fs = concrete.Filesys()
+        fs.touch(full_path)
 
-        with f.open('r') as fd:
+        with fs.open(full_path, 'r') as fd:
             ensure_except(IOError, fd.write, 'pqr')
             assert fd.read() == 'xyz'
 
@@ -460,9 +251,9 @@ class TestWithScratchdir(ScratchContainer):
         full_path = self.get_fullname('a')
         self.write_file('a', 'xyz')
 
-        f = concrete.File(full_path)
+        fs = concrete.Filesys()
 
-        hashval = f.hash()
+        hashval = fs.hash(full_path)
         expect = hashlib.sha512('xyz'.encode('utf-8')).hexdigest()
         assert hashval == expect
 
@@ -474,10 +265,10 @@ class TestWithScratchdir(ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        f = concrete.Link(full_path)
-        f.symlink('xyz')
+        fs = concrete.Filesys()
+        fs.symlink('xyz', full_path)
 
-        hashval = f.hash()
+        hashval = fs.hash(full_path)
         expect = hashlib.sha256('xyz'.encode('utf-8')).hexdigest()
         assert hashval == expect
 
@@ -513,17 +304,18 @@ class TestWithScratchdir(ScratchContainer):
                 os.R_OK | os.W_OK | os.X_OK):
             result_map[(flags, None)] = False
 
+        fs = concrete.Filesys()
+
         for (flags, mode) in result_map:
             expect = result_map[(flags, mode)]
 
             full_path = self.get_fullname('a')
-            elem = concrete.File(full_path)
 
             if mode is not None:
-                elem.touch()
-                os.chmod(full_path, mode)
+                fs.touch(full_path)
+                fs.chmod(full_path, mode)
 
-            assert elem.access(flags) == expect
+            assert fs.access(full_path, flags) == expect
 
             if mode is not None:
                 os.remove(full_path)
@@ -535,13 +327,13 @@ class TestWithScratchdir(ScratchContainer):
         Verifies that stating a file gives an object with the correct
         attributes.
         """
+        full_name = self.get_fullname('a')
         fs = concrete.Filesys()
-        elem = fs.lookup(self.get_fullname('a'), elem_type=concrete.File)
-        assert elem is not None
+        assert not fs.exists(full_name)
 
-        elem.create()
+        fs.touch(full_name)
 
-        st_result = elem.stat()
+        st_result = fs.stat(full_name)
 
         assert hasattr(st_result, 'st_mode')
         assert hasattr(st_result, 'st_ino')
@@ -562,13 +354,13 @@ class TestWithScratchdir(ScratchContainer):
         Unit: Filesys Concrete Link Stat
         Verifies that attempting to stat a link works.
         """
+        full_name = self.get_fullname('a')
         fs = concrete.Filesys()
-        elem = fs.lookup(self.get_fullname('a'), elem_type=concrete.Link)
-        assert elem is not None
+        assert not fs.exists(full_name)
 
-        elem.create('nowhere')
+        fs.symlink('nowhere', full_name)
 
-        st_result = elem.stat()
+        st_result = fs.stat(full_name)
 
         assert hasattr(st_result, 'st_mode')
         assert hasattr(st_result, 'st_ino')
@@ -590,21 +382,24 @@ class TestWithScratchdir(ScratchContainer):
         Verifies that chmoding a file results in correct stat() results for
         various permissions settings.
         """
+        full_name = self.get_fullname('a')
         fs = concrete.Filesys()
+        assert not fs.exists(full_name)
 
-        elem = fs.lookup(self.get_fullname('a'), elem_type=concrete.File)
-        elem.create()
-        elem.chmod(0o651)
+        fs.touch(full_name)
+        fs.chmod(full_name, 0o651)
 
-        st_result = elem.stat()
+        st_result = fs.stat(full_name)
         assert hasattr(st_result, 'st_mode')
         assert st_result.st_mode & 0o777 == 0o651, oct(st_result.st_mode)
 
-        elem = fs.lookup(self.get_fullname('b'), elem_type=concrete.File)
-        elem.create()
-        elem.chmod(0o536)
+        full_name = self.get_fullname('b')
+        assert not fs.exists(full_name)
 
-        st_result = elem.stat()
+        fs.touch(full_name)
+        fs.chmod(full_name, 0o536)
+
+        st_result = fs.stat(full_name)
         assert hasattr(st_result, 'st_mode')
         assert st_result.st_mode & 0o777 == 0o536, oct(st_result.st_mode)
 
@@ -616,19 +411,17 @@ class TestWithScratchdir(ScratchContainer):
         guarantee that the tests are run as root, we have no expectation that a
         chown operation will work.
         """
+        full_name = self.get_fullname('a')
         fs = concrete.Filesys()
+        fs.touch(full_name)
 
-        elem = fs.lookup(self.get_fullname('a'), elem_type=concrete.File)
-        elem.create()
-
-        def mock_chown(path, uid, gid):
-            global mock_args
-            mock_args = (path, uid, gid)
+        mock_chown = mock.Mock()
+        mock_chown.return_value = None
 
         with mock.patch('os.lchown', mock_chown):
-            elem.chown(100, 200)
+            fs.chown(full_name, 100, 200)
 
-        assert mock_args == (elem.path, 100, 200)
+        mock_chown.assert_called_once_with(full_name, 100, 200)
 
     @istest
     def dir_walk(self):
@@ -638,22 +431,13 @@ class TestWithScratchdir(ScratchContainer):
         and walk it.
         """
         fs = concrete.Filesys()
-        elem = fs.lookup(self.get_fullname('a/b/c'), elem_type=concrete.Dir)
-        elem.create(recursive=True)
+        fs.mkdir(self.get_fullname('a/b/c'))
+        fs.touch(self.get_fullname('a/f1'))
+        fs.symlink('../f1', self.get_fullname('a/b/l1'))
+        fs.symlink('..', self.get_fullname('a/b/c/l2'))
 
-        elem = fs.lookup(self.get_fullname('a/f1'), elem_type=concrete.File)
-        elem.create()
-
-        elem = fs.lookup(self.get_fullname('a/b/l1'), elem_type=concrete.Link)
-        elem.create('../f1')
-
-        elem = fs.lookup(self.get_fullname('a/b/c/l2'),
-                elem_type=concrete.Link)
-        elem.create('..')
-
-        elem = fs.lookup(self.get_fullname('a'))
         results = []
-        for (d, sds, fs) in elem.walk():
+        for (d, sds, fs) in fs.walk(self.get_fullname('a')):
             results.append((d, sds, fs))
 
         assert len(results) == 3
@@ -669,11 +453,11 @@ class TestWithScratchdir(ScratchContainer):
         should raise an OSError.
         """
         fs = concrete.Filesys()
-        elem = fs.lookup(self.get_fullname('a'), elem_type=concrete.Dir)
-        elem.create()
-        elem.chmod(0o000)
+        full_name = self.get_fullname('a')
+        fs.mkdir(full_name)
+        fs.chmod(full_name, 0o000)
 
-        elem = fs.lookup(self.get_fullname('a/b'), elem_type=concrete.Dir)
-        e = ensure_except(OSError, elem.create)
+        full_name = self.get_fullname('a/b')
+        e = ensure_except(OSError, fs.mkdir, full_name)
         # must be a permission denied error
         assert e.errno == 13

@@ -11,6 +11,7 @@ import salve
 
 from salve import action
 from salve.action import copy
+from salve.filesys import real_fs
 
 from salve.util import locations
 from salve.util import streams
@@ -99,7 +100,7 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
 
             # at this point, the dir is known not to exist
             # now check properties of the containing dir
-            containing_dir = locations.get_existing_prefix(self.dst)
+            containing_dir = real_fs.get_existing_ancestor(self.dst)
             if os.access(containing_dir, os.W_OK):
                 return True
 
