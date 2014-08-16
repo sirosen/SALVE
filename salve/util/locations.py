@@ -86,3 +86,21 @@ def clean_path(path, absolute=False):
             path = rpath
 
     return os.path.normpath(path)
+
+
+def pjoin(*args, **kwargs):
+    """
+    Lightweight wrapper around os.path.join
+
+    Serves only to abstract away from the os module
+    """
+    return os.path.join(*args, **kwargs)
+
+
+def dirname(*args, **kwargs):
+    """
+    Lightweight wrapper around os.path.dirname
+
+    Serves only to abstract away from the os module
+    """
+    return os.path.dirname(*args, **kwargs)

@@ -8,6 +8,7 @@ from salve.util.context import ExecutionContext, FileContext
 
 from salve import action
 from salve.action import shell
+from salve.filesys import real_fs
 
 
 class MockProcess(object):
@@ -43,7 +44,7 @@ def shell_action_basic():
 
     with mock.patch('subprocess.Popen', mock_Popen):
         a = shell.ShellAction('mkdir /a/b', dummy_file_context)
-        a.execute()
+        a.execute(real_fs)
 
     assert len(done_commands) == 1
     assert done_commands[0] == 'mkdir /a/b'
@@ -67,4 +68,4 @@ def failed_shell_action():
 
     with mock.patch('subprocess.Popen', mock_Popen):
         a = shell.ShellAction(['touch /a/b'], dummy_file_context)
-        ensure_except(action.ActionException, a.execute)
+        ensure_except(action.ActionException, a.execute, real_fs)

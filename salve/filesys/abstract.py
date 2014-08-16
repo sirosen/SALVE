@@ -120,13 +120,14 @@ class Filesys(with_metaclass(abc.ABCMeta)):
 
             @mode
             As per os.access, this must either be
-                os.F_OK
+                filesys.access_codes.F_OK
             or an inclusive OR of
-                os.W_OK
-                os.R_OK
-                os.X_OK
+                filesys.access_codes.W_OK
+                filesys.access_codes.R_OK
+                filesys.access_codes.X_OK
             When operating on a real file, arguments are presumably passed
-            transparently through to the os.access() function
+            transparently through to the os.access() function, after a
+            translation step.
         """
 
     @abc.abstractmethod

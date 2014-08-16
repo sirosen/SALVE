@@ -1,14 +1,11 @@
 #!/usr/bin/python
 
 import abc
-import os
-import sys
-import shutil
 
 import salve
 
 from salve import action
-from salve.filesys import real_fs
+from salve.filesys import access_codes
 from salve.util import locations
 
 from salve.util.context import ExecutionContext
@@ -47,7 +44,7 @@ class FileCreateAction(CreateAction):
         return ("FileCreateAction(dst=" + self.dst +
             ",context=" + repr(self.file_context) + ")")
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         """
         Ensures that the target file exists and is writable, or that
         it does not exist and is in a writable directory.
@@ -60,15 +57,15 @@ class FileCreateAction(CreateAction):
             """
             Checks if the target is in a writable directory.
             """
-            if real_fs.access(self.dst, os.W_OK):
+            if filesys.access(self.dst, access_codes.W_OK):
                 return True
-            if real_fs.access(self.dst, os.F_OK):
+            if filesys.access(self.dst, access_codes.F_OK):
                 return False
             # file is now known not to exist
-            assert not real_fs.exists(self.dst)
+            assert not filesys.exists(self.dst)
 
-            parent = os.path.dirname(self.dst)
-            if real_fs.access(parent, os.W_OK):
+            parent = locations.dirname(self.dst)
+            if filesys.access(parent, access_codes.W_OK):
                 return True
 
             # the file is doesn't exist and the containing dir is
@@ -84,13 +81,13 @@ class FileCreateAction(CreateAction):
 
         return self.verification_codes.OK
 
-    def execute(self):
+    def execute(self, filesys):
         """
         FileCreateAction execution.
 
         Does a file creation if the file does not exist.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = ("FileCreate: Non-Writable target file \"%s\""
@@ -105,7 +102,7 @@ class FileCreateAction(CreateAction):
                 file_context=self.file_context, min_verbosity=1)
 
         # touch the file
-        real_fs.touch(self.dst)
+        filesys.touch(self.dst)
 
 
 class DirCreateAction(CreateAction):
@@ -129,7 +126,7 @@ class DirCreateAction(CreateAction):
         return ("DirCreateAction(dst=" + self.dst + ",context=" +
                 repr(self.file_context) + ")")
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         """
         Checks if the target dir already exists, or if its parent is writable.
         """
@@ -141,15 +138,15 @@ class DirCreateAction(CreateAction):
             """
             Checks if the target is in a writable directory.
             """
-            ancestor = real_fs.get_existing_ancestor(self.dst)
-            return real_fs.access(ancestor, os.W_OK)
+            ancestor = filesys.get_existing_ancestor(self.dst)
+            return filesys.access(ancestor, access_codes.W_OK)
 
         salve.logger.info('DirCreate: Checking if target exists, \"%s\"' %
                 self.dst, file_context=self.file_context,
                 min_verbosity=3)
 
         # creation of existing dirs is always OK
-        if real_fs.exists(self.dst):
+        if filesys.exists(self.dst):
             return self.verification_codes.OK
 
         salve.logger.info('DirCreate: Checking target is writable, \"%s\"' %
@@ -161,11 +158,11 @@ class DirCreateAction(CreateAction):
 
         return self.verification_codes.OK
 
-    def execute(self):
+    def execute(self, filesys):
         """
         Create a directory and any necessary parents.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = ("DirCreate: Non-Writable target dir \"%s\"" %
@@ -181,4 +178,4 @@ class DirCreateAction(CreateAction):
                 min_verbosity=1)
 
         # make the directory
-        real_fs.mkdir(self.dst)
+        filesys.mkdir(self.dst)

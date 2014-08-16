@@ -7,6 +7,7 @@ from tests.utils.exceptions import ensure_except
 from tests.unit.action import dummy_file_context, dummy_logger
 
 from salve import action
+from salve.filesys import real_fs
 
 
 @istest
@@ -42,7 +43,7 @@ def dynamic_action_execute_fails():
             pass
 
     act = DummyAction(dummy_file_context)
-    ensure_except(action.ActionException, act.execute)
+    ensure_except(action.ActionException, act.execute, real_fs)
 
 
 @istest
@@ -85,7 +86,7 @@ def empty_action_list():
     # Just ensuring that an empty action list is valid
     with mock.patch('salve.action.Action.execute', mock_execute):
         actions = action.ActionList([], dummy_file_context)
-        actions.execute()
+        actions(real_fs)
 
     assert len(done_actions) == 0
 
@@ -116,13 +117,13 @@ def action_list_inorder():
         def __init__(self, ctx):
             action.Action.__init__(self, ctx)
 
-        def execute(self):
+        def execute(self, filesys):
             done_actions.append(self)
 
     a = DummyAction(dummy_file_context)
     b = DummyAction(dummy_file_context)
     al = action.ActionList([a, b], dummy_file_context)
-    al.execute()
+    al(real_fs)
 
     assert done_actions[0] == a
     assert done_actions[1] == b
@@ -145,6 +146,6 @@ def action_verifies_OK():
     a = DummyAction(dummy_file_context)
 
     with mock.patch('salve.logger', dummy_logger):
-        verify_code = a.verify_can_exec()
+        verify_code = a.verify_can_exec(real_fs)
 
     assert verify_code == a.verification_codes.OK

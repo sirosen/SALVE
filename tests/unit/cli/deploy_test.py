@@ -49,10 +49,10 @@ def deploy_main():
         def __init__(self):
             pass
 
-        def __call__(self):
-            self.execute()
+        def __call__(self, filesys):
+            self.execute(filesys)
 
-        def execute(self):
+        def execute(self, filesys):
             have_run['action_execute'] = True
 
     class MockManifest(object):

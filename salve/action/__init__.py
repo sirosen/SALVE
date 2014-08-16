@@ -7,7 +7,7 @@ from salve.api.block import CompiledBlock
 
 from salve.util.error import SALVEException
 from salve.util.context import ExecutionContext
-from salve.util import enum
+from salve.util.enum import Enum
 from salve.util.six import with_metaclass
 
 
@@ -37,7 +37,7 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
     There is no meaningful generic Action, so this is an ABC.
     """
     # by default, the only verification code is OK
-    verification_codes = enum.Enum('OK')
+    verification_codes = Enum('OK')
 
     def __init__(self, file_context):
         """
@@ -49,12 +49,16 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
         """
         self.file_context = file_context
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         """
         Verifies that the action can be executed. Returns a verification code
         from self.verification_codes.
         'OK' indicates that execution can proceed. Anything else is an error
         or warning code specific to the action type.
+
+        Args:
+            @filesys
+            The filesystem, real or virtualized, against which to verify.
         """
         # transition to the action verification phase,
         # confirming execution will work
@@ -62,12 +66,18 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
         return self.verification_codes.OK
 
     @abc.abstractmethod
-    def execute(self):
+    def execute(self, filesys):
         """
         Executes the Action.
 
         This is the only essential characteristic of an Action: that
         it can be executed to produce some effect.
+
+        Args:
+            @filesys
+            The filesystem on which the action should be executed. Used to
+            transition actions between operation on the real and virtualized
+            filesystem.
         """
         pass  # pragma: no cover
 
@@ -95,11 +105,17 @@ class DynamicAction(with_metaclass(abc.ABCMeta, Action)):
         """
         pass  # pragma: no cover
 
-    def execute(self):
+    def execute(self, filesys):
         """
         DynamicAction.execute is not abstract because by default, the
         notion of execute on an ungenerated action is well defined.
         This needs to be overwritten during generation in most cases.
+
+        Args:
+            @filesys
+            The filesystem on which the action should be executed. Used to
+            transition actions between operation on the real and virtualized
+            filesystem.
         """
         raise ActionException('Uninstantiated DynamicAction',
                               self.file_context)
@@ -171,10 +187,16 @@ class ActionList(Action):
         assert isinstance(act, Action)
         self.actions.insert(0, act)
 
-    def execute(self):
+    def execute(self, filesys):
         """
         Execute the AL. Consists of a walk over the AL executing each
         of its sub-actions.
+
+        Args:
+            @filesys
+            The filesystem on which the action should be executed. Used to
+            transition actions between operation on the real and virtualized
+            filesystem.
         """
         for act in self:
-            act()
+            act(filesys)
