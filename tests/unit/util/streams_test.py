@@ -67,23 +67,3 @@ def sha512_mismatch():
     with open(cname) as f:
         chash = salve.util.streams.sha_512(f)
     assert ahash != chash
-
-
-@istest
-def sha512_hash_is_fast():
-    """
-    Unit: Streams Util SHA512 Is Fast
-    Tests that sha512 hashes are taken fast enough. This is not a
-    serious performance test, but rather insurance against extra work
-    being introduced into the hashing function.
-    """
-    cname = os.path.join(_testfile_dir, 'c')
-    t = timeit.timeit(
-            'with open("' + cname + '") as f: salve.util.streams.sha_512(f)',
-            setup='import salve.util.streams', number=1000
-        )
-    # this has a wide margin of error (one order of magnitude) and
-    # should therefore pass even on systems with relatively high load
-    # on _very_ old systems this test might fail, but it just ensures
-    # that our hashing method is acceptably fast
-    assert t < 0.5
