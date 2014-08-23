@@ -18,6 +18,6 @@ def main():
     import sys
 
     if sys.version_info < (2, 6):
-        sys.exit(1)
+        sys.exit('Python Version Too Old! SALVE Requires Python >= 2.6')
 
     run()
