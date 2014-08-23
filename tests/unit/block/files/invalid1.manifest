@@ -1,4 +1,5 @@
 # first invalid manifest file
+# self-inclusion
 manifest {
-    source  $SALVE_ROOT/tests/unit/block/files/invalid1.manifest
+    source  invalid1.manifest
 }

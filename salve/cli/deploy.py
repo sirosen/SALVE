@@ -36,7 +36,7 @@ def run_on_manifest(root_manifest, args):
     if args.verbosity:
         salve.exec_context.set('verbosity', args.verbosity)
 
-    root_dir = locations.get_salve_root()
+    root_dir = locations.containing_dir(root_manifest)
     if args.directory:
         root_dir = os.path.abspath(args.directory)
 

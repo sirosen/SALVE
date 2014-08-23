@@ -29,18 +29,13 @@ def containing_dir(path, depth=1):
     return d
 
 
-def get_salve_root():
-    """
-    Get the root directory of the SALVE repository.
-    """
-    return containing_dir(__file__, depth=3)
-
-
 def get_default_config():
     """
     Get the location of the default settings ini file.
     """
-    return os.path.join(get_salve_root(), 'default_settings.ini')
+    return os.path.abspath(
+            os.path.join(containing_dir(__file__),
+                '../default_settings.ini'))
 
 
 def is_abs_or_var(path):

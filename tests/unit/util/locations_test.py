@@ -7,18 +7,6 @@ import salve.util.locations
 
 
 @istest
-def get_salve_root():
-    """
-    Unit: Locations Util Get SALVE Root Dir
-    Tests the path searching code for the SALVE root.
-    This is always relative to locations' __file__ attribute.
-    """
-    with mock.patch('salve.util.locations.__file__',
-                    '/tmp/SALVE/src/util/locations.py'):
-        assert salve.util.locations.get_salve_root() == '/tmp/SALVE'
-
-
-@istest
 def get_default_config():
     """
     Unit: Locations Util Get Default Config File
@@ -26,9 +14,9 @@ def get_default_config():
     This is, like the SALVE root, always relative to locations.__file__
     """
     with mock.patch('salve.util.locations.__file__',
-                    '/tmp/SALVE/src/util/locations.py'):
+                    '/tmp/salve/util/locations.py'):
         assert salve.util.locations.get_default_config() == \
-               '/tmp/SALVE/default_settings.ini'
+               '/tmp/salve/default_settings.ini'
 
 
 @istest
