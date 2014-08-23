@@ -10,10 +10,7 @@ This should do the following:
 - Convert the root Manifest Block to an Action and execute it
 """
 
-import sys
+from salve.cli import main
 
-if sys.version_info < (2, 6):
-    sys.exit(1)
-
-from salve.cli import run
-run()
+if __name__ == '__main__':
+    main()
