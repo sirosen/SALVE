@@ -4,6 +4,10 @@ Changelog
     * Support for Python 2.6 (with argparse installed)
     * Primary Attribute style blocks
     * Filesys abstraction layer
+    * Removed `SALVE_ROOT` automatic variable (still allowed as an environment
+        variable) and relocated `default_settings.ini` to
+        `salve/default_settings.ini`
+    * Default directory (without override) is directory of root manifest
  * 2.2.0
     * Travis and Coveralls integration
     * Improved internal logging and context handling
