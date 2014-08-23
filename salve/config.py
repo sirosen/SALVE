@@ -88,7 +88,6 @@ class SALVEConfig(object):
         # along with SALVE_USER_PRIMARY_GROUP
         self.env['USER'] = user
         self.env['HOME'] = userhome
-        self.env['SALVE_ROOT'] = locations.get_salve_root()
         self.env['SALVE_USER_PRIMARY_GROUP'] = \
                 ugo.get_group_from_username(user)
 

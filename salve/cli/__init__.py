@@ -12,3 +12,12 @@ def run():
 
     args = parser.parse_args()
     args.func(args)
+
+
+def main():
+    import sys
+
+    if sys.version_info < (2, 6):
+        sys.exit(1)
+
+    run()
