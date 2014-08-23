@@ -39,10 +39,10 @@ def dir_create_compile():
     assert isinstance(mkdir, create.DirCreateAction)
     assert isinstance(chown, modify.DirChownAction)
 
-    assert mkdir.dst == '/p/q/r'
+    assert str(mkdir.dst) == '/p/q/r'
     assert chown.user == 'user1'
     assert chown.group == 'nogroup'
-    assert chown.target == mkdir.dst
+    assert chown.target == str(mkdir.dst)
 
 
 @istest
@@ -72,12 +72,12 @@ def dir_create_compile_chmod():
     assert isinstance(chmod, modify.DirChmodAction)
     assert isinstance(chown, modify.DirChownAction)
 
-    assert mkdir.dst == '/p/q/r'
-    assert chmod.target == mkdir.dst
+    assert str(mkdir.dst) == '/p/q/r'
+    assert chmod.target == str(mkdir.dst)
     assert chmod.mode == int('755', 8)
     assert chown.user == 'user1'
     assert chown.group == 'nogroup'
-    assert chown.target == mkdir.dst
+    assert chown.target == str(mkdir.dst)
 
 
 @istest
@@ -104,7 +104,7 @@ def dir_create_chown_as_root():
     assert isinstance(mkdir, create.DirCreateAction)
     assert isinstance(chown, modify.DirChownAction)
 
-    assert mkdir.dst == '/p/q/r'
+    assert str(mkdir.dst) == '/p/q/r'
     assert chown.target == '/p/q/r'
     assert chown.user == 'user1'
     assert chown.group == 'nogroup'
@@ -130,7 +130,7 @@ def empty_dir_copy_compile():
 
     assert isinstance(mkdir_act, create.DirCreateAction)
 
-    assert mkdir_act.dst == '/p/q/r'
+    assert str(mkdir_act.dst) == '/p/q/r'
 
 
 @istest
@@ -159,7 +159,7 @@ def dir_copy_chown_as_root():
     assert isinstance(mkdir_act, create.DirCreateAction)
     assert isinstance(chown_act, modify.DirChownAction)
 
-    assert mkdir_act.dst == '/p/q/r'
+    assert str(mkdir_act.dst) == '/p/q/r'
     assert chown_act.target == '/p/q/r'
     assert chown_act.user == 'user1'
     assert chown_act.group == 'nogroup'

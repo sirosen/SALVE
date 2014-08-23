@@ -61,23 +61,6 @@ def is_abs_or_var(path):
     return False
 
 
-def get_existing_prefix(path):
-    """
-    Finds the longest prefix to a path that is known to exist.
-
-    Args:
-        @path
-        An absolute path whose prefix should be inspected.
-    """
-    # be safe
-    path = os.path.abspath(path)
-    # exists is sufficient because we can stat directories as long as
-    # we have execute permissions
-    while not os.path.exists(path):
-        path = os.path.dirname(path)
-    return path
-
-
 def clean_path(path, absolute=False):
     """
     Cleans up a path for printing or logging. Primarily, this is
@@ -103,3 +86,21 @@ def clean_path(path, absolute=False):
             path = rpath
 
     return os.path.normpath(path)
+
+
+def pjoin(*args, **kwargs):
+    """
+    Lightweight wrapper around os.path.join
+
+    Serves only to abstract away from the os module
+    """
+    return os.path.join(*args, **kwargs)
+
+
+def dirname(*args, **kwargs):
+    """
+    Lightweight wrapper around os.path.dirname
+
+    Serves only to abstract away from the os module
+    """
+    return os.path.dirname(*args, **kwargs)

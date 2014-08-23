@@ -1,23 +1,22 @@
 #!/usr/bin/python
 
 import abc
-import os
-import sys
-import shutil
 
 import salve
 
 from salve import action
+from salve.filesys import access_codes
+from salve.util import locations
 from salve.util import ugo
 from salve.util.context import ExecutionContext
+from salve.util.six import with_metaclass
 
 
-class ModifyAction(action.Action):
+class ModifyAction(with_metaclass(abc.ABCMeta, action.Action)):
     """
     The base class for all Actions that modify existing files and
     directories.
     """
-    __metaclass__ = abc.ABCMeta
     verification_codes = \
         action.Action.verification_codes.extend('NONEXISTENT_TARGET')
 
@@ -35,15 +34,13 @@ class ModifyAction(action.Action):
         self.target = target
 
 
-class DirModifyAction(ModifyAction):
+class DirModifyAction(with_metaclass(abc.ABCMeta, ModifyAction)):
     """
     The base class for Modify Actions on directories.
     Primarily used to carry information about the recursivity of the
     modification.
     Is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, target, recursive, file_context):
         """
         DirModifyAction constructor.
@@ -61,12 +58,11 @@ class DirModifyAction(ModifyAction):
         self.recursive = recursive
 
 
-class ChownAction(ModifyAction):
+class ChownAction(with_metaclass(abc.ABCMeta, ModifyAction)):
     """
     The base class for ChownActions.
     Is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
     verification_codes = \
         ModifyAction.verification_codes.extend('NOT_ROOT',
                                                'SKIP_EXEC')
@@ -89,7 +85,7 @@ class ChownAction(ModifyAction):
         self.user = user
         self.group = group
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
@@ -97,15 +93,15 @@ class ChownAction(ModifyAction):
         salve.logger.info('Chown: Checking target exists, \"%s\"' %
                 self.target, min_verbosity=3)
 
-        if not os.path.exists(self.target):
+        if not filesys.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
         salve.logger.info('Chown: Checking if execution can be skipped, ' +
                 '\"%s\"' % self.target, min_verbosity=3)
 
         # if the chown would do nothing, give skip exec
-        if ugo.name_to_uid(self.user) == os.stat(self.target).st_uid and \
-           ugo.name_to_gid(self.group) == os.stat(self.target).st_gid:
+        if ugo.name_to_uid(self.user) == filesys.stat(self.target).st_uid and \
+           ugo.name_to_gid(self.group) == filesys.stat(self.target).st_gid:
             return self.verification_codes.SKIP_EXEC
 
         salve.logger.info('Chown: Checking user is root', min_verbosity=3)
@@ -116,12 +112,11 @@ class ChownAction(ModifyAction):
         return self.verification_codes.OK
 
 
-class ChmodAction(ModifyAction):
+class ChmodAction(with_metaclass(abc.ABCMeta, ModifyAction)):
     """
     The base class for ChmodActions.
     Is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
     verification_codes = \
         ModifyAction.verification_codes.extend('UNOWNED_TARGET')
 
@@ -140,7 +135,7 @@ class ChmodAction(ModifyAction):
         ModifyAction.__init__(self, target, file_context)
         self.mode = int(mode, 8)
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
@@ -149,7 +144,7 @@ class ChmodAction(ModifyAction):
                 self.target, min_verbosity=3)
 
         # a nonexistent file or dir can never be chmoded
-        if not os.path.exists(self.target):
+        if not filesys.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
         salve.logger.info('Chmod: Checking if user is root', min_verbosity=3)
@@ -193,13 +188,13 @@ class FileChownAction(ChownAction):
                 ",user=" + str(self.user) + ",group=" + str(self.group) +
                 ",context=" + repr(self.file_context) + ")")
 
-    def execute(self):
+    def execute(self, filesys):
         """
         FileChownAction execution.
 
         Change the owner and group of a single file.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
             logstr = "FileChown: Non-Existent target file \"%s\"" % self.target
@@ -221,8 +216,7 @@ class FileChownAction(ChownAction):
             (self.target, self.user, self.group), min_verbosity=1)
 
         # chown without following symlinks
-        # lchown works on non-symlink files as well
-        os.lchown(self.target, ugo.name_to_uid(self.user),
+        filesys.chown(self.target, ugo.name_to_uid(self.user),
                   ugo.name_to_gid(self.group))
 
 
@@ -249,13 +243,13 @@ class FileChmodAction(ChmodAction):
                 ",mode=" + '{0:o}'.format(self.mode) +
                 ",context=" + repr(self.file_context) + ")")
 
-    def execute(self):
+    def execute(self, filesys):
         """
         FileChmodAction execution.
 
         Change the umask of a single file.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
             logstr = "FileChmod: Non-Existent target file \"%s\"" % self.target
@@ -272,7 +266,7 @@ class FileChmodAction(ChmodAction):
         salve.logger.info('Performing FileChmod of \"%s\" to %s' %
             (self.target, '{0:o}'.format(self.mode)), min_verbosity=1)
 
-        os.chmod(self.target, self.mode)
+        filesys.chmod(self.target, self.mode)
 
 
 class DirChownAction(ChownAction, DirModifyAction):
@@ -309,7 +303,7 @@ class DirChownAction(ChownAction, DirModifyAction):
                 ",recursive=" + str(self.recursive) +
                 ",context=" + repr(self.file_context) + ")")
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
@@ -317,14 +311,14 @@ class DirChownAction(ChownAction, DirModifyAction):
         salve.logger.info('DirChown: Checking target exists, \"%s\"' %
                 self.target, min_verbosity=3)
 
-        if not os.access(self.target, os.F_OK):
+        if not filesys.access(self.target, access_codes.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
         salve.logger.info('DirChown: Checking if execution can be skipped, ' +
                 '\"%s\"' % self.target, min_verbosity=3)
 
-        if os.stat(self.target).st_uid == ugo.name_to_uid(self.user) and \
-            os.stat(self.target).st_gid == ugo.name_to_gid(self.group):
+        if filesys.stat(self.target).st_uid == ugo.name_to_uid(self.user) and \
+            filesys.stat(self.target).st_gid == ugo.name_to_gid(self.group):
             return self.verification_codes.SKIP_EXEC
 
         salve.logger.info('DirChown: Checking if user is root',
@@ -335,13 +329,13 @@ class DirChownAction(ChownAction, DirModifyAction):
 
         return self.verification_codes.OK
 
-    def execute(self):
+    def execute(self, filesys):
         """
         DirChownAction execution.
 
         Change the owner and group of a directory or directory tree.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
             logstr = "DirChown: Non-Existent target dir \"%s\"" % self.target
@@ -362,29 +356,29 @@ class DirChownAction(ChownAction, DirModifyAction):
             uid = ugo.name_to_uid(self.user)
             gid = ugo.name_to_gid(self.group)
             # chown without following symlinks
-            os.lchown(self.target, uid, gid)
+            filesys.chown(self.target, uid, gid)
 
         if self.recursive:
-            for directory, subdirs, files in os.walk(self.target):
+            for directory, subdirs, files in filesys.walk(self.target):
                 # chown on all subdirectories
                 for sd in subdirs:
-                    target = os.path.join(directory, sd)
+                    target = locations.pjoin(directory, sd)
                     # synthesize a new action and invoke it
                     synth = DirChownAction(target,
                                            self.user,
                                            self.group,
                                            self.file_context,
                                            recursive=False)
-                    synth()
+                    synth(filesys)
                 # chown on all files in the directory
                 for f in files:
-                    target = os.path.join(directory, f)
+                    target = locations.pjoin(directory, f)
                     # synthesize a new action and invoke it
                     synth = FileChownAction(target,
                                             self.user,
                                             self.group,
                                             self.file_context)
-                    synth()
+                    synth(filesys)
 
 
 class DirChmodAction(ChmodAction, DirModifyAction):
@@ -418,7 +412,7 @@ class DirChmodAction(ChmodAction, DirModifyAction):
                 ",recursive=" + str(self.recursive) +
                 ",context=" + repr(self.file_context) + ")")
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
@@ -426,7 +420,7 @@ class DirChmodAction(ChmodAction, DirModifyAction):
         salve.logger.info('DirChmod: Checking if target exists, \"%s\"' %
                 self.target, min_verbosity=3)
 
-        if not os.access(self.target, os.F_OK):
+        if not filesys.access(self.target, access_codes.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
         salve.logger.info('DirChmod: Checking if user is root',
@@ -443,13 +437,13 @@ class DirChmodAction(ChmodAction, DirModifyAction):
 
         return self.verification_codes.OK
 
-    def execute(self):
+    def execute(self, filesys):
         """
         DirChmodAction execution.
 
         Change the umask of a directory or directory tree.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
             logstr = "DirChmod: Non-Existent target dir \"%s\"" % self.target
@@ -467,25 +461,25 @@ class DirChmodAction(ChmodAction, DirModifyAction):
         salve.logger.info('Performing DirChmod of \"%s\" to %s' %
             (self.target, '{0:o}'.format(self.mode)), min_verbosity=1)
 
-        os.chmod(self.target, self.mode)
+        filesys.chmod(self.target, self.mode)
 
         if self.recursive:
-            for directory, subdirs, files in os.walk(self.target):
+            for directory, subdirs, files in filesys.walk(self.target):
                 # chmod on all subdirectories
                 for sd in subdirs:
-                    target = os.path.join(directory, sd)
+                    target = locations.pjoin(directory, sd)
                     # synthesize a new action and invoke it
                     # synthetic DirChmods are always nonrecursive
                     synth = DirChmodAction(target,
                                            '{0:o}'.format(self.mode),
                                            self.file_context,
                                            recursive=False)
-                    synth()
+                    synth(filesys)
                 # chmod on all files in the directory
                 for f in files:
-                    target = os.path.join(directory, f)
+                    target = locations.pjoin(directory, f)
                     # synthesize a new action and invoke it
                     synth = FileChmodAction(target,
                                             '{0:o}'.format(self.mode),
                                             self.file_context)
-                    synth()
+                    synth(filesys)

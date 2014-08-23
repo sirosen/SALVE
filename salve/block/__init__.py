@@ -9,6 +9,8 @@ from salve.util.enum import Enum
 from salve.util.error import SALVEException
 import salve.util.locations as locations
 
+from salve.util.six import with_metaclass
+
 
 class BlockException(SALVEException):
     """
@@ -28,15 +30,13 @@ class BlockException(SALVEException):
         SALVEException.__init__(self, msg, file_context=file_context)
 
 
-class Block(AbstractBlock):
+class Block(with_metaclass(abc.ABCMeta, AbstractBlock)):
     """
     A block is the basic unit of configuration.
     Typically, blocks describe files, SALVE manifests, patches, etc
     This is an ABC that defines the common characteristics of all
     blocks.
     """
-    __metaclass__ = abc.ABCMeta
-
     # these are the valid types of block, and therefore the valid
     # block identifiers (case insensitive)
     types = Enum('FILE', 'MANIFEST', 'DIRECTORY')

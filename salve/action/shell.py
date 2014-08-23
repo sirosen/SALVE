@@ -30,7 +30,7 @@ class ShellAction(Action):
     def __str__(self):
         return 'ShellAction(' + str(self.cmd) + ')'
 
-    def execute(self):
+    def execute(self, filesys):
         """
         ShellAction execution.
 

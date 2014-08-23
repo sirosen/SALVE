@@ -12,6 +12,7 @@ from salve.util.error import SALVEException
 from salve.util import locations
 from salve.block import manifest_block
 from salve import config
+from salve.filesys import real_fs
 
 
 def run_on_manifest(root_manifest, args):
@@ -46,7 +47,7 @@ def run_on_manifest(root_manifest, args):
     root_block.expand_blocks(root_dir, conf)
 
     root_action = root_block.compile()
-    root_action()
+    root_action(real_fs)
 
 
 def main(args):

@@ -3,11 +3,10 @@
 from __future__ import print_function
 
 import abc
-import os
-import sys
 import time
 
 import salve
+from salve.filesys import access_codes
 
 from salve import action
 from salve.action import copy
@@ -15,9 +14,10 @@ from salve.action import copy
 from salve.util import locations
 from salve.util import streams
 from salve.util.context import ExecutionContext
+from salve.util.six import with_metaclass
 
 
-class BackupAction(copy.CopyAction):
+class BackupAction(with_metaclass(abc.ABCMeta, copy.CopyAction)):
     """
     The base class for all BackupActions, all of which are types of
     CopyActions.
@@ -25,8 +25,6 @@ class BackupAction(copy.CopyAction):
     A BackupAction takes a file to backup, a backup directory and
     logfile, and performs the mechanics of a backup operation.
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, src, file_context):
         """
         BackupAction constructor.
@@ -45,7 +43,7 @@ class BackupAction(copy.CopyAction):
         # useful basis for the actual BackupAction
         copy.CopyAction.__init__(self,
                                  src,
-                                 os.path.join(backup_dir, 'files'),
+                                 locations.pjoin(backup_dir, 'files'),
                                  file_context)
         # although redundant with CopyAction, useful for pretty printing
         self.backup_dir = backup_dir
@@ -83,7 +81,7 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
                 self.backup_dir + ",backup_log=" + self.logfile +
                 ",context=" + str(self.file_context) + ")")
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
@@ -92,36 +90,36 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
             """
             Checks if the backup target dir is writable.
             """
-            if os.access(self.dst, os.W_OK):
+            if filesys.access(self.dst, access_codes.W_OK):
                 return True
 
-            if os.access(self.dst, os.F_OK):
+            if filesys.access(self.dst, access_codes.F_OK):
                 return False  # pragma: no cover
 
             # at this point, the dir is known not to exist
             # now check properties of the containing dir
-            containing_dir = locations.get_existing_prefix(self.dst)
-            if os.access(containing_dir, os.W_OK):
+            containing_dir = filesys.get_existing_ancestor(self.dst)
+            if filesys.access(containing_dir, access_codes.W_OK):
                 return True
 
             # if the dir doesn't exist, and the dir containing it
             # isn't writable, then the dir can't be written
             return False
 
-        def existant_source():
-            return os.access(self.src, os.F_OK)
+        def existent_source():
+            return filesys.access(self.src, access_codes.F_OK)
 
         def readable_source():
             """
             Checks if the source is a readable file.
             """
-            return os.access(self.src, os.R_OK)
+            return filesys.access(self.src, access_codes.R_OK)
 
         salve.logger.info('FileBackup: Checking source existence, \"%s\"' %
                 self.src, file_context=self.file_context,
                 min_verbosity=3)
 
-        if not existant_source():
+        if not existent_source():
             return self.verification_codes.NONEXISTENT_SOURCE
 
         salve.logger.info('FileBackup: Checking source is readable, \"%s\"' %
@@ -140,14 +138,14 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
 
         return self.verification_codes.OK
 
-    def execute(self):
+    def execute(self, filesys):
         """
         Perform the FileBackupAction.
 
         Rewrites dst based on the value of the @src, does a file copy,
         then writes to the logfile.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
             logstr = "FileBackup: Non-Readable source file \"%s\"" % self.src
@@ -168,19 +166,17 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
         salve.logger.info('Performing File Backup of \"%s\"' % self.src,
                 file_context=self.file_context, min_verbosity=1)
 
-        # FIXME: change to EAFP style
-        if not os.path.exists(self.dst):
-            os.makedirs(self.dst)
+        filesys.mkdir(self.dst)
 
         self.hash_val = streams.hash_by_filename(self.src)
 
         # update dst so that the FileCopyAction can run correctly
-        self.dst = os.path.join(self.dst, self.hash_val)
+        self.dst = locations.pjoin(self.dst, self.hash_val)
 
         # if the backup exists, no need to actually rewrite it
-        if not os.path.exists(self.dst):
+        if not filesys.exists(self.dst):
             # otherwise, invoke the FileCopyAction execution
-            copy.FileCopyAction.execute(self)
+            copy.FileCopyAction.execute(self, filesys)
 
         self.write_log()
 
@@ -220,7 +216,7 @@ class DirBackupAction(action.ActionList, BackupAction):
         BackupAction.__init__(self, src, file_context)
         action.ActionList.__init__(self, [], file_context)
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
@@ -229,18 +225,18 @@ class DirBackupAction(action.ActionList, BackupAction):
                 '\"%s\"' % self.dst, file_context=self.file_context,
                 min_verbosity=3)
 
-        if not os.path.exists(self.src):
+        if not filesys.exists(self.src):
             return self.verification_codes.NONEXISTENT_SOURCE
 
         return self.verification_codes.OK
 
-    def execute(self):
+    def execute(self, filesys):
         """
         Execute the DirBackupAction.
 
         Consists of an AL execution of all file backups.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_SOURCE:
             logstr = "DirBackup: Non-Existent source dir \"%s\"" % self.src
@@ -254,11 +250,11 @@ class DirBackupAction(action.ActionList, BackupAction):
                 file_context=self.file_context, min_verbosity=1)
 
         # append a file backup for each file in @src
-        for dirname, subdirs, files in os.walk(self.src):
+        for dirname, subdirs, files in filesys.walk(self.src):
             # for now, to keep it super-simple, we ignore empty dirs
             for f in files:
-                filename = os.path.join(dirname, f)
+                filename = locations.pjoin(dirname, f)
                 self.append(FileBackupAction(filename,
                                              self.file_context))
 
-        action.ActionList.execute(self)
+        action.ActionList.execute(self, filesys)

@@ -10,6 +10,7 @@ from salve.util.context import ExecutionContext, FileContext
 from salve import action
 from salve.action import modify
 from salve.util import ugo
+from salve.filesys import real_fs
 
 from tests.utils import scratch
 
@@ -53,9 +54,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # have to mock to be 100% certain that we are not root
         with mock.patch('salve.util.ugo.is_root', lambda: False):
-            with mock.patch('os.stat', lambda x: mock_stat_result):
-                code = act.verify_can_exec()
-                assert code == act.verification_codes.NOT_ROOT, str(code)
+            with mock.patch('salve.filesys.real_fs.stat',
+                    lambda x: mock_stat_result):
+                code = act.verify_can_exec(real_fs)
+
+        assert code == act.verification_codes.NOT_ROOT, str(code)
 
     @istest
     def filechown_execute_nonroot(self):
@@ -68,22 +71,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.FileChownAction(a_name, 'user1', 'nogroup',
                 self.file_context)
 
-        log = {'lchown': None}
+        mock_chown = mock.Mock()
 
-        def mock_lchown(f, uid, gid):
-            log['lchown'] = (f, uid, gid)
+        mock_verify = mock.Mock()
+        mock_verify.return_value = \
+                modify.FileChownAction.verification_codes.NOT_ROOT
 
-        mock_stat_result = mock.Mock()
-        # ensure a uid/gid mismatch
-        mock_stat_result.st_uid = ugo.name_to_uid('user1') + 1
-        mock_stat_result.st_gid = ugo.name_to_gid('nogroup') + 1
+        with mock.patch('salve.action.modify.FileChownAction.verify_can_exec',
+                mock_verify):
+            with mock.patch('salve.filesys.real_fs.chown', mock_chown):
+                act(real_fs)
 
-        with mock.patch('os.lchown', mock_lchown):
-            with mock.patch('os.stat', lambda x: mock_stat_result):
-                with mock.patch('salve.util.ugo.is_root', lambda: False):
-                    act()
-
-        assert log['lchown'] is None
+        assert not mock_chown.called
 
     @istest
     def filechmod_verify_nonowner(self):
@@ -100,7 +99,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.FileChmodAction(a_name, '600', self.file_context)
 
         with mock.patch('salve.util.ugo.is_owner', lambda x: False):
-            code = act.verify_can_exec()
+            code = act.verify_can_exec(real_fs)
             assert code == act.verification_codes.UNOWNED_TARGET, str(code)
 
     @istest
@@ -124,9 +123,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.DirChownAction(a_name, 'user1', 'nogroup',
                 self.file_context)
 
-        with mock.patch('os.stat', lambda x: mock_stat_result):
+        with mock.patch('salve.filesys.real_fs.stat',
+                lambda x: mock_stat_result):
             with mock.patch('salve.util.ugo.is_root', lambda: False):
-                code = act.verify_can_exec()
+                code = act.verify_can_exec(real_fs)
                 assert code == act.verification_codes.NOT_ROOT, str(code)
 
     @istest
@@ -144,7 +144,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
         with mock.patch('salve.util.ugo.is_root', lambda: True):
-            code = act.verify_can_exec()
+            code = act.verify_can_exec(real_fs)
             assert code == act.verification_codes.OK, str(code)
 
     @istest
@@ -163,7 +163,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with mock.patch('salve.util.ugo.is_root', lambda: False):
             with mock.patch('salve.util.ugo.is_owner', lambda x: False):
-                code = act.verify_can_exec()
+                code = act.verify_can_exec(real_fs)
                 assert code == act.verification_codes.UNOWNED_TARGET, str(code)
 
     @istest
@@ -183,8 +183,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.FileChmodAction('a', '600', self.file_context)
 
         with mock.patch('salve.action.modify.FileChmodAction.verify_can_exec',
-                lambda x: x.verification_codes.UNOWNED_TARGET):
-            act()
+                lambda x, fs: x.verification_codes.UNOWNED_TARGET):
+            act(real_fs)
 
         assert log['chmod'] is None
         assert (self.stderr.getvalue() ==
@@ -209,9 +209,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 recursive=True)
 
         with mock.patch('salve.action.modify.DirChownAction.verify_can_exec',
-                lambda x: modify.DirChownAction.verification_codes.NOT_ROOT):
+                lambda x, fs:
+                modify.DirChownAction.verification_codes.NOT_ROOT):
             with mock.patch('os.lchown', mock_lchown):
-                act()
+                act(real_fs)
 
         assert len(lchown_args) == 0
         assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
@@ -237,9 +238,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with mock.patch('os.walk', mock_os_walk):
             with mock.patch(
                     'salve.action.modify.DirChmodAction.verify_can_exec',
-                    lambda self: self.verification_codes.UNOWNED_TARGET):
+                    lambda self, fs: self.verification_codes.UNOWNED_TARGET):
                 with mock.patch('os.chmod', mock_chmod):
-                    act()
+                    act(real_fs)
 
         assert len(chmod_args) == 0
         assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
@@ -261,10 +262,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
         with mock.patch('salve.action.modify.DirChownAction.verify_can_exec',
-                        lambda self: self.verification_codes.NOT_ROOT):
+                        lambda self, fs: self.verification_codes.NOT_ROOT):
             with mock.patch('os.walk', mock_os_walk):
                 with mock.patch('os.lchown', mock_lchown):
-                    act()
+                    act(real_fs)
 
         assert len(lchown_args) == 0
         assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
@@ -290,10 +291,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         unowned_target_code = \
                 modify.DirChmodAction.verification_codes.UNOWNED_TARGET
         with mock.patch('salve.action.modify.DirChmodAction.verify_can_exec',
-                lambda x: unowned_target_code):
+                lambda x, fs: unowned_target_code):
             with mock.patch('os.walk', mock_os_walk):
                 with mock.patch('os.chmod', mock_chmod):
-                    act()
+                    act(real_fs)
 
         assert len(chmod_args) == 0
         assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
@@ -350,9 +351,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         act = modify.FileChmodAction('a', '0000', self.file_context)
 
-        with mock.patch('os.path.exists', lambda x: True):
+        with mock.patch('salve.filesys.real_fs.exists', lambda x: True):
             with mock.patch('salve.util.ugo.is_root', lambda: True):
-                assert act.verify_can_exec() == act.verification_codes.OK
+                assert act.verify_can_exec(real_fs) == \
+                        act.verification_codes.OK
 
     @istest
     def filechown_verify(self):
@@ -366,12 +368,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_stat_result.st_gid = 1
         mock_stat_result.st_uid = 1
 
-        with mock.patch('os.stat', lambda x: mock_stat_result):
-            with mock.patch('salve.util.ugo.name_to_uid', lambda x: 0):
-                with mock.patch('salve.util.ugo.name_to_gid', lambda x: 0):
-                    with mock.patch('salve.util.ugo.is_root', lambda: True):
-                        assert act.verify_can_exec() == \
-                                act.verification_codes.OK
+        with mock.patch('salve.filesys.real_fs.stat',
+                lambda x: mock_stat_result):
+            with mock.patch('salve.filesys.real_fs.exists', lambda x: True):
+                with mock.patch('salve.util.ugo.name_to_uid', lambda x: 0):
+                    with mock.patch('salve.util.ugo.name_to_gid', lambda x: 0):
+                        with mock.patch('salve.util.ugo.is_root',
+                                lambda: True):
+                            assert act.verify_can_exec(real_fs) == \
+                                    act.verification_codes.OK
 
     @istest
     def dirchown_verify(self):
@@ -384,14 +389,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_stat_result.st_gid = 1
         mock_stat_result.st_uid = 1
 
-        with mock.patch('os.stat', lambda x: mock_stat_result):
-            with mock.patch('os.access', lambda x, y: True):
+        with mock.patch('salve.filesys.real_fs.stat',
+                lambda x: mock_stat_result):
+            with mock.patch('salve.filesys.real_fs.access', lambda x, y: True):
                 with mock.patch('salve.util.ugo.name_to_uid', lambda x: 0):
                     with mock.patch('salve.util.ugo.name_to_gid',
                             lambda x: 0):
                         with mock.patch('salve.util.ugo.is_root',
                                 lambda: True):
-                            assert act.verify_can_exec() == \
+                            assert act.verify_can_exec(real_fs) == \
                                     act.verification_codes.OK
 
     @istest
@@ -417,8 +423,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
                         with mock.patch('salve.util.ugo.is_root',
                                 lambda: True):
                             with mock.patch(chown_verify_name,
-                                    lambda self: mocked_verify_code):
-                                act()
+                                    lambda self, fs: mocked_verify_code):
+                                act(real_fs)
 
         assert log['lchown'] == ('a', 1, 2)
 
@@ -429,19 +435,21 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         act = modify.FileChmodAction('a', '600', self.file_context)
 
-        log = {'chmod': None}
-
-        def mock_chmod(f, mode):
-            log['chmod'] = (f, mode)
+        mock_chmod = mock.Mock()
         mock_stat_result = mock.Mock()
         mock_stat_result.st_uid = os.getuid()
 
-        with mock.patch('os.chmod', mock_chmod):
-            with mock.patch('os.access', lambda x, y: True):
-                with mock.patch('os.stat', lambda x: mock_stat_result):
-                    act()
+        with mock.patch('salve.filesys.real_fs.chmod', mock_chmod):
+            with mock.patch('salve.filesys.real_fs.access', lambda x, y: True):
+                with mock.patch('salve.filesys.real_fs.exists',
+                        lambda x: True):
+                    with mock.patch('salve.filesys.real_fs.stat',
+                            lambda x: mock_stat_result):
+                        with mock.patch('salve.util.ugo.is_owner',
+                                lambda x: True):
+                            act(real_fs)
 
-        assert log['chmod'] == ('a', int('600', 8))
+        mock_chmod.assert_called_once_with('a', int('600', 8))
 
     @istest
     def dirchown_execute(self):
@@ -463,13 +471,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
             with mock.patch('salve.util.ugo.name_to_uid', lambda x: 1):
                 with mock.patch('salve.util.ugo.name_to_gid', lambda x: 2):
                     with mock.patch(dir_verify_name,
-                            lambda x:
+                            lambda x, fs:
                             modify.DirChownAction.verification_codes.OK):
                         with mock.patch(file_verify_name,
-                                lambda x:
+                                lambda x, fs:
                                 modify.FileChownAction.verification_codes.OK):
                             with mock.patch('os.lchown', mock_lchown):
-                                act()
+                                act(real_fs)
 
         assert len(lchown_args) == 8
         assert ('a', 1, 2) in lchown_args
@@ -502,12 +510,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 'salve.action.modify.FileChmodAction.verify_can_exec'
         with mock.patch('os.walk', mock_os_walk):
             with mock.patch(dir_verify_name,
-                    lambda x: modify.DirChmodAction.verification_codes.OK):
+                    lambda x, fs: modify.DirChmodAction.verification_codes.OK):
                 with mock.patch(file_verify_name,
-                        lambda x:
+                        lambda x, fs:
                         modify.FileChmodAction.verification_codes.OK):
                     with mock.patch('os.chmod', mock_chmod):
-                        act()
+                        act(real_fs)
 
         assert len(chmod_args) == 8
         mode = int('755', 8)
@@ -537,10 +545,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
             with mock.patch('salve.util.ugo.name_to_uid', lambda x: 1):
                 with mock.patch('salve.util.ugo.name_to_gid', lambda x: 2):
                     with mock.patch(dir_verify_name,
-                            lambda x:
+                            lambda x, fs:
                             modify.DirChownAction.verification_codes.OK):
                         with mock.patch('os.lchown', mock_lchown):
-                            act()
+                            act(real_fs)
 
         assert len(lchown_args) == 1
         assert ('a', 1, 2) in lchown_args
@@ -560,9 +568,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         act = modify.DirChmodAction('a', '755', self.file_context)
         with mock.patch('salve.action.modify.DirChmodAction.verify_can_exec',
-                    lambda x: modify.DirChmodAction.verification_codes.OK):
+                    lambda x, fs: modify.DirChmodAction.verification_codes.OK):
             with mock.patch('os.chmod', mock_chmod):
-                act()
+                act(real_fs)
 
         assert len(chmod_args) == 1
         mode = int('755', 8)

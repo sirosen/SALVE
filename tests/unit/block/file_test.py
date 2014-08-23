@@ -103,11 +103,11 @@ def file_create_compile():
     assert isinstance(chmod_act, modify.FileChmodAction)
     assert isinstance(chown_act, modify.FileChownAction)
 
-    assert touch.dst == '/p/q/r'
+    assert str(touch.dst) == '/p/q/r'
     assert chmod_act.target == '/p/q/r'
     assert chown_act.user == 'user1'
     assert chown_act.group == 'nogroup'
-    assert chown_act.target == touch.dst
+    assert chown_act.target == str(touch.dst)
 
 
 @istest
@@ -173,7 +173,7 @@ def file_create_nouser():
     assert isinstance(touch, create.FileCreateAction)
     assert isinstance(chmod_act, modify.FileChmodAction)
 
-    assert touch.dst == '/p/q/r'
+    assert str(touch.dst) == '/p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
     assert chmod_act.target == '/p/q/r'
 
@@ -243,7 +243,7 @@ def file_create_nogroup():
     assert isinstance(touch, create.FileCreateAction)
     assert isinstance(chmod_act, modify.FileChmodAction)
 
-    assert touch.dst == '/p/q/r'
+    assert str(touch.dst) == '/p/q/r'
     assert '{0:o}'.format(chmod_act.mode) == '600'
     assert chmod_act.target == '/p/q/r'
 
@@ -314,10 +314,10 @@ def file_create_nomode():
     assert isinstance(touch, create.FileCreateAction)
     assert isinstance(chown, modify.FileChownAction)
 
-    assert touch.dst == '/p/q/r'
+    assert str(touch.dst) == '/p/q/r'
     assert chown.user == 'user1'
     assert chown.group == 'nogroup'
-    assert chown.target == touch.dst
+    assert chown.target == str(touch.dst)
 
 
 @istest

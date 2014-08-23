@@ -7,6 +7,7 @@ from nose.tools import istest
 from salve.util.context import ExecutionContext, FileContext
 
 from salve.action import create
+from salve.filesys import real_fs
 from tests.utils import scratch
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
@@ -41,9 +42,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with builtin_patch:
             with mock.patch('os.access', lambda x, y: True):
                 fc = create.FileCreateAction(a_name, dummy_file_context)
-                fc()
+                fc(real_fs)
 
-        mock_open.assert_called_once_with(a_name, 'w')
+        mock_open.assert_called_once_with(a_name, 'a')
         handle = mock_open()
         assert len(handle.write.mock_calls) == 0
 
@@ -60,7 +61,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with mock.patch('os.makedirs', mock_mkdirs):
             with mock.patch('os.access', lambda x, y: True):
                 dc = create.DirCreateAction(a_name, dummy_file_context)
-                dc()
+                dc(real_fs)
 
         mock_mkdirs.assert_called_once_with(a_name)
 

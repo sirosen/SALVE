@@ -1,19 +1,18 @@
 #!/usr/bin/python
 
-import sys
 import abc
-import os
-import shutil
 
 import salve
 
 from salve import action
-from salve.util import enum
+from salve.filesys import access_codes
+from salve.util import locations
 
 from salve.util.context import ExecutionContext
+from salve.util.six import with_metaclass
 
 
-class CopyAction(action.Action):
+class CopyAction(with_metaclass(abc.ABCMeta, action.Action)):
     """
     The base class for all CopyActions.
 
@@ -21,9 +20,9 @@ class CopyAction(action.Action):
     source to the destination. The meanings of a Copy vary between
     files and directories, so this is an ABC.
     """
-    __metaclass__ = abc.ABCMeta
     verification_codes = \
-        action.Action.verification_codes.extend('UNWRITABLE_TARGET')
+        action.Action.verification_codes.extend('UNWRITABLE_TARGET',
+                'UNREADABLE_SOURCE')
 
     def __init__(self, src, dst, file_context):
         """
@@ -46,9 +45,6 @@ class FileCopyAction(CopyAction):
     """
     An action to copy a single file.
     """
-    verification_codes = \
-        CopyAction.verification_codes.extend('UNREADABLE_SOURCE')
-
     def __init__(self, src, dst, file_context):
         """
         FileCopyAction constructor.
@@ -70,7 +66,7 @@ class FileCopyAction(CopyAction):
         return ("FileCopyAction(src=" + str(self.src) + ",dst=" +
                 str(self.dst) + ",context=" + repr(self.file_context) + ")")
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         """
         Check to ensure that execution can proceed without errors.
         Ensures that the source file exists and is readable, and that
@@ -84,15 +80,15 @@ class FileCopyAction(CopyAction):
             """
             Checks if the target file is writable.
             """
-            if os.access(self.dst, os.W_OK):
+            if filesys.access(self.dst, access_codes.W_OK):
                 return True
-            if os.access(self.dst, os.F_OK):
+            if filesys.access(self.dst, access_codes.F_OK):
                 return False
 
             # at this point, the file is known not to exist
             # now check properties of the containing dir
-            containing_dir = os.path.dirname(self.dst)
-            if os.access(containing_dir, os.W_OK):
+            containing_dir = locations.dirname(self.dst)
+            if filesys.access(containing_dir, access_codes.W_OK):
                 return True
 
             # if the file doesn't exist, and the dir containing it
@@ -103,14 +99,14 @@ class FileCopyAction(CopyAction):
             """
             Checks if the source is a readable file.
             """
-            return os.access(self.src, os.R_OK)
+            return filesys.access(self.src, access_codes.R_OK)
 
         def source_islink():
             """
             Checks if the source is a symlink (copied by value, not
             dereferenced)
             """
-            return os.path.islink(self.src)
+            return filesys.lookup_type(self.src) is filesys.element_types.LINK
 
         salve.logger.info('FileCopy: Checking destination is writable, ' +
                 '\"%s\"' % self.dst, file_context=self.file_context,
@@ -135,14 +131,14 @@ class FileCopyAction(CopyAction):
 
         return self.verification_codes.OK
 
-    def execute(self):
+    def execute(self, filesys):
         """
         FileCopyAction execution.
 
         Does a file copy or symlink creation, depending on the type
         of the source file.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "FileCopy: Non-Writable target file \"%s\"" % self.dst
@@ -161,10 +157,7 @@ class FileCopyAction(CopyAction):
                 (self.src, self.dst), file_context=self.file_context,
                 min_verbosity=1)
 
-        if os.path.islink(self.src):
-            os.symlink(os.readlink(self.src), self.dst)
-        else:
-            shutil.copyfile(self.src, self.dst)
+        filesys.copy(self.src, self.dst)
 
 
 class DirCopyAction(CopyAction):
@@ -189,7 +182,7 @@ class DirCopyAction(CopyAction):
         return ("DirCopyAction(src=" + str(self.src) + ",dst=" +
                 str(self.dst) + ",context=" + repr(self.file_context) + ")")
 
-    def verify_can_exec(self):
+    def verify_can_exec(self, filesys):
         """
         Check to ensure that execution can proceed without errors.
         Ensures that the the target directory is writable.
@@ -198,11 +191,27 @@ class DirCopyAction(CopyAction):
         # confirming execution will work
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
+        def readable_source():
+            """
+            Checks if the source is a readable and traversable directory. If
+            not, then it will be impossible to view and copy its contents.
+            """
+            return filesys.access(self.src,
+                    access_codes.R_OK | access_codes.X_OK)
+
         def writable_target():
             """
             Checks if the target is in a writable directory.
             """
-            return os.access(os.path.dirname(self.dst), os.W_OK)
+            return filesys.access(locations.dirname(self.dst),
+                    access_codes.W_OK)
+
+        salve.logger.info('DirCopy: Checking source is readable + ' +
+                'traversable, \"%s\"' % self.dst,
+                file_context=self.file_context, min_verbosity=3)
+
+        if not readable_source():
+            return self.verification_codes.UNREADABLE_SOURCE
 
         salve.logger.info('DirCopy: Checking target is writable, \"%s\"' %
                 self.dst, file_context=self.file_context,
@@ -213,11 +222,16 @@ class DirCopyAction(CopyAction):
 
         return self.verification_codes.OK
 
-    def execute(self):
+    def execute(self, filesys):
         """
         Copy a directory tree from one location to another.
         """
-        vcode = self.verify_can_exec()
+        vcode = self.verify_can_exec(filesys)
+
+        if vcode == self.verification_codes.UNREADABLE_SOURCE:
+            logstr = "DirCopy: Non-Readable source directory \"%s\"" % self.src
+            salve.logger.warn(logstr, file_context=self.file_context)
+            return
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "DirCopy: Non-Writable target directory \"%s\"" % self.dst
@@ -231,4 +245,4 @@ class DirCopyAction(CopyAction):
                 (self.src, self.dst), file_context=self.file_context,
                 min_verbosity=1)
 
-        shutil.copytree(self.src, self.dst, symlinks=True)
+        filesys.copy(self.src, self.dst)
