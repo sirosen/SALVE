@@ -108,6 +108,27 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 fcp.verification_codes.UNREADABLE_SOURCE
 
     @istest
+    def dir_canexec_unreadable_source(self):
+        """
+        Unit: Dir Copy Action Verify Unreadable Source
+        Checks the results of a verification check when the source
+        is an unreadable dir.
+        """
+        self.make_dir('a')
+        a_name = self.get_fullname('a')
+        b_name = self.get_fullname('b')
+
+        dcp = copy.DirCopyAction(a_name, b_name,
+                                  self.dummy_file_context)
+
+        mock_access = mock.Mock()
+        mock_access.return_value = False
+
+        with mock.patch('salve.filesys.real_fs.access', mock_access):
+            assert dcp.verify_can_exec(real_fs) == \
+                    dcp.verification_codes.UNREADABLE_SOURCE
+
+    @istest
     def dir_canexec_unwritable_target(self):
         """
         Unit: Dir Copy Action Verify Unwritable Target
@@ -172,6 +193,25 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 dcp(real_fs)
 
         mock_copy.assert_called_once_with('a', 'b/c')
+
+    @istest
+    def dircopy_unreadable_source_execute(self):
+        """
+        Unit: Directory Copy Action Execution, Unreadable Source
+        """
+        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+
+        unreadable_source_code = \
+                copy.DirCopyAction.verification_codes.UNREADABLE_SOURCE
+        with mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
+                lambda x, fs: unreadable_source_code):
+            dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
+            dcp(real_fs)
+
+        err = self.stderr.getvalue()
+        expected = ('[WARN] [EXECUTION] no such file: ' +
+                'DirCopy: Non-Readable source directory "a"\n')
+        assert err == expected, "%s != %s" % (err, expected)
 
     @istest
     def dircopy_unwritable_target_execute(self):

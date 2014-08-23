@@ -196,13 +196,15 @@ class DirCopyAction(CopyAction):
             Checks if the source is a readable and traversable directory. If
             not, then it will be impossible to view and copy its contents.
             """
-            return filesys.access(self.src, access_codes.R_OK | access_codes.X_OK)
+            return filesys.access(self.src,
+                    access_codes.R_OK | access_codes.X_OK)
 
         def writable_target():
             """
             Checks if the target is in a writable directory.
             """
-            return filesys.access(locations.dirname(self.dst), access_codes.W_OK)
+            return filesys.access(locations.dirname(self.dst),
+                    access_codes.W_OK)
 
         salve.logger.info('DirCopy: Checking source is readable + ' +
                 'traversable, \"%s\"' % self.dst,
@@ -227,7 +229,7 @@ class DirCopyAction(CopyAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
-            logstr = "DirCopy: Non-Readable source directory \"%s\"" % self.dst
+            logstr = "DirCopy: Non-Readable source directory \"%s\"" % self.src
             salve.logger.warn(logstr, file_context=self.file_context)
             return
 

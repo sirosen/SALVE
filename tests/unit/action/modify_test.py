@@ -57,7 +57,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
             with mock.patch('salve.filesys.real_fs.stat',
                     lambda x: mock_stat_result):
                 code = act.verify_can_exec(real_fs)
-                assert code == act.verification_codes.NOT_ROOT, str(code)
+
+        assert code == act.verification_codes.NOT_ROOT, str(code)
 
     @istest
     def filechown_execute_nonroot(self):
@@ -70,19 +71,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.FileChownAction(a_name, 'user1', 'nogroup',
                 self.file_context)
 
-        mock_lchown = mock.Mock()
+        mock_chown = mock.Mock()
 
-        mock_stat_result = mock.Mock()
-        # ensure a uid/gid mismatch
-        mock_stat_result.st_uid = ugo.name_to_uid('user1') + 1
-        mock_stat_result.st_gid = ugo.name_to_gid('nogroup') + 1
+        mock_verify = mock.Mock()
+        mock_verify.return_value = \
+                modify.FileChownAction.verification_codes.NOT_ROOT
 
-        with mock.patch('os.lchown', mock_lchown):
-            with mock.patch('os.stat', lambda x: mock_stat_result):
-                with mock.patch('salve.util.ugo.is_root', lambda: False):
-                    act(real_fs)
+        with mock.patch('salve.action.modify.FileChownAction.verify_can_exec',
+                mock_verify):
+            with mock.patch('salve.filesys.real_fs.chown', mock_chown):
+                act(real_fs)
 
-        assert not mock_lchown.called
+        assert not mock_chown.called
 
     @istest
     def filechmod_verify_nonowner(self):
