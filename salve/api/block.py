@@ -4,6 +4,7 @@
 
 import abc
 
+from salve.util.enum import Enum
 from salve.util.six import with_metaclass
 
 
@@ -35,7 +36,7 @@ class CompiledBlock(with_metaclass(abc.ABCMeta)):
         pass  # pragma: no cover
 
 
-class AbstractBlock(with_metaclass(abc.ABCMeta)):
+class Block(with_metaclass(abc.ABCMeta)):
     """
     A block is the basic unit of configuration.
     Typically, blocks describe files, SALVE manifests, patches, etc
@@ -43,6 +44,10 @@ class AbstractBlock(with_metaclass(abc.ABCMeta)):
     blocks. Furthermore, it defines the methods that must be implemented
     on a block by its author.
     """
+    # these are the valid types of block, and therefore the valid
+    # block identifiers (case insensitive)
+    types = Enum('FILE', 'MANIFEST', 'DIRECTORY')
+
     @abc.abstractmethod
     def has(self, attribute_name):
         """
