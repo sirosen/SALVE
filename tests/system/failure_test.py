@@ -4,19 +4,11 @@ import os
 import mock
 
 from nose.tools import istest
-from tests.util import ensure_except
+from tests.util import ensure_except, file_path
 from tests import system
 
 from salve import cli
 from salve.util import locations
-
-_testfile_dir = os.path.join(
-        locations.containing_dir(__file__, depth=2),
-        'testfiles')
-
-
-def get_full_path(filename):
-    return os.path.join(_testfile_dir, filename)
 
 
 def except_from_args(argv):
@@ -35,7 +27,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
         """
-        path = get_full_path('unclosed_block.manifest')
+        path = file_path('unclosed_block.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
@@ -54,7 +46,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
         """
-        path = get_full_path('missing_open.manifest')
+        path = file_path('missing_open.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
@@ -74,7 +66,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
         """
-        path = get_full_path('missing_id.manifest')
+        path = file_path('missing_id.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
@@ -93,7 +85,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
         """
-        path = get_full_path('missing_attr_val.manifest')
+        path = file_path('missing_attr_val.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
@@ -112,7 +104,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
         """
-        path = get_full_path('double_open.manifest')
+        path = file_path('double_open.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
@@ -131,7 +123,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
         """
-        path = get_full_path('invalid_block_id.manifest')
+        path = file_path('invalid_block_id.manifest')
         rpath = os.path.relpath(path, '.')
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)

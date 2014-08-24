@@ -4,9 +4,9 @@ import os
 import timeit
 from nose.tools import istest
 
-import salve.util.streams
+from tests.util import file_path
 
-_testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
+import salve.util.streams
 
 
 @istest
@@ -16,7 +16,7 @@ def get_filename():
     Tests get_filename on real files, given the File objects.
     """
     for char in ['a', 'b', 'c']:
-        name = os.path.join(_testfile_dir, char)
+        name = file_path(char)
         with open(name) as f:
             assert salve.util.streams.get_filename(f) == name
 
@@ -27,8 +27,8 @@ def sha512_empty_match():
     Unit: Streams Util SHA512 Empty File Match
     Ensures that the sha512 hashes of two empty files match.
     """
-    aname = os.path.join(_testfile_dir, 'a')
-    bname = os.path.join(_testfile_dir, 'b')
+    aname = file_path('a')
+    bname = file_path('b')
     ahash, bhash = None, None
     with open(aname) as f:
         ahash = salve.util.streams.sha_512(f)
@@ -43,8 +43,8 @@ def sha512_nonempty_match():
     Unit: Streams Util SHA512 Non-Empty File Match
     Ensures that the sha512 hashes of two nonempty files match.
     """
-    cname = os.path.join(_testfile_dir, 'c')
-    dname = os.path.join(_testfile_dir, 'd')
+    cname = file_path('c')
+    dname = file_path('d')
     ahash, chash = None, None
     with open(cname) as f:
         chash = salve.util.streams.sha_512(f)
@@ -59,8 +59,8 @@ def sha512_mismatch():
     Unit: Streams Util SHA512 File Mismatch
     Ensures that the sha512 hashes of nonmatching files don't match.
     """
-    aname = os.path.join(_testfile_dir, 'a')
-    cname = os.path.join(_testfile_dir, 'c')
+    aname = file_path('a')
+    cname = file_path('c')
     ahash, chash = None, None
     with open(aname) as f:
         ahash = salve.util.streams.sha_512(f)

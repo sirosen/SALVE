@@ -1,6 +1,0 @@
-# a single non-empty file block
-
-file {
-    source /a/b/c
-    target "/d/e f/g"
-}

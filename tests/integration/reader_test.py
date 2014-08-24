@@ -2,12 +2,11 @@
 
 from nose.tools import istest
 
+from salve.util import locations
 from salve.block import file_block
 from salve.reader import tokenize, parse
 
-from tests.util import scratch, ensure_except
-
-from tests.integration import get_full_path
+from tests.util import scratch, ensure_except, file_path
 
 
 def parse_filename(filename):
@@ -23,7 +22,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
 
         Checks that parsing an empty file produces an empty list of blocks.
         """
-        blocks = parse_filename(get_full_path('empty.manifest'))
+        blocks = parse_filename(file_path('empty.manifest'))
         assert len(blocks) == 0
 
     @istest
@@ -33,7 +32,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
 
         Checks that parsing an empty block raises no errors.
         """
-        blocks = parse_filename(get_full_path('empty_block.manifest'))
+        blocks = parse_filename(file_path('empty_block.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
         assert isinstance(fblock, file_block.FileBlock)
@@ -45,7 +44,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
 
         Checks that parsing a block with one attribute raises no errors.
         """
-        blocks = parse_filename(get_full_path('single_attr.manifest'))
+        blocks = parse_filename(file_path('single_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
         assert isinstance(fblock, file_block.FileBlock)
@@ -59,7 +58,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Checks that parsing a block with several attributes raises no
         errors.
         """
-        blocks = parse_filename(get_full_path('two_attr.manifest'))
+        blocks = parse_filename(file_path('two_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
         assert isinstance(fblock, file_block.FileBlock)
@@ -74,7 +73,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Checks that parsing a block with several attributes raises no
         errors.
         """
-        blocks = parse_filename(get_full_path('spaced_attr.manifest'))
+        blocks = parse_filename(file_path('spaced_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
         assert isinstance(fblock, file_block.FileBlock)
@@ -89,13 +88,13 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = get_full_path('unclosed_block.manifest')
+        path = file_path('unclosed_block.manifest')
         e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
         assert sctx.lineno == 4
-        assert sctx.filename == path
+        assert locations.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def missing_open_raises_TE(self):
@@ -105,13 +104,13 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = get_full_path('missing_open.manifest')
+        path = file_path('missing_open.manifest')
         e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
         assert sctx.lineno == 5
-        assert sctx.filename == path
+        assert locations.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def missing_identifier_raises_TE(self):
@@ -121,13 +120,13 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = get_full_path('missing_id.manifest')
+        path = file_path('missing_id.manifest')
         e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
         assert sctx.lineno == 3
-        assert sctx.filename == path
+        assert locations.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def missing_value_raises_TE(self):
@@ -137,13 +136,13 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = get_full_path('missing_attr_val.manifest')
+        path = file_path('missing_attr_val.manifest')
         e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
         assert sctx.lineno == 5
-        assert sctx.filename == path
+        assert locations.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def double_open_raises_TE(self):
@@ -153,13 +152,13 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = get_full_path('double_open.manifest')
+        path = file_path('double_open.manifest')
         e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
         assert sctx.lineno == 3
-        assert sctx.filename == path
+        assert locations.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def invalid_block_id_raises_PE(self):
@@ -169,10 +168,10 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = get_full_path('invalid_block_id.manifest')
+        path = file_path('invalid_block_id.manifest')
         e = ensure_except(parse.ParsingException,
                           parse_filename,
                           path)
         sctx = e.file_context
         assert sctx.lineno == 7
-        assert sctx.filename == path
+        assert locations.clean_path(sctx.filename, absolute=True) == path

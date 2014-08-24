@@ -3,22 +3,18 @@
 import os
 import mock
 
+from tests.util import testfile_dir
+
 import salve.config
 from salve.util.context import FileContext, ExecutionContext
 from salve.util.log import Logger
 
-_testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
-
-
-def get_full_path(filename):
-    return os.path.join(_testfile_dir, filename)
-
 
 def mock_expanduser(string):
     user = os.environ['USER']
-    string = string.replace('~' + user, _testfile_dir)
+    string = string.replace('~' + user, testfile_dir)
     if string[0] == '~':
-        string = _testfile_dir + string[1:]
+        string = testfile_dir + string[1:]
     return string
 
 

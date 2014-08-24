@@ -11,12 +11,6 @@ from salve.action import copy
 from salve.filesys import real_fs
 from tests.util import scratch
 
-_testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
-
-
-def get_full_path(filename):
-    return os.path.join(_testfile_dir, filename)
-
 
 class TestWithScratchdir(scratch.ScratchContainer):
     def __init__(self):

@@ -1,11 +1,11 @@
 # a valid manifest containing a manifest block and file block
-# with relative paths (relative to SALVE_ROOT)
+# with relative paths
 
 manifest {
-    source valid1.manifest
+    source empty.manifest
 }
 
 file {
-    source valid1.manifest
+    source empty.manifest
     target a/b/c
 }
