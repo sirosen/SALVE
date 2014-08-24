@@ -8,11 +8,9 @@ from salve.reader.tokenize import Token
 from salve.util.context import FileContext
 from salve.util import locations
 
-from tests.utils.exceptions import ensure_except
-from tests.utils import MockedGlobals
+from tests.util import ensure_except, MockedGlobals
 
-import salve.block.file_block
-import salve.block.manifest_block
+from salve.block import file_block, manifest_block
 
 _testfile_dir = pjoin(dirname(__file__), 'files')
 dummy_context = FileContext('no such file')
@@ -189,7 +187,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(get_full_path('valid2.manifest'))
         assert len(blocks) == 1
-        assert isinstance(blocks[0], salve.block.file_block.FileBlock)
+        assert isinstance(blocks[0], file_block.FileBlock)
         assert len(blocks[0].attrs) == 0
 
     @istest
@@ -201,7 +199,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(get_full_path('valid3.manifest'))
         assert len(blocks) == 1
-        assert isinstance(blocks[0], salve.block.file_block.FileBlock)
+        assert isinstance(blocks[0], file_block.FileBlock)
         assert len(blocks[0].attrs) == 2
 
     @istest
@@ -213,7 +211,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(get_full_path('valid4.manifest'))
         assert len(blocks) == 1
-        assert isinstance(blocks[0], salve.block.file_block.FileBlock)
+        assert isinstance(blocks[0], file_block.FileBlock)
         assert len(blocks[0].attrs) == 2
         assert blocks[0].get(blocks[0].primary_attr) == "/d/e/f/g"
 
@@ -226,10 +224,10 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(get_full_path('valid5.manifest'))
         assert len(blocks) == 2
-        assert isinstance(blocks[0], salve.block.manifest_block.ManifestBlock)
+        assert isinstance(blocks[0], manifest_block.ManifestBlock)
         assert len(blocks[0].attrs) == 1
         assert blocks[0].get(blocks[0].primary_attr) == "man man"
-        assert isinstance(blocks[1], salve.block.file_block.FileBlock)
+        assert isinstance(blocks[1], file_block.FileBlock)
         assert len(blocks[1].attrs) == 2
         assert blocks[1].get('source') == "potato"
         assert blocks[1].get('target') == "mango"
@@ -243,7 +241,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(get_full_path('valid8.manifest'))
         assert len(blocks) == 1
-        assert isinstance(blocks[0], salve.block.file_block.FileBlock)
+        assert isinstance(blocks[0], file_block.FileBlock)
         assert len(blocks[0].attrs) == 2
         assert blocks[0].get(blocks[0].primary_attr) == "lobster"
         assert blocks[0].get('source') == "salad"

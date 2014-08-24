@@ -2,16 +2,15 @@
 
 import os
 import mock
-import shlex
 import textwrap
 from nose.tools import istest
 
-from tests.end2end.cli import common
+from tests import system
 
 import salve
 
 
-class TestWithRunLog(common.RunScratchContainer):
+class TestWithRunLog(system.RunScratchContainer):
     default_settings_content = textwrap.dedent(
         """
         [global]
@@ -41,7 +40,7 @@ class TestWithRunLog(common.RunScratchContainer):
     @istest
     def explicit_run_log(self):
         """
-        E2E: Settings, Set a Run Log File
+        System: Settings, Set a Run Log File
 
         Runs a manifest with settings which set a run log and verifies that
         the error, warn, and info output is written to the log.

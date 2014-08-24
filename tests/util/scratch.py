@@ -8,9 +8,8 @@ import mock
 import textwrap
 import string
 
-import salve.util.locations as locations
-
-from tests.utils import MockedGlobals
+from salve.util import locations
+from tests.util import MockedGlobals
 
 
 class ScratchContainer(MockedGlobals):

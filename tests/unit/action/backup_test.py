@@ -9,8 +9,7 @@ from salve.action import backup
 from salve.filesys import real_fs
 from salve.util.context import ExecutionContext, FileContext
 
-from tests.utils.exceptions import ensure_except
-from tests.utils import scratch
+from tests.util import ensure_except, scratch
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 

@@ -3,7 +3,7 @@
 import mock
 from nose.tools import istest
 
-from tests.utils.exceptions import ensure_except
+from tests.util import ensure_except
 from tests.unit.action import dummy_file_context, dummy_logger
 
 from salve import action

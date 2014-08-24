@@ -4,8 +4,8 @@ import mock
 import io
 from nose.tools import istest
 
-from salve.cli import parser as cli_parser
-from tests.utils.exceptions import ensure_except
+from salve.cli import parser
+from tests.util import ensure_except
 
 
 @istest
@@ -17,9 +17,9 @@ def parse_cmd1():
     """
     fake_argv = ['./salve.py', 'deploy', '-m', 'a/b/c']
 
-    parser = cli_parser.get_parser()
+    p = parser.get_parser()
     with mock.patch('sys.argv', fake_argv):
-        args = parser.parse_args()
+        args = p.parse_args()
         assert args.manifest == 'a/b/c'
         assert args.directory is None
         assert args.configfile is None
@@ -34,9 +34,9 @@ def parse_cmd2():
     """
     fake_argv = ['./salve.py', 'deploy', '-c', 'p/q', '-m', 'root.man']
 
-    parser = cli_parser.get_parser()
+    p = parser.get_parser()
     with mock.patch('sys.argv', fake_argv):
-        args = parser.parse_args()
+        args = p.parse_args()
         assert args.configfile == 'p/q'
         assert args.directory is None
         assert args.manifest == 'root.man'
@@ -52,9 +52,9 @@ def parse_cmd3():
     fake_argv = ['./salve.py', '-c', 'a/b', 'deploy', '-c', 'p/q',
             '-m', 'root.man']
 
-    parser = cli_parser.get_parser()
+    p = parser.get_parser()
     with mock.patch('sys.argv', fake_argv):
-        args = parser.parse_args()
+        args = p.parse_args()
         assert args.configfile == 'p/q'
         assert args.directory is None
         assert args.manifest == 'root.man'
@@ -69,7 +69,7 @@ def parse_cmd4():
     fake_argv = ['./salve.py', 'deploy', '-c', 'p/q']
     stderr = io.StringIO()
 
-    parser = cli_parser.get_parser()
+    p = parser.get_parser()
     with mock.patch('sys.argv', fake_argv):
         with mock.patch('sys.stderr', stderr):
-            ensure_except(SystemExit, parser.parse_args)
+            ensure_except(SystemExit, p.parse_args)

@@ -12,7 +12,7 @@ from salve.action import modify
 from salve.util import ugo
 from salve.filesys import real_fs
 
-from tests.utils import scratch
+from tests.util import scratch
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 

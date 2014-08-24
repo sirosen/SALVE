@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from nose.tools import istest
-from tests.utils.exceptions import ensure_except
+from tests.util import ensure_except
 
 from salve.block import Block
 from salve.util.context import FileContext

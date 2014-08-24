@@ -5,8 +5,7 @@ import sys
 import mock
 
 from nose.tools import istest
-from tests.utils.exceptions import ensure_except
-from tests.utils import scratch
+from tests.util import ensure_except, scratch
 
 from salve.cli import deploy
 from salve.util import locations

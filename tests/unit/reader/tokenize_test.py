@@ -1,16 +1,15 @@
 #!/usr/bin/python
 
 from nose.tools import istest
-from os.path import dirname, join as pjoin
+from os.path import dirname
 
-from tests.utils.exceptions import ensure_except
-from tests.utils import MockedGlobals
+from tests.util import ensure_except, MockedGlobals
 
 from salve.util.context import FileContext
 from salve.reader import tokenize
 from salve.util import locations
 
-_testfile_dir = pjoin(dirname(__file__), 'files')
+_testfile_dir = locations.pjoin(dirname(__file__), 'files')
 
 
 def tokenize_filename(filename):
@@ -19,7 +18,7 @@ def tokenize_filename(filename):
 
 
 def get_full_path(filename):
-    return locations.clean_path(pjoin(_testfile_dir, filename))
+    return locations.clean_path(locations.pjoin(_testfile_dir, filename))
 
 
 def ensure_TokenizationException(filename):

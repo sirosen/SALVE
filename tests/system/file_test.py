@@ -2,17 +2,16 @@
 
 import os
 import mock
-import shlex
 from nose.tools import istest
 
-from tests.end2end.cli import common
+from tests import system
 
 
-class TestWithScratchdir(common.RunScratchContainer):
+class TestWithScratchdir(system.RunScratchContainer):
     @istest
     def copy_single_file(self):
         """
-        E2E: Copy a Single File
+        System: Copy a Single File
 
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
@@ -27,7 +26,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def implicit_copy_single_file(self):
         """
-        E2E: Implicit Copy a Single File
+        System: Implicit Copy a Single File
 
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
@@ -42,7 +41,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def copy_two_files(self):
         """
-        E2E: Copy Two Files
+        System: Copy Two Files
 
         Runs a manifest which copies two files and verifies the contents of
         the destination files.
@@ -68,7 +67,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def create_single_file(self):
         """
-        E2E: Create a Single File
+        System: Create a Single File
 
         Runs a manifest which creates a file and verifies the contents of
         the destination file are nil.
@@ -83,7 +82,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def create_multiple_files(self):
         """
-        E2E: Create Multiple Files
+        System: Create Multiple Files
 
         Runs a manifest which creates two files and verifies the contents of
         the destination file are nil.
@@ -102,7 +101,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def create_existing_file(self):
         """
-        E2E: Create Existing File
+        System: Create Existing File
 
         Runs a manifest which touches an existing file and verifies the
         contents of the destination file do not change.
@@ -119,7 +118,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def change_file_permissions(self):
         """
-        E2E: Change Single File Permissions
+        System: Change Single File Permissions
 
         Runs a manifest which touches several files and verifies the
         permissions of the target files.
@@ -135,7 +134,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def change_own_permissions(self):
         """
-        E2E: Reflexive Manifest Permissions Change
+        System: Reflexive Manifest Permissions Change
 
         Runs a manifest which changes its own permissions to remove user
         read/write permissions.
@@ -149,7 +148,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def copy_unwritable_target(self):
         """
-        E2E: Copy File, Unwritable Target
+        System: Copy File, Unwritable Target
 
         Runs a manifest which copies itself over an unwritable target file.
         Should result in failure during verification.
@@ -175,7 +174,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def copy_unreadable_source(self):
         """
-        E2E: Copy File, Unreadable Source
+        System: Copy File, Unreadable Source
 
         Runs a manifest which copies an unreadable source file.
         Should result in failure during verification.
@@ -199,7 +198,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def create_unwritable_target(self):
         """
-        E2E: Create File, Existing Unwritable Target
+        System: Create File, Existing Unwritable Target
 
         Runs a manifest which creates a file on top of an existing unwritable
         file.
@@ -223,7 +222,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def create_unwritable_parent(self):
         """
-        E2E: Create File, Unwritable Parent Dir
+        System: Create File, Unwritable Parent Dir
 
         Runs a manifest which creates a file on in an existing unwritable
         directory.

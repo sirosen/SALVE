@@ -4,12 +4,15 @@ import os
 import mock
 
 from nose.tools import istest
-from tests.utils.exceptions import ensure_except
-from tests.end2end.cli import common
+from tests.util import ensure_except
+from tests import system
 
 from salve import cli
+from salve.util import locations
 
-_testfile_dir = os.path.join(os.path.dirname(__file__), '../testfiles')
+_testfile_dir = os.path.join(
+        locations.containing_dir(__file__, depth=2),
+        'testfiles')
 
 
 def get_full_path(filename):
@@ -18,16 +21,16 @@ def get_full_path(filename):
 
 def except_from_args(argv):
     with mock.patch('sys.argv', argv):
-        e = ensure_except(SystemExit, cli.run)
+        e = ensure_except(SystemExit, cli.main)
 
     return e
 
 
-class TestWithScratchdir(common.RunScratchContainer):
+class TestWithScratchdir(system.RunScratchContainer):
     @istest
     def unclosed_block_fails(self):
         """
-        E2E: Run on File With Unclosed Block Fails
+        System: Run on File With Unclosed Block Fails
 
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
@@ -46,7 +49,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def missing_open_fails(self):
         """
-        E2E: Run on File With Missing { Fails
+        System: Run on File With Missing { Fails
 
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
@@ -66,7 +69,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def missing_identifier_fails(self):
         """
-        E2E: Run on File With Missing Identifier Fails
+        System: Run on File With Missing Identifier Fails
 
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
@@ -85,7 +88,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def missing_value_fails(self):
         """
-        E2E: Run on File With Missing Attr Value Fails
+        System: Run on File With Missing Attr Value Fails
 
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
@@ -104,7 +107,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def double_open_fails(self):
         """
-        E2E: Run on File With Double { Fails
+        System: Run on File With Double { Fails
 
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.
@@ -123,7 +126,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def invalid_block_id_fails(self):
         """
-        E2E: Run on File With Invalid Block ID Fails
+        System: Run on File With Invalid Block ID Fails
 
         Not only validates that a SystemExit occurs, but also
         verifies the exit code and message of the raised exception.

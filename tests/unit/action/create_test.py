@@ -8,7 +8,7 @@ from salve.util.context import ExecutionContext, FileContext
 
 from salve.action import create
 from salve.filesys import real_fs
-from tests.utils import scratch
+from tests.util import scratch
 
 _testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
 

@@ -4,14 +4,14 @@ import os
 import shlex
 from nose.tools import istest
 
-from tests.end2end.cli import common
+from tests import system
 
 
-class TestWithScratchdir(common.RunScratchContainer):
+class TestWithScratchdir(system.RunScratchContainer):
     @istest
     def copy_file_triggers_backup(self):
         """
-        E2E: Copy File Triggers Backup
+        System: Copy File Triggers Backup
 
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
@@ -41,7 +41,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def copy_file_triggers_backup_implicit_dir(self):
         """
-        E2E: Copy File Implicit Backup Dir
+        System: Copy File Implicit Backup Dir
 
         Runs a manifest which copies itself and verifies the contents of
         the destination file.
@@ -69,7 +69,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def copy_dir_triggers_backup(self):
         """
-        E2E: Copy Directory Triggers File Backup
+        System: Copy Directory Triggers File Backup
 
         Runs a manifest which copies an directory containing an empty dir.
         Verifies that the target is created, and that it has a duplicate
@@ -112,7 +112,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def unwritable_backupdir_cancel(self):
         """
-        E2E: Unwritable Backup Dir Cancels Backup
+        System: Unwritable Backup Dir Cancels Backup
 
         Runs a file copy to trigger a backup with an unwritable backup dir.
         Verifies that no backup action takes place.
@@ -142,7 +142,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def unwritable_backupdir_cancel(self):
         """
-        E2E: Unwritable Backup Parent Dir Cancels Backup
+        System: Unwritable Backup Parent Dir Cancels Backup
 
         Runs a file copy to trigger a backup with an unwritable backup parent
         dir. Verifies that no backup action takes place.
@@ -172,7 +172,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def unreadable_source_cancel(self):
         """
-        E2E: Unreadable Source File Cancels Backup
+        System: Unreadable Source File Cancels Backup
 
         Verifies that if the source file is not readable, the bakcup action
         will be cancelled.

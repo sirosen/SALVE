@@ -2,17 +2,16 @@
 
 import os
 import mock
-import shlex
 from nose.tools import istest
 
-from tests.end2end.cli import common
+from tests import system
 
 
-class TestWithScratchdir(common.RunScratchContainer):
+class TestWithScratchdir(system.RunScratchContainer):
     @istest
     def copy_symlink(self):
         """
-        E2E: Copy Symlink
+        System: Copy Symlink
 
         Runs a manifest which copies a symlink and verifies the contents of
         the destination link.

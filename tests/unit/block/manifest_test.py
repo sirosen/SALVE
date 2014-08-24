@@ -3,20 +3,17 @@
 import os
 import mock
 from nose.tools import istest
-from tests.utils.exceptions import ensure_except
+from tests.util import ensure_except
 
 from salve import action
-from salve.action import backup
-from salve.action import copy
+from salve.action import backup, copy
 
-from salve.block import manifest_block
-from salve.block import file_block
+from salve.block import manifest_block, file_block
 from salve import block
 from salve.util import locations
 
-from tests.unit.block import get_full_path
-from tests.unit.block import dummy_file_context, dummy_exec_context
-from tests.unit.block import dummy_conf, dummy_logger
+from tests.unit.block import get_full_path, \
+        dummy_file_context, dummy_exec_context, dummy_conf, dummy_logger
 
 
 @istest

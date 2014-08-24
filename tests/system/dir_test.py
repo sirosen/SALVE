@@ -4,14 +4,14 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.end2end.cli import common
+from tests import system
 
 
-class TestWithScratchdir(common.RunScratchContainer):
+class TestWithScratchdir(system.RunScratchContainer):
     @istest
     def copy_empty_dir(self):
         """
-        E2E: Copy an Empty Directory
+        System: Copy an Empty Directory
 
         Runs a manifest which copies an empty directory. Verifies that
         the target is created, and that it is empty as well.
@@ -29,7 +29,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def implicit_copy_action(self):
         """
-        E2E: Copy Directory Implicit Action
+        System: Copy Directory Implicit Action
 
         Runs a manifest which copies an empty directory. Verifies that
         the target is created, and that it is empty as well.
@@ -47,7 +47,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def create_dir(self):
         """
-        E2E: Create a Directory
+        System: Create a Directory
 
         Runs a manifest which copies an empty directory. Verifies that
         the target is created, and that it is empty as well.
@@ -62,7 +62,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def set_dir_mode(self):
         """
-        E2E: Create a Directory to Set Mode
+        System: Create a Directory to Set Mode
 
         Runs a manifest which copies an empty directory. Verifies that
         the target is created, and that it is empty as well.
@@ -79,7 +79,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def copy_dir_with_file(self):
         """
-        E2E: Copy Directory With File
+        System: Copy Directory With File
 
         Runs a manifest which copies an directory containing one file.
         Verifies that the target is created, and that it has a duplicate
@@ -104,7 +104,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def copy_dir_containing_empty_dir(self):
         """
-        E2E: Copy Directory Containing Empty Directory
+        System: Copy Directory Containing Empty Directory
 
         Runs a manifest which copies an directory containing an empty dir.
         Verifies that the target is created, and that it has a duplicate
@@ -129,7 +129,7 @@ class TestWithScratchdir(common.RunScratchContainer):
     @istest
     def copy_unwritable_target_parent(self):
         """
-        E2E: Copy Directory, Unwritable Target Parent
+        System: Copy Directory, Unwritable Target Parent
 
         Runs a manifest which copies a dir to an unwritable location.
         Should result in failure during verification.

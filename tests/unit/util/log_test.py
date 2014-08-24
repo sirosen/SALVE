@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from nose.tools import istest
-from tests.utils import scratch
+from tests.util import scratch
 
 
 class TestWithScratchdir(scratch.ScratchContainer):

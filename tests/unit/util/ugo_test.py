@@ -1,11 +1,9 @@
 #!/usr/bin/python
 
-import salve.util.ugo as ugo
+from salve.util import ugo
 
 from nose.tools import istest
 import mock
-
-from collections import namedtuple
 
 
 @istest
@@ -17,12 +15,14 @@ def group_from_username():
     for getpwnam and getgrgid.
     """
     mock_getgrgid = mock.Mock()
-    mock_group = namedtuple('mock_group', ['gr_name'])
-    mock_getgrgid.return_value = mock_group('group1')
+    mock_group = mock.Mock()
+    mock_group.gr_name = 'group1'
+    mock_getgrgid.return_value = mock_group
 
     mock_getpwnam = mock.Mock()
-    mock_pw = namedtuple('mock_pw', ['pw_gid'])
-    mock_getpwnam.return_value = mock_pw(21)
+    mock_pw = mock.Mock()
+    mock_pw.pw_gid = 21
+    mock_getpwnam.return_value = mock_pw
 
     with mock.patch('pwd.getpwnam', mock_getpwnam):
         with mock.patch('grp.getgrgid', mock_getgrgid):
@@ -60,9 +60,10 @@ def name_to_uid():
 
     Checks the result of name_to_uid using getpwnam.
     """
-    mock_pw = namedtuple('mock_pw', ['pw_uid'])
+    mock_pw = mock.Mock()
+    mock_pw.pw_uid = 101
     mock_getpwnam = mock.Mock()
-    mock_getpwnam.return_value = mock_pw(101)
+    mock_getpwnam.return_value = mock_pw
 
     with mock.patch('pwd.getpwnam', mock_getpwnam):
         uuid = ugo.name_to_uid('user1')
@@ -78,9 +79,10 @@ def name_to_gid():
 
     Checks the result of name_to_gid using getgrnam.
     """
-    mock_gr = namedtuple('mock_gr', ['gr_gid'])
+    mock_gr = mock.Mock()
+    mock_gr.gr_gid = 2000
     mock_getgrnam = mock.Mock()
-    mock_getgrnam.return_value = mock_gr(2000)
+    mock_getgrnam.return_value = mock_gr
 
     with mock.patch('grp.getgrnam', mock_getgrnam):
         gid = ugo.name_to_gid('group2')

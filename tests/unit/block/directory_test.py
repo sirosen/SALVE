@@ -4,14 +4,11 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.utils.exceptions import ensure_except
-from salve.block import BlockException
+from tests.util import ensure_except
 
 from salve import action
-from salve.action import backup
-from salve.action import modify
-from salve.action import create
-from salve.block import directory_block
+from salve.action import backup, modify, create
+from salve.block import BlockException, directory_block
 
 from tests.unit.block import dummy_file_context, dummy_logger
 

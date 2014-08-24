@@ -6,14 +6,12 @@ import hashlib
 import mock
 
 from nose.tools import istest
-from tests.utils.exceptions import ensure_except
-from tests.utils.scratch import ScratchContainer
+from tests.util import ensure_except, scratch
 
-from salve.filesys import concrete
-from salve.filesys import abstract
+from salve.filesys import concrete, abstract
 
 
-class TestWithScratchdir(ScratchContainer):
+class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def missing_file_lookup(self):
         """

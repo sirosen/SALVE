@@ -2,8 +2,8 @@
 
 import mock
 
-from tests.utils import scratch
 from salve import cli
+from tests.util import scratch
 
 
 class RunScratchContainer(scratch.ScratchContainer):

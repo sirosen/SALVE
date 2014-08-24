@@ -1,35 +1,25 @@
 #!/usr/bin/python
 
 from nose.tools import istest
-from os.path import dirname, join as pjoin
 
-import salve.block.file_block
+from salve.block import file_block
+from salve.reader import tokenize, parse
 
-import salve.reader.tokenize
-import salve.reader.parse
+from tests.util import scratch, ensure_except
 
-import salve.util.locations as locations
-
-import tests.utils.scratch
-from tests.utils.exceptions import ensure_except
-
-_testfile_dir = pjoin(dirname(__file__), 'testfiles')
+from tests.integration import get_full_path
 
 
 def parse_filename(filename):
     with open(filename) as f:
-        return salve.reader.parse.parse_stream(f)
+        return parse.parse_stream(f)
 
 
-def get_full_path(filename):
-    return locations.clean_path(pjoin(_testfile_dir, filename))
-
-
-class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
+class TestWithScratchContainer(scratch.ScratchContainer):
     @istest
     def empty_file(self):
         """
-        E2E: Parse Empty Manifest File
+        Integration: Parse Empty Manifest File
 
         Checks that parsing an empty file produces an empty list of blocks.
         """
@@ -39,32 +29,32 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
     @istest
     def empty_block(self):
         """
-        E2E: Parse File With Empty Block
+        Integration: Parse File With Empty Block
 
         Checks that parsing an empty block raises no errors.
         """
         blocks = parse_filename(get_full_path('empty_block.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, salve.block.file_block.FileBlock)
+        assert isinstance(fblock, file_block.FileBlock)
 
     @istest
     def single_attr_block(self):
         """
-        E2E: Parse File With Single Attr Block
+        Integration: Parse File With Single Attr Block
 
         Checks that parsing a block with one attribute raises no errors.
         """
         blocks = parse_filename(get_full_path('single_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, salve.block.file_block.FileBlock)
+        assert isinstance(fblock, file_block.FileBlock)
         assert fblock.get('source') == '/a/b/c'
 
     @istest
     def multiple_attr_block(self):
         """
-        E2E: Parse File With Multiple Attr Block
+        Integration: Parse File With Multiple Attr Block
 
         Checks that parsing a block with several attributes raises no
         errors.
@@ -72,14 +62,14 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('two_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, salve.block.file_block.FileBlock)
+        assert isinstance(fblock, file_block.FileBlock)
         assert fblock.get('source') == '/a/b/c'
         assert fblock.get('target') == '/d/e'
 
     @istest
     def spaced_attr_block(self):
         """
-        E2E: Parse File With Block Attr Containing Spaces
+        Integration: Parse File With Block Attr Containing Spaces
 
         Checks that parsing a block with several attributes raises no
         errors.
@@ -87,20 +77,20 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
         blocks = parse_filename(get_full_path('spaced_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, salve.block.file_block.FileBlock)
+        assert isinstance(fblock, file_block.FileBlock)
         assert fblock.get('source') == '/a/b/c'
         assert fblock.get('target') == '/d/e f/g'
 
     @istest
     def unclosed_block_raises_TE(self):
         """
-        E2E: Parse File With Unclosed Block Raises Tokenization Exception
+        Integration: Parsing Unclosed Block Raises TokenizationException
 
-        Not only validates that a Tokenization Exception occurs, but also
+        Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
         path = get_full_path('unclosed_block.manifest')
-        e = ensure_except(salve.reader.tokenize.TokenizationException,
+        e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
@@ -110,13 +100,13 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
     @istest
     def missing_open_raises_TE(self):
         """
-        E2E: Parse File With Unopened Block Raises Tokenization Exception
+        Integration: Parsing Unopened Block Raises TokenizationException
 
-        Not only validates that a Tokenization Exception occurs, but also
+        Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
         path = get_full_path('missing_open.manifest')
-        e = ensure_except(salve.reader.tokenize.TokenizationException,
+        e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
@@ -126,13 +116,13 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
     @istest
     def missing_identifier_raises_TE(self):
         """
-        E2E: Parse File With Missing Block ID Raises Tokenization Exception
+        Integration: Parsing Missing Block ID Raises TokenizationException
 
-        Not only validates that a Tokenization Exception occurs, but also
+        Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
         path = get_full_path('missing_id.manifest')
-        e = ensure_except(salve.reader.tokenize.TokenizationException,
+        e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
@@ -142,13 +132,13 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
     @istest
     def missing_value_raises_TE(self):
         """
-        E2E: Parse File With Missing Block ID Raises Tokenization Exception
+        Integration: Parsing Missing Block ID Raises TokenizationException
 
-        Not only validates that a Tokenization Exception occurs, but also
+        Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
         path = get_full_path('missing_attr_val.manifest')
-        e = ensure_except(salve.reader.tokenize.TokenizationException,
+        e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
@@ -158,13 +148,13 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
     @istest
     def double_open_raises_TE(self):
         """
-        E2E: Parse File With Double Block Open Raises Tokenization Exception
+        Integration: Parsing Double Block Open Raises TokenizationException
 
-        Not only validates that a Tokenization Exception occurs, but also
+        Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
         path = get_full_path('double_open.manifest')
-        e = ensure_except(salve.reader.tokenize.TokenizationException,
+        e = ensure_except(tokenize.TokenizationException,
                           parse_filename,
                           path)
         sctx = e.file_context
@@ -174,13 +164,13 @@ class TestWithScratchContainer(tests.utils.scratch.ScratchContainer):
     @istest
     def invalid_block_id_raises_PE(self):
         """
-        E2E: Parse File With Invalid Block ID Raises Parsing Exception
+        Integration: Parse File With Invalid Block ID Raises ParsingException
 
-        Not only validates that a Tokenization Exception occurs, but also
+        Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
         path = get_full_path('invalid_block_id.manifest')
-        e = ensure_except(salve.reader.parse.ParsingException,
+        e = ensure_except(parse.ParsingException,
                           parse_filename,
                           path)
         sctx = e.file_context

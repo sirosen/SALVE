@@ -5,7 +5,7 @@ import mock
 from nose.tools import istest, with_setup
 from os.path import dirname, abspath, relpath, join as pjoin
 
-from tests.utils.exceptions import ensure_except
+from tests.util import ensure_except
 from salve.util.error import SALVEException
 
 from salve import config
