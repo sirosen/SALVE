@@ -2,14 +2,14 @@
 
 import mock
 
-import tests.utils.scratch
-import salve.cli
+from tests.utils import scratch
+from salve import cli
 
 
-class RunScratchContainer(tests.utils.scratch.ScratchContainer):
+class RunScratchContainer(scratch.ScratchContainer):
     def run_on_args(self, argv):
         with mock.patch('sys.argv', argv):
-            return salve.cli.run()
+            return cli.main()
 
     def run_on_manifest(self, manifest):
         man_path = self.get_fullname(manifest)

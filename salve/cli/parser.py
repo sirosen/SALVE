@@ -2,12 +2,13 @@
 
 from __future__ import unicode_literals
 import argparse
+import textwrap
 
 import salve.cli.deploy
 import salve.cli.backup
 
 
-def add_backup_args(parser):
+def add_backup_args(parser):  # pragma: no cover
     """
     Takes in an argparse parser and adds the options for the backup subcommand.
     This is necessary because of the way that argparse handles subparsers --
@@ -50,19 +51,28 @@ def get_parser():
         def __init__(self, *args, **kwargs):
             argparse.ArgumentParser.__init__(self, *args, **kwargs)
             self.add_argument('-c', '--config-file', dest='configfile',
-                default=None, help='A SALVE config file.')
+                default=None, help='A SALVE config file (INI format).')
             self.add_argument('-v', '--verbose', dest='verbosity',
                 default=0, action='count', help='Verbosity of log output. ' +
                 'Specify multiple times for higher verbosity.')
 
-    parser = SALVESharedParser(description='Run SALVE.')
+    description = textwrap.dedent("""Run a SALVE command.
+        SALVE is a configuration deployment language that guarantees the
+        properties of idempotence, safety, and recoverability that are
+        necessary in order to manage personal configuration files in a
+        straightforward way.
+        For a full description of SALVE and its capabilities, visit
+        http://salve.sirosen.net/""")
+
+    parser = SALVESharedParser(description=description)
 
     subparsers = parser.add_subparsers(title='Subcommands',
         parser_class=SALVESharedParser, metavar='')
 
-    backup_parser = subparsers.add_parser('backup',
-            help='Directly manipulate, inspect, and restore from backups.')
-    add_backup_args(backup_parser)
+    # don't yet add the backup parser -- it isn't supported yet
+    # backup_parser = subparsers.add_parser('backup',
+    #         help='Directly manipulate, inspect, and restore from backups.')
+    # add_backup_args(backup_parser)
 
     deploy_parser = subparsers.add_parser('deploy', help='Run on a manifest' +
         ' tree and deploy the described configuration.')
