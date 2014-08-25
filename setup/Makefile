@@ -6,32 +6,27 @@
 # JUST NEEDS TO WORK FOR ME
 ###
 
-MOVE_LIST=setup.py MANIFEST.in requirements.txt
 SETUP_OPTIONS=
 
-.PHONY: copy-files clean distclean
+.PHONY: upload clean
 
 # default target is dev
 all: dev
 
-stable: build
+stable: upload
 dev:
-	$(MAKE) build SETUP_OPTIONS="egg_info --tag-build=.dev"
-
-copy-files:
-	cp ${MOVE_LIST} ../
+	$(MAKE) upload SETUP_OPTIONS="egg_info --tag-build=.dev"
 
 clean:
-	cd .. && rm -f ${MOVE_LIST}
+	rm -rf ../setup-virtualenv ../dist ../build ../salve.egg-info
 
-distclean: clean
-	rm -rf ../.setup-venv ../dist ../build ../salve.egg-info
+../setup-virtualenv: requirements.txt
+	virtualenv ../setup-virtualenv
+	../setup-virtualenv/bin/pip install -r requirements.txt
 
-../.setup-venv: requirements.txt
-	virtualenv ../.setup-venv
-	../.setup-venv/bin/pip install -r requirements.txt
+build: ../setup-virtualenv
+	rm -rf ../dist/ # can't leave this lying around or twine will grab it
+	cd .. && setup-virtualenv/bin/python setup.py ${SETUP_OPTIONS} sdist bdist_egg
 
-build: copy-files ../.setup-venv
-	cd .. && .setup-venv/bin/python setup.py ${SETUP_OPTIONS} sdist bdist_egg
-	cd .. && . .setup-venv/bin/activate; twine upload dist/*
-	$(MAKE) clean
+upload: build
+	cd .. && . setup-virtualenv/bin/activate; twine upload dist/*
