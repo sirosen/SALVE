@@ -2,14 +2,13 @@
 
 from nose.tools import istest
 
+from salve import paths
 from salve.reader import parse
 from salve.reader.tokenize import Token
-from salve.util.context import FileContext
-from salve.util import locations
+from salve.context import FileContext
+from salve.block import file_block, manifest_block
 
 from tests.util import ensure_except, file_path, MockedGlobals
-
-from salve.block import file_block, manifest_block
 
 dummy_context = FileContext('no such file')
 
@@ -35,8 +34,8 @@ def ensure_ParsingException(tokens=None, filename=None):
     else:
         assert False
     assert (filename is None or
-           locations.clean_path(e.file_context.filename) ==
-           locations.clean_path(file_path(filename)))
+           paths.clean_path(e.file_context.filename) ==
+           paths.clean_path(file_path(filename)))
 
 
 class TestParsingMockedGlobals(MockedGlobals):

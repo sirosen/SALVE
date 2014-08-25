@@ -6,19 +6,19 @@ from nose.tools import istest
 
 from tests.util import file_path
 
-import salve.util.streams
+import salve.util
 
 
 @istest
-def get_filename():
+def stream_filename():
     """
-    Unit: Streams Util Get Stream Filename
-    Tests get_filename on real files, given the File objects.
+    Unit: Util Get Stream Filename
+    Tests stream_filename on real files, given the File objects.
     """
     for char in ['a', 'b', 'c']:
         name = file_path(char)
         with open(name) as f:
-            assert salve.util.streams.get_filename(f) == name
+            assert salve.util.stream_filename(f) == name
 
 
 @istest
@@ -31,9 +31,9 @@ def sha512_empty_match():
     bname = file_path('b')
     ahash, bhash = None, None
     with open(aname) as f:
-        ahash = salve.util.streams.sha_512(f)
+        ahash = salve.util.sha512(f)
     with open(bname) as f:
-        bhash = salve.util.streams.sha_512(f)
+        bhash = salve.util.sha512(f)
     assert ahash == bhash
 
 
@@ -47,9 +47,9 @@ def sha512_nonempty_match():
     dname = file_path('d')
     ahash, chash = None, None
     with open(cname) as f:
-        chash = salve.util.streams.sha_512(f)
+        chash = salve.util.sha512(f)
     with open(dname) as f:
-        dhash = salve.util.streams.sha_512(f)
+        dhash = salve.util.sha512(f)
     assert chash == dhash
 
 
@@ -63,7 +63,7 @@ def sha512_mismatch():
     cname = file_path('c')
     ahash, chash = None, None
     with open(aname) as f:
-        ahash = salve.util.streams.sha_512(f)
+        ahash = salve.util.sha512(f)
     with open(cname) as f:
-        chash = salve.util.streams.sha_512(f)
+        chash = salve.util.sha512(f)
     assert ahash != chash

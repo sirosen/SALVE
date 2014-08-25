@@ -35,7 +35,7 @@ def get_default_config():
     """
     return os.path.abspath(
             os.path.join(containing_dir(__file__),
-                '../default_settings.ini'))
+                'default_settings.ini'))
 
 
 def is_abs_or_var(path):

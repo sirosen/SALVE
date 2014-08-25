@@ -5,7 +5,7 @@ import os
 import salve
 from salve import action
 
-from salve.util.context import ExecutionContext
+from salve.context import ExecutionContext
 from salve.api import Block
 from salve.block import CoreBlock
 

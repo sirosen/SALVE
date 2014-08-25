@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from salve.util import ugo
+from salve import ugo
 
 from nose.tools import istest
 import mock

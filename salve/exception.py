@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import salve.util.locations as locations
-
 
 class SALVEException(Exception):
     """

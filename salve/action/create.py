@@ -4,12 +4,10 @@ import abc
 
 import salve
 
-from salve import action
+from salve import action, paths
 from salve.filesys import access_codes
-from salve.util import locations
-
-from salve.util.context import ExecutionContext
-from salve.util.six import with_metaclass
+from salve.context import ExecutionContext
+from salve.util import with_metaclass
 
 
 class CreateAction(with_metaclass(abc.ABCMeta, action.Action)):
@@ -64,7 +62,7 @@ class FileCreateAction(CreateAction):
             # file is now known not to exist
             assert not filesys.exists(self.dst)
 
-            parent = locations.dirname(self.dst)
+            parent = paths.dirname(self.dst)
             if filesys.access(parent, access_codes.W_OK):
                 return True
 

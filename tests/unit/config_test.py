@@ -65,7 +65,7 @@ def setup_os1():
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = mock.patch('salve.util.ugo.get_group_from_username',
+    group_patch = mock.patch('salve.ugo.get_group_from_username',
                              mock_get_group)
 
     # put the patches in place
@@ -88,7 +88,7 @@ def setup_os2():
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = mock.patch('salve.util.ugo.get_group_from_username',
+    group_patch = mock.patch('salve.ugo.get_group_from_username',
                         mock_get_group)
 
     setup_patches(mock.patch.dict('os.environ', mock_env),
@@ -109,7 +109,7 @@ def setup_os3():
 
     # mock group lookups to always return 'nogroup'
     mock_get_group = lambda x: 'nogroup'
-    group_patch = mock.patch('salve.util.ugo.get_group_from_username',
+    group_patch = mock.patch('salve.ugo.get_group_from_username',
                              mock_get_group)
 
     setup_patches(mock.patch.dict('os.environ', mock_env),

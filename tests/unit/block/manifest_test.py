@@ -5,12 +5,10 @@ import mock
 from nose.tools import istest
 from tests.util import ensure_except, file_path
 
-from salve import action
+from salve import action, block, paths
 from salve.action import backup, copy
 
 from salve.block import manifest_block, file_block
-from salve import block
-from salve.util import locations
 
 from tests.unit.block import dummy_file_context, dummy_exec_context, \
         dummy_conf, dummy_logger
@@ -64,7 +62,7 @@ def recursive_manifest_error():
     BlockException when expanded.
     """
     invalid1_path = file_path('self_include.manifest')
-    sourcedir = locations.containing_dir(invalid1_path)
+    sourcedir = paths.containing_dir(invalid1_path)
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=invalid1_path)
@@ -79,7 +77,7 @@ def sub_block_expand():
     Verifies that Manifest block expansion works normally.
     """
     valid2_path = file_path('empty_and_file.manifest')
-    sourcedir = locations.containing_dir(valid2_path)
+    sourcedir = paths.containing_dir(valid2_path)
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=valid2_path)
@@ -91,7 +89,7 @@ def sub_block_expand():
     assert isinstance(fblock, file_block.FileBlock)
     assert mblock.get('source') == file_path('empty.manifest')
     assert fblock.get('source') == file_path('empty.manifest')
-    assert fblock.get('target') == locations.pjoin(sourcedir, 'a/b/c')
+    assert fblock.get('target') == paths.pjoin(sourcedir, 'a/b/c')
 
 
 @istest
@@ -102,7 +100,7 @@ def sub_block_compile():
     conversion works normally.
     """
     valid2_path = file_path('empty_and_file.manifest')
-    sourcedir = locations.containing_dir(valid2_path)
+    sourcedir = paths.containing_dir(valid2_path)
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=valid2_path)

@@ -3,19 +3,18 @@
 import io
 import mock
 
-from salve.util.context import ExecutionContext
-from salve.util.log import Logger
+from salve import paths
+from salve.context import ExecutionContext
+from salve.log import Logger
 
-from salve.util import locations
 
-
-testfile_dir = locations.pjoin(
-        locations.containing_dir(__file__, depth=2),
+testfile_dir = paths.pjoin(
+        paths.containing_dir(__file__, depth=2),
         'testfiles')
 
 
 def file_path(filename):
-    return locations.pjoin(testfile_dir, filename)
+    return paths.pjoin(testfile_dir, filename)
 
 
 def ensure_except(exception_type, func, *args, **kwargs):

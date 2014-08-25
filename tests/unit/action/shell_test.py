@@ -4,7 +4,7 @@ from nose.tools import istest
 import mock
 
 from tests.util import ensure_except
-from salve.util.context import ExecutionContext, FileContext
+from salve.context import ExecutionContext, FileContext
 
 from salve import action
 from salve.action import shell

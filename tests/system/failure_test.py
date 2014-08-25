@@ -8,7 +8,6 @@ from tests.util import ensure_except, file_path
 from tests import system
 
 from salve import cli
-from salve.util import locations
 
 
 def except_from_args(argv):

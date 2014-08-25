@@ -7,11 +7,10 @@ import sys
 
 import salve
 
-from salve.util.context import FileContext
-from salve.util.error import SALVEException
-from salve.util import locations
+from salve import paths, config
+from salve.context import FileContext
+from salve.exception import SALVEException
 from salve.block import manifest_block
-from salve import config
 from salve.filesys import real_fs
 
 
@@ -36,7 +35,7 @@ def run_on_manifest(root_manifest, args):
     if args.verbosity:
         salve.exec_context.set('verbosity', args.verbosity)
 
-    root_dir = locations.containing_dir(root_manifest)
+    root_dir = paths.containing_dir(root_manifest)
     if args.directory:
         root_dir = os.path.abspath(args.directory)
 

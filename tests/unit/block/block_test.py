@@ -4,7 +4,7 @@ from nose.tools import istest
 from tests.util import ensure_except
 
 from salve.block import Block
-from salve.util.context import FileContext
+from salve.context import FileContext
 
 
 @istest

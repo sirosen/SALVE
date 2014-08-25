@@ -4,12 +4,10 @@ import abc
 
 import salve
 
-from salve import action
+from salve import action, paths
 from salve.filesys import access_codes
-from salve.util import locations
-
-from salve.util.context import ExecutionContext
-from salve.util.six import with_metaclass
+from salve.context import ExecutionContext
+from salve.util import with_metaclass
 
 
 class CopyAction(with_metaclass(abc.ABCMeta, action.Action)):
@@ -87,7 +85,7 @@ class FileCopyAction(CopyAction):
 
             # at this point, the file is known not to exist
             # now check properties of the containing dir
-            containing_dir = locations.dirname(self.dst)
+            containing_dir = paths.dirname(self.dst)
             if filesys.access(containing_dir, access_codes.W_OK):
                 return True
 
@@ -203,7 +201,7 @@ class DirCopyAction(CopyAction):
             """
             Checks if the target is in a writable directory.
             """
-            return filesys.access(locations.dirname(self.dst),
+            return filesys.access(paths.dirname(self.dst),
                     access_codes.W_OK)
 
         salve.logger.info('DirCopy: Checking source is readable + ' +

@@ -3,12 +3,12 @@
 import abc
 import os
 
+from salve import paths
 from salve.api import Block
 
-from salve.util.error import SALVEException
-from salve.util import locations
+from salve.exception import SALVEException
 
-from salve.util.six import with_metaclass
+from salve.util import with_metaclass
 
 
 class BlockException(SALVEException):
@@ -146,7 +146,7 @@ class CoreBlock(with_metaclass(abc.ABCMeta, Block)):
         # define a helper to expand attributes with the root_dir
         def expand_attr(attrname):
             val = self.get(attrname)
-            if not locations.is_abs_or_var(val):
+            if not paths.is_abs_or_var(val):
                 self.set(attrname, os.path.join(root_dir, val))
 
         # find the minimal set of path attributes

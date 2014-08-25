@@ -8,7 +8,7 @@ import mock
 import textwrap
 import string
 
-from salve.util import locations
+from salve import paths
 from tests.util import MockedGlobals
 
 
@@ -74,13 +74,13 @@ class ScratchContainer(MockedGlobals):
         real_open = open
 
         def mock_open(path, *args, **kwargs):
-            if os.path.abspath(path) == locations.get_default_config():
+            if os.path.abspath(path) == paths.get_default_config():
                 return real_open(settings_loc, *args, **kwargs)
             else:
                 return real_open(path, *args, **kwargs)
 
         self.patches.add(
-            mock.patch('salve.util.ugo.get_group_from_username',
+            mock.patch('salve.ugo.get_group_from_username',
                        get_groupname)
             )
 
@@ -89,10 +89,10 @@ class ScratchContainer(MockedGlobals):
         # user
         real_uid = os.geteuid()
         real_gid = os.getegid()
-        self.patches.add(mock.patch('salve.util.ugo.name_to_uid',
+        self.patches.add(mock.patch('salve.ugo.name_to_uid',
             lambda x: real_uid)
             )
-        self.patches.add(mock.patch('salve.util.ugo.name_to_gid',
+        self.patches.add(mock.patch('salve.ugo.name_to_gid',
             lambda x: real_gid)
             )
 

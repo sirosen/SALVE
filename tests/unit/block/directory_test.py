@@ -89,7 +89,7 @@ def dir_create_chown_as_root():
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
-    with mock.patch('salve.util.ugo.is_root', lambda: True):
+    with mock.patch('salve.ugo.is_root', lambda: True):
         with mock.patch('salve.logger', dummy_logger):
             dir_act = b.compile()
 
@@ -143,7 +143,7 @@ def dir_copy_chown_as_root():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
 
-    with mock.patch('salve.util.ugo.is_root', lambda: True):
+    with mock.patch('salve.ugo.is_root', lambda: True):
         with mock.patch('os.walk', lambda d: []):
             with mock.patch('salve.logger', dummy_logger):
                 al = b.compile()

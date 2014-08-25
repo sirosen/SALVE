@@ -7,7 +7,7 @@ from nose.tools import istest
 from salve import action
 from salve.action import backup
 from salve.filesys import real_fs
-from salve.util.context import ExecutionContext, FileContext
+from salve.context import ExecutionContext, FileContext
 
 from tests.util import ensure_except, scratch, file_path
 from tests.unit.action import dummy_file_context

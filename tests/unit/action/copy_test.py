@@ -4,7 +4,7 @@ import os
 import mock
 from nose.tools import istest
 
-from salve.util.context import ExecutionContext, FileContext
+from salve.context import ExecutionContext, FileContext
 
 from salve import action
 from salve.action import copy

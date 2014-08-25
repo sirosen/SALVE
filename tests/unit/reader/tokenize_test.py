@@ -2,11 +2,11 @@
 
 from nose.tools import istest
 
-from tests.util import ensure_except, file_path, MockedGlobals
-
-from salve.util.context import FileContext
+from salve import paths
+from salve.context import FileContext
 from salve.reader import tokenize
-from salve.util import locations
+
+from tests.util import ensure_except, file_path, MockedGlobals
 
 
 def tokenize_filename(filename):
@@ -19,8 +19,8 @@ def ensure_TokenizationException(filename):
     e = ensure_except(tokenize.TokenizationException,
                       tokenize_filename,
                       full_path)
-    assert (locations.clean_path(e.file_context.filename) ==
-            locations.clean_path(full_path))
+    assert (paths.clean_path(e.file_context.filename) ==
+            paths.clean_path(full_path))
 
 #failure tests
 

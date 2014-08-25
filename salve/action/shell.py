@@ -5,7 +5,7 @@ import subprocess
 import salve
 
 from salve.action import Action, ActionException
-from salve.util.context import ExecutionContext
+from salve.context import ExecutionContext
 
 
 class ShellAction(Action):

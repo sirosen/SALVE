@@ -5,9 +5,9 @@ import mock
 
 from tests.util import testfile_dir
 
-import salve.config
-from salve.util.context import FileContext, ExecutionContext
-from salve.util.log import Logger
+from salve import config
+from salve.context import FileContext, ExecutionContext
+from salve.log import Logger
 
 
 def mock_expanduser(string):
@@ -26,7 +26,7 @@ dummy_logger = Logger(dummy_exec_context)
 with mock.patch('os.path.expanduser', mock_expanduser):
     with mock.patch('salve.exec_context', dummy_exec_context):
         with mock.patch('salve.logger', dummy_logger):
-            dummy_conf = salve.config.SALVEConfig()
+            dummy_conf = config.SALVEConfig()
 
 # must be set after conf is created, otherwise they will be overidden by
 # config initialization

@@ -2,8 +2,8 @@
 
 import salve
 
-from salve.util import locations
-from salve.util.enum import Enum
+from salve import paths
+from salve.util import Enum
 
 
 class FileContext(object):
@@ -23,7 +23,7 @@ class FileContext(object):
             The line number identified by the context. When None, it means that
             there is no meaningful line number.
         """
-        self.filename = locations.clean_path(filename)
+        self.filename = paths.clean_path(filename)
         self.lineno = lineno
 
     def __str__(self):

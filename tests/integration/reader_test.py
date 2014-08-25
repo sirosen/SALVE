@@ -2,7 +2,7 @@
 
 from nose.tools import istest
 
-from salve.util import locations
+from salve import paths
 from salve.block import file_block
 from salve.reader import tokenize, parse
 
@@ -94,7 +94,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
                           path)
         sctx = e.file_context
         assert sctx.lineno == 4
-        assert locations.clean_path(sctx.filename, absolute=True) == path
+        assert paths.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def missing_open_raises_TE(self):
@@ -110,7 +110,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
                           path)
         sctx = e.file_context
         assert sctx.lineno == 5
-        assert locations.clean_path(sctx.filename, absolute=True) == path
+        assert paths.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def missing_identifier_raises_TE(self):
@@ -126,7 +126,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
                           path)
         sctx = e.file_context
         assert sctx.lineno == 3
-        assert locations.clean_path(sctx.filename, absolute=True) == path
+        assert paths.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def missing_value_raises_TE(self):
@@ -142,7 +142,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
                           path)
         sctx = e.file_context
         assert sctx.lineno == 5
-        assert locations.clean_path(sctx.filename, absolute=True) == path
+        assert paths.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def double_open_raises_TE(self):
@@ -158,7 +158,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
                           path)
         sctx = e.file_context
         assert sctx.lineno == 3
-        assert locations.clean_path(sctx.filename, absolute=True) == path
+        assert paths.clean_path(sctx.filename, absolute=True) == path
 
     @istest
     def invalid_block_id_raises_PE(self):
@@ -174,4 +174,4 @@ class TestWithScratchContainer(scratch.ScratchContainer):
                           path)
         sctx = e.file_context
         assert sctx.lineno == 7
-        assert locations.clean_path(sctx.filename, absolute=True) == path
+        assert paths.clean_path(sctx.filename, absolute=True) == path

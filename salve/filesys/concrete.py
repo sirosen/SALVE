@@ -6,7 +6,7 @@ import abc
 from contextlib import contextmanager
 
 from salve.filesys import abstract
-from salve.util.six import with_metaclass
+from salve.util import with_metaclass, hash_from_path
 
 
 class Filesys(abstract.Filesys):
@@ -65,11 +65,10 @@ class Filesys(abstract.Filesys):
     def hash(self, path):
         """
         Transparent implementation of hash() using
-        salve.util.streams.hash_by_filename
+        salve.util.hash_from_path
         """
-        from salve.util.streams import hash_by_filename
         assert self.exists(path)
-        return hash_by_filename(path)
+        return hash_from_path(path)
 
     def copy(self, src, dst):
         """

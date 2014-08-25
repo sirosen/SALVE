@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import sys
 
-from salve.util.enum import Enum
+from salve.util import Enum
 
 # check if unicode is defined
 try:  # pragma: no cover

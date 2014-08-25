@@ -4,7 +4,7 @@ import mock
 from nose.tools import istest
 
 from tests.util import ensure_except
-from salve.util import context
+from salve import context
 
 
 @istest
