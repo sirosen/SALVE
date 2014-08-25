@@ -9,7 +9,7 @@ with open('CHANGELOG.md', 'r') as f:
 
 setup(
     name='salve',
-    version='2.3.0',
+    version='2.3.1',
 
     install_requires=['argparse'],
     packages=['salve', 'salve.api', 'salve.action', 'salve.block', 'salve.cli',
