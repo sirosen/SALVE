@@ -10,5 +10,7 @@ This should do the following:
 - Convert the root Manifest Block to an Action and execute it
 """
 
-from salve.run.command import run
-run()
+from salve.cli import main
+
+if __name__ == '__main__':
+    main()

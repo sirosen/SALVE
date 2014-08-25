@@ -4,11 +4,11 @@ import string
 import shlex
 
 import salve
+from salve import paths
+from salve.context import FileContext
+from salve.exception import SALVEException
 
-from salve.util.enum import Enum
-from salve.util.error import SALVEException
-from salve.util.context import FileContext
-from salve.util.streams import get_filename
+from salve.util import Enum, stream_filename
 
 
 class TokenizationException(SALVEException):
@@ -108,17 +108,24 @@ def tokenize_stream(stream):
 
     """
     State definitions
-        FREE: Waiting for a block identifier
-        IDENTIFIER_FOUND: Got a block identifier, waiting for a {
+        FREE: Waiting for a block identifier or EOF
+
+        IDENTIFIER_FOUND: Got a block identifier, waiting for a { or primary
+        attr (template string)
+
+        PRIMARY_ATTR_FOUND: Found a primary block attr, next is either { or
+        another identifier, or EOF
+
         BLOCK: Inside of a block, waiting for an attribute identifier
             or }
+
         IDENTIFIER_FOUND_BLOCK: Inside of a block, got an attribute
             identifier, waiting for a template string value
     """
-    states = Enum('FREE', 'IDENTIFIER_FOUND', 'BLOCK',
+    states = Enum('FREE', 'IDENTIFIER_FOUND', 'PRIMARY_ATTR_FOUND', 'BLOCK',
                   'IDENTIFIER_FOUND_BLOCK')
 
-    filename = get_filename(stream)
+    filename = paths.clean_path(stream_filename(stream), absolute=True)
 
     tokens = []
     state = states.FREE
@@ -162,12 +169,34 @@ def tokenize_stream(stream):
             state = states.IDENTIFIER_FOUND
 
         # if we have found a block identifier, the next token must be
-        # a block start, '{'
+        # a block start, '{', or the primary attr
         elif state is states.IDENTIFIER_FOUND:
-            if current != '{':
-                unexpected_token(current, Token.types.BLOCK_START, ctx)
-            add_token(current, Token.types.BLOCK_START, ctx)
-            state = states.BLOCK
+            # if it's a block open, cool
+            if current == '{':
+                add_token(current, Token.types.BLOCK_START, ctx)
+                state = states.BLOCK
+            # if it's a block close, uncool
+            elif current == '}':
+                unexpected_token(current, [Token.types.BLOCK_START,
+                    Token.types.TEMPLATE], ctx)
+            # anything else must be  primary attr
+            else:
+                add_token(current, Token.types.TEMPLATE, ctx)
+                state = states.PRIMARY_ATTR_FOUND
+
+        elif state is states.PRIMARY_ATTR_FOUND:
+            # if it's a block open, cool
+            if current == '{':
+                add_token(current, Token.types.BLOCK_START, ctx)
+                state = states.BLOCK
+            # if it's a block close, uncool
+            elif current == '}':
+                unexpected_token(current, [Token.types.BLOCK_START,
+                    Token.types.TEMPLATE], ctx)
+            # anything else is a new block identifier, so no block body
+            else:
+                add_token(current, Token.types.IDENTIFIER, ctx)
+                state = states.IDENTIFIER_FOUND
 
         # if we are in a block, the next token is either a block end,
         # '}', or an attribute identifier
@@ -194,7 +223,9 @@ def tokenize_stream(stream):
         # get the next Maybe(Token)
         current = tokenizer.get_token()
 
-    if state is not states.FREE:
+    # we can either be FREE (i.e. last saw a '}') or PRIMARY_ATTR_FOUND (i.e.
+    # last saw a '<block_id> <attr_val>') at the end of the file
+    if state not in (states.FREE, states.PRIMARY_ATTR_FOUND):
         raise TokenizationException('Tokenizer ended in state ' +
                                      state, ctx)
 

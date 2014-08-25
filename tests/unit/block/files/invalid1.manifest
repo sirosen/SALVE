@@ -1,4 +1,0 @@
-# first invalid manifest file
-manifest {
-    source  $SALVE_ROOT/tests/unit/block/files/invalid1.manifest
-}

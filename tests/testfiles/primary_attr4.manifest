@@ -1,0 +1,3 @@
+# primary attr block with empty body
+
+manifest "man man" {}

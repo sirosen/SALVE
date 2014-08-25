@@ -2,9 +2,8 @@
 
 import salve
 
-import salve.block.identifier
-from salve.util.streams import get_filename
-from salve.util.error import SALVEException
+from salve.block import identifier
+from salve.exception import SALVEException
 from salve.reader.tokenize import Token, tokenize_stream
 
 
@@ -52,52 +51,74 @@ def parse_tokens(tokens):
 
     # track the expected next token(s)
     expected_token_types = [Token.types.IDENTIFIER]
+    # tracks whether or not parsing is inside of a "{" "}" delimited block
+    in_block = False
+
     # the current_block and current_attr are used to build blocks
     # before they are appended to the blocks list
     current_block = None
     current_attr = None
+
     for token in tokens:
         # if the token is unexpected, throw an exception and fail
         if token.ty not in expected_token_types:
             unexpected_token(token, expected_token_types)
-        # if there is no current block, the incoming token must
-        # be an identifier, so we can use it to construct a new block
-        elif not current_block:
+
+        # if the token is an identifier found outside of a block, it is the
+        # beginning of a new block
+        if not in_block and token.ty == Token.types.IDENTIFIER:
             try:
-                b_from_id = salve.block.identifier.block_from_identifier
-                current_block = b_from_id(token)
+                current_block = identifier.block_from_identifier(token)
+                blocks.append(current_block)
             except:
                 raise ParsingException('Invalid block id ' +
                     token.value, token.file_context)
-            expected_token_types = [Token.types.BLOCK_START]
-        else:
-            # if the token is a block start, do nothing
+            expected_token_types = [Token.types.BLOCK_START,
+                                    Token.types.TEMPLATE]
+            # go back to loop start (other stuff might match, and we don't want
+            # it to, since this is the block's identifier)
+            continue
+
+        # if not in a block, look for a primary attr, or {
+        if not in_block:
+            # token.ty not in (BLOCK_END, IDENTIFIER)
+            # if the token is a block start, set in_block
             if token.ty == Token.types.BLOCK_START:
+                in_block = True
                 expected_token_types = [Token.types.BLOCK_END,
-                                         Token.types.IDENTIFIER]
-            # if the token is a block end, add the current block to the
-            # list and set current_block to None
-            elif token.ty == Token.types.BLOCK_END:
-                blocks.append(current_block)
-                current_block = None
+                                        Token.types.IDENTIFIER]
+            # if the token is a template string, assign it to the
+            # primary attr
+            elif token.ty == Token.types.TEMPLATE:
+                expected_token_types = [Token.types.BLOCK_START,
+                                        Token.types.IDENTIFIER]
+                current_block.set(current_block.primary_attr, token.value)
+
+        # i.e. in_block==True
+        # look for block attribute,value pairs, or }
+        else:
+            # if the token is a block end, set current_block to None and
+            # set state to not be in block
+            if token.ty == Token.types.BLOCK_END:
+                in_block = False
                 expected_token_types = [Token.types.IDENTIFIER]
             # if the token is an identifier, it is the name of an attr
+            # (because we're in a block)
             elif token.ty == Token.types.IDENTIFIER:
                 current_attr = token.value.lower()
                 expected_token_types = [Token.types.TEMPLATE]
             # if the token is a template string, assign it to the
             # current attr
             elif token.ty == Token.types.TEMPLATE:
-                current_block.set(current_attr, token.value)
                 expected_token_types = [Token.types.BLOCK_END,
-                                         Token.types.IDENTIFIER]
-            # no meaningful else because token types must be valid, as
-            # per the earlier check for valid token type
-            else:
-                raise ValueError('SALVE Internal Error!')  # pragma: no cover
+                                        Token.types.IDENTIFIER]
+                current_block.set(current_attr, token.value)
+                current_attr = None
+
     # if the token list terminates and there is still a block in
-    # progress, it means that the block was not teminated
-    if current_block is not None:
+    # progress or a TEMPLATE could come next, it means that the block was not
+    # teminated properly
+    if in_block or Token.types.TEMPLATE in expected_token_types:
         # this PE carries no token because it is the absence of a token
         # that triggers it
         raise ParsingException('Incomplete block in token stream!',

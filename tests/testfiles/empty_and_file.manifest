@@ -1,0 +1,11 @@
+# a valid manifest containing a manifest block and file block
+# with relative paths
+
+manifest {
+    source empty.manifest
+}
+
+file {
+    source empty.manifest
+    target a/b/c
+}

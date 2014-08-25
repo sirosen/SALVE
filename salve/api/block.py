@@ -4,16 +4,16 @@
 
 import abc
 
+from salve.util import Enum, with_metaclass
 
-class CompiledBlock(object):
+
+class CompiledBlock(with_metaclass(abc.ABCMeta)):
     """
     To define a block, you need to write a block definition in the block-def
     DSL, and you need to write a definition for the compiled block. The block
     will be produced by parsing a manifest, but the compiled block defines what
     actions are taken by means of that block.
     """
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def verify_can_exec(self):
         """
@@ -35,7 +35,7 @@ class CompiledBlock(object):
         pass  # pragma: no cover
 
 
-class AbstractBlock(object):
+class Block(with_metaclass(abc.ABCMeta)):
     """
     A block is the basic unit of configuration.
     Typically, blocks describe files, SALVE manifests, patches, etc
@@ -43,7 +43,9 @@ class AbstractBlock(object):
     blocks. Furthermore, it defines the methods that must be implemented
     on a block by its author.
     """
-    __metaclass__ = abc.ABCMeta
+    # these are the valid types of block, and therefore the valid
+    # block identifiers (case insensitive)
+    types = Enum('FILE', 'MANIFEST', 'DIRECTORY')
 
     @abc.abstractmethod
     def has(self, attribute_name):

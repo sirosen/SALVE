@@ -4,14 +4,11 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.utils.exceptions import ensure_except
-from salve.block.base import BlockException
+from tests.util import ensure_except
 
-import salve.execute.action as action
-import salve.execute.backup as backup
-import salve.execute.modify as modify
-import salve.execute.create as create
-import salve.block.directory_block
+from salve import action
+from salve.action import backup, modify, create
+from salve.block import BlockException, directory_block
 
 from tests.unit.block import dummy_file_context, dummy_logger
 
@@ -19,10 +16,10 @@ from tests.unit.block import dummy_file_context, dummy_logger
 @istest
 def dir_create_compile():
     """
-    Directory Block Create Compile
+    Unit: Directory Block Create Compile
     Verifies the result of converting a Dir Block to an Action.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'create')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
@@ -39,20 +36,20 @@ def dir_create_compile():
     assert isinstance(mkdir, create.DirCreateAction)
     assert isinstance(chown, modify.DirChownAction)
 
-    assert mkdir.dst == '/p/q/r'
+    assert str(mkdir.dst) == '/p/q/r'
     assert chown.user == 'user1'
     assert chown.group == 'nogroup'
-    assert chown.target == mkdir.dst
+    assert chown.target == str(mkdir.dst)
 
 
 @istest
 def dir_create_compile_chmod():
     """
-    Directory Block Create Compile With Chmod
+    Unit: Directory Block Create Compile With Chmod
     Verifies the result of converting a Dir Block to an Action when the
     Block's mode is set.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'create')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
@@ -72,29 +69,29 @@ def dir_create_compile_chmod():
     assert isinstance(chmod, modify.DirChmodAction)
     assert isinstance(chown, modify.DirChownAction)
 
-    assert mkdir.dst == '/p/q/r'
-    assert chmod.target == mkdir.dst
+    assert str(mkdir.dst) == '/p/q/r'
+    assert chmod.target == str(mkdir.dst)
     assert chmod.mode == int('755', 8)
     assert chown.user == 'user1'
     assert chown.group == 'nogroup'
-    assert chown.target == mkdir.dst
+    assert chown.target == str(mkdir.dst)
 
 
 @istest
 def dir_create_chown_as_root():
     """
-    Directory Block Create Compile With Chown
+    Unit: Directory Block Create Compile With Chown
     Verifies the result of converting a Dir Block to an Action when the
     user is root and the Block's user and group are set.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'create')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
-    with mock.patch('salve.util.ugo.is_root', lambda: True), \
-         mock.patch('salve.logger', dummy_logger):
-        dir_act = b.compile()
+    with mock.patch('salve.ugo.is_root', lambda: True):
+        with mock.patch('salve.logger', dummy_logger):
+            dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
     assert len(dir_act.actions) == 2
@@ -104,7 +101,7 @@ def dir_create_chown_as_root():
     assert isinstance(mkdir, create.DirCreateAction)
     assert isinstance(chown, modify.DirChownAction)
 
-    assert mkdir.dst == '/p/q/r'
+    assert str(mkdir.dst) == '/p/q/r'
     assert chown.target == '/p/q/r'
     assert chown.user == 'user1'
     assert chown.group == 'nogroup'
@@ -113,16 +110,16 @@ def dir_create_chown_as_root():
 @istest
 def empty_dir_copy_compile():
     """
-    Directory Block Copy Compile (Empty Dir)
+    Unit: Directory Block Copy Compile (Empty Dir)
     Verifies the result of converting a Dir Block to an Action.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
-    with mock.patch('os.walk', lambda d: []), \
-         mock.patch('salve.logger', dummy_logger):
-        dir_act = b.compile()
+    with mock.patch('os.walk', lambda d: []):
+        with mock.patch('salve.logger', dummy_logger):
+            dir_act = b.compile()
 
     assert isinstance(dir_act, action.ActionList)
     assert len(dir_act.actions) == 1
@@ -130,25 +127,26 @@ def empty_dir_copy_compile():
 
     assert isinstance(mkdir_act, create.DirCreateAction)
 
-    assert mkdir_act.dst == '/p/q/r'
+    assert str(mkdir_act.dst) == '/p/q/r'
 
 
 @istest
 def dir_copy_chown_as_root():
     """
-    Directory Block Copy Compile (As Root)
+    Unit: Directory Block Copy Compile (As Root)
     Verifies the result of converting a Dir Block to an Action.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
-    with mock.patch('salve.util.ugo.is_root', lambda: True), \
-         mock.patch('os.walk', lambda d: []), \
-         mock.patch('salve.logger', dummy_logger):
-        al = b.compile()
+
+    with mock.patch('salve.ugo.is_root', lambda: True):
+        with mock.patch('os.walk', lambda d: []):
+            with mock.patch('salve.logger', dummy_logger):
+                al = b.compile()
 
     assert isinstance(al, action.ActionList)
     assert len(al.actions) == 2
@@ -158,7 +156,7 @@ def dir_copy_chown_as_root():
     assert isinstance(mkdir_act, create.DirCreateAction)
     assert isinstance(chown_act, modify.DirChownAction)
 
-    assert mkdir_act.dst == '/p/q/r'
+    assert str(mkdir_act.dst) == '/p/q/r'
     assert chown_act.target == '/p/q/r'
     assert chown_act.user == 'user1'
     assert chown_act.group == 'nogroup'
@@ -167,11 +165,11 @@ def dir_copy_chown_as_root():
 @istest
 def dir_copy_fails_nosource():
     """
-    Directory Block Copy Fails Without Source
+    Unit: Directory Block Copy Fails Without Source
     Verifies that converting a Dir Block to an Action raises a
     BlockException.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'copy')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
@@ -185,11 +183,11 @@ def dir_copy_fails_nosource():
 @istest
 def dir_copy_fails_notarget():
     """
-    Directory Block Copy Compilation Fails Without Target
+    Unit: Directory Block Copy Compilation Fails Without Target
     Verifies that converting a Dir Block to an Action raises a
     BlockException.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'copy')
     b.set('source', '/a/b/c')
     b.set('user', 'user1')
@@ -203,11 +201,11 @@ def dir_copy_fails_notarget():
 @istest
 def dir_create_fails_notarget():
     """
-    Directory Block Create Compilation Fails Without Target
+    Unit: Directory Block Create Compilation Fails Without Target
     Verifies that converting a Dir Block to an Action raises a
     BlockException.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'create')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
@@ -220,10 +218,10 @@ def dir_create_fails_notarget():
 @istest
 def dir_path_expand():
     """
-    Directory Block Path Expand
+    Unit: Directory Block Path Expand
     Verifies the results of path expansion in a Dir block.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('source', 'p/q/r/s')
     b.set('target', 't/u/v/w/x/y/z/1/2/3/../3')
     root_dir = 'file/root/directory'
@@ -237,11 +235,11 @@ def dir_path_expand():
 @istest
 def dir_path_expand_fail_notarget():
     """
-    Directory Block Path Expand Fails Without Target
+    Unit: Directory Block Path Expand Fails Without Target
     Verifies that path expansion fails when there is no "target"
     attribute.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'create')
     b.set('user', 'user1')
     b.set('group', 'user1')
@@ -253,11 +251,11 @@ def dir_path_expand_fail_notarget():
 @istest
 def dir_compile_fail_noaction():
     """
-    Directory Block Compilation Fails Without Action
+    Unit: Directory Block Compilation Fails Without Action
     Verifies that block to action conversion fails when there is no
     "action" attribute.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
@@ -271,11 +269,11 @@ def dir_compile_fail_noaction():
 @istest
 def dir_compile_fail_unknown_action():
     """
-    Directory Block Compilation Fails Unknown Action
+    Unit: Directory Block Compilation Fails Unknown Action
     Verifies that block to action conversion fails when the "action"
     attribute has an unrecognized value.
     """
-    b = salve.block.directory_block.DirBlock(dummy_file_context)
+    b = directory_block.DirBlock(dummy_file_context)
     b.set('action', 'UNDEFINED_ACTION')
     b.set('source', '/a/b/c')
     b.set('target', '/p/q/r')

@@ -1,5 +1,0 @@
-#missing a value for the source attribute
-
-file {
-    source
-}

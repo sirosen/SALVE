@@ -1,0 +1,9 @@
+# multiple Primary Attribute style blocks
+
+manifest "man man"
+
+file "bat man"
+
+directory "super man"
+
+manifest "wo man"
