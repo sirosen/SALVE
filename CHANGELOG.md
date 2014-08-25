@@ -1,5 +1,7 @@
 Changelog
 =========
+ * 2.3.1
+    * Fixes to setuptools usage
  * 2.3.0
     * Support for Python 2.6 (with argparse installed)
     * Primary Attribute style blocks

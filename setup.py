@@ -9,11 +9,11 @@ with open('CHANGELOG.md', 'r') as f:
 
 setup(
     name='salve',
-    version='2.3.0',
+    version='2.3.1',
 
     install_requires=['argparse'],
     packages=['salve', 'salve.api', 'salve.action', 'salve.block', 'salve.cli',
-        'salve.filesys', 'salve.reader', 'salve.util'],
+        'salve.filesys', 'salve.reader'],
     package_data={'': ['*.ini']},
     entry_points={'console_scripts': ['salve = salve.cli:main']},
 
