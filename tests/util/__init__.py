@@ -13,7 +13,7 @@ testfile_dir = paths.pjoin(
         'testfiles')
 
 
-def file_path(filename):
+def full_path(filename):
     return paths.pjoin(testfile_dir, filename)
 
 

@@ -8,7 +8,7 @@ from os.path import dirname, abspath, relpath
 from salve import config, paths
 from salve.exception import SALVEException
 
-from tests.util import ensure_except, file_path
+from tests.util import ensure_except, full_path
 
 _active_patches = set()
 
@@ -54,7 +54,7 @@ def setup_os1():
     Setup the first dummy environment.
     """
     home_map = {'root': '/var/root',
-                'user1': file_path('user1_homedir')}
+                'user1': full_path('user1_homedir')}
     mock_env = {'SUDO_USER': 'user1',
                'USER': 'root',
                'HOME': home_map['user1']}
@@ -76,7 +76,7 @@ def setup_os1():
 
 def setup_os2():
     home_map = {'root': '/var/root',
-                'user1': file_path('user1_homedir')}
+                'user1': full_path('user1_homedir')}
     mock_env = {'SUDO_USER': 'user1',
                'USER': 'root',
                'HOME': home_map['user1'],
@@ -98,7 +98,7 @@ def setup_os2():
 
 def setup_os3():
     home_map = {'root': '/var/root',
-                'user1': file_path('user1_homedir')}
+                'user1': full_path('user1_homedir')}
     mock_env = {'SUDO_USER': 'user1',
                'USER': 'root',
                'HOME': home_map['user1'],
@@ -139,7 +139,7 @@ def sudo_homedir_resolution():
     """
     orig_home = os.environ['HOME']
     conf = config.SALVEConfig()
-    assert conf.env['HOME'] == file_path('user1_homedir')
+    assert conf.env['HOME'] == full_path('user1_homedir')
     assert os.environ['HOME'] == orig_home
 
 
@@ -151,7 +151,7 @@ def valid_config1():
     Tests that parsing a specified config file works.
     """
     conf = config.SALVEConfig(
-            filename=file_path('single_section_single_attr.ini'))
+            filename=full_path('single_section_single_attr.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
 
 
@@ -175,7 +175,7 @@ def overload_from_env():
     config file settings.
     """
     conf = config.SALVEConfig(
-            filename=file_path('single_section_single_attr.ini'))
+            filename=full_path('single_section_single_attr.ini'))
     assert conf.attributes['metadata']['path'] == '/etc/meta/'
 
 
@@ -189,7 +189,7 @@ def multiple_env_overload():
     behavior, as the alternatives are inconsistent and unpredictable.
     """
     conf = config.SALVEConfig(
-            filename=file_path('two_sections.ini'))
+            filename=full_path('two_sections.ini'))
     assert conf.attributes['meta_data']['path'] == '/etc/meta/'
     assert conf.attributes['meta']['data_path'] == '/etc/meta/'
 
@@ -203,7 +203,7 @@ def missing_config():
     still loaded and works as if no config were specified.
     """
     conf = config.SALVEConfig(
-            filename=file_path('NONEXISTENT_FILE'))
+            filename=full_path('NONEXISTENT_FILE'))
 
     assert conf.attributes['file']['action'] == 'copy'
     assert conf.attributes['file']['mode'] == '644'
@@ -225,7 +225,7 @@ def invalid_file():
     """
     try:
         conf = config.SALVEConfig(
-                filename=file_path('unassigned_val.ini'))
+                filename=full_path('unassigned_val.ini'))
     except SALVEException as e:
         assert isinstance(e, SALVEException)
         assert ('Encountered an error while parsing' +
@@ -253,6 +253,6 @@ def template_sub():
     """
     conf = config.SALVEConfig()
     assert conf.template('$USER') == 'user1'
-    assert conf.template('$HOME') == file_path('user1_homedir')
+    assert conf.template('$HOME') == full_path('user1_homedir')
     assert (conf.template('$HOME/bin/program') ==
-            paths.pjoin(file_path('user1_homedir'), 'bin/program'))
+            paths.pjoin(full_path('user1_homedir'), 'bin/program'))

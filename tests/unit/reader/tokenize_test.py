@@ -6,7 +6,7 @@ from salve import paths
 from salve.context import FileContext
 from salve.reader import tokenize
 
-from tests.util import ensure_except, file_path, MockedGlobals
+from tests.util import ensure_except, full_path, MockedGlobals
 
 
 def tokenize_filename(filename):
@@ -15,12 +15,12 @@ def tokenize_filename(filename):
 
 
 def ensure_TokenizationException(filename):
-    full_path = file_path(filename)
+    path = full_path(filename)
     e = ensure_except(tokenize.TokenizationException,
                       tokenize_filename,
-                      full_path)
+                      path)
     assert (paths.clean_path(e.file_context.filename) ==
-            paths.clean_path(full_path))
+            paths.clean_path(path))
 
 #failure tests
 
@@ -93,7 +93,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Unit: Tokenizer Empty Manifest
         Verifies that tokenizing an empty file produces an empty token list.
         """
-        tokens = tokenize_filename(file_path('empty.manifest'))
+        tokens = tokenize_filename(full_path('empty.manifest'))
         assert len(tokens) == 0
 
     @istest
@@ -103,7 +103,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Verifies that tokenizing an empty block produces a token list
         containing the identifier, a block open, and a block close.
         """
-        tokens = tokenize_filename(file_path('empty_block.manifest'))
+        tokens = tokenize_filename(full_path('empty_block.manifest'))
         assert len(tokens) == 3
         assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
         assert tokens[1].ty == tokenize.Token.types.BLOCK_START
@@ -116,7 +116,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Ensures that no exception is raised if the tokenizer encounters an
         unknown block identifier.
         """
-        tokens = tokenize_filename(file_path('invalid_block_id.manifest'))
+        tokens = tokenize_filename(full_path('invalid_block_id.manifest'))
         assert len(tokens) == 8
         assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
         assert tokens[1].ty == tokenize.Token.types.BLOCK_START
@@ -134,7 +134,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Verifies that tokenization proceeds correctly when an attribute
         value is a quoted string containing spaces.
         """
-        tokens = tokenize_filename(file_path('spaced_attr.manifest'))
+        tokens = tokenize_filename(full_path('spaced_attr.manifest'))
         assert len(tokens) == 7
         assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
         assert tokens[1].ty == tokenize.Token.types.BLOCK_START
@@ -151,7 +151,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Verifies that tokenization proceeds correctly when a "Primary
         Attribute" style block is followed by an ordinary block.
         """
-        tokens = tokenize_filename(file_path('primary_attr2.manifest'))
+        tokens = tokenize_filename(full_path('primary_attr2.manifest'))
         assert len(tokens) == 9
         assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
         assert tokens[1].ty == tokenize.Token.types.TEMPLATE
@@ -170,7 +170,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Verifies that tokenization proceeds correctly when a group of "Primary
         Attribute" style blocks are given in series
         """
-        tokens = tokenize_filename(file_path('primary_attr3.manifest'))
+        tokens = tokenize_filename(full_path('primary_attr3.manifest'))
         assert len(tokens) == 8
         assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
         assert tokens[1].ty == tokenize.Token.types.TEMPLATE
@@ -188,7 +188,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Verifies that tokenization proceeds correctly when a "Primary
         Attribute" style block is given a "{}" body
         """
-        tokens = tokenize_filename(file_path('primary_attr4.manifest'))
+        tokens = tokenize_filename(full_path('primary_attr4.manifest'))
         assert len(tokens) == 4
         assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
         assert tokens[1].ty == tokenize.Token.types.TEMPLATE

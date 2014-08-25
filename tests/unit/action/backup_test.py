@@ -9,7 +9,7 @@ from salve.action import backup
 from salve.filesys import real_fs
 from salve.context import ExecutionContext, FileContext
 
-from tests.util import ensure_except, scratch, file_path
+from tests.util import ensure_except, scratch, full_path
 from tests.unit.action import dummy_file_context
 
 
@@ -119,7 +119,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that a file's abspath becomes its storage directory under
         the backup dir.
         """
-        filename = file_path('file1.txt')
+        filename = full_path('file1.txt')
         act = backup.FileBackupAction(filename,
                                       dummy_file_context)
         assert act.dst == '/etc/salve/backup/files'
@@ -131,7 +131,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         Checks the result of converting a file backup action to a string.
         """
-        filename = file_path('file1.txt')
+        filename = full_path('file1.txt')
         act = backup.FileBackupAction(filename,
                                       dummy_file_context)
         assert str(act) == \
@@ -146,7 +146,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that on a successful backup action, the logfile is written
         with the date, hash, and filename.
         """
-        filename = file_path('file1.txt')
+        filename = full_path('file1.txt')
         act = backup.FileBackupAction(filename,
                                       dummy_file_context)
         act.hash_val = 'abc'
@@ -168,7 +168,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks the expansion of a directory into its constituent files for
         directory backups.
         """
-        dirname = file_path('dir1')
+        dirname = full_path('dir1')
         act = backup.DirBackupAction(dirname,
                                      dummy_file_context)
 
@@ -185,9 +185,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         for subact in act.actions:
             assert isinstance(subact, backup.FileBackupAction)
             seen_files.add(subact.src)
-        assert file_path('dir1/a') in seen_files
-        assert file_path('dir1/b') in seen_files
-        assert file_path('dir1/inner_dir1/.abc') in seen_files
+        assert full_path('dir1/a') in seen_files
+        assert full_path('dir1/b') in seen_files
+        assert full_path('dir1/inner_dir1/.abc') in seen_files
 
     @istest
     def dir_execute(self):
@@ -196,7 +196,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that executing a DirBackupAction runs a FileBackupAction on
         each of the files in the directory.
         """
-        dirname = file_path('dir1')
+        dirname = full_path('dir1')
         act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
@@ -209,9 +209,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
                         mock_execute):
             act(real_fs)
 
-        assert file_path('dir1/a') in seen_files
-        assert file_path('dir1/b') in seen_files
-        assert file_path('dir1/inner_dir1/.abc') in seen_files
+        assert full_path('dir1/a') in seen_files
+        assert full_path('dir1/b') in seen_files
+        assert full_path('dir1/inner_dir1/.abc') in seen_files
 
     @istest
     def dir_verify_no_source(self):
@@ -220,7 +220,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that verification of a DirBackupAction identifies missing
         source dir.
         """
-        dirname = file_path('no such dir')
+        dirname = full_path('no such dir')
         act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
@@ -239,7 +239,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
-        dirname = file_path('no such dir')
+        dirname = full_path('no such dir')
         act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions

@@ -4,7 +4,7 @@ import os
 import timeit
 from nose.tools import istest
 
-from tests.util import file_path
+from tests.util import full_path
 
 import salve.util
 
@@ -16,7 +16,7 @@ def stream_filename():
     Tests stream_filename on real files, given the File objects.
     """
     for char in ['a', 'b', 'c']:
-        name = file_path(char)
+        name = full_path(char)
         with open(name) as f:
             assert salve.util.stream_filename(f) == name
 
@@ -27,8 +27,8 @@ def sha512_empty_match():
     Unit: Streams Util SHA512 Empty File Match
     Ensures that the sha512 hashes of two empty files match.
     """
-    aname = file_path('a')
-    bname = file_path('b')
+    aname = full_path('a')
+    bname = full_path('b')
     ahash, bhash = None, None
     with open(aname) as f:
         ahash = salve.util.sha512(f)
@@ -43,8 +43,8 @@ def sha512_nonempty_match():
     Unit: Streams Util SHA512 Non-Empty File Match
     Ensures that the sha512 hashes of two nonempty files match.
     """
-    cname = file_path('c')
-    dname = file_path('d')
+    cname = full_path('c')
+    dname = full_path('d')
     ahash, chash = None, None
     with open(cname) as f:
         chash = salve.util.sha512(f)
@@ -59,8 +59,8 @@ def sha512_mismatch():
     Unit: Streams Util SHA512 File Mismatch
     Ensures that the sha512 hashes of nonmatching files don't match.
     """
-    aname = file_path('a')
-    cname = file_path('c')
+    aname = full_path('a')
+    cname = full_path('c')
     ahash, chash = None, None
     with open(aname) as f:
         ahash = salve.util.sha512(f)

@@ -8,7 +8,7 @@ from salve.reader.tokenize import Token
 from salve.context import FileContext
 from salve.block import file_block, manifest_block
 
-from tests.util import ensure_except, file_path, MockedGlobals
+from tests.util import ensure_except, full_path, MockedGlobals
 
 dummy_context = FileContext('no such file')
 
@@ -30,12 +30,12 @@ def ensure_ParsingException(tokens=None, filename=None):
     elif filename:
         e = ensure_except(parse.ParsingException,
                           parse_filename,
-                          file_path(filename))
+                          full_path(filename))
     else:
         assert False
     assert (filename is None or
            paths.clean_path(e.file_context.filename) ==
-           paths.clean_path(file_path(filename)))
+           paths.clean_path(full_path(filename)))
 
 
 class TestParsingMockedGlobals(MockedGlobals):
@@ -170,7 +170,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         Unit: Parser Empty File
         Checks that parsing an empty file produces an empty block list.
         """
-        blocks = parse_filename(file_path('empty.manifest'))
+        blocks = parse_filename(full_path('empty.manifest'))
         assert len(blocks) == 0
 
     @istest
@@ -179,7 +179,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         Unit: Parser Empty Block In File
         Checks that parsing a file with an empty block is valid.
         """
-        blocks = parse_filename(file_path('empty_block.manifest'))
+        blocks = parse_filename(full_path('empty_block.manifest'))
         assert len(blocks) == 1
         assert isinstance(blocks[0], file_block.FileBlock)
         assert len(blocks[0].attrs) == 0
@@ -191,7 +191,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing an attribute that contains spaces in quotes
         does not raise an error and correctly assigns to the attribute.
         """
-        blocks = parse_filename(file_path('spaced_attr.manifest'))
+        blocks = parse_filename(full_path('spaced_attr.manifest'))
         assert len(blocks) == 1
         assert isinstance(blocks[0], file_block.FileBlock)
         assert len(blocks[0].attrs) == 2
@@ -203,7 +203,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing a Primary Attribute style file block does not raise
         any errors.
         """
-        blocks = parse_filename(file_path('primary_attr.manifest'))
+        blocks = parse_filename(full_path('primary_attr.manifest'))
         assert len(blocks) == 1
         assert isinstance(blocks[0], file_block.FileBlock)
         assert len(blocks[0].attrs) == 2
@@ -216,7 +216,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that there are no errors parsing a Primary Attribute style block
         followed by an ordinary block.
         """
-        blocks = parse_filename(file_path('primary_attr2.manifest'))
+        blocks = parse_filename(full_path('primary_attr2.manifest'))
         assert len(blocks) == 2
         assert isinstance(blocks[0], manifest_block.ManifestBlock)
         assert len(blocks[0].attrs) == 1
@@ -233,7 +233,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing is successful on a primary attr block with a
         nonempty body.
         """
-        blocks = parse_filename(file_path('primary_attr5.manifest'))
+        blocks = parse_filename(full_path('primary_attr5.manifest'))
         assert len(blocks) == 1
         assert isinstance(blocks[0], file_block.FileBlock)
         assert len(blocks[0].attrs) == 2
