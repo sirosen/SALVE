@@ -13,7 +13,7 @@ setup(
 
     install_requires=['argparse'],
     packages=['salve', 'salve.api', 'salve.action', 'salve.block', 'salve.cli',
-        'salve.filesys', 'salve.reader', 'salve.util'],
+        'salve.filesys', 'salve.reader'],
     package_data={'': ['*.ini']},
     entry_points={'console_scripts': ['salve = salve.cli:main']},
 
