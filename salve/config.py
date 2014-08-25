@@ -10,11 +10,9 @@ import string
 
 import salve
 
-import salve.block.manifest_block
-from salve.util import locations
-from salve.util import ugo
-from salve.util.context import FileContext
-from salve.util.error import SALVEException
+from salve import paths, ugo
+from salve.context import FileContext
+from salve.exception import SALVEException
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -44,7 +42,7 @@ class SALVEConfigParser(configparser.ConfigParser):
         # first read the defaults
         # either read the user's rc file, if not given a filename
         # or read the given file
-        filenames = [locations.get_default_config(),
+        filenames = [paths.get_default_config(),
                      os.path.join(userhome, '.salverc'),
                      filename]
         # filter out filename if it is None

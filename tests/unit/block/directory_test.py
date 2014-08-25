@@ -4,14 +4,11 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.utils.exceptions import ensure_except
-from salve.block import BlockException
+from tests.util import ensure_except
 
 from salve import action
-from salve.action import backup
-from salve.action import modify
-from salve.action import create
-from salve.block import directory_block
+from salve.action import backup, modify, create
+from salve.block import BlockException, directory_block
 
 from tests.unit.block import dummy_file_context, dummy_logger
 
@@ -92,7 +89,7 @@ def dir_create_chown_as_root():
     b.set('target', '/p/q/r')
     b.set('user', 'user1')
     b.set('group', 'nogroup')
-    with mock.patch('salve.util.ugo.is_root', lambda: True):
+    with mock.patch('salve.ugo.is_root', lambda: True):
         with mock.patch('salve.logger', dummy_logger):
             dir_act = b.compile()
 
@@ -146,7 +143,7 @@ def dir_copy_chown_as_root():
     b.set('user', 'user1')
     b.set('group', 'nogroup')
 
-    with mock.patch('salve.util.ugo.is_root', lambda: True):
+    with mock.patch('salve.ugo.is_root', lambda: True):
         with mock.patch('os.walk', lambda d: []):
             with mock.patch('salve.logger', dummy_logger):
                 al = b.compile()

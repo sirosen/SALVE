@@ -1,4 +1,0 @@
-# unclosed block
-file { }
-
-file {

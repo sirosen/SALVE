@@ -4,11 +4,11 @@ import string
 import shlex
 
 import salve
+from salve import paths
+from salve.context import FileContext
+from salve.exception import SALVEException
 
-from salve.util.enum import Enum
-from salve.util.error import SALVEException
-from salve.util.context import FileContext
-from salve.util.streams import get_filename
+from salve.util import Enum, stream_filename
 
 
 class TokenizationException(SALVEException):
@@ -125,7 +125,7 @@ def tokenize_stream(stream):
     states = Enum('FREE', 'IDENTIFIER_FOUND', 'PRIMARY_ATTR_FOUND', 'BLOCK',
                   'IDENTIFIER_FOUND_BLOCK')
 
-    filename = get_filename(stream)
+    filename = paths.clean_path(stream_filename(stream), absolute=True)
 
     tokens = []
     state = states.FREE

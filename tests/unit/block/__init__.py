@@ -3,22 +3,18 @@
 import os
 import mock
 
-import salve.config
-from salve.util.context import FileContext, ExecutionContext
-from salve.util.log import Logger
+from tests.util import testfile_dir
 
-_testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
-
-
-def get_full_path(filename):
-    return os.path.join(_testfile_dir, filename)
+from salve import config
+from salve.context import FileContext, ExecutionContext
+from salve.log import Logger
 
 
 def mock_expanduser(string):
     user = os.environ['USER']
-    string = string.replace('~' + user, _testfile_dir)
+    string = string.replace('~' + user, testfile_dir)
     if string[0] == '~':
-        string = _testfile_dir + string[1:]
+        string = testfile_dir + string[1:]
     return string
 
 
@@ -30,7 +26,7 @@ dummy_logger = Logger(dummy_exec_context)
 with mock.patch('os.path.expanduser', mock_expanduser):
     with mock.patch('salve.exec_context', dummy_exec_context):
         with mock.patch('salve.logger', dummy_logger):
-            dummy_conf = salve.config.SALVEConfig()
+            dummy_conf = config.SALVEConfig()
 
 # must be set after conf is created, otherwise they will be overidden by
 # config initialization

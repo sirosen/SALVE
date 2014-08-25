@@ -4,14 +4,11 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.utils.exceptions import ensure_except
-from salve.block import BlockException
+from tests.util import ensure_except
 from salve.reader.tokenize import Token
 
-import salve.block.file_block
-import salve.block.manifest_block
-import salve.block.directory_block
-import salve.block.identifier
+from salve.block import BlockException, identifier, \
+        file_block, manifest_block, directory_block
 
 from tests.unit.block import dummy_file_context, dummy_logger
 
@@ -28,7 +25,7 @@ def invalid_block_id1():
 
     with mock.patch('salve.logger', dummy_logger):
         ensure_except(BlockException,
-                      salve.block.identifier.block_from_identifier,
+                      identifier.block_from_identifier,
                       invalid_id)
 
 
@@ -44,7 +41,7 @@ def invalid_block_id2():
 
     with mock.patch('salve.logger', dummy_logger):
         ensure_except(BlockException,
-                      salve.block.identifier.block_from_identifier,
+                      identifier.block_from_identifier,
                       invalid_id)
 
 
@@ -56,8 +53,8 @@ def valid_file_id():
     """
     file_id = Token('file', Token.types.IDENTIFIER, dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
-        file_block = salve.block.identifier.block_from_identifier(file_id)
-    assert isinstance(file_block, salve.block.file_block.FileBlock)
+        fb = identifier.block_from_identifier(file_id)
+    assert isinstance(fb, file_block.FileBlock)
 
 
 @istest
@@ -68,9 +65,9 @@ def valid_manifest_id():
     """
     manifest_id = Token('manifest', Token.types.IDENTIFIER, dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
-        manifest_block = salve.block.identifier.block_from_identifier(
+        mb = identifier.block_from_identifier(
                 manifest_id)
-    assert isinstance(manifest_block, salve.block.manifest_block.ManifestBlock)
+    assert isinstance(mb, manifest_block.ManifestBlock)
 
 
 @istest
@@ -82,5 +79,5 @@ def valid_directory_id():
     manifest_id = Token('directory', Token.types.IDENTIFIER,
             dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
-        dir_block = salve.block.identifier.block_from_identifier(manifest_id)
-    assert isinstance(dir_block, salve.block.directory_block.DirBlock)
+        dir_block = identifier.block_from_identifier(manifest_id)
+    assert isinstance(dir_block, directory_block.DirBlock)

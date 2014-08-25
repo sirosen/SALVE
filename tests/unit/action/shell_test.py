@@ -3,8 +3,8 @@
 from nose.tools import istest
 import mock
 
-from tests.utils.exceptions import ensure_except
-from salve.util.context import ExecutionContext, FileContext
+from tests.util import ensure_except
+from salve.context import ExecutionContext, FileContext
 
 from salve import action
 from salve.action import shell

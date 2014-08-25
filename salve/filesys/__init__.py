@@ -2,7 +2,7 @@
 
 import os
 
-from salve.util.enum import Enum
+from salve.util import Enum
 from salve.filesys.abstract import Filesys
 from salve.filesys.concrete import Filesys as ConcreteFilesys
 

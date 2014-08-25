@@ -1,0 +1,5 @@
+# first invalid manifest file
+# self-inclusion
+manifest {
+    source  self_include.manifest
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-from salve.util.context import FileContext, ExecutionContext
-from salve.util.log import Logger
+from salve.context import FileContext, ExecutionContext
+from salve.log import Logger
 
 
 dummy_file_context = FileContext('no such file')

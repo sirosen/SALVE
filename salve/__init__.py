@@ -1,7 +1,7 @@
-import salve.util.log
-import salve.util.context
+import salve.log
+import salve.context
 
-exec_context = salve.util.context.ExecutionContext(
-        startphase=salve.util.context.ExecutionContext.phases.STARTUP)
+exec_context = salve.context.ExecutionContext(
+        startphase=salve.context.ExecutionContext.phases.STARTUP)
 
-logger = salve.util.log.Logger(exec_context)
+logger = salve.log.Logger(exec_context)

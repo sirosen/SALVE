@@ -4,17 +4,11 @@ import os
 import mock
 from nose.tools import istest
 
-from salve.util.context import ExecutionContext, FileContext
+from salve.context import ExecutionContext, FileContext
 
 from salve.action import create
 from salve.filesys import real_fs
-from tests.utils import scratch
-
-_testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
-
-
-def get_full_path(filename):
-    return os.path.join(_testfile_dir, filename)
+from tests.util import scratch
 
 dummy_file_context = FileContext('no such file')
 dummy_exec_context = ExecutionContext()

@@ -7,18 +7,10 @@ from nose.tools import istest
 from salve import action
 from salve.action import backup
 from salve.filesys import real_fs
-from salve.util.context import ExecutionContext, FileContext
+from salve.context import ExecutionContext, FileContext
 
-from tests.utils.exceptions import ensure_except
-from tests.utils import scratch
-
-_testfile_dir = os.path.join(os.path.dirname(__file__), 'files')
-
-
-def get_full_path(filename):
-    return os.path.join(_testfile_dir, filename)
-
-dummy_file_context = FileContext('no such file')
+from tests.util import ensure_except, scratch, full_path
+from tests.unit.action import dummy_file_context
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
@@ -127,7 +119,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that a file's abspath becomes its storage directory under
         the backup dir.
         """
-        filename = get_full_path('file1.txt')
+        filename = full_path('file1.txt')
         act = backup.FileBackupAction(filename,
                                       dummy_file_context)
         assert act.dst == '/etc/salve/backup/files'
@@ -139,7 +131,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         Checks the result of converting a file backup action to a string.
         """
-        filename = get_full_path('file1.txt')
+        filename = full_path('file1.txt')
         act = backup.FileBackupAction(filename,
                                       dummy_file_context)
         assert str(act) == \
@@ -154,7 +146,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that on a successful backup action, the logfile is written
         with the date, hash, and filename.
         """
-        filename = get_full_path('file1.txt')
+        filename = full_path('file1.txt')
         act = backup.FileBackupAction(filename,
                                       dummy_file_context)
         act.hash_val = 'abc'
@@ -176,7 +168,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks the expansion of a directory into its constituent files for
         directory backups.
         """
-        dirname = get_full_path('dir1')
+        dirname = full_path('dir1')
         act = backup.DirBackupAction(dirname,
                                      dummy_file_context)
 
@@ -193,9 +185,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         for subact in act.actions:
             assert isinstance(subact, backup.FileBackupAction)
             seen_files.add(subact.src)
-        assert get_full_path('dir1/a') in seen_files
-        assert get_full_path('dir1/b') in seen_files
-        assert get_full_path('dir1/inner_dir1/.abc') in seen_files
+        assert full_path('dir1/a') in seen_files
+        assert full_path('dir1/b') in seen_files
+        assert full_path('dir1/inner_dir1/.abc') in seen_files
 
     @istest
     def dir_execute(self):
@@ -204,7 +196,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that executing a DirBackupAction runs a FileBackupAction on
         each of the files in the directory.
         """
-        dirname = get_full_path('dir1')
+        dirname = full_path('dir1')
         act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
@@ -217,9 +209,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
                         mock_execute):
             act(real_fs)
 
-        assert get_full_path('dir1/a') in seen_files
-        assert get_full_path('dir1/b') in seen_files
-        assert get_full_path('dir1/inner_dir1/.abc') in seen_files
+        assert full_path('dir1/a') in seen_files
+        assert full_path('dir1/b') in seen_files
+        assert full_path('dir1/inner_dir1/.abc') in seen_files
 
     @istest
     def dir_verify_no_source(self):
@@ -228,7 +220,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that verification of a DirBackupAction identifies missing
         source dir.
         """
-        dirname = get_full_path('no such dir')
+        dirname = full_path('no such dir')
         act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
@@ -247,7 +239,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
-        dirname = get_full_path('no such dir')
+        dirname = full_path('no such dir')
         act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions

@@ -2,7 +2,7 @@
 
 from nose.tools import istest
 
-import salve.util.enum as enum
+from salve.util import Enum
 
 
 @istest
@@ -12,7 +12,7 @@ def automapping():
     Tests that the automatic mapping of strings in an enum
     correctly assigns them to themselves.
     """
-    x = enum.Enum('A', 'B')
+    x = Enum('A', 'B')
     y = x.B
     assert(x.A == 'A')
     assert(x.B is y)
@@ -27,7 +27,7 @@ def explicit_mapping():
     """
     def func():
         pass
-    x = enum.Enum(A=1, B='x.B', C=func)
+    x = Enum(A=1, B='x.B', C=func)
     assert(x.A == 1)
     assert(x.B == 'x.B')
     assert(x.C is func)
@@ -42,7 +42,7 @@ def mixed_mapping():
     """
     def func():
         pass
-    x = enum.Enum('A', B='x.B', C=func)
+    x = Enum('A', B='x.B', C=func)
     assert(x.A == 'A')
     assert(x.B == 'x.B')
     assert(x.C is func)

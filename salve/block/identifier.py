@@ -5,15 +5,13 @@ import salve
 from salve.reader.tokenize import Token
 
 from salve.block import BlockException
-import salve.block.file_block
-import salve.block.manifest_block
-import salve.block.directory_block
+from salve.block import file_block, manifest_block, directory_block
 
 # maps valid identifiers to block constructors
 identifier_map = {
-    'file': salve.block.file_block.FileBlock,
-    'manifest': salve.block.manifest_block.ManifestBlock,
-    'directory': salve.block.directory_block.DirBlock
+    'file': file_block.FileBlock,
+    'manifest': manifest_block.ManifestBlock,
+    'directory': directory_block.DirBlock
 }
 
 

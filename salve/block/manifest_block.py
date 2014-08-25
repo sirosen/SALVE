@@ -5,11 +5,12 @@ import os
 import salve
 from salve import action
 
-from salve.util.context import ExecutionContext
-from salve.block import Block
+from salve.context import ExecutionContext
+from salve.api import Block
+from salve.block import CoreBlock
 
 
-class ManifestBlock(Block):
+class ManifestBlock(CoreBlock):
     """
     A manifest block describes another manifest to be expanded and
     executed. It may also specify properties of that manifest's
@@ -31,7 +32,7 @@ class ManifestBlock(Block):
         # transition to the parsing/block expansion phase, converting
         # files into blocks
         salve.exec_context.transition(ExecutionContext.phases.PARSING)
-        Block.__init__(self, Block.types.MANIFEST, file_context)
+        CoreBlock.__init__(self, Block.types.MANIFEST, file_context)
         self.sub_blocks = None
         if source:
             self.set('source', source)

@@ -3,20 +3,15 @@
 import os
 import mock
 from nose.tools import istest
-from tests.utils.exceptions import ensure_except
+from tests.util import ensure_except, full_path
 
-from salve import action
-from salve.action import backup
-from salve.action import copy
+from salve import action, block, paths
+from salve.action import backup, copy
 
-from salve.block import manifest_block
-from salve.block import file_block
-from salve import block
-from salve.util import locations
+from salve.block import manifest_block, file_block
 
-from tests.unit.block import get_full_path
-from tests.unit.block import dummy_file_context, dummy_exec_context
-from tests.unit.block import dummy_conf, dummy_logger
+from tests.unit.block import dummy_file_context, dummy_exec_context, \
+        dummy_conf, dummy_logger
 
 
 @istest
@@ -54,7 +49,7 @@ def empty_manifest_expand():
     """
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
-            source=get_full_path('valid1.manifest'))
+            source=full_path('empty.manifest'))
         b.expand_blocks('/', dummy_conf)
     assert len(b.sub_blocks) == 0
 
@@ -66,8 +61,8 @@ def recursive_manifest_error():
     Verifies that a Manifest block which includes itself raises a
     BlockException when expanded.
     """
-    invalid1_path = get_full_path('invalid1.manifest')
-    sourcedir = locations.containing_dir(invalid1_path)
+    invalid1_path = full_path('self_include.manifest')
+    sourcedir = paths.containing_dir(invalid1_path)
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=invalid1_path)
@@ -81,8 +76,8 @@ def sub_block_expand():
     Unit: Manifest Block SubBlock Expand
     Verifies that Manifest block expansion works normally.
     """
-    valid2_path = get_full_path('valid2.manifest')
-    sourcedir = locations.containing_dir(valid2_path)
+    valid2_path = full_path('empty_and_file.manifest')
+    sourcedir = paths.containing_dir(valid2_path)
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=valid2_path)
@@ -92,9 +87,9 @@ def sub_block_expand():
     fblock = b.sub_blocks[1]
     assert isinstance(mblock, manifest_block.ManifestBlock)
     assert isinstance(fblock, file_block.FileBlock)
-    assert mblock.get('source') == get_full_path('valid1.manifest')
-    assert fblock.get('source') == get_full_path('valid1.manifest')
-    assert fblock.get('target') == locations.pjoin(sourcedir, 'a/b/c')
+    assert mblock.get('source') == full_path('empty.manifest')
+    assert fblock.get('source') == full_path('empty.manifest')
+    assert fblock.get('target') == paths.pjoin(sourcedir, 'a/b/c')
 
 
 @istest
@@ -104,8 +99,8 @@ def sub_block_compile():
     Verifies that Manifest block expansion followed by action
     conversion works normally.
     """
-    valid2_path = get_full_path('valid2.manifest')
-    sourcedir = locations.containing_dir(valid2_path)
+    valid2_path = full_path('empty_and_file.manifest')
+    sourcedir = paths.containing_dir(valid2_path)
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=valid2_path)
@@ -115,8 +110,8 @@ def sub_block_compile():
     fblock = b.sub_blocks[1]
     assert isinstance(mblock, manifest_block.ManifestBlock)
     assert isinstance(fblock, file_block.FileBlock)
-    assert mblock.get('source') == get_full_path('valid1.manifest')
-    assert fblock.get('source') == get_full_path('valid1.manifest')
+    assert mblock.get('source') == full_path('empty.manifest')
+    assert fblock.get('source') == full_path('empty.manifest')
     assert fblock.get('target') == os.path.join(sourcedir, 'a/b/c')
 
     with mock.patch('salve.logger', dummy_logger):

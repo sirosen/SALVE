@@ -6,15 +6,11 @@ import abc
 import time
 
 import salve
+from salve import action, paths
 from salve.filesys import access_codes
-
-from salve import action
 from salve.action import copy
-
-from salve.util import locations
-from salve.util import streams
-from salve.util.context import ExecutionContext
-from salve.util.six import with_metaclass
+from salve.context import ExecutionContext
+from salve.util import hash_from_path, with_metaclass
 
 
 class BackupAction(with_metaclass(abc.ABCMeta, copy.CopyAction)):
@@ -43,7 +39,7 @@ class BackupAction(with_metaclass(abc.ABCMeta, copy.CopyAction)):
         # useful basis for the actual BackupAction
         copy.CopyAction.__init__(self,
                                  src,
-                                 locations.pjoin(backup_dir, 'files'),
+                                 paths.pjoin(backup_dir, 'files'),
                                  file_context)
         # although redundant with CopyAction, useful for pretty printing
         self.backup_dir = backup_dir
@@ -168,10 +164,10 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
 
         filesys.mkdir(self.dst)
 
-        self.hash_val = streams.hash_by_filename(self.src)
+        self.hash_val = hash_from_path(self.src)
 
         # update dst so that the FileCopyAction can run correctly
-        self.dst = locations.pjoin(self.dst, self.hash_val)
+        self.dst = paths.pjoin(self.dst, self.hash_val)
 
         # if the backup exists, no need to actually rewrite it
         if not filesys.exists(self.dst):
@@ -186,7 +182,7 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
         """
         logval = time.strftime('%Y-%m-%d %H:%M:%S') + ' ' + \
                  self.hash_val + ' ' + \
-                 locations.clean_path(self.src, absolute=True)
+                 paths.clean_path(self.src, absolute=True)
         # TODO: use some locks to make this thread-safe for future
         # versions of SALVE supporting parallelism
         with open(self.logfile, 'a') as f:
@@ -253,7 +249,7 @@ class DirBackupAction(action.ActionList, BackupAction):
         for dirname, subdirs, files in filesys.walk(self.src):
             # for now, to keep it super-simple, we ignore empty dirs
             for f in files:
-                filename = locations.pjoin(dirname, f)
+                filename = paths.pjoin(dirname, f)
                 self.append(FileBackupAction(filename,
                                              self.file_context))
 

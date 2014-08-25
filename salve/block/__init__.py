@@ -3,13 +3,12 @@
 import abc
 import os
 
-from salve.api.block import AbstractBlock
+from salve import paths
+from salve.api import Block
 
-from salve.util.enum import Enum
-from salve.util.error import SALVEException
-import salve.util.locations as locations
+from salve.exception import SALVEException
 
-from salve.util.six import with_metaclass
+from salve.util import with_metaclass
 
 
 class BlockException(SALVEException):
@@ -30,24 +29,20 @@ class BlockException(SALVEException):
         SALVEException.__init__(self, msg, file_context=file_context)
 
 
-class Block(with_metaclass(abc.ABCMeta, AbstractBlock)):
+class CoreBlock(with_metaclass(abc.ABCMeta, Block)):
     """
     A block is the basic unit of configuration.
     Typically, blocks describe files, SALVE manifests, patches, etc
     This is an ABC that defines the common characteristics of all
-    blocks.
+    blocks in the SALVE Core.
     """
-    # these are the valid types of block, and therefore the valid
-    # block identifiers (case insensitive)
-    types = Enum('FILE', 'MANIFEST', 'DIRECTORY')
-
     def __init__(self, ty, file_context):
         """
-        Base Block constructor.
+        Base CoreBlock constructor.
 
         Args:
             @ty
-            An element of Block.types, the type of the block.
+            An element of CoreBlock.types, the type of the block.
 
             @file_context
             The FileContext of this Block. Used to pass globals and
@@ -151,7 +146,7 @@ class Block(with_metaclass(abc.ABCMeta, AbstractBlock)):
         # define a helper to expand attributes with the root_dir
         def expand_attr(attrname):
             val = self.get(attrname)
-            if not locations.is_abs_or_var(val):
+            if not paths.is_abs_or_var(val):
                 self.set(attrname, os.path.join(root_dir, val))
 
         # find the minimal set of path attributes

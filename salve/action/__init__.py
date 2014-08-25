@@ -5,10 +5,9 @@ import abc
 import salve
 from salve.api.block import CompiledBlock
 
-from salve.util.error import SALVEException
-from salve.util.context import ExecutionContext
-from salve.util.enum import Enum
-from salve.util.six import with_metaclass
+from salve.exception import SALVEException
+from salve.context import ExecutionContext
+from salve.util import Enum, with_metaclass
 
 
 class ActionException(SALVEException):

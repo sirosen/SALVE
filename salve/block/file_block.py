@@ -5,15 +5,13 @@ import os
 import salve
 
 from salve import action
-from salve.action import backup
-from salve.action import copy
-from salve.action import create
-from salve.action import modify
+from salve.action import backup, copy, create, modify
 
-from salve.block import Block, BlockException
+from salve.api import Block
+from salve.block import CoreBlock, BlockException
 
 
-class FileBlock(Block):
+class FileBlock(CoreBlock):
     """
     A file block describes an action performed on a file.
     This includes creation, deletion, and string append.
@@ -26,7 +24,7 @@ class FileBlock(Block):
             @file_context
             The FileContext for this block.
         """
-        Block.__init__(self, Block.types.FILE, file_context)
+        CoreBlock.__init__(self, Block.types.FILE, file_context)
         for attr in ['target', 'source']:
             self.path_attrs.add(attr)
         for attr in ['target']:

@@ -4,12 +4,10 @@ import abc
 
 import salve
 
-from salve import action
+from salve import action, paths, ugo
 from salve.filesys import access_codes
-from salve.util import locations
-from salve.util import ugo
-from salve.util.context import ExecutionContext
-from salve.util.six import with_metaclass
+from salve.context import ExecutionContext
+from salve.util import with_metaclass
 
 
 class ModifyAction(with_metaclass(abc.ABCMeta, action.Action)):
@@ -362,7 +360,7 @@ class DirChownAction(ChownAction, DirModifyAction):
             for directory, subdirs, files in filesys.walk(self.target):
                 # chown on all subdirectories
                 for sd in subdirs:
-                    target = locations.pjoin(directory, sd)
+                    target = paths.pjoin(directory, sd)
                     # synthesize a new action and invoke it
                     synth = DirChownAction(target,
                                            self.user,
@@ -372,7 +370,7 @@ class DirChownAction(ChownAction, DirModifyAction):
                     synth(filesys)
                 # chown on all files in the directory
                 for f in files:
-                    target = locations.pjoin(directory, f)
+                    target = paths.pjoin(directory, f)
                     # synthesize a new action and invoke it
                     synth = FileChownAction(target,
                                             self.user,
@@ -467,7 +465,7 @@ class DirChmodAction(ChmodAction, DirModifyAction):
             for directory, subdirs, files in filesys.walk(self.target):
                 # chmod on all subdirectories
                 for sd in subdirs:
-                    target = locations.pjoin(directory, sd)
+                    target = paths.pjoin(directory, sd)
                     # synthesize a new action and invoke it
                     # synthetic DirChmods are always nonrecursive
                     synth = DirChmodAction(target,
@@ -477,7 +475,7 @@ class DirChmodAction(ChmodAction, DirModifyAction):
                     synth(filesys)
                 # chmod on all files in the directory
                 for f in files:
-                    target = locations.pjoin(directory, f)
+                    target = paths.pjoin(directory, f)
                     # synthesize a new action and invoke it
                     synth = FileChmodAction(target,
                                             '{0:o}'.format(self.mode),
