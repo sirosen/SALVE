@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import argparse
 import textwrap
 
+import salve
 import salve.cli.deploy
 import salve.cli.backup
 
@@ -55,6 +56,8 @@ def get_parser():
             self.add_argument('-v', '--verbose', dest='verbosity',
                 default=0, action='count', help='Verbosity of log output. ' +
                 'Specify multiple times for higher verbosity.')
+            self.add_argument('--version', action='version',
+                    version="%(prog)s " + salve.__version__)
 
     description = textwrap.dedent("""Run a SALVE command.
         SALVE is a configuration deployment language that guarantees the
@@ -64,7 +67,7 @@ def get_parser():
         For a full description of SALVE and its capabilities, visit
         http://salve.sirosen.net/""")
 
-    parser = SALVESharedParser(description=description)
+    parser = SALVESharedParser(prog='SALVE', description=description)
 
     subparsers = parser.add_subparsers(title='Subcommands',
         parser_class=SALVESharedParser, metavar='')
