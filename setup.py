@@ -1,19 +1,20 @@
 from setuptools import setup
+import salve
 
 readme_text = ''
 changelog_text = ''
-with open('README.md', 'r') as f:
+with open('README.rst', 'r') as f:
     readme_text = f.read()
-with open('CHANGELOG.md', 'r') as f:
+with open('CHANGELOG.rst', 'r') as f:
     changelog_text = f.read()
 
 setup(
     name='salve',
-    version='2.3.0',
+    version=salve.__version__,
 
     install_requires=['argparse'],
     packages=['salve', 'salve.api', 'salve.action', 'salve.block', 'salve.cli',
-        'salve.filesys', 'salve.reader', 'salve.util'],
+        'salve.filesys', 'salve.reader'],
     package_data={'': ['*.ini']},
     entry_points={'console_scripts': ['salve = salve.cli:main']},
 
