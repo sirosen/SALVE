@@ -3,9 +3,9 @@ import salve
 
 readme_text = ''
 changelog_text = ''
-with open('README.md', 'r') as f:
+with open('README.rst', 'r') as f:
     readme_text = f.read()
-with open('CHANGELOG.md', 'r') as f:
+with open('CHANGELOG.rst', 'r') as f:
     changelog_text = f.read()
 
 setup(
