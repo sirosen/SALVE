@@ -42,6 +42,18 @@ or, if you are using the git repo as your source:
 
     python SALVE/salve.py deploy --manifest path/to/root.manifest
 
+What if my filesystem is changing while I run SALVE?
+----------------------------------------------------
+
+It is considered unsafe to run SALVE when the files it is operating on are in a
+state of flux.
+One of the core assumptions made is that no files specified either as sources
+of information, or as the targets for actions, are changing while the program
+is being run.
+
+Running SALVE on such files results in undefined behavior, and is strongly
+disrecommended.
+
 What do I need to run it?
 =========================
 
