@@ -15,10 +15,7 @@ Authors: Stephen Rosen
 
 Version: 2.3.0
 
-More information is available at `SALVE Website`_.
-
-.. _SALVE Website:
-    http://salve.sirosen.net/
+More information is available at `SALVE Website <http://salve.sirosen.net/>`_.
 
 What can it do?
 ===============
@@ -27,15 +24,8 @@ SALVE versions files and directories in a git repository, and handles the messy 
 It is safer to use than shell scripts in a few ways, and guarantees idempotence for a wide class of deployment actions.
 It also backs up the preexisting versions of files that it changes when possible so that you can recover them if necessary at a later date.
 
-To start writing manifests, you can go to the `Quick-Start Guide`_.
-For a more detailed description of the SALVE language, the `Language Page`_ and the `Examples Page`_ are good resources.
-
-.. _Quick-Start Guide:
-    http://salve.sirosen.net/quickstart.html
-.. _Language Page:
-    http://salve.sirosen.net/lang.html
-.. _Examples Page:
-    http://salve.sirosen.net/examples.html
+To start writing manifests, you can go to the `Quick-Start Guide <http://salve.sirosen.net/quickstart.html>`_.
+For a more detailed description of the SALVE language, the `Language Page <http://salve.sirosen.net/lang>`_ and the `Examples Page <http://salve.sirosen.net/lang/examples.html>`_ are good resources.
 
 What do I need to run it?
 =========================
