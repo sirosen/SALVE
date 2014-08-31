@@ -9,7 +9,7 @@ from salve.filesys import abstract
 from salve.util import with_metaclass, hash_from_path
 
 
-class Filesys(abstract.Filesys):
+class ConcreteFilesys(abstract.Filesys):
     def lookup_type(self, path):
         """
         Lookup the type of a given path.
@@ -145,19 +145,3 @@ class Filesys(abstract.Filesys):
                 return
             else:
                 raise e
-
-    def get_existing_ancestor(self, path):
-        """
-        Finds the longest prefix to a path that is known to exist.
-
-        Args:
-            @path
-            An absolute path whose prefix should be inspected.
-        """
-        # be safe
-        path = os.path.abspath(path)
-        # exists is sufficient because we can stat directories as long as
-        # we have execute permissions
-        while not os.path.exists(path):
-            path = os.path.dirname(path)
-        return path

@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
 import os
-
 from salve.util import Enum
-from salve.filesys.abstract import Filesys
-from salve.filesys.concrete import Filesys as ConcreteFilesys
+
+from salve.filesys.concrete import ConcreteFilesys
+from salve.filesys.virtual import VirtualFilesys
+
 
 # this is really just an alias to let us get the "os" module entirely out of
 # the picture in many parts of the codebase

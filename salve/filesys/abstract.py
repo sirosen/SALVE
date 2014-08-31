@@ -17,7 +17,7 @@ class Filesys(with_metaclass(abc.ABCMeta)):
     element_types = Enum('FILE', 'DIR', 'LINK')
 
     @abc.abstractmethod
-    def lookup_type(self, path):
+    def lookup_type(self, path):  # pragma: no cover
         """
         Lookup the type of a given path.
 
@@ -277,3 +277,10 @@ class Filesys(with_metaclass(abc.ABCMeta)):
             @path
             An absolute path whose prefix should be inspected.
         """
+        # be safe and convert to abspath explicitly
+        path = os.path.abspath(path)
+        # exists is sufficient because we can stat directories as long as
+        # we have execute permissions
+        while not self.exists(path):
+            path = os.path.dirname(path)
+        return path
