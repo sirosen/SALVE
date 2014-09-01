@@ -16,9 +16,11 @@ def normalize_path(path):
     This is slightly more extensive than any particular component of the
     os.path module.
     """
-    # abspath makes it absolute, realpath removes symlinks, and normpath
+    # abspath makes it absolute and normpath
     # normalizes things like '/a/../b' to '/b'
-    return os.path.normpath(os.path.realpath(os.path.abspath(path)))
+    # don't normalize symlinks because those may conflict with entries in the
+    # virtual FS
+    return os.path.normpath(os.path.abspath(path))
 
 
 class VirtualFSElement(with_metaclass(abc.ABCMeta)):
@@ -88,6 +90,34 @@ class VirtualFilesys(abstract.Filesys):
         loop_detector = {}
 
         def normalize_vlinks_helper(path):
+            """
+            A helper that does the actual normalization work. Needed because
+            the final product goes through a mild amount of post-processing.
+
+            Args:
+                @path
+                The path whose links (virtual and real) need to be
+                dereferenced.
+
+            Technique is, in short, to handle the path recursively.
+            First, normalize all real and virtual links in the dirname, then
+            look at the dirname joined with the basename.
+            If the result does not exists (according to the virtual FS), then
+            it is a broken symlink, and is returned as-is.
+            Next, it is inspected to see if it is a symlink or not. If not, the
+            work is done and the path can be returned. Symlinks are checked for
+            being absolute or relative. Absolute links restart the
+            normalization process, while relative ones are joined to the
+            dirname, subject to some basic normalization (os.path.normpath),
+            and restart normalization.
+
+            Importantly, many results are memoized. This is not just a
+            performance measure, but also ensures that symlink loops are
+            detected and produce a meaningful result. As an unfortunate
+            side-effect, loops produce the target of the original link as their
+            result, not the path to the original link (a slight deviation from
+            os.path.realpath). Fixing this is a low-priority item.
+            """
             (head, tail) = os.path.split(path)
             # check to see if we've reached the root
             # recursive base case
@@ -102,6 +132,17 @@ class VirtualFilesys(abstract.Filesys):
             if not self.exists(normed_prefix):
                 return reformed_path
 
+            # if this path refers to a real or virtual symlink that we've seen
+            # in the past, then return whatever it dereferenced to -- prevents
+            # loops and potentially saves us from recomputing
+
+            # notably, does not cause problems with structures like
+            # /a/b -> /a/c  and  /a -> /p/q/r/
+            # in which we will read '/a/b' and produce '/p/q/r/b'
+            # after which we will get '/a/c' and be forced to handle '/a' again
+            if reformed_path in loop_detector:
+                return loop_detector[reformed_path]
+
             # if there is a registered FS element, check its type
             # and if it is a link, follow it
             if self._has(reformed_path):
@@ -109,38 +150,39 @@ class VirtualFilesys(abstract.Filesys):
                     return reformed_path
                 else:
                     elem = self._lookup(reformed_path)
+                    new_path = elem.link_target
 
-                    # if the symlink is absolute, restart normalization
-                    if os.path.isabs(elem.link_target):
-                        return normalize_vlinks_helper(elem.link_target)
-
-                    else:
+                    # if the symlink is not absolute, join it with the dir
+                    # contianing the reformed path
+                    if not os.path.isabs(elem.link_target):
                         # normpath is safe because it doesn't look at symlinks
                         # and such on the real FS (which could conflict with
                         # the virtual symlinks)
                         new_path = os.path.normpath(pjoin(head,
                             elem.link_target))
 
-                        # record link remappings so as to catch loops
-                        loop_detector[reformed_path] = new_path
+                    # record link remappings so as to catch loops
+                    loop_detector[reformed_path] = new_path
 
-                        # if we are chasing two symlinks which point at one
-                        # another, do like realpath and return the former one
-                        # (still have to normalize its ancestors)
-                        if new_path in loop_detector:
-                            return new_path
-                        else:
-                            return normalize_vlinks_helper(pjoin(head,
-                                elem.link_target))
+                    return normalize_vlinks_helper(new_path)
 
             # if we're looking at a filesys symlink without an entry in the
             # lookup table, we have no worries unless an ancestor of this is a
             # virtual link that leads us elsewhere, but that can't be the case
             # for the reformed path because we already normalized ancestors
             elif os.path.islink(reformed_path):
-                return normalize_vlinks_helper(os.path.realpath(reformed_path))
+                # read the link, and if it is not absolute, join it with the
+                # reformed path's directory
+                target = os.readlink(reformed_path)
+                if not os.path.isabs(target):
+                    target = os.path.normpath(pjoin(head, target))
 
-            # otherwise, just look for symlinks in the ancestry
+                # record link remappings so as to catch loops
+                loop_detector[reformed_path] = target
+
+                return normalize_vlinks_helper(target)
+
+            # otherwise, take the new path to be the normalized version
             return reformed_path
 
         return normalize_path(normalize_vlinks_helper(path))
@@ -177,14 +219,7 @@ class VirtualFilesys(abstract.Filesys):
         May still return OSError(2, 'No such file or directory') when
         nonrecursive mkdir calls have missing ancestors.
         """
-
-        ###
-        # FIXME: ignores the handling of VirtualLinks that may appear in the
-        # path -- these need to be resolved as part of the path cleaning
-        # process
-        ###
-
-        path = normalize_path(path)
+        path = self._normalize_virtual_links(normalize_path(path))
         parent = dirname(path)
 
         if not self.exists(path):
