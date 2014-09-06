@@ -57,3 +57,16 @@ def is_owner(path):
     assert os.path.exists(path)
 
     return os.stat(path).st_uid == os.geteuid()
+
+
+def get_current_umask():
+    """
+    Gets and returns the current umask as an octal integer. Does not modify the
+    umask (although this is not threadsafe, as it will have to modify it
+    temporarily in order to get it).
+    """
+    # doesn't matter what we set it to here. 000 is the most conservative
+    # choice (cannot cause bugs that expose data unnecessarily)
+    old_mask = os.umask(0o000)
+    os.umask(old_mask)
+    return old_mask

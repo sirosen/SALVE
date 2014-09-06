@@ -1,69 +1,92 @@
 #!/usr/bin/python
 
 import os
+import time
 import shutil
 import abc
 from contextlib import contextmanager
+from collections import namedtuple
 
 from salve.filesys import abstract
 from salve.util import with_metaclass
+from salve.ugo import get_current_umask
 from salve.paths import dirname, pjoin
 
 
-def normalize_path(path):
+# Stat information is a named tuple (lighter weight than a full class just for
+# these attributes)
+StatInfo = namedtuple('StatInfo', 'st_uid', 'st_gid', 'st_mode',
+        'st_nlink', 'st_ino', 'st_size', 'st_atime', 'st_mtime',
+        'st_ctime')
+
+
+def virtual_inode_number_generator():
     """
-    Normalize a path per the standards of the virtual filesystem.
-    This is slightly more extensive than any particular component of the
-    os.path module.
+    Create dummy unique ids for the virtual inodes. These aren't really used at
+    present, but could serve as the basis for hardlinks in the virtual FS.
     """
-    # abspath makes it absolute and normpath
-    # normalizes things like '/a/../b' to '/b'
-    # don't normalize symlinks because those may conflict with entries in the
-    # virtual FS
-    return os.path.normpath(os.path.abspath(path))
+    c = 1
+    while True:
+        yield c
+        c += 1
+
+
+def build_new_statinfo(size):
+    """
+    Build the most generic StatInfo possible, using the currently available
+    information. Some basic values are still required from the calling
+    function.
+    Acts as though it is creating a fresh file, which may or may not be the
+    case.
+    """
+    cur_time = int(time.time())
+    return StatInfo(st_uid=os.geteuid(), st_gid=os.getegid(),
+            st_mode=get_current_umask(), st_nlink=1,
+            st_ino=virtual_inode_number_generator(), st_size=size,
+            st_atime=cur_time, st_mtime=cur_time, st_ctime=cur_time)
 
 
 class VirtualFSElement(with_metaclass(abc.ABCMeta)):
-    def __init__(self, path):
-        # create a new fs element
-        self.path = normalize_path(path)
+    def __init__(self, filesys, path, stat_info=None):
+        """
+        Create a new FS element, given a filesystem with which to register it,
+        and a path at which the element can be found.
+        """
+        self.path = filesys._normalize_virtual_links(path)
 
-        # set basic properties (to defaults)
-        # existence
-        self.exists = False
-        # stat properties
-        self.uid = None
-        self.gid = None
-        self.mode = None
-        self.nlink = None
-        self.ino = None
-        self.size = 0
-        self.atime = None
-        self.mtime = None
-        self.ctime = None
+        # set common properties by leveraging the provided stat_info
+
+        # set stat attributes to None if they are not provided
+        if stat_info is not None:
+            self.stat_info = stat_info
+        else:
+            self.stat_info = StatInfo(st_uid=None, st_gid=None, st_mode=None,
+                    st_nlink=None, st_ino=None, st_size=None,
+                    st_atime=None, st_mtime=None, st_ctime=None)
+
+        # existence is determined by checking if there is an inode in the FS
+        # element's StatInfo
+        self.exists = self.stat_info.st_ino is not None
+
+        # register the new FS element with the filesys
+        # safe because __init__ is just an initializer, not a constructor
+        filesys._register(self)
 
 
 class VirtualFile(VirtualFSElement):
-    def __init__(self, path):
-        VirtualFSElement.__init__(self, path)
+    def __init__(self, filesys, path):
+        VirtualFSElement.__init__(self, filesys, path)
         self.content = None
-
-    def check_access(self, access_flags):
-        return False
 
 
 class VirtualDir(VirtualFSElement):
-    def check_access(self, access_flags):
-        return False
+    pass
 
 
 class VirtualLink(VirtualFSElement):
-    def __init__(self, path):
-        VirtualFSElement.__init__(self, path)
+    def __init__(self, filesys, path):
+        VirtualFSElement.__init__(self, filesys, path)
         self.link_target = None
-
-    def check_access(self, access_flags):
-        return False
 
 
 class VirtualFilesys(abstract.Filesys):
@@ -87,6 +110,7 @@ class VirtualFilesys(abstract.Filesys):
         Walks a path, rewriting all virtual links as though applying readlink
         to them. Then does a pass of normalization for safety.
         """
+        path = os.path.abspath(path)
         loop_detector = {}
 
         def normalize_vlinks_helper(path):
@@ -96,8 +120,7 @@ class VirtualFilesys(abstract.Filesys):
 
             Args:
                 @path
-                The path whose links (virtual and real) need to be
-                dereferenced.
+                The path whose links (virtual and real) need to be expanded.
 
             Technique is, in short, to handle the path recursively.
             First, normalize all real and virtual links in the dirname, then
@@ -185,7 +208,38 @@ class VirtualFilesys(abstract.Filesys):
             # otherwise, take the new path to be the normalized version
             return reformed_path
 
-        return normalize_path(normalize_vlinks_helper(path))
+        return os.path.normpath(normalize_vlinks_helper(path))
+
+    def exists(self, path):
+        """
+        Check if a file, directory, or link exists at a location in the virtual
+        filesystem.
+
+        Args:
+            @path
+            The path to the file, dir, or link (real or virtual) to check.
+        """
+        normed_path = self._normalize_virtual_links(path)
+        if self._has(normed_path):
+            elem = self._lookup(normed_path)
+            return elem.exists
+        else:
+            return self.real_fs.exists(normed_path)
+
+    def stat(self, path):
+        """
+        Either return the FS element's stat_info (if present), or failover to a
+        real filesystem stat.
+        """
+        normed_path = self._normalize_virtual_links(path)
+        if self.exists(normed_path):
+            if self._has(normed_path):
+                elem = self._lookup(normed_path)
+                return elem.stat_info
+            else:
+                return self.real_fs.stat(normed_path)
+        else:
+            raise OSError(2, "No such file or directory: '%s'" % path)
 
     def lookup_type(self, path):
         """
@@ -197,9 +251,10 @@ class VirtualFilesys(abstract.Filesys):
             @path
             The path to the file, dir, or link to lookup.
         """
+        path = self._normalize_virtual_links(path)
         # if there is a matching element, check its class
-        if path in lookup_table:
-            elem = self.lookup_table[path]
+        if self._has(path):
+            elem = self._lookup(path)
             if isinstance(elem, VirtualFile):
                 return self.element_types.FILE
             elif isinstance(elem, VirtualDir):
@@ -219,18 +274,16 @@ class VirtualFilesys(abstract.Filesys):
         May still return OSError(2, 'No such file or directory') when
         nonrecursive mkdir calls have missing ancestors.
         """
-        path = self._normalize_virtual_links(normalize_path(path))
+        path = self._normalize_virtual_links(path)
         parent = dirname(path)
 
         if not self.exists(path):
             if recursive:
-                elem = VirtualDir(path)
-                self._register(elem)
+                elem = VirtualDir(self, path, exists=True)
                 self.mkdir(parent, recursive=True)
             else:
                 if self.exists(parent):
-                    elem = VirtualDir(path)
-                    self._register(elem)
+                    elem = VirtualDir(self, path, exists=True)
                 else:
                     return OSError(2,
                             "No such file or directory: '%s'" % path)
