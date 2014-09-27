@@ -52,7 +52,9 @@ class VirtualFSElement(with_metaclass(abc.ABCMeta)):
         Create a new FS element, given a filesystem with which to register it,
         and a path at which the element can be found.
         """
-        self.path = filesys._normalize_virtual_links(path)
+        self.filesys = filesys
+        self.path = filesys._normalize_virtual_links(path,
+                resolve_last_link=True)
 
         # set common properties by leveraging the provided stat_info
 
@@ -99,16 +101,32 @@ class VirtualFilesys(abstract.Filesys):
     def _register(self, elem):
         self.lookup_table[elem.path] = elem
 
+    """
+    Observational functions, do not modify content of the Virtual Filesys.
+    These are safe, and independent from functions which may modify Virtual FS
+    elements.
+    """
+
     def _has(self, path):
         return path in self.lookup_table
 
     def _lookup(self, path):
         return self.lookup_table[path]
 
-    def _normalize_virtual_links(self, path):
+    def _normalize_virtual_links(self, path, resolve_last_link=False):
         """
         Walks a path, rewriting all virtual links as though applying readlink
         to them. Then does a pass of normalization for safety.
+
+        Args:
+            @path
+            The path whose links need to be expanded
+
+        KWArgs:
+            @resolve_last_link=False
+            When false, treat the path as a potential path to a symlink, so
+            don't resolve the last element in it. When True, resolve every
+            symlink in the path.
         """
         path = os.path.abspath(path)
         loop_detector = {}
@@ -208,7 +226,45 @@ class VirtualFilesys(abstract.Filesys):
             # otherwise, take the new path to be the normalized version
             return reformed_path
 
-        return os.path.normpath(normalize_vlinks_helper(path))
+        # if the target of resolution is not allowed to be a symlink, then we
+        # will follow every link in the path without exception
+        if resolve_last_link:
+            return os.path.normpath(normalize_vlinks_helper(path))
+        # if, on the other hand, we may be normalizing the path to a symlink,
+        # then we can only safely operate on the directory component of the
+        # path, and not on the final component of it
+        else:
+            (head, tail) = os.path.split(path)
+            return os.path.normpath(pjoin(normalize_vlinks_helper(head), tail))
+
+    def lookup_type(self, path):
+        """
+        Lookup the type of a given path.
+        Fails over onto the real filesystem if there is no registered element
+        at a location.
+
+        Args:
+            @path
+            The path to the file, dir, or link to lookup.
+        """
+        # do symlink resolution, but don't follow a link if that's what this
+        # resolves to, since we might be doing a type lookup on a symlink
+        path = self._normalize_virtual_links(path)
+        # if there is a matching element, check its class
+        if self._has(path):
+            elem = self._lookup(path)
+            if isinstance(elem, VirtualFile):
+                return self.element_types.FILE
+            elif isinstance(elem, VirtualDir):
+                return self.element_types.DIR
+            elif isinstance(elem, VirtualLink):
+                return self.element_types.LINK
+            else:
+                return None
+
+        # if no entry matches, inspect the underlying filesystem
+        else:
+            return self.real_fs.lookup_type(path)
 
     def exists(self, path):
         """
@@ -241,37 +297,33 @@ class VirtualFilesys(abstract.Filesys):
         else:
             raise OSError(2, "No such file or directory: '%s'" % path)
 
-    def lookup_type(self, path):
-        """
-        Lookup the type of a given path.
-        Fails over onto the real filesystem if there is no registered element
-        at a location.
+    """
+    Mutation functions, change content of the Virtual Filesys.
+    These depend upon the observational functions, and alter the state of the
+    filesystem.
+    """
 
-        Args:
-            @path
-            The path to the file, dir, or link to lookup.
+    def _virtualize_file(self, path):
         """
-        path = self._normalize_virtual_links(path)
-        # if there is a matching element, check its class
-        if self._has(path):
-            elem = self._lookup(path)
-            if isinstance(elem, VirtualFile):
-                return self.element_types.FILE
-            elif isinstance(elem, VirtualDir):
-                return self.element_types.DIR
-            elif isinstance(elem, VirtualLink):
-                return self.element_types.LINK
-            else:
-                return None
+        Virtualize an already existing link, file, or directory.
+        """
+        # normalize links in the
+        normed_path = self._normalize_virtual_links(path)
+        if self._has(normed_path):
+            return self._lookup(normed_path)
 
-        # if no entry matches, inspect the underlying filesystem
-        else:
-            return self.real_fs.lookup_type(path)
+        if not self.exists(normed_path):
+            raise OSError(2, "No such file or directory: '%s'" % normed_path)
+
+        ty = self._lookup_type(normed_path)
+        if ty is self.element_types.LINK:
+            elem = VirtualLink(self, normed_path)
+            elem.link_target = os.readlink(normed_path)
 
     def mkdir(self, path, recursive=True):
         """
         Create the directory desired, suppressing "already exists" errors.
-        May still return OSError(2, 'No such file or directory') when
+        May still raise OSError(2, 'No such file or directory') when
         nonrecursive mkdir calls have missing ancestors.
         """
         path = self._normalize_virtual_links(path)
@@ -285,5 +337,9 @@ class VirtualFilesys(abstract.Filesys):
                 if self.exists(parent):
                     elem = VirtualDir(self, path, exists=True)
                 else:
-                    return OSError(2,
+                    raise OSError(2,
                             "No such file or directory: '%s'" % path)
+        else:
+            existing_ty = self._lookup_type(path)
+            if existing_ty is not self.element_types.DIR:
+                raise OSError(17, "File exists: '%s'" % path)
