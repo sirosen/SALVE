@@ -15,9 +15,9 @@ from salve.paths import dirname, pjoin
 
 # Stat information is a named tuple (lighter weight than a full class just for
 # these attributes)
-StatInfo = namedtuple('StatInfo', 'st_uid', 'st_gid', 'st_mode',
-        'st_nlink', 'st_ino', 'st_size', 'st_atime', 'st_mtime',
-        'st_ctime')
+StatInfo = namedtuple('StatInfo',
+        ('st_uid', 'st_gid', 'st_mode', 'st_nlink', 'st_ino', 'st_size',
+         'st_atime', 'st_mtime', 'st_ctime'))
 
 
 def virtual_inode_number_generator():
