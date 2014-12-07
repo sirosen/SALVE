@@ -125,6 +125,34 @@ def hash_from_path(path):
             return sha512(f)
 
 
+def transitive_dict_resolve(mapping, entry):
+    """
+    Do transitive resolution of a dictionary entry. i.e. if the entry
+    resolves to a value in the dict, then resolve that value in the
+    dict as well, until we arrive at a value not in the dictionary.
+    If we are trying to resolve a loop, or if the original entry is not
+    in the mapping, returns the original entry.
+
+    Args:
+        @mapping
+        The dictionary through which we are trying to do transitive
+        resolution.
+
+        @entry
+        The initial entry in the mapping. Not assumed to actually be in
+        the mapping.
+    """
+    # entry must be in mapping
+    if entry not in mapping:
+        return entry
+
+    current = mapping[entry]
+    while current != entry and current in mapping:
+        current = mapping[current]
+
+    return current
+
+
 """
 Ported functionality from the Python2/Python3 compatibility library, six
 

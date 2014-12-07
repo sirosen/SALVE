@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from collections import namedtuple
 
 from salve.filesys import abstract
-from salve.util import with_metaclass
+from salve.util import with_metaclass, transitive_dict_resolve
 from salve.ugo import get_current_umask
 from salve.paths import dirname, pjoin
 
@@ -113,6 +113,48 @@ class VirtualFilesys(abstract.Filesys):
     def _lookup(self, path):
         return self.lookup_table[path]
 
+    def _raw_lookup_type(self, path):
+        """
+        Lookup the type of a given path.
+        Fails over onto the real filesystem if there is no registered element
+        at a location. Unlike the public-facing version of this method, does
+        not try to do symlink resolution.
+
+        Args:
+            @path
+            The path to the file, dir, or link to lookup.
+        """
+        # if it's in the virtual FS, look it up
+        if self._has(path):
+            elem = self._lookup(path)
+            if isinstance(elem, VirtualFile):
+                return self.element_types.FILE
+            elif isinstance(elem, VirtualDir):
+                return self.element_types.DIR
+            elif isinstance(elem, VirtualLink):
+                return self.element_types.LINK
+            else:
+                return None
+        # if nothing matches, inspect the underlying filesystem
+        else:
+            return self.real_fs.lookup_type(path)
+
+    def _raw_exists(self, path):
+        """
+        Check if a file, directory, or link exists at a location in the virtual
+        filesystem. Unlike the public-facing version of this method, does not
+        try to do symlink resolution.
+
+        Args:
+            @path
+            The path to the file, dir, or link (real or virtual) to check.
+        """
+        if self._has(normed_path):
+            elem = self._lookup(normed_path)
+            return elem.exists
+        else:
+            return self.real_fs.exists(normed_path)
+
     def _normalize_virtual_links(self, path, resolve_last_link=False):
         """
         Walks a path, rewriting all virtual links as though applying readlink
@@ -128,36 +170,41 @@ class VirtualFilesys(abstract.Filesys):
             don't resolve the last element in it. When True, resolve every
             symlink in the path.
         """
+        # abspath also does path normalization, so we can now start operating
+        # on an absolute path without crazy patterns like '/a/b/.././/./../c'
         path = os.path.abspath(path)
-        loop_detector = {}
+        # the link cache will be used to detect symlink loops, and also to
+        # speed up resolution in cases with re-entrant symlink patterns (most
+        # commonly a symlink directory in the values of symlinks) that can
+        # force reresolution. For example, given
+        # /a/b -> /a/c  and  /a -> /p/q/r/
+        # we will read '/a/b' and produce '/p/q/r/b' after which we will get
+        # '/a/c' and be forced to handle '/a' again
+        link_cache = {}
 
         def normalize_vlinks_helper(path):
             """
             A helper that does the actual normalization work. Needed because
             the final product goes through a mild amount of post-processing.
 
-            Args:
-                @path
-                The path whose links (virtual and real) need to be expanded.
-
             Technique is, in short, to handle the path recursively.
             First, normalize all real and virtual links in the dirname, then
             look at the dirname joined with the basename.
-            If the result does not exists (according to the virtual FS), then
-            it is a broken symlink, and is returned as-is.
-            Next, it is inspected to see if it is a symlink or not. If not, the
-            work is done and the path can be returned. Symlinks are checked for
-            being absolute or relative. Absolute links restart the
-            normalization process, while relative ones are joined to the
-            dirname, subject to some basic normalization (os.path.normpath),
-            and restart normalization.
+            If the result does not exists, then it is a broken symlink.
+            If it is not a symlink, we can return it as is.
+            Absolute links restart the normalization process, while relative
+            ones are joined to the dirname and restart normalization.
 
-            Importantly, many results are memoized. This is not just a
+            Importantly, many results are memoized. This is not only a
             performance measure, but also ensures that symlink loops are
-            detected and produce a meaningful result. As an unfortunate
-            side-effect, loops produce the target of the original link as their
-            result, not the path to the original link (a slight deviation from
-            os.path.realpath). Fixing this is a low-priority item.
+            detected and produce a meaningful result.
+
+            FIXME: May not always produce results consistent with the behavior
+            of os.readlink when handling loops.
+
+            Args:
+                @path
+                The path whose links (virtual and real) need to be expanded.
             """
             (head, tail) = os.path.split(path)
             # check to see if we've reached the root
@@ -165,77 +212,83 @@ class VirtualFilesys(abstract.Filesys):
             if tail == "":
                 return path
 
+            # normalize the prefix to this path recursively
             normed_prefix = normalize_vlinks_helper(head)
             reformed_path = pjoin(normed_prefix, tail)
 
-            # if the directory does not exist in the virtual FS, then a
-            # symlink is broken, but should be returned verbatim
-            if not self.exists(normed_prefix):
+            # if this path refers to a real or virtual symlink that we've seen
+            # in the past, then return whatever it dereferences to
+            # breaks us out of symlink loops
+            if reformed_path in link_cache:
+                return transitive_dict_resolve(link_cache, reformed_path)
+
+            # if the location does not exist in the virtual FS, then a
+            # symlink is broken, so it should be returned verbatim without any
+            # further attempts at resolution
+            if not self._raw_exists(reformed_path):
                 return reformed_path
 
-            # if this path refers to a real or virtual symlink that we've seen
-            # in the past, then return whatever it dereferenced to -- prevents
-            # loops and potentially saves us from recomputing
+            # we now know that we are dealing with a symlink, file, or dir
+            # which exists in the virtual FS (this may mean that it is a real
+            # symlink in the underlying FS; we don't know yet)
+            # the next step is to determine if it is not a link -- in which
+            # case we are done -- or to attempt to resolve it if it is one
 
-            # notably, does not cause problems with structures like
-            # /a/b -> /a/c  and  /a -> /p/q/r/
-            # in which we will read '/a/b' and produce '/p/q/r/b'
-            # after which we will get '/a/c' and be forced to handle '/a' again
-            if reformed_path in loop_detector:
-                return loop_detector[reformed_path]
+            # it could be a link in the virtual FS or a link in the real FS
+            # a raw lookup is the same as a lookup, but without trying to do
+            # symlink normalization before type inspection (infinite recursion
+            # badness)
+            # it still includes failover to the real FS when elements are
+            # absent from the virtual FS
+            if self._raw_lookup_type(reformed_path) != self.element_types.LINK:
+                return reformed_path
 
-            # if there is a registered FS element, check its type
-            # and if it is a link, follow it
+            # now we know it's a link, so we need to do one step of resolution
+
+            # what does our single-step resolution produce?
+            # starts as None, but must be set before we're done
+            new_path = None
+
+            # if there is a registered virtual FS element, it's a link, so we
+            # can start to treat it as such
             if self._has(reformed_path):
-                if self.lookup_type(reformed_path) != self.element_types.LINK:
-                    return reformed_path
-                else:
-                    elem = self._lookup(reformed_path)
-                    new_path = elem.link_target
+                elem = self._lookup(reformed_path)
+                new_path = elem.link_target
 
-                    # if the symlink is not absolute, join it with the dir
-                    # contianing the reformed path
-                    if not os.path.isabs(elem.link_target):
-                        # normpath is safe because it doesn't look at symlinks
-                        # and such on the real FS (which could conflict with
-                        # the virtual symlinks)
-                        new_path = os.path.normpath(pjoin(head,
-                            elem.link_target))
-
-                    # record link remappings so as to catch loops
-                    loop_detector[reformed_path] = new_path
-
-                    return normalize_vlinks_helper(new_path)
-
-            # if we're looking at a filesys symlink without an entry in the
-            # lookup table, we have no worries unless an ancestor of this is a
-            # virtual link that leads us elsewhere, but that can't be the case
-            # for the reformed path because we already normalized ancestors
-            elif os.path.islink(reformed_path):
+                # if the symlink is not absolute, join it with the dir
+                # containing the reformed path
+                if not os.path.isabs(elem.link_target):
+                    new_path = pjoin(normed_prefix, elem.link_target)
+            # if not a virtual FS element, it must be a real FS symlink
+            else:
                 # read the link, and if it is not absolute, join it with the
                 # reformed path's directory
-                target = os.readlink(reformed_path)
-                if not os.path.isabs(target):
-                    target = os.path.normpath(pjoin(head, target))
+                new_path = os.readlink(reformed_path)
+                if not os.path.isabs(new_path):
+                    new_path = pjoin(normed_prefix, new_path)
 
-                # record link remappings so as to catch loops
-                loop_detector[reformed_path] = target
+            # safety assertion so that we blow up if things go sideways
+            assert new_path is not None
+            # normalize the path to remove icky '/../'-like patterns
+            new_path = os.path.normpath(new_path)
 
-                return normalize_vlinks_helper(target)
+            # record link remappings so as to catch loops and short-circuit
+            # resolution in the future
+            link_cache[reformed_path] = new_path
 
-            # otherwise, take the new path to be the normalized version
-            return reformed_path
+            return normalize_vlinks_helper(new_path)
 
         # if the target of resolution is not allowed to be a symlink, then we
-        # will follow every link in the path without exception
+        # will follow every link in the path normally
         if resolve_last_link:
-            return os.path.normpath(normalize_vlinks_helper(path))
+            return normalize_vlinks_helper(path)
         # if, on the other hand, we may be normalizing the path to a symlink,
         # then we can only safely operate on the directory component of the
-        # path, and not on the final component of it
+        # path, and not on the final element of it
+        # so we have to split the path and join the tail to it after the fact
         else:
             (head, tail) = os.path.split(path)
-            return os.path.normpath(pjoin(normalize_vlinks_helper(head), tail))
+            return pjoin(normalize_vlinks_helper(head), tail)
 
     def lookup_type(self, path):
         """
@@ -250,21 +303,7 @@ class VirtualFilesys(abstract.Filesys):
         # do symlink resolution, but don't follow a link if that's what this
         # resolves to, since we might be doing a type lookup on a symlink
         path = self._normalize_virtual_links(path)
-        # if there is a matching element, check its class
-        if self._has(path):
-            elem = self._lookup(path)
-            if isinstance(elem, VirtualFile):
-                return self.element_types.FILE
-            elif isinstance(elem, VirtualDir):
-                return self.element_types.DIR
-            elif isinstance(elem, VirtualLink):
-                return self.element_types.LINK
-            else:
-                return None
-
-        # if no entry matches, inspect the underlying filesystem
-        else:
-            return self.real_fs.lookup_type(path)
+        return self._raw_lookup_type(self, path)
 
     def exists(self, path):
         """
@@ -276,11 +315,7 @@ class VirtualFilesys(abstract.Filesys):
             The path to the file, dir, or link (real or virtual) to check.
         """
         normed_path = self._normalize_virtual_links(path)
-        if self._has(normed_path):
-            elem = self._lookup(normed_path)
-            return elem.exists
-        else:
-            return self.real_fs.exists(normed_path)
+        self._raw_exists(normed_path)
 
     def stat(self, path):
         """
