@@ -1,5 +1,8 @@
 Changelog
 =========
+ * 2.4.0
+    * Paths can be expanded relative to the manifest being processed, rather than
+      relative to the root manifest (this will become the default in version 3)
  * 2.3.1
     * Fixes to setuptools usage
     * Change markdown documents to reST

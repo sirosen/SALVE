@@ -166,7 +166,10 @@ class TestWithScratchdir(system.RunScratchContainer):
         assert s == '', s
 
         err = self.stderr.getvalue()
-        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCopy: ' +
+        expected = ('[WARN] [STARTUP] ' +
+            'Deprecation Warning: --directory will be removed in version 3 ' +
+            'as --version3-relative-paths becomes the default.\n' +
+            '[WARN] [VERIFICATION] %s, line 1: FileCopy: ' +
             'Non-Writable target file "%s"\n') % (self.get_fullname('1.man'),
             fullname)
         assert err == expected, "%s != %s" % (err, expected)
@@ -243,3 +246,24 @@ class TestWithScratchdir(system.RunScratchContainer):
             'Non-Writable target file "%s"\n') %
             (self.get_fullname('1.man'), fullname_b))
         assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
+
+    @istest
+    def create_with_v3_path(self):
+        """
+        System: Create File With v3 Relative Path
+
+        Runs a manifest which creates a file, in version 3 relative path mode.
+        """
+        content = 'file gamma { action create }\n'
+        self.make_dir('a')
+        self.write_file('a/1.man', content)
+        self.run_on_manifest('a/1.man')
+        assert self.exists('gamma')
+        s = self.read_file('gamma')
+        assert s == '', s
+
+        assert not self.exists('a/gamma')
+        self.run_on_manifest('a/1.man', argv=['--ver3'])
+        assert self.exists('a/gamma')
+        s = self.read_file('a/gamma')
+        assert s == '', s

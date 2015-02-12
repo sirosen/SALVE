@@ -37,7 +37,7 @@ def sourceless_manifest_expand_error():
         b = manifest_block.ManifestBlock(dummy_file_context)
         ensure_except(block.BlockException,
                       b.expand_blocks, '/',
-                      dummy_conf)
+                      dummy_conf, False)
 
 
 @istest
@@ -50,7 +50,7 @@ def empty_manifest_expand():
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=full_path('empty.manifest'))
-        b.expand_blocks('/', dummy_conf)
+        b.expand_blocks('/', dummy_conf, False)
     assert len(b.sub_blocks) == 0
 
 
@@ -67,7 +67,7 @@ def recursive_manifest_error():
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=invalid1_path)
         ensure_except(block.BlockException,
-                      b.expand_blocks, sourcedir, dummy_conf)
+                      b.expand_blocks, sourcedir, dummy_conf, False)
 
 
 @istest
@@ -81,7 +81,7 @@ def sub_block_expand():
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=valid2_path)
-        b.expand_blocks(sourcedir, dummy_conf)
+        b.expand_blocks(sourcedir, dummy_conf, False)
     assert len(b.sub_blocks) == 2
     mblock = b.sub_blocks[0]
     fblock = b.sub_blocks[1]
@@ -104,7 +104,7 @@ def sub_block_compile():
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
             source=valid2_path)
-        b.expand_blocks(sourcedir, dummy_conf)
+        b.expand_blocks(sourcedir, dummy_conf, False)
     assert len(b.sub_blocks) == 2
     mblock = b.sub_blocks[0]
     fblock = b.sub_blocks[1]

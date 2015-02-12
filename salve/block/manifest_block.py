@@ -3,7 +3,7 @@
 import os
 
 import salve
-from salve import action
+from salve import action, paths
 
 from salve.context import ExecutionContext
 from salve.api import Block
@@ -40,7 +40,7 @@ class ManifestBlock(CoreBlock):
         self.min_attrs.add('source')
         self.primary_attr = 'source'
 
-    def expand_blocks(self, root_dir, config, ancestors=None):
+    def expand_blocks(self, root_dir, config, v3_relpaths, ancestors=None):
         """
         Expands a manifest block by reading its source, parsing it into
         blocks, and assigning those to be the sub_blocks of the manifest
@@ -50,9 +50,14 @@ class ManifestBlock(CoreBlock):
         Args:
             @config is used to fill in any variable values in the
             blocks' template string attributes.
-            @root_dir is the root of all relative paths in the manifest
-            and its descendants. Typically, this is left unset and
-            defaults to the SALVE_ROOT.
+
+            @root_dir is the root of all relative paths in the manifest.
+
+            @v3_relpaths
+            Used to specify SALVE v3 relative path interpretation (relative to
+            current manifest). When False, @root_dir is passed along from one
+            manifest to the next, generally meaning that all paths are relative
+            to the initial manifest.
 
         KWArgs:
             @ancestors is the set of containing manifests. It is passed
@@ -62,7 +67,7 @@ class ManifestBlock(CoreBlock):
         # This import must take place inside of the function because
         # there is a circular dependency between ManifestBlocks and the
         # parser
-        import salve.reader.parse as parse
+        from salve.reader import parse
         # ensure that this block has config applied and paths expanded
         # this guarantees that 'source' is accurate
         config.apply_to_block(self)
@@ -82,18 +87,24 @@ class ManifestBlock(CoreBlock):
         # parse the manifest source
         with open(filename) as man:
             self.sub_blocks = parse.parse_stream(man)
+
+        # set the directory from which relative paths are expanded
+        containing_dir = root_dir
+        if v3_relpaths:
+            containing_dir = paths.containing_dir(filename)
         for b in self.sub_blocks:
             # recursively apply to manifest blocks
             if isinstance(b, ManifestBlock):
-                b.expand_blocks(root_dir,
+                b.expand_blocks(containing_dir,
                                 config,
+                                v3_relpaths,
                                 ancestors=ancestors)
             # expand any relative paths and substitute for any vars
             # must be in order so that a variable which expands to a
             # relative path works correctly
             else:
                 config.apply_to_block(b)
-                b.expand_file_paths(root_dir)
+                b.expand_file_paths(containing_dir)
 
     def compile(self):
         """
