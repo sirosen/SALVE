@@ -1,4 +1,2 @@
-#!/usr/bin/python
-
-from salve.context.filectx import FileContext
-from salve.context.execctx import ExecutionContext
+from .filectx import FileContext
+from .execctx import ExecutionContext

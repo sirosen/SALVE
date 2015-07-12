@@ -8,7 +8,7 @@ import mock
 from nose.tools import istest
 from tests.util import ensure_except, scratch
 
-from salve.filesys import concrete, abstract
+from salve.filesys import ConcreteFilesys
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
@@ -19,7 +19,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that attempting to lookup the type of a file that does not
         exist in a Concrete Filesystem will return None.
         """
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         ty = fs.lookup_type(self.get_fullname('a'))
         assert ty is None
 
@@ -31,7 +31,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a')
         self.write_file('a', 'abcdefg')
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         ty = fs.lookup_type(full_path)
         assert ty is fs.element_types.FILE
 
@@ -43,7 +43,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a')
         self.make_dir('a')
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         ty = fs.lookup_type(full_path)
         assert ty is fs.element_types.DIR
 
@@ -55,7 +55,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a')
         os.symlink('nowhere', full_path)
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         ty = fs.lookup_type(full_path)
         assert ty is fs.element_types.LINK
 
@@ -71,7 +71,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         src_path = self.get_fullname('a')
         dst_path = self.get_fullname('b')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.copy(src_path, dst_path)
 
         assert content == self.read_file('b')
@@ -90,7 +90,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         dst_path = self.get_fullname('b')
         os.symlink(link_target, src_path)
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.copy(src_path, dst_path)
 
         assert os.path.islink(dst_path)
@@ -111,7 +111,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         src_path = self.get_fullname('a')
         dst_path = self.get_fullname('z/a')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.copy(src_path, dst_path)
 
         assert os.path.isdir(dst_path)
@@ -126,7 +126,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.touch(full_path)
 
         assert os.path.isfile(full_path)
@@ -141,7 +141,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         full_path = self.get_fullname('a')
         link_target = 'b'
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.symlink(link_target, full_path)
 
         assert os.path.islink(full_path)
@@ -155,7 +155,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.mkdir(full_path, recursive=False)
 
         assert os.path.isdir(full_path)
@@ -170,7 +170,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a/b/c')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.mkdir(full_path, recursive=True)
 
         assert os.path.isdir(full_path)
@@ -184,7 +184,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.mkdir(full_path, recursive=False)
         fs.mkdir(full_path, recursive=False)
 
@@ -200,7 +200,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a/b')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         e = ensure_except(OSError, fs.mkdir, full_path, recursive=False)
 
         assert e.errno == 2
@@ -214,7 +214,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.touch(full_path)
 
         with fs.open(full_path, 'w') as fd:
@@ -233,7 +233,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         full_path = self.get_fullname('a')
         self.write_file('a', 'xyz')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.touch(full_path)
 
         with fs.open(full_path, 'r') as fd:
@@ -249,7 +249,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         full_path = self.get_fullname('a')
         self.write_file('a', 'xyz')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
 
         hashval = fs.hash(full_path)
         expect = hashlib.sha512('xyz'.encode('utf-8')).hexdigest()
@@ -263,7 +263,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_path = self.get_fullname('a')
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.symlink('xyz', full_path)
 
         hashval = fs.hash(full_path)
@@ -302,7 +302,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                       os.R_OK | os.W_OK | os.X_OK):
             result_map[(flags, None)] = False
 
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
 
         for (flags, mode) in result_map:
             expect = result_map[(flags, mode)]
@@ -326,7 +326,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         attributes.
         """
         full_name = self.get_fullname('a')
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         assert not fs.exists(full_name)
 
         fs.touch(full_name)
@@ -353,7 +353,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that attempting to stat a link works.
         """
         full_name = self.get_fullname('a')
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         assert not fs.exists(full_name)
 
         fs.symlink('nowhere', full_name)
@@ -381,7 +381,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         various permissions settings.
         """
         full_name = self.get_fullname('a')
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         assert not fs.exists(full_name)
 
         fs.touch(full_name)
@@ -410,7 +410,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         chown operation will work.
         """
         full_name = self.get_fullname('a')
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.touch(full_name)
 
         mock_chown = mock.Mock()
@@ -428,7 +428,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Validates the results of using filesys tooling to create a directory
         and walk it.
         """
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         fs.mkdir(self.get_fullname('a/b/c'))
         fs.touch(self.get_fullname('a/f1'))
         fs.symlink('../f1', self.get_fullname('a/b/l1'))
@@ -450,7 +450,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Creating a directory when the parent directory has bad permissions
         should raise an OSError.
         """
-        fs = concrete.Filesys()
+        fs = ConcreteFilesys()
         full_name = self.get_fullname('a')
         fs.mkdir(full_name)
         fs.chmod(full_name, 0o000)

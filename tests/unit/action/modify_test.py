@@ -9,7 +9,7 @@ from salve.context import ExecutionContext, FileContext
 
 from salve import action, ugo
 from salve.action import modify
-from salve.filesys import real_fs
+from salve.filesys import ConcreteFilesys
 
 from tests.util import scratch
 
@@ -50,9 +50,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # have to mock to be 100% certain that we are not root
         with mock.patch('salve.ugo.is_root', lambda: False):
-            with mock.patch('salve.filesys.real_fs.stat',
-                            lambda x: mock_stat_result):
-                code = act.verify_can_exec(real_fs)
+            with mock.patch('salve.filesys.ConcreteFilesys.stat',
+                            lambda fs, x: mock_stat_result):
+                code = act.verify_can_exec(ConcreteFilesys())
 
         assert code == act.verification_codes.NOT_ROOT, str(code)
 
@@ -75,8 +75,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with mock.patch('salve.action.modify.FileChownAction.verify_can_exec',
                         mock_verify):
-            with mock.patch('salve.filesys.real_fs.chown', mock_chown):
-                act(real_fs)
+            with mock.patch('salve.filesys.ConcreteFilesys.chown', mock_chown):
+                act(ConcreteFilesys())
 
         assert not mock_chown.called
 
@@ -95,7 +95,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.FileChmodAction(a_name, '600', self.file_context)
 
         with mock.patch('salve.ugo.is_owner', lambda x: False):
-            code = act.verify_can_exec(real_fs)
+            code = act.verify_can_exec(ConcreteFilesys())
             assert code == act.verification_codes.UNOWNED_TARGET, str(code)
 
     @istest
@@ -119,10 +119,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.DirChownAction(a_name, 'user1', 'nogroup',
                                     self.file_context)
 
-        with mock.patch('salve.filesys.real_fs.stat',
-                        lambda x: mock_stat_result):
+        with mock.patch('salve.filesys.ConcreteFilesys.stat',
+                        lambda fs, x: mock_stat_result):
             with mock.patch('salve.ugo.is_root', lambda: False):
-                code = act.verify_can_exec(real_fs)
+                code = act.verify_can_exec(ConcreteFilesys())
                 assert code == act.verification_codes.NOT_ROOT, str(code)
 
     @istest
@@ -140,7 +140,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
         with mock.patch('salve.ugo.is_root', lambda: True):
-            code = act.verify_can_exec(real_fs)
+            code = act.verify_can_exec(ConcreteFilesys())
             assert code == act.verification_codes.OK, str(code)
 
     @istest
@@ -159,7 +159,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with mock.patch('salve.ugo.is_root', lambda: False):
             with mock.patch('salve.ugo.is_owner', lambda x: False):
-                code = act.verify_can_exec(real_fs)
+                code = act.verify_can_exec(ConcreteFilesys())
                 assert code == act.verification_codes.UNOWNED_TARGET, str(code)
 
     @istest
@@ -180,7 +180,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with mock.patch('salve.action.modify.FileChmodAction.verify_can_exec',
                         lambda x, fs: x.verification_codes.UNOWNED_TARGET):
-            act(real_fs)
+            act(ConcreteFilesys())
 
         assert log['chmod'] is None
         assert (self.stderr.getvalue() ==
@@ -209,7 +209,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                         lambda x, fs:
                         modify.DirChownAction.verification_codes.NOT_ROOT):
             with mock.patch('os.lchown', mock_lchown):
-                act(real_fs)
+                act(ConcreteFilesys())
 
         assert len(lchown_args) == 0
         assert (self.stderr.getvalue() == (
@@ -238,7 +238,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                     'salve.action.modify.DirChmodAction.verify_can_exec',
                     lambda self, fs: self.verification_codes.UNOWNED_TARGET):
                 with mock.patch('os.chmod', mock_chmod):
-                    act(real_fs)
+                    act(ConcreteFilesys())
 
         assert len(chmod_args) == 0
         assert (self.stderr.getvalue() == (
@@ -264,7 +264,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                         lambda self, fs: self.verification_codes.NOT_ROOT):
             with mock.patch('os.walk', mock_os_walk):
                 with mock.patch('os.lchown', mock_lchown):
-                    act(real_fs)
+                    act(ConcreteFilesys())
 
         assert len(lchown_args) == 0
         assert (self.stderr.getvalue() == (
@@ -294,7 +294,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                         lambda x, fs: unowned_target_code):
             with mock.patch('os.walk', mock_os_walk):
                 with mock.patch('os.chmod', mock_chmod):
-                    act(real_fs)
+                    act(ConcreteFilesys())
 
         assert len(chmod_args) == 0
         assert (self.stderr.getvalue() == (
@@ -352,9 +352,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         act = modify.FileChmodAction('a', '0000', self.file_context)
 
-        with mock.patch('salve.filesys.real_fs.exists', lambda x: True):
+        with mock.patch('salve.filesys.ConcreteFilesys.exists',
+                        lambda fs, x: True):
             with mock.patch('salve.ugo.is_root', lambda: True):
-                assert act.verify_can_exec(real_fs) == \
+                assert act.verify_can_exec(ConcreteFilesys()) == \
                     act.verification_codes.OK
 
     @istest
@@ -369,14 +370,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_stat_result.st_gid = 1
         mock_stat_result.st_uid = 1
 
-        with mock.patch('salve.filesys.real_fs.stat',
-                        lambda x: mock_stat_result):
-            with mock.patch('salve.filesys.real_fs.exists', lambda x: True):
+        with mock.patch('salve.filesys.ConcreteFilesys.stat',
+                        lambda fs, x: mock_stat_result):
+            with mock.patch('salve.filesys.ConcreteFilesys.exists',
+                            lambda fs, x: True):
                 with mock.patch('salve.ugo.name_to_uid', lambda x: 0):
                     with mock.patch('salve.ugo.name_to_gid', lambda x: 0):
                         with mock.patch('salve.ugo.is_root',
                                         lambda: True):
-                            assert act.verify_can_exec(real_fs) == \
+                            assert act.verify_can_exec(ConcreteFilesys()) == \
                                 act.verification_codes.OK
 
     @istest
@@ -390,15 +392,16 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_stat_result.st_gid = 1
         mock_stat_result.st_uid = 1
 
-        with mock.patch('salve.filesys.real_fs.stat',
-                        lambda x: mock_stat_result):
-            with mock.patch('salve.filesys.real_fs.access', lambda x, y: True):
+        with mock.patch('salve.filesys.ConcreteFilesys.stat',
+                        lambda fs, x: mock_stat_result):
+            with mock.patch('salve.filesys.ConcreteFilesys.access',
+                            lambda fs, x, y: True):
                 with mock.patch('salve.ugo.name_to_uid', lambda x: 0):
                     with mock.patch('salve.ugo.name_to_gid',
                                     lambda x: 0):
                         with mock.patch('salve.ugo.is_root',
                                         lambda: True):
-                            assert act.verify_can_exec(real_fs) == \
+                            assert act.verify_can_exec(ConcreteFilesys()) == \
                                 act.verification_codes.OK
 
     @istest
@@ -426,7 +429,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                             with mock.patch(chown_verify_name,
                                             lambda self, fs:
                                             mocked_verify_code):
-                                act(real_fs)
+                                act(ConcreteFilesys())
 
         assert log['lchown'] == ('a', 1, 2)
 
@@ -441,15 +444,16 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_stat_result = mock.Mock()
         mock_stat_result.st_uid = os.getuid()
 
-        with mock.patch('salve.filesys.real_fs.chmod', mock_chmod):
-            with mock.patch('salve.filesys.real_fs.access', lambda x, y: True):
-                with mock.patch('salve.filesys.real_fs.exists',
-                                lambda x: True):
-                    with mock.patch('salve.filesys.real_fs.stat',
-                                    lambda x: mock_stat_result):
+        with mock.patch('salve.filesys.ConcreteFilesys.chmod', mock_chmod):
+            with mock.patch('salve.filesys.ConcreteFilesys.access',
+                            lambda fs, x, y: True):
+                with mock.patch('salve.filesys.ConcreteFilesys.exists',
+                                lambda fs, x: True):
+                    with mock.patch('salve.filesys.ConcreteFilesys.stat',
+                                    lambda fs, x: mock_stat_result):
                         with mock.patch('salve.ugo.is_owner',
                                         lambda x: True):
-                            act(real_fs)
+                            act(ConcreteFilesys())
 
         mock_chmod.assert_called_once_with('a', int('600', 8))
 
@@ -479,7 +483,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                         with mock.patch(file_verify_name,
                                         lambda x, fs: filechown_ok_code):
                             with mock.patch('os.lchown', mock_lchown):
-                                act(real_fs)
+                                act(ConcreteFilesys())
 
         assert len(lchown_args) == 8
         assert ('a', 1, 2) in lchown_args
@@ -518,7 +522,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 with mock.patch(file_verify_name,
                                 lambda x, fs: filechmod_ok_code):
                     with mock.patch('os.chmod', mock_chmod):
-                        act(real_fs)
+                        act(ConcreteFilesys())
 
         assert len(chmod_args) == 8
         mode = int('755', 8)
@@ -551,7 +555,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                     with mock.patch(dir_verify_name,
                                     lambda x, fs: dirchown_ok_code):
                         with mock.patch('os.lchown', mock_lchown):
-                            act(real_fs)
+                            act(ConcreteFilesys())
 
         assert len(lchown_args) == 1
         assert ('a', 1, 2) in lchown_args
@@ -574,7 +578,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                         lambda x, fs:
                         modify.DirChmodAction.verification_codes.OK):
             with mock.patch('os.chmod', mock_chmod):
-                act(real_fs)
+                act(ConcreteFilesys())
 
         assert len(chmod_args) == 1
         mode = int('755', 8)

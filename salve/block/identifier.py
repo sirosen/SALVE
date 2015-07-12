@@ -2,16 +2,16 @@
 
 import salve
 
-from salve.reader.tokenize import Token
-
-from salve.block import BlockException
-from salve.block import file_block, manifest_block, directory_block
+from salve.exceptions import BlockException
+from salve.block.file import FileBlock
+from salve.block.directory import DirBlock
+from salve.block.manifest import ManifestBlock
 
 # maps valid identifiers to block constructors
 identifier_map = {
-    'file': file_block.FileBlock,
-    'manifest': manifest_block.ManifestBlock,
-    'directory': directory_block.DirBlock
+    'file': FileBlock,
+    'manifest': ManifestBlock,
+    'directory': DirBlock
 }
 
 
@@ -27,6 +27,11 @@ def block_from_identifier(id_token):
         The Token which is a block identifier. Consists of a string and
         little else.
     """
+    # import Token here to avoid circular dependency issues
+    # the parser needs to know about the valid identifiers from here, but this
+    # needs to know about Tokens
+    from salve.parser import Token
+
     # assert failures indicate an internal error (invalid state)
     assert isinstance(id_token, Token)
     ctx = id_token.file_context

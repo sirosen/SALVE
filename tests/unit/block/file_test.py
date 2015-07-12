@@ -9,8 +9,9 @@ from tests.util import ensure_except, scratch
 from salve import action
 from salve.context import ExecutionContext
 from salve.action import backup, create, modify, copy
+from salve.exceptions import BlockException
 
-from salve.block import BlockException, file_block
+from salve.block import FileBlock
 
 from tests.unit.block import dummy_file_context, dummy_logger, \
     ScratchWithExecCtx
@@ -23,7 +24,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Unit: File Block Copy Compile
         Verifies the result of converting a file copy block to an action.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')
@@ -69,7 +70,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Unit: File Block Create Compile
         Verifies the result of converting a file create block to an action.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('target', '/p/q/r')
         b.set('user', 'user1')
@@ -112,7 +113,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that converting a file copy block to an action when the
         user attribute is unset skips the chown subaction, even as root.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')
@@ -147,7 +148,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that converting a file create block to an action when the
         user attribute is unset leaves out the chown.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('target', '/p/q/r')
         b.set('group', 'nogroup')
@@ -177,7 +178,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that converting a file copy block to an action when the
         group attribute is unset raises a BlockException.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')
@@ -214,7 +215,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that converting a file create block to an action when the
         group attribute is unset raises a BlockException.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('target', '/p/q/r')
         b.set('user', 'user1')
@@ -244,7 +245,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that converting a file copy block to an action when the
         mode attribute is unset raises a BlockException.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')
@@ -282,7 +283,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that converting a file create block to an action when the
         mode attribute is unset raises a BlockException.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('target', '/p/q/r')
         b.set('user', 'user1')
@@ -313,7 +314,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that converting a file copy block to an action when the
         source attribute is unset raises a BlockException.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('target', '/p/q/r')
         b.set('user', 'user1')
@@ -330,7 +331,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that converting a file copy block to an action when the
         target attribute is unset raises a BlockException.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('source', '/a/b/c')
         b.set('user', 'user1')
@@ -347,7 +348,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that converting a file create block to an action when the
         target attribute is unset raises a BlockException.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('source', '/a/b/c')
         b.set('user', 'user1')
@@ -363,7 +364,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Unit: File Block Path Expand
         Tests the results of expanding relative paths in a File block.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('source', 'p/q/r/s')
         b.set('target', 't/u/v/w/x/y/z/1/2/3/../3')
         root_dir = 'file/root/directory'
@@ -380,7 +381,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that a File Block with the target attribute unset raises
         a BlockException when paths are expanded.
         """
-        b = file_block.FileBlock(dummy_file_context)
+        b = FileBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('source', 'p/q/r/s')
         b.set('user', 'user1')

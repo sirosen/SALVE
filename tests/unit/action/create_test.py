@@ -7,7 +7,7 @@ from nose.tools import istest
 from salve.context import ExecutionContext, FileContext
 
 from salve.action import create
-from salve.filesys import real_fs
+from salve.filesys import ConcreteFilesys
 from tests.util import scratch
 
 dummy_file_context = FileContext('no such file')
@@ -36,7 +36,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with builtin_patch:
             with mock.patch('os.access', lambda x, y: True):
                 fc = create.FileCreateAction(a_name, dummy_file_context)
-                fc(real_fs)
+                fc(ConcreteFilesys())
 
         mock_open.assert_called_once_with(a_name, 'a')
         handle = mock_open()
@@ -55,7 +55,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with mock.patch('os.makedirs', mock_mkdirs):
             with mock.patch('os.access', lambda x, y: True):
                 dc = create.DirCreateAction(a_name, dummy_file_context)
-                dc(real_fs)
+                dc(ConcreteFilesys())
 
         mock_mkdirs.assert_called_once_with(a_name)
 

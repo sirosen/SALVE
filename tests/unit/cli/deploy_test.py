@@ -8,8 +8,8 @@ from nose.tools import istest
 
 from salve.cli import deploy
 
-from salve.block import BlockException
-from salve.exceptions import SALVEException
+from salve.exceptions import SALVEException, ActionException, BlockException, \
+    ParsingException
 from salve.context import ExecutionContext, FileContext
 
 from tests.util import ensure_except, scratch
@@ -87,7 +87,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             def compile(self):
                 return MockAction()
 
-        with mock.patch('salve.block.manifest_block.ManifestBlock',
+        with mock.patch('salve.cli.deploy.ManifestBlock',
                         MockManifest):
             with mock.patch('salve.config.SALVEConfig', mock.Mock()):
                 deploy.main(fake_args)
@@ -161,8 +161,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown ActionExceptions.
         """
-        from salve.action import ActionException
-
         ExecutionContext().transition(ExecutionContext.phases.STARTUP)
 
         fake_args = mock.Mock()
@@ -194,7 +192,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown TokenizationExceptions.
         """
-        from salve.reader.tokenize import TokenizationException
+        from salve.exceptions import TokenizationException
 
         ExecutionContext().transition(ExecutionContext.phases.STARTUP)
 
@@ -227,8 +225,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown ParsingExceptions.
         """
-        from salve.reader.parse import ParsingException
-
         ExecutionContext().transition(ExecutionContext.phases.STARTUP)
 
         fake_args = mock.Mock()

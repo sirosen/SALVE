@@ -1,1 +1,1 @@
-from salve.api.block import Block, CompiledBlock
+from .block import Block, CompiledBlock

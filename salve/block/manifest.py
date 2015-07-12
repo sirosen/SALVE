@@ -3,11 +3,14 @@
 import os
 
 import salve
-from salve import action, paths
+from salve import paths
 
+from salve.action import ActionList
 from salve.context import ExecutionContext
 from salve.api import Block
-from salve.block import CoreBlock
+from salve.exceptions import BlockException
+
+from .base import CoreBlock
 
 
 class ManifestBlock(CoreBlock):
@@ -67,7 +70,7 @@ class ManifestBlock(CoreBlock):
         # This import must take place inside of the function because
         # there is a circular dependency between ManifestBlocks and the
         # parser
-        from salve.reader import parse
+        from salve.parser import parse_stream
         # ensure that this block has config applied and paths expanded
         # this guarantees that 'source' is accurate
         config.apply_to_block(self)
@@ -86,7 +89,7 @@ class ManifestBlock(CoreBlock):
 
         # parse the manifest source
         with open(filename) as man:
-            self.sub_blocks = parse.parse_stream(man)
+            self.sub_blocks = parse_stream(man)
 
         # set the directory from which relative paths are expanded
         containing_dir = root_dir
@@ -122,7 +125,7 @@ class ManifestBlock(CoreBlock):
             raise self.mk_except('Attempted to convert unexpanded ' +
                                  'manifest to action.')
 
-        act = action.ActionList([], self.file_context)
+        act = ActionList([], self.file_context)
         for b in self.sub_blocks:
             subact = b.compile()
             if subact is not None:

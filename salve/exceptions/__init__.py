@@ -1,6 +1,6 @@
-from salve.exceptions.base import SALVEException
+from .base import SALVEException
 
-from salve.exceptions.parsing import ParsingException, TokenizationException
+from .parsing import ParsingException, TokenizationException
 
-from salve.exceptions.block import BlockException
-from salve.exceptions.action import ActionException
+from .block import BlockException
+from .action import ActionException

@@ -59,12 +59,28 @@ class MockedGlobals(MockedIO):
         MockedIO.__init__(self)
         self.logger = Logger(logfile=self.stderr)
         self.logger_patch = mock.patch('salve.logger', self.logger)
+        self.action_logger_patches = [
+            mock.patch('salve.action.%s.logger' % loc,
+                       self.logger)
+            for loc in [
+                'backup.file', 'backup.directory',
+                'copy.file', 'create.file',
+                'copy.directory', 'create.directory',
+                'modify.chmod', 'modify.chown',
+                'modify.file_chmod', 'modify.file_chown',
+                'modify.dir_chmod', 'modify.dir_chown'
+            ]
+        ]
 
     def setUp(self):
         MockedIO.setUp(self)
         clear_exec_context()
         self.logger_patch.start()
+        for p in self.action_logger_patches:
+            p.start()
 
     def tearDown(self):
         MockedIO.tearDown(self)
         self.logger_patch.stop()
+        for p in self.action_logger_patches:
+            p.stop()

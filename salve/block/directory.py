@@ -4,11 +4,11 @@ import os
 
 import salve
 
-from salve import action
-from salve.action import backup, copy, create, modify
-
+from salve.action import ActionList, backup, copy, create, modify
 from salve.api import Block
-from salve.block import CoreBlock, BlockException
+from salve.exceptions import BlockException
+
+from .base import CoreBlock
 
 
 class DirBlock(CoreBlock):
@@ -44,7 +44,7 @@ class DirBlock(CoreBlock):
         """
         act = create.DirCreateAction(dirname, self.file_context)
         if self.has('mode'):
-            act = action.ActionList([act], self.file_context)
+            act = ActionList([act], self.file_context)
             act.append(modify.DirChmodAction(dirname,
                                              self.get('mode'),
                                              self.file_context))
@@ -65,8 +65,8 @@ class DirBlock(CoreBlock):
         # as well, to set the correct permissions for the directory
         # but not its children
         if self.has('user') and self.has('group'):
-            if not isinstance(act, action.ActionList):
-                act = action.ActionList([act], self.file_context)
+            if not isinstance(act, ActionList):
+                act = ActionList([act], self.file_context)
             act.append(modify.DirChownAction(self.get('target'),
                                              self.get('user'),
                                              self.get('group'),
@@ -87,8 +87,8 @@ class DirBlock(CoreBlock):
         # create the target directory; make the action an AL for
         # simplicity when adding actions to it
         act = self._mkdir(self.get('target'))
-        if not isinstance(act, action.ActionList):
-            act = action.ActionList([act], self.file_context)
+        if not isinstance(act, ActionList):
+            act = ActionList([act], self.file_context)
 
         # walk over all files and subdirs in the directory, creating
         # directories and copying files
@@ -116,8 +116,8 @@ class DirBlock(CoreBlock):
                 copy_act = copy.FileCopyAction(fname,
                                                target_fname,
                                                self.file_context)
-                file_act = action.ActionList([backup_act, copy_act],
-                                             self.file_context)
+                file_act = ActionList([backup_act, copy_act],
+                                      self.file_context)
                 act.append(file_act)
 
         if self.has('mode'):

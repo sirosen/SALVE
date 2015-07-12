@@ -7,8 +7,9 @@ from tests.util import ensure_except, full_path
 
 from salve import action, block, paths
 from salve.action import backup, copy
+from salve.exceptions import BlockException
 
-from salve.block import manifest_block, file_block
+from salve.block import ManifestBlock, FileBlock
 
 from tests.unit.block import dummy_file_context, dummy_conf, dummy_logger, \
     ScratchWithExecCtx
@@ -23,8 +24,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         compiled if the action attribute is unspecified.
         """
         with mock.patch('salve.logger', dummy_logger):
-            b = manifest_block.ManifestBlock(dummy_file_context)
-            ensure_except(block.BlockException, b.compile)
+            b = ManifestBlock(dummy_file_context)
+            ensure_except(BlockException, b.compile)
 
     @istest
     def sourceless_manifest_expand_error(self):
@@ -34,8 +35,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         are expanded if the source attribute is unspecified.
         """
         with mock.patch('salve.logger', dummy_logger):
-            b = manifest_block.ManifestBlock(dummy_file_context)
-            ensure_except(block.BlockException,
+            b = ManifestBlock(dummy_file_context)
+            ensure_except(BlockException,
                           b.expand_blocks, '/',
                           dummy_conf, False)
 
@@ -47,7 +48,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         errors.
         """
         with mock.patch('salve.logger', dummy_logger):
-            b = manifest_block.ManifestBlock(
+            b = ManifestBlock(
                 dummy_file_context,
                 source=full_path('empty.manifest'))
             b.expand_blocks('/', dummy_conf, False)
@@ -63,9 +64,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         invalid1_path = full_path('self_include.manifest')
         sourcedir = paths.containing_dir(invalid1_path)
         with mock.patch('salve.logger', dummy_logger):
-            b = manifest_block.ManifestBlock(dummy_file_context,
-                                             source=invalid1_path)
-            ensure_except(block.BlockException,
+            b = ManifestBlock(dummy_file_context, source=invalid1_path)
+            ensure_except(BlockException,
                           b.expand_blocks, sourcedir, dummy_conf, False)
 
     @istest
@@ -77,14 +77,13 @@ class TestWithScratchdir(ScratchWithExecCtx):
         valid2_path = full_path('empty_and_file.manifest')
         sourcedir = paths.containing_dir(valid2_path)
         with mock.patch('salve.logger', dummy_logger):
-            b = manifest_block.ManifestBlock(dummy_file_context,
-                                             source=valid2_path)
+            b = ManifestBlock(dummy_file_context, source=valid2_path)
             b.expand_blocks(sourcedir, dummy_conf, False)
         assert len(b.sub_blocks) == 2
         mblock = b.sub_blocks[0]
         fblock = b.sub_blocks[1]
-        assert isinstance(mblock, manifest_block.ManifestBlock)
-        assert isinstance(fblock, file_block.FileBlock)
+        assert isinstance(mblock, ManifestBlock)
+        assert isinstance(fblock, FileBlock)
         assert mblock.get('source') == full_path('empty.manifest')
         assert fblock.get('source') == full_path('empty.manifest')
         assert fblock.get('target') == paths.pjoin(sourcedir, 'a/b/c')
@@ -99,14 +98,13 @@ class TestWithScratchdir(ScratchWithExecCtx):
         valid2_path = full_path('empty_and_file.manifest')
         sourcedir = paths.containing_dir(valid2_path)
         with mock.patch('salve.logger', dummy_logger):
-            b = manifest_block.ManifestBlock(dummy_file_context,
-                                             source=valid2_path)
+            b = ManifestBlock(dummy_file_context, source=valid2_path)
             b.expand_blocks(sourcedir, dummy_conf, False)
         assert len(b.sub_blocks) == 2
         mblock = b.sub_blocks[0]
         fblock = b.sub_blocks[1]
-        assert isinstance(mblock, manifest_block.ManifestBlock)
-        assert isinstance(fblock, file_block.FileBlock)
+        assert isinstance(mblock, ManifestBlock)
+        assert isinstance(fblock, FileBlock)
         assert mblock.get('source') == full_path('empty.manifest')
         assert fblock.get('source') == full_path('empty.manifest')
         assert fblock.get('target') == os.path.join(sourcedir, 'a/b/c')

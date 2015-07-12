@@ -4,11 +4,11 @@ import os
 
 import salve
 
-from salve import action
-from salve.action import backup, copy, create, modify
-
+from salve.action import ActionList, backup, copy, create, modify
 from salve.api import Block
-from salve.block import CoreBlock, BlockException
+from salve.exceptions import BlockException
+
+from .base import CoreBlock
 
 
 class FileBlock(CoreBlock):
@@ -84,9 +84,8 @@ class FileBlock(CoreBlock):
 
             # otherwise, check if the action is an actionlist, and convert
             # it into one if it is not
-            if not isinstance(file_act, action.ActionList):
-                file_act = action.ActionList([file_act],
-                                             self.file_context)
+            if not isinstance(file_act, ActionList):
+                file_act = ActionList([file_act], self.file_context)
             if prepend:
                 file_act.prepend(new)
             else:

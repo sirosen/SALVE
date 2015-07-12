@@ -3,10 +3,9 @@
 from nose.tools import istest
 
 from salve import paths
-from salve.reader import parse
-from salve.reader.tokenize import Token
+from salve.parser import parse, Token
 from salve.context import FileContext
-from salve.block import file_block, manifest_block
+from salve.block import FileBlock, ManifestBlock
 
 from tests.util import ensure_except, full_path, MockedGlobals
 
@@ -181,7 +180,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(full_path('empty_block.manifest'))
         assert len(blocks) == 1
-        assert isinstance(blocks[0], file_block.FileBlock)
+        assert isinstance(blocks[0], FileBlock)
         assert len(blocks[0].attrs) == 0
 
     @istest
@@ -193,7 +192,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(full_path('spaced_attr.manifest'))
         assert len(blocks) == 1
-        assert isinstance(blocks[0], file_block.FileBlock)
+        assert isinstance(blocks[0], FileBlock)
         assert len(blocks[0].attrs) == 2
 
     @istest
@@ -205,7 +204,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(full_path('primary_attr.manifest'))
         assert len(blocks) == 1
-        assert isinstance(blocks[0], file_block.FileBlock)
+        assert isinstance(blocks[0], FileBlock)
         assert len(blocks[0].attrs) == 2
         assert blocks[0].get(blocks[0].primary_attr) == "/d/e/f/g"
 
@@ -218,10 +217,10 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(full_path('primary_attr2.manifest'))
         assert len(blocks) == 2
-        assert isinstance(blocks[0], manifest_block.ManifestBlock)
+        assert isinstance(blocks[0], ManifestBlock)
         assert len(blocks[0].attrs) == 1
         assert blocks[0].get(blocks[0].primary_attr) == "man man"
-        assert isinstance(blocks[1], file_block.FileBlock)
+        assert isinstance(blocks[1], FileBlock)
         assert len(blocks[1].attrs) == 2
         assert blocks[1].get('source') == "potato"
         assert blocks[1].get('target') == "mango"
@@ -235,7 +234,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(full_path('primary_attr5.manifest'))
         assert len(blocks) == 1
-        assert isinstance(blocks[0], file_block.FileBlock)
+        assert isinstance(blocks[0], FileBlock)
         assert len(blocks[0].attrs) == 2
         assert blocks[0].get(blocks[0].primary_attr) == "lobster"
         assert blocks[0].get('source') == "salad"

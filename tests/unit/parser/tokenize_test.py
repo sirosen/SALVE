@@ -4,7 +4,7 @@ from nose.tools import istest
 
 from salve import paths
 from salve.context import FileContext
-from salve.reader import tokenize
+from salve.parser import tokenize
 
 from tests.util import ensure_except, full_path, MockedGlobals
 

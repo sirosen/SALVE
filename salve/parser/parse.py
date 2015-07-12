@@ -2,7 +2,7 @@ import salve
 
 from salve.exceptions import ParsingException
 from salve.block import identifier
-from salve.reader.tokenize import Token, tokenize_stream
+from salve.parser.tokenize import Token, tokenize_stream
 
 
 def parse_tokens(tokens):

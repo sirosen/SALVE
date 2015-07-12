@@ -3,8 +3,8 @@
 from nose.tools import istest
 
 from salve import paths
-from salve.block import file_block
-from salve.reader import tokenize, parse
+from salve.block import FileBlock
+from salve.parser import tokenize, parse
 
 from tests.util import scratch, ensure_except, full_path
 
@@ -35,7 +35,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         blocks = parse_filename(full_path('empty_block.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, file_block.FileBlock)
+        assert isinstance(fblock, FileBlock)
 
     @istest
     def single_attr_block(self):
@@ -47,7 +47,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         blocks = parse_filename(full_path('single_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, file_block.FileBlock)
+        assert isinstance(fblock, FileBlock)
         assert fblock.get('source') == '/a/b/c'
 
     @istest
@@ -61,7 +61,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         blocks = parse_filename(full_path('two_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, file_block.FileBlock)
+        assert isinstance(fblock, FileBlock)
         assert fblock.get('source') == '/a/b/c'
         assert fblock.get('target') == '/d/e'
 
@@ -76,7 +76,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         blocks = parse_filename(full_path('spaced_attr.manifest'))
         assert len(blocks) == 1
         fblock = blocks[0]
-        assert isinstance(fblock, file_block.FileBlock)
+        assert isinstance(fblock, FileBlock)
         assert fblock.get('source') == '/a/b/c'
         assert fblock.get('target') == '/d/e f/g'
 
