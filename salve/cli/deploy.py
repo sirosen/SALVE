@@ -42,7 +42,7 @@ def run_on_manifest(root_manifest, args):
     # root_block is a synthetic manifest block containing the root
     # manifest
     root_block = manifest_block.ManifestBlock(FileContext('no such file'),
-            source=root_manifest)
+                                              source=root_manifest)
     root_block.expand_blocks(root_dir, conf, args.v3_relpath)
 
     root_action = root_block.compile()
@@ -70,9 +70,10 @@ def clean_and_validate_args(args):
 
     # warn about deprecations coming in v3
     if args.directory:
-        salve.logger.warn('Deprecation Warning: --directory will be ' +
-        'removed in version 3 as --version3-relative-paths becomes the ' +
-        'default.')
+        salve.logger.warn(
+            'Deprecation Warning: --directory will be ' +
+            'removed in version 3 as --version3-relative-paths becomes the ' +
+            'default.')
 
 
 def main(args):

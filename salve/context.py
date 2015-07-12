@@ -65,7 +65,7 @@ class ExecutionContext(object):
                                '[%s] -> [%s]' %
                                (self.phase, newphase))
             salve.logger.info(transition_text, hide_context=True,
-                    min_verbosity=3)
+                              min_verbosity=3)
 
         self.phase = newphase
 

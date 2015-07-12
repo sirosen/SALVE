@@ -112,22 +112,22 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
             return filesys.access(self.src, access_codes.R_OK)
 
         salve.logger.info('FileBackup: Checking source existence, \"%s\"' %
-                self.src, file_context=self.file_context,
-                min_verbosity=3)
+                          self.src, file_context=self.file_context,
+                          min_verbosity=3)
 
         if not existent_source():
             return self.verification_codes.NONEXISTENT_SOURCE
 
         salve.logger.info('FileBackup: Checking source is readable, \"%s\"' %
-                self.src, file_context=self.file_context,
-                min_verbosity=3)
+                          self.src, file_context=self.file_context,
+                          min_verbosity=3)
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
 
         salve.logger.info('FileBackup: Checking destination is writable, ' +
-                '\"%s\"' % self.dst, file_context=self.file_context,
-                min_verbosity=3)
+                          '\"%s\"' % self.dst, file_context=self.file_context,
+                          min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -160,7 +160,7 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing File Backup of \"%s\"' % self.src,
-                file_context=self.file_context, min_verbosity=1)
+                          file_context=self.file_context, min_verbosity=1)
 
         filesys.mkdir(self.dst)
 
@@ -181,8 +181,8 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
         Log the date, hash, and filename, to the backup log.
         """
         logval = time.strftime('%Y-%m-%d %H:%M:%S') + ' ' + \
-                 self.hash_val + ' ' + \
-                 paths.clean_path(self.src, absolute=True)
+            self.hash_val + ' ' + \
+            paths.clean_path(self.src, absolute=True)
         # TODO: use some locks to make this thread-safe for future
         # versions of SALVE supporting parallelism
         with open(self.logfile, 'a') as f:
@@ -218,8 +218,8 @@ class DirBackupAction(action.ActionList, BackupAction):
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('DirBackup: Checking destination is writable, ' +
-                '\"%s\"' % self.dst, file_context=self.file_context,
-                min_verbosity=3)
+                          '\"%s\"' % self.dst, file_context=self.file_context,
+                          min_verbosity=3)
 
         if not filesys.exists(self.src):
             return self.verification_codes.NONEXISTENT_SOURCE
@@ -243,7 +243,7 @@ class DirBackupAction(action.ActionList, BackupAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing Directory Backup of \"%s\"' % self.src,
-                file_context=self.file_context, min_verbosity=1)
+                          file_context=self.file_context, min_verbosity=1)
 
         # append a file backup for each file in @src
         for dirname, subdirs, files in filesys.walk(self.src):

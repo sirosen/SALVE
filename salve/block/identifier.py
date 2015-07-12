@@ -35,8 +35,8 @@ def block_from_identifier(id_token):
                              str(id_token), ctx)
 
     salve.logger.info('Generating Block From Identifier Token: ' +
-            str(id_token), file_context=ctx,
-            min_verbosity=3)
+                      str(id_token), file_context=ctx,
+                      min_verbosity=3)
 
     # if the identifier is not in the map, raise an exception
     val = id_token.value.lower()

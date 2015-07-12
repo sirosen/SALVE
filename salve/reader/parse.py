@@ -44,7 +44,8 @@ def parse_tokens(tokens):
     blocks = []
 
     def unexpected_token(token, expected_types):
-        raise ParsingException('Invalid token.' +
+        raise ParsingException(
+            'Invalid token.' +
             'Expected a token of types ' + str(expected_types) +
             ' but got token ' + token.value + ' of type ' + token.ty +
             ' instead.', token.file_context)
@@ -72,7 +73,7 @@ def parse_tokens(tokens):
                 blocks.append(current_block)
             except:
                 raise ParsingException('Invalid block id ' +
-                    token.value, token.file_context)
+                                       token.value, token.file_context)
             expected_token_types = [Token.types.BLOCK_START,
                                     Token.types.TEMPLATE]
             # go back to loop start (other stuff might match, and we don't want
@@ -122,7 +123,7 @@ def parse_tokens(tokens):
         # this PE carries no token because it is the absence of a token
         # that triggers it
         raise ParsingException('Incomplete block in token stream!',
-            current_block.file_context)
+                               current_block.file_context)
 
     salve.logger.info('Finished Parsing Token Stream', min_verbosity=2)
 

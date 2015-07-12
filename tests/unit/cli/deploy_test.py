@@ -88,7 +88,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 return MockAction()
 
         with mock.patch('salve.block.manifest_block.ManifestBlock',
-                MockManifest):
+                        MockManifest):
             with mock.patch('salve.config.SALVEConfig', mock.Mock()):
                 deploy.main(fake_args)
 
@@ -115,12 +115,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == ('[WARN] [STARTUP] ' +
-                'Deprecation Warning: --directory will be removed in ' +
-                'version 3 as --version3-relative-paths becomes the ' +
-                'default.\n' +
-                '[ERROR] [STARTUP] no such file, line -1: ' +
-                'message string\n'), stderr_out
+        assert stderr_out == (
+            '[WARN] [STARTUP] ' +
+            'Deprecation Warning: --directory will be removed in ' +
+            'version 3 as --version3-relative-paths becomes the ' +
+            'default.\n' +
+            '[ERROR] [STARTUP] no such file, line -1: ' +
+            'message string\n'), stderr_out
 
     @istest
     def deploy_block_exception(self):
@@ -145,12 +146,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == ('[WARN] [STARTUP] ' +
-                'Deprecation Warning: --directory will be removed in ' +
-                'version 3 as --version3-relative-paths becomes the ' +
-                'default.\n' +
-                '[ERROR] [PARSING] no such file, line -1: ' +
-                'message string\n'), stderr_out
+        assert stderr_out == (
+            '[WARN] [STARTUP] ' +
+            'Deprecation Warning: --directory will be removed in ' +
+            'version 3 as --version3-relative-paths becomes the ' +
+            'default.\n' +
+            '[ERROR] [PARSING] no such file, line -1: ' +
+            'message string\n'), stderr_out
 
     @istest
     def deploy_action_exception(self):
@@ -177,12 +179,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == ('[WARN] [STARTUP] ' +
-                'Deprecation Warning: --directory will be removed in ' +
-                'version 3 as --version3-relative-paths becomes the ' +
-                'default.\n' +
-                '[ERROR] [COMPILATION] ' +
-                'no such file, line -1: message string\n'), stderr_out
+        assert stderr_out == (
+            '[WARN] [STARTUP] ' +
+            'Deprecation Warning: --directory will be removed in ' +
+            'version 3 as --version3-relative-paths becomes the ' +
+            'default.\n' +
+            '[ERROR] [COMPILATION] ' +
+            'no such file, line -1: message string\n'), stderr_out
 
     @istest
     def deploy_tokenization_exception(self):
@@ -209,12 +212,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == ('[WARN] [STARTUP] ' +
-                'Deprecation Warning: --directory will be removed in ' +
-                'version 3 as --version3-relative-paths becomes the ' +
-                'default.\n' +
-                '[ERROR] [PARSING] no such file, line -1: ' +
-                'message string\n'), stderr_out
+        assert stderr_out == (
+            '[WARN] [STARTUP] ' +
+            'Deprecation Warning: --directory will be removed in ' +
+            'version 3 as --version3-relative-paths becomes the ' +
+            'default.\n' +
+            '[ERROR] [PARSING] no such file, line -1: ' +
+            'message string\n'), stderr_out
 
     @istest
     def deploy_parsing_exception(self):
@@ -241,12 +245,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == ('[WARN] [STARTUP] ' +
-                'Deprecation Warning: --directory will be removed in ' +
-                'version 3 as --version3-relative-paths becomes the ' +
-                'default.\n' +
-                '[ERROR] [PARSING] no such file, line -1: ' +
-                'message string\n'), stderr_out
+        assert stderr_out == (
+            '[WARN] [STARTUP] ' +
+            'Deprecation Warning: --directory will be removed in ' +
+            'version 3 as --version3-relative-paths becomes the ' +
+            'default.\n' +
+            '[ERROR] [PARSING] no such file, line -1: ' +
+            'message string\n'), stderr_out
 
     @istest
     def deploy_unexpected_exception(self):

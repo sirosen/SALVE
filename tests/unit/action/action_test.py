@@ -101,7 +101,7 @@ def empty_action_list_to_string():
     act = action.ActionList([], dummy_file_context)
 
     assert str(act) == ('ActionList([],context=' +
-            repr(dummy_file_context) + ')')
+                        repr(dummy_file_context) + ')')
 
 
 @istest

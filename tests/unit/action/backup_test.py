@@ -43,15 +43,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         cp_exec_name = 'salve.action.copy.FileCopyAction.execute'
         backup_verify_name = \
-                'salve.action.backup.FileBackupAction.verify_can_exec'
+            'salve.action.backup.FileBackupAction.verify_can_exec'
         backup_writelog_name = \
-                'salve.action.backup.FileBackupAction.write_log'
+            'salve.action.backup.FileBackupAction.write_log'
         with mock.patch(cp_exec_name, mock_cp):
             with mock.patch(backup_verify_name, lambda self, fs:
-                    self.verification_codes.OK):
+                            self.verification_codes.OK):
                 with mock.patch(backup_writelog_name, lambda self: None):
                     with mock.patch('salve.filesys.real_fs.mkdir',
-                            mock_mkdir):
+                                    mock_mkdir):
                         act(real_fs)
 
         mock_mkdir.assert_called_once_with('/etc/salve/backup/files')
@@ -86,13 +86,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         cp_exec_name = 'salve.action.copy.FileCopyAction.execute'
         backup_writelog_name = \
-                'salve.action.backup.FileBackupAction.write_log'
+            'salve.action.backup.FileBackupAction.write_log'
         backup_verify_name = \
-                'salve.action.backup.FileBackupAction.verify_can_exec'
+            'salve.action.backup.FileBackupAction.verify_can_exec'
         with mock.patch(cp_exec_name, mock_cp):
             with mock.patch(backup_writelog_name, lambda self: None):
                 with mock.patch(backup_verify_name,
-                        lambda self, fs: self.verification_codes.OK):
+                                lambda self, fs: self.verification_codes.OK):
                     with mock.patch('salve.filesys.real_fs.mkdir', mock_mkdir):
                         act(real_fs)
 
@@ -110,7 +110,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that instantiating a BackupAction raises an error.
         """
         ensure_except(TypeError, backup.BackupAction, '/a/b/c',
-                dummy_file_context)
+                      dummy_file_context)
 
     @istest
     def file_dst_dir(self):
@@ -247,6 +247,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             assert isinstance(subact, backup.FileBackupAction)
 
         act(real_fs)
-        assert self.stderr.getvalue() == ("[WARN] [VERIFICATION] " +
-                "no such file: DirBackup: Non-Existent source dir " +
-                '"%s"\n' % dirname), self.stderr.getvalue()
+        assert self.stderr.getvalue() == (
+            "[WARN] [VERIFICATION] " +
+            "no such file: DirBackup: Non-Existent source dir " +
+            '"%s"\n' % dirname), self.stderr.getvalue()

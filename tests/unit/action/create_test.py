@@ -31,7 +31,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         except ImportError:
             import __builtin__ as builtins
             builtin_patch = mock.patch('__builtin__.open', mock_open,
-                    create=True)
+                                       create=True)
 
         with builtin_patch:
             with mock.patch('os.access', lambda x, y: True):

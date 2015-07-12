@@ -15,8 +15,8 @@ def get_default_config():
     """
     with mock.patch('salve.paths.__file__',
                     '/tmp/salve/paths.py'):
-        assert paths.get_default_config() == \
-               '/tmp/salve/default_settings.ini'
+        assert (paths.get_default_config() ==
+                '/tmp/salve/default_settings.ini')
 
 
 @istest

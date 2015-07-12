@@ -8,7 +8,7 @@ from tests.util import ensure_except
 from salve.reader.tokenize import Token
 
 from salve.block import BlockException, identifier, \
-        file_block, manifest_block, directory_block
+    file_block, manifest_block, directory_block
 
 from tests.unit.block import dummy_file_context, dummy_logger
 
@@ -21,7 +21,7 @@ def invalid_block_id1():
     type IDENTIFIER.
     """
     invalid_id = Token('invalid_block_id', Token.types.IDENTIFIER,
-            dummy_file_context)
+                       dummy_file_context)
 
     with mock.patch('salve.logger', dummy_logger):
         ensure_except(BlockException,
@@ -65,8 +65,7 @@ def valid_manifest_id():
     """
     manifest_id = Token('manifest', Token.types.IDENTIFIER, dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
-        mb = identifier.block_from_identifier(
-                manifest_id)
+        mb = identifier.block_from_identifier(manifest_id)
     assert isinstance(mb, manifest_block.ManifestBlock)
 
 
@@ -77,7 +76,7 @@ def valid_directory_id():
     Checks that an identifier 'directory' creates a directory block.
     """
     manifest_id = Token('directory', Token.types.IDENTIFIER,
-            dummy_file_context)
+                        dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
         dir_block = identifier.block_from_identifier(manifest_id)
     assert isinstance(dir_block, directory_block.DirBlock)

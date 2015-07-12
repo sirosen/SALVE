@@ -89,13 +89,13 @@ class ChownAction(with_metaclass(abc.ABCMeta, ModifyAction)):
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('Chown: Checking target exists, \"%s\"' %
-                self.target, min_verbosity=3)
+                          self.target, min_verbosity=3)
 
         if not filesys.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
         salve.logger.info('Chown: Checking if execution can be skipped, ' +
-                '\"%s\"' % self.target, min_verbosity=3)
+                          '\"%s\"' % self.target, min_verbosity=3)
 
         # if the chown would do nothing, give skip exec
         if ugo.name_to_uid(self.user) == filesys.stat(self.target).st_uid and \
@@ -139,7 +139,7 @@ class ChmodAction(with_metaclass(abc.ABCMeta, ModifyAction)):
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('Chmod: Checking target exists, \"%s\"' %
-                self.target, min_verbosity=3)
+                          self.target, min_verbosity=3)
 
         # a nonexistent file or dir can never be chmoded
         if not filesys.exists(self.target):
@@ -152,7 +152,7 @@ class ChmodAction(with_metaclass(abc.ABCMeta, ModifyAction)):
             return self.verification_codes.OK
 
         salve.logger.info('Chmod: Checking if user is owner of target, ' +
-                '\"%s\"' % self.target, min_verbosity=3)
+                          '\"%s\"' % self.target, min_verbosity=3)
 
         # now the file is known to exist and the user is not root
         if not ugo.is_owner(self.target):
@@ -210,12 +210,13 @@ class FileChownAction(ChownAction):
         # transition to the execution phase
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
-        salve.logger.info('Performing FileChown of \"%s\" to %s:%s' %
+        salve.logger.info(
+            'Performing FileChown of \"%s\" to %s:%s' %
             (self.target, self.user, self.group), min_verbosity=1)
 
         # chown without following symlinks
         filesys.chown(self.target, ugo.name_to_uid(self.user),
-                  ugo.name_to_gid(self.group))
+                      ugo.name_to_gid(self.group))
 
 
 class FileChmodAction(ChmodAction):
@@ -262,7 +263,8 @@ class FileChmodAction(ChmodAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing FileChmod of \"%s\" to %s' %
-            (self.target, '{0:o}'.format(self.mode)), min_verbosity=1)
+                          (self.target, '{0:o}'.format(self.mode)),
+                          min_verbosity=1)
 
         filesys.chmod(self.target, self.mode)
 
@@ -307,20 +309,20 @@ class DirChownAction(ChownAction, DirModifyAction):
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('DirChown: Checking target exists, \"%s\"' %
-                self.target, min_verbosity=3)
+                          self.target, min_verbosity=3)
 
         if not filesys.access(self.target, access_codes.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
         salve.logger.info('DirChown: Checking if execution can be skipped, ' +
-                '\"%s\"' % self.target, min_verbosity=3)
+                          '\"%s\"' % self.target, min_verbosity=3)
 
         if filesys.stat(self.target).st_uid == ugo.name_to_uid(self.user) and \
-            filesys.stat(self.target).st_gid == ugo.name_to_gid(self.group):
+           filesys.stat(self.target).st_gid == ugo.name_to_gid(self.group):
             return self.verification_codes.SKIP_EXEC
 
         salve.logger.info('DirChown: Checking if user is root',
-                min_verbosity=3)
+                          min_verbosity=3)
 
         if not ugo.is_root():
             return self.verification_codes.NOT_ROOT
@@ -348,7 +350,8 @@ class DirChownAction(ChownAction, DirModifyAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing DirChown of \"%s\" to %s:%s' %
-            (self.target, self.user, self.group), min_verbosity=1)
+                          (self.target, self.user, self.group),
+                          min_verbosity=1)
 
         if vcode != self.verification_codes.SKIP_EXEC:
             uid = ugo.name_to_uid(self.user)
@@ -416,19 +419,19 @@ class DirChmodAction(ChmodAction, DirModifyAction):
         salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('DirChmod: Checking if target exists, \"%s\"' %
-                self.target, min_verbosity=3)
+                          self.target, min_verbosity=3)
 
         if not filesys.access(self.target, access_codes.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
         salve.logger.info('DirChmod: Checking if user is root',
-                min_verbosity=3)
+                          min_verbosity=3)
 
         if ugo.is_root():
             return self.verification_codes.OK
 
         salve.logger.info('DirChmod: Checking if user is target owner, ' +
-                '\"%s\"' % self.target, min_verbosity=3)
+                          '\"%s\"' % self.target, min_verbosity=3)
 
         if not ugo.is_owner(self.target):
             return self.verification_codes.UNOWNED_TARGET
@@ -457,7 +460,8 @@ class DirChmodAction(ChmodAction, DirModifyAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing DirChmod of \"%s\" to %s' %
-            (self.target, '{0:o}'.format(self.mode)), min_verbosity=1)
+                          (self.target, '{0:o}'.format(self.mode)),
+                          min_verbosity=1)
 
         filesys.chmod(self.target, self.mode)
 

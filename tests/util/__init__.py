@@ -9,8 +9,8 @@ from salve.log import Logger
 
 
 testfile_dir = paths.pjoin(
-        paths.containing_dir(__file__, depth=2),
-        'testfiles')
+    paths.containing_dir(__file__, depth=2),
+    'testfiles')
 
 
 def full_path(filename):

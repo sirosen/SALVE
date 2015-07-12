@@ -20,7 +20,7 @@ class CopyAction(with_metaclass(abc.ABCMeta, action.Action)):
     """
     verification_codes = \
         action.Action.verification_codes.extend('UNWRITABLE_TARGET',
-                'UNREADABLE_SOURCE')
+                                                'UNREADABLE_SOURCE')
 
     def __init__(self, src, dst, file_context):
         """
@@ -107,22 +107,22 @@ class FileCopyAction(CopyAction):
             return filesys.lookup_type(self.src) is filesys.element_types.LINK
 
         salve.logger.info('FileCopy: Checking destination is writable, ' +
-                '\"%s\"' % self.dst, file_context=self.file_context,
-                min_verbosity=3)
+                          '\"%s\"' % self.dst, file_context=self.file_context,
+                          min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
 
         salve.logger.info('FileCopy: Checking if source is link, "%s"' %
-                self.src, file_context=self.file_context,
-                min_verbosity=3)
+                          self.src, file_context=self.file_context,
+                          min_verbosity=3)
 
         if source_islink():
             return self.verification_codes.OK
 
         salve.logger.info('FileCopy: Checking source is readable, \"%s\"' %
-                self.src, file_context=self.file_context,
-                min_verbosity=3)
+                          self.src, file_context=self.file_context,
+                          min_verbosity=3)
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
@@ -152,8 +152,8 @@ class FileCopyAction(CopyAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing File Copy \"%s\" -> \"%s\"' %
-                (self.src, self.dst), file_context=self.file_context,
-                min_verbosity=1)
+                          (self.src, self.dst), file_context=self.file_context,
+                          min_verbosity=1)
 
         filesys.copy(self.src, self.dst)
 
@@ -195,25 +195,25 @@ class DirCopyAction(CopyAction):
             not, then it will be impossible to view and copy its contents.
             """
             return filesys.access(self.src,
-                    access_codes.R_OK | access_codes.X_OK)
+                                  access_codes.R_OK | access_codes.X_OK)
 
         def writable_target():
             """
             Checks if the target is in a writable directory.
             """
             return filesys.access(paths.dirname(self.dst),
-                    access_codes.W_OK)
+                                  access_codes.W_OK)
 
         salve.logger.info('DirCopy: Checking source is readable + ' +
-                'traversable, \"%s\"' % self.dst,
-                file_context=self.file_context, min_verbosity=3)
+                          'traversable, \"%s\"' % self.dst,
+                          file_context=self.file_context, min_verbosity=3)
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
 
         salve.logger.info('DirCopy: Checking target is writable, \"%s\"' %
-                self.dst, file_context=self.file_context,
-                min_verbosity=3)
+                          self.dst, file_context=self.file_context,
+                          min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -240,7 +240,7 @@ class DirCopyAction(CopyAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing Directory Copy \"%s\" -> \"%s\"' %
-                (self.src, self.dst), file_context=self.file_context,
-                min_verbosity=1)
+                          (self.src, self.dst), file_context=self.file_context,
+                          min_verbosity=1)
 
         filesys.copy(self.src, self.dst)

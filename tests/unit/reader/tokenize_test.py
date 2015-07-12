@@ -22,7 +22,7 @@ def ensure_TokenizationException(filename):
     assert (paths.clean_path(e.file_context.filename) ==
             paths.clean_path(path))
 
-#failure tests
+# failure tests
 
 
 class TestTokenizeMockedGlobals(MockedGlobals):
@@ -85,7 +85,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         """
         ensure_TokenizationException('double_open.manifest')
 
-    #validation tests
+    # validation tests
 
     @istest
     def empty_manifest(self):
@@ -203,5 +203,5 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         """
         ctx = FileContext('a/b/c', 2)
         file_tok = tokenize.Token('file', tokenize.Token.types.IDENTIFIER, ctx)
-        assert str(file_tok) == \
-                'Token(value=file,ty=IDENTIFIER,lineno=2,filename=a/b/c)'
+        assert (str(file_tok) ==
+                'Token(value=file,ty=IDENTIFIER,lineno=2,filename=a/b/c)')

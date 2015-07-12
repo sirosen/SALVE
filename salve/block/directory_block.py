@@ -97,19 +97,19 @@ class DirBlock(CoreBlock):
             # target and create that directory
             for sd in subdirs:
                 target_dir = os.path.join(
-                                self.get('target'),
-                                os.path.relpath(os.path.join(d, sd),
-                                                self.get('source'))
-                             )
+                    self.get('target'),
+                    os.path.relpath(os.path.join(d, sd),
+                                    self.get('source'))
+                    )
                 act.append(self._mkdir(target_dir))
             # for every file, first backup any file that is at the
             # destination, then copy from source to target tree
             for f in files:
                 fname = os.path.join(d, f)
                 target_dir = os.path.join(
-                                self.get('target'),
-                                os.path.relpath(d, self.get('source'))
-                             )
+                    self.get('target'),
+                    os.path.relpath(d, self.get('source'))
+                    )
                 target_fname = os.path.join(target_dir, f)
                 backup_act = backup.FileBackupAction(target_fname,
                                                      self.file_context)
@@ -152,7 +152,7 @@ class DirBlock(CoreBlock):
         any files that are being overwritten.
         """
         salve.logger.info('Converting DirBlock to DirAction',
-                file_context=self.file_context, min_verbosity=3)
+                          file_context=self.file_context, min_verbosity=3)
 
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will

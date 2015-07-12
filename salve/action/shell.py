@@ -49,7 +49,8 @@ class ShellAction(Action):
         process.wait()
         # check if returncode became nonzero, and fail if it did
         if process.returncode != 0:
-            raise ActionException(str(self) +
+            raise ActionException(
+                str(self) +
                 ' failed with exit code ' + str(process.returncode),
                 self.file_context)
 
