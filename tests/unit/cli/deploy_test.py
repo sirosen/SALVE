@@ -9,7 +9,7 @@ from nose.tools import istest
 from salve.cli import deploy
 
 from salve.block import BlockException
-from salve.exception import SALVEException
+from salve.exceptions import SALVEException
 from salve.context import ExecutionContext, FileContext
 
 from tests.util import ensure_except, scratch

@@ -12,7 +12,7 @@ import salve
 
 from salve import paths, ugo
 from salve.context import FileContext, ExecutionContext
-from salve.exception import SALVEException
+from salve.exceptions import SALVEException
 
 SALVE_ENV_PREFIX = 'SALVE_'
 

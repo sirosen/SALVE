@@ -1,30 +1,8 @@
-#!/usr/bin/python
-
 import salve
 
+from salve.exceptions import ParsingException
 from salve.block import identifier
-from salve.exception import SALVEException
 from salve.reader.tokenize import Token, tokenize_stream
-
-
-class ParsingException(SALVEException):
-    """
-    A specialized exception for parsing errors.
-
-    A ParsingException (PE) often carres the token that tripped the
-    exception in its message.
-    """
-    def __init__(self, msg, file_context):
-        """
-        ParsingException constructor
-
-        Args:
-            @msg
-            A string message that describes the error.
-            @file_context
-            The FileContext.
-        """
-        SALVEException.__init__(self, msg, file_context)
 
 
 def parse_tokens(tokens):

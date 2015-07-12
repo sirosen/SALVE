@@ -1,31 +1,12 @@
-#!/usr/bin/python
-
 import string
 import shlex
 
 import salve
 from salve import paths, Enum
 from salve.context import FileContext
-from salve.exception import SALVEException
+from salve.exceptions import TokenizationException
 
 from salve.util import stream_filename
-
-
-class TokenizationException(SALVEException):
-    """
-    A SALVE exception specialized for tokenization.
-    """
-    def __init__(self, msg, file_context):
-        """
-        TokenizationException constructor
-
-        Args:
-            @msg
-            A string message that describes the error.
-            @file_context
-            The FileContext.
-        """
-        SALVEException.__init__(self, msg, file_context)
 
 
 class Token(object):

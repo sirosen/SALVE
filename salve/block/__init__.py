@@ -1,30 +1,10 @@
-#!/usr/bin/python
-
 import abc
 import os
 
 from salve import paths, with_metaclass
 from salve.api import Block
 
-from salve.exception import SALVEException
-
-
-class BlockException(SALVEException):
-    """
-    A SALVE exception specialized for blocks.
-    """
-    def __init__(self, msg, file_context):
-        """
-        BlockException constructor
-
-        Args:
-            @msg
-            A string message that describes the error or exception.
-            @file_context
-            A FileContext that identifies the origin of this
-            exception.
-        """
-        SALVEException.__init__(self, msg, file_context=file_context)
+from salve.exceptions import BlockException
 
 
 class CoreBlock(with_metaclass(abc.ABCMeta, Block)):

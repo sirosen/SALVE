@@ -9,7 +9,7 @@ import salve
 
 from salve import paths, config
 from salve.context import FileContext, ExecutionContext
-from salve.exception import SALVEException
+from salve.exceptions import SALVEException
 from salve.block import manifest_block
 from salve.filesys import real_fs
 

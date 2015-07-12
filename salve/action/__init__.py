@@ -6,25 +6,8 @@ import salve
 from salve import Enum, with_metaclass
 
 from salve.api.block import CompiledBlock
-from salve.exception import SALVEException
+from salve.exceptions import ActionException
 from salve.context import ExecutionContext
-
-
-class ActionException(SALVEException):
-    """
-    A SALVE exception specialized for Actions.
-    """
-    def __init__(self, msg, file_context):
-        """
-        ActionException constructor
-
-        Args:
-            @msg
-            A string message that describes the error.
-            @file_context
-            A FileContext.
-        """
-        SALVEException.__init__(self, msg, file_context)
 
 
 class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
