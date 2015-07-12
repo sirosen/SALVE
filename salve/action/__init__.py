@@ -61,7 +61,7 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
         return self.verification_codes.OK
 
     @abc.abstractmethod

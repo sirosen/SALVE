@@ -18,7 +18,6 @@ from tests.util import ensure_except, scratch
 class TestWithScratchdir(scratch.ScratchContainer):
     def __init__(self):
         scratch.ScratchContainer.__init__(self)
-        self.exec_context.set('log_level', set(('WARN', 'ERROR')))
         dummy_file_context = FileContext('no such file', -1)
         self.ctx = dummy_file_context
 
@@ -33,6 +32,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
+        ExecutionContext().set('log_level', set(('WARN', 'ERROR')))
         self.exit_patch.start()
 
     def tearDown(self):
@@ -130,13 +130,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown BlockExceptions.
         """
-        self.exec_context.transition(ExecutionContext.phases.STARTUP)
+        ExecutionContext().transition(ExecutionContext.phases.STARTUP)
 
         fake_args = mock.Mock()
         fake_args.manifest = 'root.manifest'
 
         def mock_run(root_manifest, args):
-            self.exec_context.transition(ExecutionContext.phases.PARSING)
+            ExecutionContext().transition(ExecutionContext.phases.PARSING)
             raise BlockException('message string', self.ctx)
 
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
@@ -163,13 +163,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         from salve.action import ActionException
 
-        self.exec_context.transition(ExecutionContext.phases.STARTUP)
+        ExecutionContext().transition(ExecutionContext.phases.STARTUP)
 
         fake_args = mock.Mock()
         fake_args.manifest = 'root.manifest'
 
         def mock_run(root_manifest, args):
-            self.exec_context.transition(ExecutionContext.phases.COMPILATION)
+            ExecutionContext().transition(ExecutionContext.phases.COMPILATION)
             raise ActionException('message string', self.ctx)
 
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
@@ -196,13 +196,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         from salve.reader.tokenize import TokenizationException
 
-        self.exec_context.transition(ExecutionContext.phases.STARTUP)
+        ExecutionContext().transition(ExecutionContext.phases.STARTUP)
 
         fake_args = mock.Mock()
         fake_args.manifest = 'root.manifest'
 
         def mock_run(root_manifest, args):
-            self.exec_context.transition(ExecutionContext.phases.PARSING)
+            ExecutionContext().transition(ExecutionContext.phases.PARSING)
             raise TokenizationException('message string', self.ctx)
 
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
@@ -229,13 +229,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         from salve.reader.parse import ParsingException
 
-        self.exec_context.transition(ExecutionContext.phases.STARTUP)
+        ExecutionContext().transition(ExecutionContext.phases.STARTUP)
 
         fake_args = mock.Mock()
         fake_args.manifest = 'root.manifest'
 
         def mock_run(root_manifest, args):
-            self.exec_context.transition(ExecutionContext.phases.PARSING)
+            ExecutionContext().transition(ExecutionContext.phases.PARSING)
             raise ParsingException('message string', self.ctx)
 
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):

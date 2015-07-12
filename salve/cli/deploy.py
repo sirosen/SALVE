@@ -8,7 +8,7 @@ import sys
 import salve
 
 from salve import paths, config
-from salve.context import FileContext
+from salve.context import FileContext, ExecutionContext
 from salve.exception import SALVEException
 from salve.block import manifest_block
 from salve.filesys import real_fs
@@ -33,7 +33,7 @@ def run_on_manifest(root_manifest, args):
 
     # must be done after config is loaded to have correct override behavior
     if args.verbosity:
-        salve.exec_context.set('verbosity', args.verbosity)
+        ExecutionContext().set('verbosity', args.verbosity)
 
     root_dir = paths.containing_dir(root_manifest)
     if args.directory and not args.v3_relpath:

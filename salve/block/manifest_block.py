@@ -31,7 +31,7 @@ class ManifestBlock(CoreBlock):
         """
         # transition to the parsing/block expansion phase, converting
         # files into blocks
-        salve.exec_context.transition(ExecutionContext.phases.PARSING)
+        ExecutionContext().transition(ExecutionContext.phases.PARSING)
         CoreBlock.__init__(self, Block.types.MANIFEST, file_context)
         self.sub_blocks = None
         if source:
@@ -117,7 +117,7 @@ class ManifestBlock(CoreBlock):
 
         # transition to the action conversion phase, converting
         # blocks into actions
-        salve.exec_context.transition(ExecutionContext.phases.COMPILATION)
+        ExecutionContext().transition(ExecutionContext.phases.COMPILATION)
         if self.sub_blocks is None:
             raise self.mk_except('Attempted to convert unexpanded ' +
                                  'manifest to action.')

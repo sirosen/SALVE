@@ -32,8 +32,8 @@ class BackupAction(with_metaclass(abc.ABCMeta, copy.CopyAction)):
             @file_context
             The FileContext.
         """
-        backup_dir = os.path.normpath(salve.exec_context.get('backup_dir'))
-        backup_log = os.path.normpath(salve.exec_context.get('backup_log'))
+        backup_dir = os.path.normpath(ExecutionContext().get('backup_dir'))
+        backup_log = os.path.normpath(ExecutionContext().get('backup_log'))
         # in the default case, a Backup is a File Copy into the
         # backup_dir in which the target filename is @src's abspath
         # this leads to bad behavior if run as-is, but can serve as a
@@ -81,7 +81,7 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
     def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         def writable_target():
             """
@@ -158,7 +158,7 @@ class FileBackupAction(BackupAction, copy.FileCopyAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing File Backup of \"%s\"' % self.src,
                           file_context=self.file_context, min_verbosity=1)
@@ -216,7 +216,7 @@ class DirBackupAction(action.ActionList, BackupAction):
     def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('DirBackup: Checking destination is writable, ' +
                           '\"%s\"' % self.dst, file_context=self.file_context,
@@ -241,7 +241,7 @@ class DirBackupAction(action.ActionList, BackupAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing Directory Backup of \"%s\"' % self.src,
                           file_context=self.file_context, min_verbosity=1)

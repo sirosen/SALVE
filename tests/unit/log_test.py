@@ -3,6 +3,8 @@
 from nose.tools import istest
 from tests.util import scratch
 
+from salve.context import ExecutionContext
+
 
 class TestWithScratchdir(scratch.ScratchContainer):
     @istest
@@ -12,6 +14,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that a logging action with the verbosity set below the min
         verbosity of the logging call is always silent.
         """
-        self.exec_context.set('verbosity', 1)
+        ExecutionContext().set('verbosity', 1)
         self.logger.info('Vacuous message.', min_verbosity=2)
         assert len(self.stderr.getvalue()) == 0, self.stderr.getvalue()

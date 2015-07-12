@@ -16,9 +16,9 @@ from tests.unit.action import dummy_file_context
 class TestWithScratchdir(scratch.ScratchContainer):
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
-        self.exec_context.set('run_log', self.stderr)
-        self.exec_context.set('backup_dir', '/etc/salve/backup')
-        self.exec_context.set('backup_log', '/etc/salve/backup.log')
+        ExecutionContext().set('run_log', self.stderr)
+        ExecutionContext().set('backup_dir', '/etc/salve/backup')
+        ExecutionContext().set('backup_log', '/etc/salve/backup.log')
 
     @istest
     def file_target_name(self):
@@ -237,7 +237,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that verification of a DirBackupAction identifies missing
         source dir during execution.
         """
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         dirname = full_path('no such dir')
         act = backup.DirBackupAction(dirname, dummy_file_context)

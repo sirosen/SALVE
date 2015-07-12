@@ -48,7 +48,7 @@ class FileCreateAction(CreateAction):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         def writable_target():
             """
@@ -92,7 +92,7 @@ class FileCreateAction(CreateAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing File Creation of \"%s\"' % self.dst,
                           file_context=self.file_context, min_verbosity=1)
@@ -128,7 +128,7 @@ class DirCreateAction(CreateAction):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         def writable_target():
             """
@@ -167,7 +167,7 @@ class DirCreateAction(CreateAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing Directory Creation of \"%s\"'
                           % self.dst, file_context=self.file_context,

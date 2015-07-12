@@ -2,8 +2,6 @@
 
 import subprocess
 
-import salve
-
 from salve.action import Action, ActionException
 from salve.context import ExecutionContext
 
@@ -38,7 +36,7 @@ class ShellAction(Action):
         nonzero exit code, and returns its stdout and stderr.
         """
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         # run the command, passing output to PIPE
         process = subprocess.Popen(self.cmd,

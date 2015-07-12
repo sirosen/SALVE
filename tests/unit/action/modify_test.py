@@ -27,8 +27,11 @@ def mock_os_walk(dir):
 class TestWithScratchdir(scratch.ScratchContainer):
     def __init__(self):
         scratch.ScratchContainer.__init__(self)
-        self.exec_context.set('log_level', set(('WARN', 'ERROR')))
         self.file_context = FileContext('no such file')
+
+    def setUp(self):
+        scratch.ScratchContainer.setUp(self)
+        ExecutionContext().set('log_level', set(('WARN', 'ERROR')))
 
     @istest
     def filechown_verify_nonroot(self):
@@ -87,7 +90,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # exec context transitions are silent, only higher level context
         # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         act = modify.FileChmodAction(a_name, '600', self.file_context)
 
@@ -111,7 +114,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # exec context transitions are silent, only higher level context
         # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         act = modify.DirChownAction(a_name, 'user1', 'nogroup',
                                     self.file_context)
@@ -132,7 +135,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # exec context transitions are silent, only higher level context
         # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
@@ -150,7 +153,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # exec context transitions are silent, only higher level context
         # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
@@ -171,7 +174,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # exec context transitions are silent, only higher level context
         # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         act = modify.FileChmodAction('a', '600', self.file_context)
 
@@ -197,7 +200,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # exec context transitions are silent, only higher level context
         # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context,
                                     recursive=True)
@@ -226,7 +229,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # exec context transitions are silent, only higher level context
         # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         act = modify.DirChmodAction('a', '755', self.file_context,
                                     recursive=True)
@@ -254,7 +257,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # exec context transitions are silent, only higher level context
         # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
         with mock.patch('salve.action.modify.DirChownAction.verify_can_exec',
@@ -281,7 +284,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # exec context transitions are silent, only higher level context
         # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         act = modify.DirChmodAction('a', '755', self.file_context)
 

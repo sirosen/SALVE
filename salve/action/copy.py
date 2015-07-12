@@ -72,7 +72,7 @@ class FileCopyAction(CopyAction):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         def writable_target():
             """
@@ -149,7 +149,7 @@ class FileCopyAction(CopyAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing File Copy \"%s\" -> \"%s\"' %
                           (self.src, self.dst), file_context=self.file_context,
@@ -187,7 +187,7 @@ class DirCopyAction(CopyAction):
         """
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         def readable_source():
             """
@@ -237,7 +237,7 @@ class DirCopyAction(CopyAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing Directory Copy \"%s\" -> \"%s\"' %
                           (self.src, self.dst), file_context=self.file_context,

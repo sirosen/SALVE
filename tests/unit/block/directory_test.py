@@ -4,17 +4,18 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.util import ensure_except, scratch
+from tests.util import ensure_except
 
 from salve import action
+from salve.context import ExecutionContext
 from salve.action import backup, modify, create, copy
 from salve.block import BlockException, directory_block
 
-from tests.unit.block import dummy_file_context, dummy_exec_context, \
-    dummy_logger
+from tests.unit.block import dummy_file_context, dummy_logger, \
+    ScratchWithExecCtx
 
 
-class TestWithScratchdir(scratch.ScratchContainer):
+class TestWithScratchdir(ScratchWithExecCtx):
     @istest
     def dir_create_compile(self):
         """
@@ -149,9 +150,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')
         with mock.patch('os.walk', mock_os_walk):
-            with mock.patch('salve.exec_context', dummy_exec_context):
-                with mock.patch('salve.logger', dummy_logger):
-                    dir_act = b.compile()
+            with mock.patch('salve.logger', dummy_logger):
+                dir_act = b.compile()
 
         # there should be seven component actions in all: four for each of the
         # directories (counting the containing dir) and three for the three

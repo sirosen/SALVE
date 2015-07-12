@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
 import salve
-from salve import Enum
+from salve import Enum, Singleton, with_metaclass
 
 
-class ExecutionContext(object):
+class ExecutionContext(with_metaclass(Singleton)):
     """
     Identifies the phase of execution, and carries any global or shared data
     from phase to phase.

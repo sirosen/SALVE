@@ -4,8 +4,10 @@ import io
 import mock
 
 from salve import paths
-from salve.context import ExecutionContext
 from salve.log import Logger
+from salve.context import ExecutionContext
+
+from tests.util.context import clear_exec_context
 
 
 testfile_dir = paths.pjoin(
@@ -55,17 +57,14 @@ class MockedIO(object):
 class MockedGlobals(MockedIO):
     def __init__(self):
         MockedIO.__init__(self)
-        self.exec_context = ExecutionContext()
-        self.logger = Logger(self.exec_context, logfile=self.stderr)
+        self.logger = Logger(logfile=self.stderr)
         self.logger_patch = mock.patch('salve.logger', self.logger)
-        self.ectx_patch = mock.patch('salve.exec_context', self.exec_context)
 
     def setUp(self):
         MockedIO.setUp(self)
-        self.ectx_patch.start()
+        clear_exec_context()
         self.logger_patch.start()
 
     def tearDown(self):
         MockedIO.tearDown(self)
-        self.ectx_patch.stop()
         self.logger_patch.stop()

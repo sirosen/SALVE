@@ -193,7 +193,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         Unit: Directory Copy Action Execution, Unreadable Source
         """
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         unreadable_source_code = \
             copy.DirCopyAction.verification_codes.UNREADABLE_SOURCE
@@ -212,7 +212,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         Unit: Directory Copy Action Execution, Unwritable Target
         """
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         unwritable_target_code = \
             copy.DirCopyAction.verification_codes.UNWRITABLE_TARGET

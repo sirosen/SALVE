@@ -85,7 +85,7 @@ class ChownAction(with_metaclass(abc.ABCMeta, ModifyAction)):
     def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('Chown: Checking target exists, \"%s\"' %
                           self.target, min_verbosity=3)
@@ -135,7 +135,7 @@ class ChmodAction(with_metaclass(abc.ABCMeta, ModifyAction)):
     def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('Chmod: Checking target exists, \"%s\"' %
                           self.target, min_verbosity=3)
@@ -207,7 +207,7 @@ class FileChownAction(ChownAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info(
             'Performing FileChown of \"%s\" to %s:%s' %
@@ -259,7 +259,7 @@ class FileChmodAction(ChmodAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing FileChmod of \"%s\" to %s' %
                           (self.target, '{0:o}'.format(self.mode)),
@@ -305,7 +305,7 @@ class DirChownAction(ChownAction, DirModifyAction):
     def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('DirChown: Checking target exists, \"%s\"' %
                           self.target, min_verbosity=3)
@@ -346,7 +346,7 @@ class DirChownAction(ChownAction, DirModifyAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing DirChown of \"%s\" to %s:%s' %
                           (self.target, self.user, self.group),
@@ -415,7 +415,7 @@ class DirChmodAction(ChmodAction, DirModifyAction):
     def verify_can_exec(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
-        salve.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         salve.logger.info('DirChmod: Checking if target exists, \"%s\"' %
                           self.target, min_verbosity=3)
@@ -456,7 +456,7 @@ class DirChmodAction(ChmodAction, DirModifyAction):
             return
 
         # transition to the execution phase
-        salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing DirChmod of \"%s\" to %s' %
                           (self.target, '{0:o}'.format(self.mode)),

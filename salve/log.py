@@ -5,6 +5,7 @@ from __future__ import print_function
 import sys
 
 from salve import Enum
+from salve.context import ExecutionContext
 
 # check if unicode is defined
 try:  # pragma: no cover
@@ -25,14 +26,10 @@ class Logger(object):
     """
     log_types = Enum('INFO', 'WARN', 'ERROR')
 
-    def __init__(self, exec_context, logfile=sys.stderr):
+    def __init__(self, logfile=sys.stderr):
         """
-        Initialize a new logger. Needs a context for printing, and a file-like
-        object to write the log messages to.
-
-        Args:
-            @exec_context
-            An Execution Context which tracks the state of SALVE.
+        Initialize a new logger. Needs a file-like object to write the log
+        messages to.
 
         KWArgs:
             @logfile
@@ -40,7 +37,6 @@ class Logger(object):
             Defaults to stderr, which typically means write to a console.
         """
         self.logfile = logfile
-        self.exec_context = exec_context
 
     def log(self, log_type, message, file_context=None,
             hide_context=False, min_verbosity=0):
@@ -70,7 +66,7 @@ class Logger(object):
         """
         assert log_type in self.log_types
 
-        ectx = self.exec_context
+        ectx = ExecutionContext()
 
         # short-circuit our way out of logging if
         # - we are specifying a type not in the enabled log_levels
