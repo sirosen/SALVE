@@ -37,7 +37,15 @@ def add_deploy_args(parser):
     parser.add_argument('-m', '--manifest', dest='manifest', default=None,
         required=True, help='The root manifest file for execution.')
     parser.add_argument('-d', '--directory', dest='directory', default=None,
-        help='The directory to which relative paths in manifests refer.')
+        help='The directory to which relative paths in manifests refer. ' +
+        'Will be removed in version 3.')
+    parser.add_argument('--ver3', '--version3', dest='version3',
+        default=False, action='store_true', help='Enable version 3 mode ' +
+        '(turn on all options which will become defaults in version 3).')
+    parser.add_argument('--version3-relative-paths', dest='v3_relpath',
+        default=False, action='store_true', help='Expand relative paths ' +
+        'in manifests relative to the current manifest, rather than ' +
+        'the root manifest.')
 
     parser.set_defaults(func=salve.cli.deploy.main)
 
