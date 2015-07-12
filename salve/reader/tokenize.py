@@ -4,11 +4,11 @@ import string
 import shlex
 
 import salve
-from salve import paths
+from salve import paths, Enum
 from salve.context import FileContext
 from salve.exception import SALVEException
 
-from salve.util import Enum, stream_filename
+from salve.util import stream_filename
 
 
 class TokenizationException(SALVEException):

@@ -5,10 +5,9 @@ import os
 
 import salve
 
-from salve import action, paths
+from salve import action, paths, with_metaclass
 from salve.filesys import access_codes
 from salve.context import ExecutionContext
-from salve.util import with_metaclass
 
 
 class CopyAction(with_metaclass(abc.ABCMeta, action.Action)):

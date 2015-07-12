@@ -7,11 +7,11 @@ import time
 import os
 
 import salve
-from salve import action, paths
+from salve import action, paths, with_metaclass
 from salve.filesys import access_codes
 from salve.action import copy
 from salve.context import ExecutionContext
-from salve.util import hash_from_path, with_metaclass
+from salve.util import hash_from_path
 
 
 class BackupAction(with_metaclass(abc.ABCMeta, copy.CopyAction)):

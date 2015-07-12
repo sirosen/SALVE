@@ -3,12 +3,10 @@
 import abc
 import os
 
-from salve import paths
+from salve import paths, with_metaclass
 from salve.api import Block
 
 from salve.exception import SALVEException
-
-from salve.util import with_metaclass
 
 
 class BlockException(SALVEException):

@@ -4,7 +4,7 @@
 
 import abc
 
-from salve.util import Enum, with_metaclass
+from salve import Enum, with_metaclass
 
 
 class CompiledBlock(with_metaclass(abc.ABCMeta)):

@@ -5,8 +5,9 @@ import shutil
 import abc
 from contextlib import contextmanager
 
+from salve import with_metaclass
 from salve.filesys import abstract
-from salve.util import with_metaclass, hash_from_path
+from salve.util import hash_from_path
 
 
 class Filesys(abstract.Filesys):

@@ -4,10 +4,9 @@ import abc
 
 import salve
 
-from salve import action, paths, ugo
+from salve import action, paths, ugo, with_metaclass
 from salve.filesys import access_codes
 from salve.context import ExecutionContext
-from salve.util import with_metaclass
 
 
 class ModifyAction(with_metaclass(abc.ABCMeta, action.Action)):

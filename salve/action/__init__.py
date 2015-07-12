@@ -3,11 +3,11 @@
 import abc
 
 import salve
-from salve.api.block import CompiledBlock
+from salve import Enum, with_metaclass
 
+from salve.api.block import CompiledBlock
 from salve.exception import SALVEException
 from salve.context import ExecutionContext
-from salve.util import Enum, with_metaclass
 
 
 class ActionException(SALVEException):
