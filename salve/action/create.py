@@ -40,7 +40,7 @@ class FileCreateAction(CreateAction):
 
     def __str__(self):
         return ("FileCreateAction(dst=" + self.dst +
-            ",context=" + repr(self.file_context) + ")")
+                ",context=" + repr(self.file_context) + ")")
 
     def verify_can_exec(self, filesys):
         """
@@ -71,8 +71,8 @@ class FileCreateAction(CreateAction):
             return False
 
         salve.logger.info('FileCreate: Checking target is writable, \"%s\"' %
-                self.dst, file_context=self.file_context,
-                min_verbosity=3)
+                          self.dst, file_context=self.file_context,
+                          min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -88,8 +88,7 @@ class FileCreateAction(CreateAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            logstr = ("FileCreate: Non-Writable target file \"%s\""
-                    % self.dst)
+            logstr = ("FileCreate: Non-Writable target file \"%s\"" % self.dst)
             salve.logger.warn(logstr, file_context=self.file_context)
             return
 
@@ -97,7 +96,7 @@ class FileCreateAction(CreateAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing File Creation of \"%s\"' % self.dst,
-                file_context=self.file_context, min_verbosity=1)
+                          file_context=self.file_context, min_verbosity=1)
 
         # touch the file
         filesys.touch(self.dst)
@@ -140,16 +139,16 @@ class DirCreateAction(CreateAction):
             return filesys.access(ancestor, access_codes.W_OK)
 
         salve.logger.info('DirCreate: Checking if target exists, \"%s\"' %
-                self.dst, file_context=self.file_context,
-                min_verbosity=3)
+                          self.dst, file_context=self.file_context,
+                          min_verbosity=3)
 
         # creation of existing dirs is always OK
         if filesys.exists(self.dst):
             return self.verification_codes.OK
 
         salve.logger.info('DirCreate: Checking target is writable, \"%s\"' %
-                self.dst, file_context=self.file_context,
-                min_verbosity=3)
+                          self.dst, file_context=self.file_context,
+                          min_verbosity=3)
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -164,7 +163,7 @@ class DirCreateAction(CreateAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = ("DirCreate: Non-Writable target dir \"%s\"" %
-                    self.dst)
+                      self.dst)
             salve.logger.warn(logstr, file_context=self.file_context)
             return
 
@@ -172,8 +171,8 @@ class DirCreateAction(CreateAction):
         salve.exec_context.transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing Directory Creation of \"%s\"'
-                % self.dst, file_context=self.file_context,
-                min_verbosity=1)
+                          % self.dst, file_context=self.file_context,
+                          min_verbosity=1)
 
         # make the directory
         filesys.mkdir(self.dst)

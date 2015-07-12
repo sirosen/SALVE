@@ -113,7 +113,7 @@ class ManifestBlock(CoreBlock):
         the manifest block's sub-blocks.
         """
         salve.logger.info('Converting ManifestBlock to ActionList',
-                file_context=self.file_context, min_verbosity=3)
+                          file_context=self.file_context, min_verbosity=3)
 
         # transition to the action conversion phase, converting
         # blocks into actions

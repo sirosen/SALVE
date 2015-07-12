@@ -281,7 +281,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         # when mode=None, means the file is missing
         result_map = {}
         all_modes = [0o000, 0o100, 0o200, 0o400,
-                0o300, 0o500, 0o600, 0o700]
+                     0o300, 0o500, 0o600, 0o700]
 
         for mode in all_modes:
             result_map[(os.F_OK, mode)] = True
@@ -298,8 +298,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # somewhat redundant, but an easy way to list all flags
         for flags in (os.F_OK, os.R_OK, os.W_OK, os.X_OK,
-                os.R_OK | os.W_OK, os.R_OK | os.X_OK, os.W_OK | os.X_OK,
-                os.R_OK | os.W_OK | os.X_OK):
+                      os.R_OK | os.W_OK, os.R_OK | os.X_OK, os.W_OK | os.X_OK,
+                      os.R_OK | os.W_OK | os.X_OK):
             result_map[(flags, None)] = False
 
         fs = concrete.Filesys()

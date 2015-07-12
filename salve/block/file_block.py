@@ -41,7 +41,7 @@ class FileBlock(CoreBlock):
         by an attempt to back up the file being overwritten.
         """
         salve.logger.info('Converting FileBlock to FileAction',
-                file_context=self.file_context, min_verbosity=3)
+                          file_context=self.file_context, min_verbosity=3)
 
         self.ensure_has_attrs('action')
 
@@ -109,7 +109,7 @@ class FileBlock(CoreBlock):
                                                   self.file_context)
         else:
             raise self.mk_except(
-                    'Unsupported FileBlock action.')  # pragma: no cover
+                'Unsupported FileBlock action.')  # pragma: no cover
 
         # if 'mode' is set, append a chmod action
         if self.has('mode'):

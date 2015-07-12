@@ -11,7 +11,7 @@ from salve.action import backup, copy
 from salve.block import manifest_block, file_block
 
 from tests.unit.block import dummy_file_context, dummy_exec_context, \
-        dummy_conf, dummy_logger
+    dummy_conf, dummy_logger
 
 
 @istest
@@ -49,7 +49,7 @@ def empty_manifest_expand():
     """
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
-            source=full_path('empty.manifest'))
+                                         source=full_path('empty.manifest'))
         b.expand_blocks('/', dummy_conf, False)
     assert len(b.sub_blocks) == 0
 
@@ -65,7 +65,7 @@ def recursive_manifest_error():
     sourcedir = paths.containing_dir(invalid1_path)
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
-            source=invalid1_path)
+                                         source=invalid1_path)
         ensure_except(block.BlockException,
                       b.expand_blocks, sourcedir, dummy_conf, False)
 
@@ -80,7 +80,7 @@ def sub_block_expand():
     sourcedir = paths.containing_dir(valid2_path)
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
-            source=valid2_path)
+                                         source=valid2_path)
         b.expand_blocks(sourcedir, dummy_conf, False)
     assert len(b.sub_blocks) == 2
     mblock = b.sub_blocks[0]
@@ -103,7 +103,7 @@ def sub_block_compile():
     sourcedir = paths.containing_dir(valid2_path)
     with mock.patch('salve.logger', dummy_logger):
         b = manifest_block.ManifestBlock(dummy_file_context,
-            source=valid2_path)
+                                         source=valid2_path)
         b.expand_blocks(sourcedir, dummy_conf, False)
     assert len(b.sub_blocks) == 2
     mblock = b.sub_blocks[0]

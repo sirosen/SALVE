@@ -151,6 +151,6 @@ class TestWithScratchdir(system.RunScratchContainer):
 
         err = self.stderr.getvalue()
         expected = ('[WARN] [VERIFICATION] %s, line 1: DirCreate: ' +
-            'Non-Writable target dir "%s"\n'
-            ) % (self.get_fullname('1.man'), fullname_sub)
+                    'Non-Writable target dir "%s"\n'
+                    ) % (self.get_fullname('1.man'), fullname_sub)
         assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)

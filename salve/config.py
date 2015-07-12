@@ -87,7 +87,7 @@ class SALVEConfig(object):
         self.env['USER'] = user
         self.env['HOME'] = userhome
         self.env['SALVE_USER_PRIMARY_GROUP'] = \
-                ugo.get_group_from_username(user)
+            ugo.get_group_from_username(user)
 
         # track the filename that's being used, for error out
         self.filename = filename
@@ -97,9 +97,10 @@ class SALVEConfig(object):
         try:
             conf = SALVEConfigParser(userhome, filename)
         except configparser.Error as e:
-            raise SALVEException('Encountered an error while parsing your ' +
-                    'configuration file(s).\n%s' % e.message,
-                    FileContext(filename))
+            raise SALVEException(
+                'Encountered an error while parsing your ' +
+                'configuration file(s).\n%s' % e.message,
+                FileContext(filename))
         sections = conf.sections()
         # the loaded configuration is stored in the config object as a
         # dict mapping section names to a dict of (key,value) items
@@ -119,13 +120,13 @@ class SALVEConfig(object):
         # start with the SALVE prefix and are uppercase
         # prevents XYz=a and XYZ=b from being ambiguous
         salve_env = dict((k, self.env[k]) for k in self.env
-                          if k.startswith(SALVE_ENV_PREFIX)
-                             and k.isupper())
+                         if k.startswith(SALVE_ENV_PREFIX)
+                         and k.isupper())
 
         # Walk through these environment variables and overwrite
         # the existing configuration with them if present
         prefixes = dict((SALVE_ENV_PREFIX + s.upper(), s)
-                    for s in self.attributes)
+                        for s in self.attributes)
 
         for key in salve_env:
             for p in prefixes:

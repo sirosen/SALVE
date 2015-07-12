@@ -50,7 +50,7 @@ def parse_cmd3():
     given in the parent
     """
     fake_argv = ['./salve.py', '-c', 'a/b', 'deploy', '-c', 'p/q',
-            '-m', 'root.man']
+                 '-m', 'root.man']
 
     p = parser.get_parser()
     with mock.patch('sys.argv', fake_argv):

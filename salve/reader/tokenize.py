@@ -102,7 +102,8 @@ def tokenize_stream(stream):
             @file_context
             The FileContext.
         """
-        raise TokenizationException('Unexpected token: ' + token_str +
+        raise TokenizationException(
+            'Unexpected token: ' + token_str +
             ' Expected ' + str(expected) + ' instead.',
             file_context)
 
@@ -131,13 +132,13 @@ def tokenize_stream(stream):
     state = states.FREE
 
     salve.logger.info('Beginning Tokenization of \"%s\"' % filename,
-            min_verbosity=2)
+                      min_verbosity=2)
     tokenizer = shlex.shlex(stream, posix=True)
     # Basically, everything other than BLOCK_START or BLOCK_END
     # is okay here, we'll let the os library handle it later wrt
     # whether or not a path is valid
     tokenizer.wordchars = (string.ascii_letters + string.digits +
-                          '_-+=^&@`/\|~$()[].,<>*?!%#')
+                           '_-+=^&@`/\|~$()[].,<>*?!%#')
 
     def add_token(tok, ty, file_context):
         """
@@ -178,7 +179,7 @@ def tokenize_stream(stream):
             # if it's a block close, uncool
             elif current == '}':
                 unexpected_token(current, [Token.types.BLOCK_START,
-                    Token.types.TEMPLATE], ctx)
+                                           Token.types.TEMPLATE], ctx)
             # anything else must be  primary attr
             else:
                 add_token(current, Token.types.TEMPLATE, ctx)
@@ -192,7 +193,7 @@ def tokenize_stream(stream):
             # if it's a block close, uncool
             elif current == '}':
                 unexpected_token(current, [Token.types.BLOCK_START,
-                    Token.types.TEMPLATE], ctx)
+                                           Token.types.TEMPLATE], ctx)
             # anything else is a new block identifier, so no block body
             else:
                 add_token(current, Token.types.IDENTIFIER, ctx)
@@ -203,7 +204,8 @@ def tokenize_stream(stream):
         elif state is states.BLOCK:
             if current == '{':
                 unexpected_token(current,
-                    [Token.types.BLOCK_END, Token.types.IDENTIFIER], ctx)
+                                 [Token.types.BLOCK_END,
+                                  Token.types.IDENTIFIER], ctx)
             elif current == '}':
                 add_token(current, Token.types.BLOCK_END, ctx)
                 state = states.FREE
@@ -227,9 +229,9 @@ def tokenize_stream(stream):
     # last saw a '<block_id> <attr_val>') at the end of the file
     if state not in (states.FREE, states.PRIMARY_ATTR_FOUND):
         raise TokenizationException('Tokenizer ended in state ' +
-                                     state, ctx)
+                                    state, ctx)
 
     salve.logger.info('Finished Tokenization of \"%s\"' % filename,
-            min_verbosity=2)
+                      min_verbosity=2)
 
     return tokens

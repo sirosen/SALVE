@@ -90,11 +90,9 @@ class ScratchContainer(MockedGlobals):
         real_uid = os.geteuid()
         real_gid = os.getegid()
         self.patches.add(mock.patch('salve.ugo.name_to_uid',
-            lambda x: real_uid)
-            )
+                         lambda x: real_uid))
         self.patches.add(mock.patch('salve.ugo.name_to_gid',
-            lambda x: real_gid)
-            )
+                         lambda x: real_gid))
 
         self.patches.add(
             mock.patch('os.path.expanduser', expanduser)

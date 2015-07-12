@@ -14,4 +14,4 @@ def block_is_abstract():
     Ensures that a Block cannot be instantiated.
     """
     ensure_except(TypeError, Block, Block.types.FILE,
-            FileContext('no such file'))
+                  FileContext('no such file'))

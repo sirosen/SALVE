@@ -34,8 +34,8 @@ def ensure_ParsingException(tokens=None, filename=None):
     else:
         assert False
     assert (filename is None or
-           paths.clean_path(e.file_context.filename) ==
-           paths.clean_path(full_path(filename)))
+            paths.clean_path(e.file_context.filename) ==
+            paths.clean_path(full_path(filename)))
 
 
 class TestParsingMockedGlobals(MockedGlobals):

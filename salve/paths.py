@@ -34,8 +34,7 @@ def get_default_config():
     Get the location of the default settings ini file.
     """
     return os.path.abspath(
-            os.path.join(containing_dir(__file__),
-                'default_settings.ini'))
+        os.path.join(containing_dir(__file__), 'default_settings.ini'))
 
 
 def is_abs_or_var(path):

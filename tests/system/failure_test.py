@@ -51,9 +51,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         e = except_from_args(argv)
 
         assert self.stderr.getvalue() == (
-                "[ERROR] [PARSING] %s, line 5: " % rpath +
-                "Unexpected token: } " +
-                "Expected ['BLOCK_START', 'TEMPLATE'] instead.\n"), \
+            "[ERROR] [PARSING] %s, line 5: " % rpath +
+            "Unexpected token: } " +
+            "Expected ['BLOCK_START', 'TEMPLATE'] instead.\n"), \
             self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
@@ -109,9 +109,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         e = except_from_args(argv)
 
         assert (self.stderr.getvalue() ==
-            ("[ERROR] [PARSING] %s, line 3: " % rpath +
-            "Unexpected token: { Expected ['BLOCK_END', 'IDENTIFIER'] " +
-            "instead.\n")), self.stderr.getvalue()
+                ("[ERROR] [PARSING] %s, line 3: " % rpath +
+                 "Unexpected token: { Expected ['BLOCK_END', 'IDENTIFIER'] " +
+                 "instead.\n")), self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
     @istest
