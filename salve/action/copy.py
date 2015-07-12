@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import abc
+import os
 
 import salve
 
@@ -35,8 +36,8 @@ class CopyAction(with_metaclass(abc.ABCMeta, action.Action)):
             The FileContext.
         """
         action.Action.__init__(self, file_context)
-        self.src = src
-        self.dst = dst
+        self.src = os.path.normpath(src)
+        self.dst = os.path.normpath(dst)
 
 
 class FileCopyAction(CopyAction):

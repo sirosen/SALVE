@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import abc
 import time
+import os
 
 import salve
 from salve import action, paths
@@ -31,8 +32,8 @@ class BackupAction(with_metaclass(abc.ABCMeta, copy.CopyAction)):
             @file_context
             The FileContext.
         """
-        backup_dir = salve.exec_context.get('backup_dir')
-        backup_log = salve.exec_context.get('backup_log')
+        backup_dir = os.path.normpath(salve.exec_context.get('backup_dir'))
+        backup_log = os.path.normpath(salve.exec_context.get('backup_log'))
         # in the default case, a Backup is a File Copy into the
         # backup_dir in which the target filename is @src's abspath
         # this leads to bad behavior if run as-is, but can serve as a
