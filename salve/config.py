@@ -11,8 +11,8 @@ import string
 import salve
 
 from salve import paths, ugo
-from salve.context import FileContext
-from salve.exception import SALVEException
+from salve.context import FileContext, ExecutionContext
+from salve.exceptions import SALVEException
 
 SALVE_ENV_PREFIX = 'SALVE_'
 
@@ -167,7 +167,7 @@ class SALVEConfig(object):
             if key == 'verbosity':
                 val = int(val)
 
-            salve.exec_context.set(key, val)
+            ExecutionContext().set(key, val)
 
     def template(self, template_string):
         """

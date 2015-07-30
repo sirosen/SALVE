@@ -6,7 +6,7 @@ from nose.tools import istest, with_setup
 from os.path import dirname, abspath, relpath
 
 from salve import config, paths
-from salve.exception import SALVEException
+from salve.exceptions import SALVEException
 
 from tests.util import ensure_except, full_path
 

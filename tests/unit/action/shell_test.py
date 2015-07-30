@@ -6,9 +6,9 @@ import mock
 from tests.util import ensure_except
 from salve.context import ExecutionContext, FileContext
 
-from salve import action
-from salve.action import shell
-from salve.filesys import real_fs
+from salve.action import ShellAction
+from salve.exceptions import ActionException
+from salve.filesys import ConcreteFilesys
 
 
 class MockProcess(object):
@@ -43,8 +43,8 @@ def shell_action_basic():
         return MockProcess()
 
     with mock.patch('subprocess.Popen', mock_Popen):
-        a = shell.ShellAction('mkdir /a/b', dummy_file_context)
-        a.execute(real_fs)
+        a = ShellAction('mkdir /a/b', dummy_file_context)
+        a.execute(ConcreteFilesys())
 
     assert len(done_commands) == 1
     assert done_commands[0] == 'mkdir /a/b'
@@ -67,5 +67,5 @@ def failed_shell_action():
         return p
 
     with mock.patch('subprocess.Popen', mock_Popen):
-        a = shell.ShellAction(['touch /a/b'], dummy_file_context)
-        ensure_except(action.ActionException, a.execute, real_fs)
+        a = ShellAction(['touch /a/b'], dummy_file_context)
+        ensure_except(ActionException, a.execute, ConcreteFilesys())

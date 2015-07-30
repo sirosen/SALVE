@@ -4,8 +4,10 @@ import io
 import mock
 
 from salve import paths
-from salve.context import ExecutionContext
 from salve.log import Logger
+from salve.context import ExecutionContext
+
+from tests.util.context import clear_exec_context
 
 
 testfile_dir = paths.pjoin(
@@ -55,17 +57,30 @@ class MockedIO(object):
 class MockedGlobals(MockedIO):
     def __init__(self):
         MockedIO.__init__(self)
-        self.exec_context = ExecutionContext()
-        self.logger = Logger(self.exec_context, logfile=self.stderr)
+        self.logger = Logger(logfile=self.stderr)
         self.logger_patch = mock.patch('salve.logger', self.logger)
-        self.ectx_patch = mock.patch('salve.exec_context', self.exec_context)
+        self.action_logger_patches = [
+            mock.patch('salve.action.%s.logger' % loc,
+                       self.logger)
+            for loc in [
+                'backup.file', 'backup.directory',
+                'copy.file', 'create.file',
+                'copy.directory', 'create.directory',
+                'modify.chmod', 'modify.chown',
+                'modify.file_chmod', 'modify.file_chown',
+                'modify.dir_chmod', 'modify.dir_chown'
+            ]
+        ]
 
     def setUp(self):
         MockedIO.setUp(self)
-        self.ectx_patch.start()
+        clear_exec_context()
         self.logger_patch.start()
+        for p in self.action_logger_patches:
+            p.start()
 
     def tearDown(self):
         MockedIO.tearDown(self)
-        self.ectx_patch.stop()
         self.logger_patch.stop()
+        for p in self.action_logger_patches:
+            p.stop()

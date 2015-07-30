@@ -4,24 +4,27 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.util import ensure_except, scratch
+from tests.util import ensure_except
 
 from salve import action
+from salve.context import ExecutionContext
 from salve.action import backup, modify, create, copy
-from salve.block import BlockException, directory_block
+from salve.exceptions import BlockException
 
-from tests.unit.block import dummy_file_context, dummy_exec_context, \
-    dummy_logger
+from salve.block import DirBlock
+
+from tests.unit.block import dummy_file_context, dummy_logger, \
+    ScratchWithExecCtx
 
 
-class TestWithScratchdir(scratch.ScratchContainer):
+class TestWithScratchdir(ScratchWithExecCtx):
     @istest
     def dir_create_compile(self):
         """
         Unit: Directory Block Create Compile
         Verifies the result of converting a Dir Block to an Action.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('target', '/p/q/r')
         b.set('user', 'user1')
@@ -50,7 +53,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies the result of converting a Dir Block to an Action when the
         Block's mode is set.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('target', '/p/q/r')
         b.set('user', 'user1')
@@ -84,7 +87,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies the result of converting a Dir Block to an Action when the
         user is root and the Block's user and group are set.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('target', '/p/q/r')
         b.set('user', 'user1')
@@ -112,7 +115,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Unit: Directory Block Copy Compile (Empty Dir)
         Verifies the result of converting a Dir Block to an Action.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')
@@ -144,14 +147,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         # create and compile a directory block which will trigger the mocked
         # os.walk() routine above
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')
         with mock.patch('os.walk', mock_os_walk):
-            with mock.patch('salve.exec_context', dummy_exec_context):
-                with mock.patch('salve.logger', dummy_logger):
-                    dir_act = b.compile()
+            with mock.patch('salve.logger', dummy_logger):
+                dir_act = b.compile()
 
         # there should be seven component actions in all: four for each of the
         # directories (counting the containing dir) and three for the three
@@ -220,7 +222,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Unit: Directory Block Copy Compile (As Root)
         Verifies the result of converting a Dir Block to an Action.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')
@@ -252,7 +254,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that converting a Dir Block to an Action raises a
         BlockException.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('target', '/p/q/r')
         b.set('user', 'user1')
@@ -269,7 +271,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that converting a Dir Block to an Action raises a
         BlockException.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'copy')
         b.set('source', '/a/b/c')
         b.set('user', 'user1')
@@ -286,7 +288,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that converting a Dir Block to an Action raises a
         BlockException.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'create')
         b.set('user', 'user1')
         b.set('group', 'nogroup')
@@ -301,7 +303,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Unit: Directory Block Path Expand
         Verifies the results of path expansion in a Dir block.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('source', 'p/q/r/s')
         b.set('target', 't/u/v/w/x/y/z/1/2/3/../3')
         root_dir = 'file/root/directory'
@@ -319,7 +321,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         attribute.
         """
         # check that this is the case for a "create" action
-        b1 = directory_block.DirBlock(dummy_file_context)
+        b1 = DirBlock(dummy_file_context)
         b1.set('action', 'create')
         b1.set('user', 'user1')
         b1.set('group', 'user1')
@@ -328,7 +330,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         ensure_except(BlockException, b1.expand_file_paths, root_dir)
 
         # check that it also holds for a "copy" action with source set
-        b2 = directory_block.DirBlock(dummy_file_context)
+        b2 = DirBlock(dummy_file_context)
         b2.set('action', 'copy')
         b2.set('user', 'user1')
         b2.set('group', 'user1')
@@ -344,7 +346,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that block to action conversion fails when there is no
         "action" attribute.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')
         b.set('user', 'user1')
@@ -361,7 +363,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that block to action conversion fails when the "action"
         attribute has an unrecognized value.
         """
-        b = directory_block.DirBlock(dummy_file_context)
+        b = DirBlock(dummy_file_context)
         b.set('action', 'UNDEFINED_ACTION')
         b.set('source', '/a/b/c')
         b.set('target', '/p/q/r')

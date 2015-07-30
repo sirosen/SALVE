@@ -8,10 +8,10 @@ import sys
 import salve
 
 from salve import paths, config
-from salve.context import FileContext
-from salve.exception import SALVEException
-from salve.block import manifest_block
-from salve.filesys import real_fs
+from salve.context import FileContext, ExecutionContext
+from salve.exceptions import SALVEException
+from salve.block import ManifestBlock
+from salve.filesys import ConcreteFilesys
 
 
 def run_on_manifest(root_manifest, args):
@@ -33,7 +33,7 @@ def run_on_manifest(root_manifest, args):
 
     # must be done after config is loaded to have correct override behavior
     if args.verbosity:
-        salve.exec_context.set('verbosity', args.verbosity)
+        ExecutionContext().set('verbosity', args.verbosity)
 
     root_dir = paths.containing_dir(root_manifest)
     if args.directory and not args.v3_relpath:
@@ -41,12 +41,12 @@ def run_on_manifest(root_manifest, args):
 
     # root_block is a synthetic manifest block containing the root
     # manifest
-    root_block = manifest_block.ManifestBlock(FileContext('no such file'),
-                                              source=root_manifest)
+    root_block = ManifestBlock(FileContext('no such file'),
+                               source=root_manifest)
     root_block.expand_blocks(root_dir, conf, args.v3_relpath)
 
     root_action = root_block.compile()
-    root_action(real_fs)
+    root_action(ConcreteFilesys())
 
 
 def clean_and_validate_args(args):

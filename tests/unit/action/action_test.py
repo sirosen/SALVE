@@ -6,8 +6,9 @@ from nose.tools import istest
 from tests.util import ensure_except
 from tests.unit.action import dummy_file_context, dummy_logger
 
-from salve import action
-from salve.filesys import real_fs
+from salve.exceptions import ActionException
+from salve.action import Action, DynamicAction, ActionList
+from salve.filesys import ConcreteFilesys
 
 
 @istest
@@ -16,7 +17,7 @@ def action_is_abstract():
     Unit: Action Base Class Is Abstract
     Verifies that instantiating an Action raises an error.
     """
-    ensure_except(TypeError, action.Action, dummy_file_context)
+    ensure_except(TypeError, Action, dummy_file_context)
 
 
 @istest
@@ -25,7 +26,7 @@ def dynamic_action_is_abstract():
     Unit: Dynamic Action Base Class Is Abstract
     Verifies that instantiating a DynamicAction raises an error.
     """
-    ensure_except(TypeError, action.DynamicAction, dummy_file_context)
+    ensure_except(TypeError, DynamicAction, dummy_file_context)
 
 
 @istest
@@ -38,12 +39,12 @@ def dynamic_action_execute_fails():
     """
     logged_funcs = []
 
-    class DummyAction(action.DynamicAction):
+    class DummyAction(DynamicAction):
         def generate(self):
             pass
 
     act = DummyAction(dummy_file_context)
-    ensure_except(action.ActionException, act.execute, real_fs)
+    ensure_except(ActionException, act.execute, ConcreteFilesys())
 
 
 @istest
@@ -56,7 +57,7 @@ def dynamic_action_call_generates_and_executes():
     """
     logged_funcs = []
 
-    class DummyAction(action.DynamicAction):
+    class DummyAction(DynamicAction):
         def generate(self):
             logged_funcs.append('generate')
 
@@ -85,8 +86,8 @@ def empty_action_list():
 
     # Just ensuring that an empty action list is valid
     with mock.patch('salve.action.Action.execute', mock_execute):
-        actions = action.ActionList([], dummy_file_context)
-        actions(real_fs)
+        actions = ActionList([], dummy_file_context)
+        actions(ConcreteFilesys())
 
     assert len(done_actions) == 0
 
@@ -98,7 +99,7 @@ def empty_action_list_to_string():
 
     Checks the string repr of an empty AL.
     """
-    act = action.ActionList([], dummy_file_context)
+    act = ActionList([], dummy_file_context)
 
     assert str(act) == ('ActionList([],context=' +
                         repr(dummy_file_context) + ')')
@@ -113,17 +114,17 @@ def action_list_inorder():
     """
     done_actions = []
 
-    class DummyAction(action.Action):
+    class DummyAction(Action):
         def __init__(self, ctx):
-            action.Action.__init__(self, ctx)
+            Action.__init__(self, ctx)
 
         def execute(self, filesys):
             done_actions.append(self)
 
     a = DummyAction(dummy_file_context)
     b = DummyAction(dummy_file_context)
-    al = action.ActionList([a, b], dummy_file_context)
-    al(real_fs)
+    al = ActionList([a, b], dummy_file_context)
+    al(ConcreteFilesys())
 
     assert done_actions[0] == a
     assert done_actions[1] == b
@@ -136,9 +137,9 @@ def action_verifies_OK():
     Verifies that an action verification on an action which does not override
     verification will produce an OK status.
     """
-    class DummyAction(action.Action):
+    class DummyAction(Action):
         def __init__(self, ctx):
-            action.Action.__init__(self, ctx)
+            Action.__init__(self, ctx)
 
         def execute(self):
             pass
@@ -146,6 +147,6 @@ def action_verifies_OK():
     a = DummyAction(dummy_file_context)
 
     with mock.patch('salve.logger', dummy_logger):
-        verify_code = a.verify_can_exec(real_fs)
+        verify_code = a.verify_can_exec(ConcreteFilesys())
 
     assert verify_code == a.verification_codes.OK

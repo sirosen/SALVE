@@ -3,11 +3,19 @@
 import os
 import mock
 
-from tests.util import testfile_dir
+from tests.util import testfile_dir, scratch
 
 from salve import config
 from salve.context import FileContext, ExecutionContext
 from salve.log import Logger
+
+
+class ScratchWithExecCtx(scratch.ScratchContainer):
+    def setUp(self):
+        scratch.ScratchContainer.setUp(self)
+        ExecutionContext().set('log_level', set())
+        ExecutionContext().set('backup_dir', '/m/n')
+        ExecutionContext().set('backup_log', '/m/n.log')
 
 
 def mock_expanduser(string):
@@ -20,16 +28,8 @@ def mock_expanduser(string):
 
 dummy_conf = None
 dummy_file_context = FileContext('no such file')
-dummy_exec_context = ExecutionContext()
-dummy_logger = Logger(dummy_exec_context)
+dummy_logger = Logger()
 
 with mock.patch('os.path.expanduser', mock_expanduser):
-    with mock.patch('salve.exec_context', dummy_exec_context):
-        with mock.patch('salve.logger', dummy_logger):
-            dummy_conf = config.SALVEConfig()
-
-# must be set after conf is created, otherwise they will be overidden by
-# config initialization
-dummy_exec_context.set('log_level', set())
-dummy_exec_context.set('backup_dir', '/m/n')
-dummy_exec_context.set('backup_log', '/m/n.log')
+    with mock.patch('salve.logger', dummy_logger):
+        dummy_conf = config.SALVEConfig()

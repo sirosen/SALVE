@@ -1,14 +1,12 @@
-#!/usr/bin/python
-
 import os
 import mock
 from nose.tools import istest
 
 from tests.util import ensure_except
-from salve.reader.tokenize import Token
+from salve.parser import Token
+from salve.exceptions import BlockException
 
-from salve.block import BlockException, identifier, \
-    file_block, manifest_block, directory_block
+from salve.block import identifier, FileBlock, ManifestBlock, DirBlock
 
 from tests.unit.block import dummy_file_context, dummy_logger
 
@@ -54,7 +52,7 @@ def valid_file_id():
     file_id = Token('file', Token.types.IDENTIFIER, dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
         fb = identifier.block_from_identifier(file_id)
-    assert isinstance(fb, file_block.FileBlock)
+    assert isinstance(fb, FileBlock)
 
 
 @istest
@@ -66,7 +64,7 @@ def valid_manifest_id():
     manifest_id = Token('manifest', Token.types.IDENTIFIER, dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
         mb = identifier.block_from_identifier(manifest_id)
-    assert isinstance(mb, manifest_block.ManifestBlock)
+    assert isinstance(mb, ManifestBlock)
 
 
 @istest
@@ -79,4 +77,4 @@ def valid_directory_id():
                         dummy_file_context)
     with mock.patch('salve.logger', dummy_logger):
         dir_block = identifier.block_from_identifier(manifest_id)
-    assert isinstance(dir_block, directory_block.DirBlock)
+    assert isinstance(dir_block, DirBlock)

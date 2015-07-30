@@ -4,7 +4,7 @@ import abc
 import os
 from contextlib import contextmanager
 
-from salve.util import Enum, with_metaclass
+from salve import Enum, with_metaclass
 
 
 class Filesys(with_metaclass(abc.ABCMeta)):
