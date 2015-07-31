@@ -7,7 +7,8 @@ import sys
 
 import salve
 
-from salve import paths, config
+from salve import paths
+from salve.config import SALVEConfig
 from salve.context import FileContext, ExecutionContext
 from salve.exceptions import SALVEException
 from salve.block import ManifestBlock
@@ -29,7 +30,7 @@ def run_on_manifest(root_manifest, args):
     cfg_file = None
     if args.configfile:
         cfg_file = args.configfile
-    conf = config.SALVEConfig(filename=cfg_file)
+    conf = SALVEConfig(filename=cfg_file)
 
     # must be done after config is loaded to have correct override behavior
     if args.verbosity:

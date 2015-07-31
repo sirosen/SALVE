@@ -1,52 +1,15 @@
-#!/usr/bin/python
-
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
-
 import os
 import string
 
 import salve
 
-from salve import paths, ugo
+from salve import ugo
 from salve.context import FileContext, ExecutionContext
 from salve.exceptions import SALVEException
 
+from .parser import SALVEConfigParser
+
 SALVE_ENV_PREFIX = 'SALVE_'
-
-
-class SALVEConfigParser(configparser.ConfigParser):
-    """
-    The SALVE configuration parser.
-    Loads default values, then attempts to look up
-    the current user's rc file for overwrites to those
-    values.
-    """
-    def __init__(self, userhome, filename):
-        """
-        SALVEConfigParser constructor.
-        Creates a ConfigParser specialized for SALVE.
-
-        Args:
-            @userhome
-            The home directory of the running user ($SUDO_USER if
-            running under 'sudo').
-            @filename
-            The name of a specific config file to load.
-        """
-        # create a config parser
-        configparser.ConfigParser.__init__(self)
-
-        # first read the defaults
-        # either read the user's rc file, if not given a filename
-        # or read the given file
-        filenames = [paths.get_default_config(),
-                     os.path.join(userhome, '.salverc'),
-                     filename]
-        # filter out filename if it is None
-        self.read(f for f in filenames if f is not None)
 
 
 class SALVEConfig(object):
