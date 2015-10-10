@@ -54,7 +54,7 @@ class FileChownAction(ChownAction):
 
         logger.info(
             'Performing FileChown of \"%s\" to %s:%s' %
-            (self.target, self.user, self.group), min_verbosity=1)
+            (self.target, self.user, self.group))
 
         # chown without following symlinks
         filesys.chown(self.target, ugo.name_to_uid(self.user),

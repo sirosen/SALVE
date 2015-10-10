@@ -29,8 +29,8 @@ class ExecutionContext(with_metaclass(Singleton)):
             transition_text = ('SALVE Execution Phase Transition ' +
                                '[%s] -> [%s]' %
                                (self.phase, newphase))
-            salve.logger.info(transition_text, hide_context=True,
-                              min_verbosity=3)
+            extra = {'hide_salve_context': True}
+            salve.logger.debug(transition_text, extra=extra)
 
         self.phase = newphase
 

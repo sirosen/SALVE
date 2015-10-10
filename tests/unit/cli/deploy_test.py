@@ -15,6 +15,11 @@ from salve.context import ExecutionContext, FileContext
 from tests.util import ensure_except, scratch
 
 
+startup_v3_warning = ('STARTUP [WARNING] Deprecation Warning: --directory ' +
+                      'will be removed in version 3 as ' +
+                      '--version3-relative-paths becomes the default.')
+
+
 class TestWithScratchdir(scratch.ScratchContainer):
     def __init__(self):
         scratch.ScratchContainer.__init__(self)
@@ -90,7 +95,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with mock.patch('salve.cli.deploy.ManifestBlock',
                         MockManifest):
             with mock.patch('salve.config.SALVEConfig', mock.Mock()):
-                deploy.main(fake_args)
+                with mock.patch('salve.cli.deploy.SALVEConfig', mock.Mock()):
+                    deploy.main(fake_args)
 
         assert have_run['action_execute']
         assert have_run['expand_blocks']
@@ -115,13 +121,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == (
-            '[WARN] [STARTUP] ' +
-            'Deprecation Warning: --directory will be removed in ' +
-            'version 3 as --version3-relative-paths becomes the ' +
-            'default.\n' +
-            '[ERROR] [STARTUP] no such file, line -1: ' +
-            'message string\n'), stderr_out
+        expected_stderr = '\n'.join((
+            startup_v3_warning,
+            ('STARTUP [ERROR] no such file, line -1: ' +
+             'message string\n')
+            ))
+        assert stderr_out == expected_stderr, stderr_out
 
     @istest
     def deploy_block_exception(self):
@@ -146,13 +151,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == (
-            '[WARN] [STARTUP] ' +
-            'Deprecation Warning: --directory will be removed in ' +
-            'version 3 as --version3-relative-paths becomes the ' +
-            'default.\n' +
-            '[ERROR] [PARSING] no such file, line -1: ' +
-            'message string\n'), stderr_out
+        expected_stderr = '\n'.join((
+            startup_v3_warning,
+            '[DEBUG] SALVE Execution Phase Transition [STARTUP] -> [PARSING]',
+            'PARSING [ERROR] no such file, line -1: message string\n'
+            ))
+        assert stderr_out == expected_stderr, stderr_out
 
     @istest
     def deploy_action_exception(self):
@@ -177,13 +181,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == (
-            '[WARN] [STARTUP] ' +
-            'Deprecation Warning: --directory will be removed in ' +
-            'version 3 as --version3-relative-paths becomes the ' +
-            'default.\n' +
-            '[ERROR] [COMPILATION] ' +
-            'no such file, line -1: message string\n'), stderr_out
+        expected_stderr = '\n'.join((
+            startup_v3_warning,
+            ('[DEBUG] SALVE Execution Phase Transition [STARTUP] -> ' +
+             '[COMPILATION]'),
+            'COMPILATION [ERROR] no such file, line -1: message string\n'
+            ))
+        assert stderr_out == expected_stderr, stderr_out
 
     @istest
     def deploy_tokenization_exception(self):
@@ -210,13 +214,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == (
-            '[WARN] [STARTUP] ' +
-            'Deprecation Warning: --directory will be removed in ' +
-            'version 3 as --version3-relative-paths becomes the ' +
-            'default.\n' +
-            '[ERROR] [PARSING] no such file, line -1: ' +
-            'message string\n'), stderr_out
+        expected_stderr = '\n'.join((
+            startup_v3_warning,
+            "[DEBUG] SALVE Execution Phase Transition [STARTUP] -> [PARSING]",
+            "PARSING [ERROR] no such file, line -1: message string\n"
+            ))
+        assert stderr_out == expected_stderr, stderr_out
 
     @istest
     def deploy_parsing_exception(self):
@@ -241,13 +244,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 assert self.mocked_exitval == 1
 
         stderr_out = self.stderr.getvalue()
-        assert stderr_out == (
-            '[WARN] [STARTUP] ' +
-            'Deprecation Warning: --directory will be removed in ' +
-            'version 3 as --version3-relative-paths becomes the ' +
-            'default.\n' +
-            '[ERROR] [PARSING] no such file, line -1: ' +
-            'message string\n'), stderr_out
+        expected_stderr = '\n'.join((
+            startup_v3_warning,
+            '[DEBUG] SALVE Execution Phase Transition [STARTUP] -> [PARSING]',
+            'PARSING [ERROR] no such file, line -1: message string\n'
+            ))
+        assert stderr_out == expected_stderr, stderr_out
 
     @istest
     def deploy_unexpected_exception(self):

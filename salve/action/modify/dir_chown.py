@@ -46,20 +46,19 @@ class DirChownAction(ChownAction, DirModifyAction):
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         logger.info('DirChown: Checking target exists, \"%s\"' %
-                    self.target, min_verbosity=3)
+                    self.target)
 
         if not filesys.access(self.target, access_codes.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
         logger.info('DirChown: Checking if execution can be skipped, ' +
-                    '\"%s\"' % self.target, min_verbosity=3)
+                    '\"%s\"' % self.target)
 
         if filesys.stat(self.target).st_uid == ugo.name_to_uid(self.user) and \
            filesys.stat(self.target).st_gid == ugo.name_to_gid(self.group):
             return self.verification_codes.SKIP_EXEC
 
-        logger.info('DirChown: Checking if user is root',
-                    min_verbosity=3)
+        logger.info('DirChown: Checking if user is root')
 
         if not ugo.is_root():
             return self.verification_codes.NOT_ROOT
@@ -87,8 +86,7 @@ class DirChownAction(ChownAction, DirModifyAction):
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         logger.info('Performing DirChown of \"%s\" to %s:%s' %
-                    (self.target, self.user, self.group),
-                    min_verbosity=1)
+                    (self.target, self.user, self.group))
 
         if vcode != self.verification_codes.SKIP_EXEC:
             uid = ugo.name_to_uid(self.user)

@@ -115,8 +115,10 @@ class ManifestBlock(CoreBlock):
         The action will always be an actionlist of the expansion of
         the manifest block's sub-blocks.
         """
-        salve.logger.info('Converting ManifestBlock to ActionList',
-                          file_context=self.file_context, min_verbosity=3)
+        salve.logger.info(
+            '{0}: Converting ManifestBlock to ActionList'.format(
+                str(self.file_context))
+            )
 
         # transition to the action conversion phase, converting
         # blocks into actions

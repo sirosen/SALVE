@@ -1,5 +1,4 @@
-#!/usr/bin/python
-
+import logging
 import os
 import mock
 
@@ -7,7 +6,7 @@ from tests.util import testfile_dir, scratch
 
 from salve import config
 from salve.context import FileContext, ExecutionContext
-from salve.log import Logger
+from salve.log import create_logger
 
 
 class ScratchWithExecCtx(scratch.ScratchContainer):
@@ -28,7 +27,8 @@ def mock_expanduser(string):
 
 dummy_conf = None
 dummy_file_context = FileContext('no such file')
-dummy_logger = Logger()
+dummy_logger = create_logger(__name__)
+dummy_logger.handlers = [logging.NullHandler()]
 
 with mock.patch('os.path.expanduser', mock_expanduser):
     with mock.patch('salve.logger', dummy_logger):

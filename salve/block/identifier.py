@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import salve
 
 from salve.exceptions import BlockException
@@ -39,9 +37,10 @@ def block_from_identifier(id_token):
         raise BlockException('Cannot create block from non-identifier: ' +
                              str(id_token), ctx)
 
-    salve.logger.info('Generating Block From Identifier Token: ' +
-                      str(id_token), file_context=ctx,
-                      min_verbosity=3)
+    salve.logger.info(
+        '{0}: Generating Block From Identifier Token: {1}'.format(
+            str(ctx), str(id_token))
+        )
 
     # if the identifier is not in the map, raise an exception
     val = id_token.value.lower()

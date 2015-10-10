@@ -34,9 +34,10 @@ class DirBackupAction(ActionList, BackupAction):
         # confirming execution will work
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
-        logger.info('DirBackup: Checking destination is writable, ' +
-                    '\"%s\"' % self.dst, file_context=self.file_context,
-                    min_verbosity=3)
+        logger.info(
+            '{0}: DirBackup: Checking destination is writable, \"{1}\"'.format(
+                self.file_context, self.dst)
+            )
 
         if not filesys.exists(self.src):
             return self.verification_codes.NONEXISTENT_SOURCE
@@ -53,14 +54,16 @@ class DirBackupAction(ActionList, BackupAction):
 
         if vcode == self.verification_codes.NONEXISTENT_SOURCE:
             logstr = "DirBackup: Non-Existent source dir \"%s\"" % self.src
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info('Performing Directory Backup of \"%s\"' % self.src,
-                    file_context=self.file_context, min_verbosity=1)
+        logger.info(
+            '{0}: Performing Directory Backup of \"{1}\"'.format(
+                self.file_context, self.src)
+            )
 
         # append a file backup for each file in @src
         for dirname, subdirs, files in filesys.walk(self.src):

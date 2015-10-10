@@ -17,6 +17,10 @@ def except_from_args(argv):
     return e
 
 
+parsing_transition_debug_string = (
+    "[DEBUG] SALVE Execution Phase Transition [STARTUP] -> [PARSING]")
+
+
 class TestWithScratchdir(system.RunScratchContainer):
     @istest
     def unclosed_block_fails(self):
@@ -31,9 +35,13 @@ class TestWithScratchdir(system.RunScratchContainer):
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
 
-        assert self.stderr.getvalue() ==\
-            "[ERROR] [PARSING] %s, line 4: " % rpath +\
-            "Tokenizer ended in state BLOCK\n", \
+        expected_stderr = '\n'.join((
+            parsing_transition_debug_string,
+            'PARSING [INFO] Beginning Tokenization of "%s"' % path,
+            ("PARSING [ERROR] %s, line 4: " % rpath +
+             "Tokenizer ended in state BLOCK\n")
+            ))
+        assert self.stderr.getvalue() == expected_stderr, \
             self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
@@ -50,10 +58,14 @@ class TestWithScratchdir(system.RunScratchContainer):
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
 
-        assert self.stderr.getvalue() == (
-            "[ERROR] [PARSING] %s, line 5: " % rpath +
-            "Unexpected token: } " +
-            "Expected ['BLOCK_START', 'TEMPLATE'] instead.\n"), \
+        expected_stderr = '\n'.join((
+            parsing_transition_debug_string,
+            'PARSING [INFO] Beginning Tokenization of "%s"' % path,
+            ("PARSING [ERROR] %s, line 5: " % rpath +
+             "Unexpected token: } Expected " +
+             "['BLOCK_START', 'TEMPLATE'] instead.\n")
+            ))
+        assert self.stderr.getvalue() == expected_stderr, \
             self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
@@ -70,9 +82,13 @@ class TestWithScratchdir(system.RunScratchContainer):
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
 
-        assert self.stderr.getvalue() ==\
-            "[ERROR] [PARSING] %s, line 3: " % rpath +\
-            "Unexpected token: { Expected IDENTIFIER instead.\n", \
+        expected_stderr = '\n'.join((
+            parsing_transition_debug_string,
+            'PARSING [INFO] Beginning Tokenization of "%s"' % path,
+            ("PARSING [ERROR] %s, line 3: " % rpath +
+             "Unexpected token: { Expected IDENTIFIER instead.\n")
+            ))
+        assert self.stderr.getvalue() == expected_stderr, \
             self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
@@ -89,9 +105,13 @@ class TestWithScratchdir(system.RunScratchContainer):
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
 
-        assert self.stderr.getvalue() ==\
-            "[ERROR] [PARSING] %s, line 5: " % rpath +\
-            "Unexpected token: } Expected TEMPLATE instead.\n", \
+        expected_stderr = '\n'.join((
+            parsing_transition_debug_string,
+            'PARSING [INFO] Beginning Tokenization of "%s"' % path,
+            ('PARSING [ERROR] %s, line 5: ' % rpath +
+             'Unexpected token: } Expected TEMPLATE instead.\n')
+            ))
+        assert self.stderr.getvalue() == expected_stderr, \
             self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
@@ -108,10 +128,15 @@ class TestWithScratchdir(system.RunScratchContainer):
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
 
-        assert (self.stderr.getvalue() ==
-                ("[ERROR] [PARSING] %s, line 3: " % rpath +
-                 "Unexpected token: { Expected ['BLOCK_END', 'IDENTIFIER'] " +
-                 "instead.\n")), self.stderr.getvalue()
+        expected_stderr = '\n'.join((
+            parsing_transition_debug_string,
+            'PARSING [INFO] Beginning Tokenization of "%s"' % path,
+            ("PARSING [ERROR] %s, line 3: " % rpath +
+             "Unexpected token: { Expected ['BLOCK_END', 'IDENTIFIER'] " +
+             "instead.\n")
+            ))
+        assert self.stderr.getvalue() == expected_stderr, \
+            self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code
 
     @istest
@@ -127,8 +152,23 @@ class TestWithScratchdir(system.RunScratchContainer):
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
 
-        assert self.stderr.getvalue() ==\
-            "[ERROR] [PARSING] %s, line 7: " % rpath +\
-            "Invalid block id invalid_block_id\n", \
+        expected_stderr = '\n'.join((
+            parsing_transition_debug_string,
+            'PARSING [INFO] Beginning Tokenization of "%s"' % path,
+            'PARSING [INFO] Finished Tokenization of "%s"' % path,
+            'PARSING [INFO] Beginning Parse of Token Stream',
+            ('PARSING [INFO] {0}, line 3: ' +
+             'Generating Block From Identifier Token: ' +
+             'Token(value=file,ty=IDENTIFIER,lineno=3,filename={0})'
+             ).format(rpath),
+            ('PARSING [INFO] {0}, line 7: ' +
+             'Generating Block From Identifier Token: ' +
+             'Token(value=invalid_block_id,ty=IDENTIFIER,' +
+             'lineno=7,filename={0})'
+             ).format(rpath),
+            ("PARSING [ERROR] %s, line 7: " % rpath +
+             "Invalid block id invalid_block_id\n")
+            ))
+        assert self.stderr.getvalue() == expected_stderr, \
             self.stderr.getvalue()
         assert e.code == 1, "incorrect error code: %d" % e.code

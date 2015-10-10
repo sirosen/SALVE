@@ -86,7 +86,7 @@ def main(args):
     try:
         run_on_manifest(args.manifest, args)
     except SALVEException as e:
-        salve.logger.error(e.message, file_context=e.file_context)
+        salve.logger.error(str(e.file_context) + ': ' + e.message)
         # Normally, sys.exit() is to be avoided, but main() is only
         # invoked if salve is running as a script, and we want to give
         # the right exit status for commandline usage

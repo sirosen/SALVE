@@ -165,14 +165,15 @@ class TestWithScratchdir(system.RunScratchContainer):
         assert s == '', s
 
         err = self.stderr.getvalue()
-        expected = (('[WARN] [STARTUP] ' +
+        expected1 = ('STARTUP [WARNING] ' +
                      'Deprecation Warning: --directory will be removed in ' +
                      'version 3 as --version3-relative-paths becomes the ' +
-                     'default.\n' +
-                     '[WARN] [VERIFICATION] %s, line 1: FileCopy: ' +
-                     'Non-Writable target file "%s"\n') %
-                    (self.get_fullname('1.man'), fullname))
-        assert err == expected, "%s != %s" % (err, expected)
+                     'default.')
+        expected2 = (('VERIFICATION [WARNING] %s, line 1: FileCopy: ' +
+                      'Non-Writable target file "%s"') %
+                     (self.get_fullname('1.man'), fullname))
+        assert expected1 in err, "%s doesn't contain %s" % (err, expected1)
+        assert expected2 in err, "%s doesn't contain %s" % (err, expected2)
 
     @istest
     def copy_unreadable_source(self):
@@ -193,7 +194,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         assert not self.exists('2')
 
         err = self.stderr.getvalue()
-        expected = (('[WARN] [VERIFICATION] %s, line 1: FileCopy: ' +
+        expected = (('VERIFICATION [WARNING] %s, line 1: FileCopy: ' +
                      'Non-Readable source file "%s"\n') %
                     (self.get_fullname('1.man'), fullname))
         assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
@@ -217,7 +218,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.run_on_manifest('1.man')
 
         err = self.stderr.getvalue()
-        expected = (('[WARN] [VERIFICATION] %s, line 1: FileCreate: ' +
+        expected = (('VERIFICATION [WARNING] %s, line 1: FileCreate: ' +
                      'Non-Writable target file "%s"\n') %
                     (self.get_fullname('1.man'), fullname))
         assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
@@ -242,7 +243,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.run_on_manifest('1.man')
 
         err = self.stderr.getvalue()
-        expected = (('[WARN] [VERIFICATION] %s, line 1: FileCreate: ' +
+        expected = (('VERIFICATION [WARNING] %s, line 1: FileCreate: ' +
                      'Non-Writable target file "%s"\n') %
                     (self.get_fullname('1.man'), fullname_b))
         assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)

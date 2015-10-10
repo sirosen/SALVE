@@ -151,8 +151,11 @@ class DirBlock(CoreBlock):
         directory copy that creates the target directories and backs up
         any files that are being overwritten.
         """
-        salve.logger.info('Converting DirBlock to DirAction',
-                          file_context=self.file_context, min_verbosity=3)
+        salve.logger.info(
+            '{0}: Converting DirBlock to DirAction'.format(
+                str(self.file_context)
+                )
+            )
 
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will

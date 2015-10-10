@@ -40,8 +40,11 @@ class FileBlock(CoreBlock):
         'touch -a'. If it is a copy action, this is a file copy preceded
         by an attempt to back up the file being overwritten.
         """
-        salve.logger.info('Converting FileBlock to FileAction',
-                          file_context=self.file_context, min_verbosity=3)
+        salve.logger.info(
+            '{0}: Converting FileBlock to FileAction'.format(
+                str(self.file_context)
+                )
+            )
 
         self.ensure_has_attrs('action')
 

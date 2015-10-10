@@ -1,13 +1,17 @@
-#!/usr/bin/python
-
-import io
+import logging
 import mock
 
 from salve import paths
-from salve.log import Logger
+from salve.log import gen_handler
 from salve.context import ExecutionContext
 
 from tests.util.context import clear_exec_context
+
+# handle Py2 vs. Py3 StringIO change
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
 testfile_dir = paths.pjoin(
@@ -40,8 +44,8 @@ def ensure_except(exception_type, func, *args, **kwargs):
 class MockedIO(object):
     def __init__(self):
         # create io patches
-        self.stderr = io.StringIO()
-        self.stdout = io.StringIO()
+        self.stderr = StringIO()
+        self.stdout = StringIO()
         self.stderr_patch = mock.patch('sys.stderr', self.stderr)
         self.stdout_patch = mock.patch('sys.stdout', self.stdout)
 
@@ -57,7 +61,9 @@ class MockedIO(object):
 class MockedGlobals(MockedIO):
     def __init__(self):
         MockedIO.__init__(self)
-        self.logger = Logger(logfile=self.stderr)
+        self.logger = logging.getLogger(__name__)
+        self.logger.propagate = False
+
         self.logger_patch = mock.patch('salve.logger', self.logger)
         self.action_logger_patches = [
             mock.patch('salve.action.%s.logger' % loc,
@@ -76,11 +82,13 @@ class MockedGlobals(MockedIO):
         MockedIO.setUp(self)
         clear_exec_context()
         self.logger_patch.start()
+        self.logger.addHandler(gen_handler(stream=self.stderr))
         for p in self.action_logger_patches:
             p.start()
 
     def tearDown(self):
         MockedIO.tearDown(self)
         self.logger_patch.stop()
+        self.logger.handlers = []
         for p in self.action_logger_patches:
             p.stop()

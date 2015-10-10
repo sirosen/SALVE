@@ -1,7 +1,16 @@
+# python 2/3 compatible use of configparser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
+
+from salve import paths
+import logging
 import os
 import string
 
 import salve
+import salve.log
 
 from salve import ugo
 from salve.context import FileContext, ExecutionContext
@@ -111,11 +120,7 @@ class SALVEConfig(object):
             # special handling for the run_log
             # convert to a file open in 'w' mode
             if key == 'run_log':
-                try:
-                    val = open(val, 'w')
-                    salve.logger.change_logfile(val)
-                except:  # pragma: no cover
-                    raise  # pragma: no cover
+                salve.log.add_logfile(salve.logger, logging.NOTSET, val)
 
             # special handling for the log_level
             # convert to a set of strings
@@ -124,7 +129,7 @@ class SALVEConfig(object):
                 # if all appears in the set, replace it with the set of all
                 # defined log types
                 if 'ALL' in val:
-                    val = set(salve.logger.log_types)
+                    val = logging.NOTSET
 
             # verbosity is an integer
             if key == 'verbosity':
