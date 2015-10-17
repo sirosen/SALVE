@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import os
 import sys
 import mock
@@ -12,7 +10,7 @@ from salve.exceptions import SALVEException, ActionException, BlockException, \
     ParsingException
 from salve.context import ExecutionContext, FileContext
 
-from tests.util import ensure_except, scratch
+from tests.util import ensure_except, scratch, assert_substr
 
 
 startup_v3_warning = ('STARTUP [WARNING] Deprecation Warning: --directory ' +
@@ -37,24 +35,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
-        ExecutionContext().set('log_level', set(('WARN', 'ERROR')))
         self.exit_patch.start()
 
     def tearDown(self):
         scratch.ScratchContainer.tearDown(self)
         self.exit_patch.stop()
-
-    @istest
-    def no_manifest_error(self):
-        """
-        Unit: Deploy Command No Manifest Fails
-        Verifies that attempting to run the deploy command fails if there
-        is no manifest specified.
-        """
-        mock_args = mock.Mock()
-        mock_args.manifest = None
-
-        ensure_except(AssertionError, deploy.main, mock_args)
 
     @istest
     def deploy_main(self):
@@ -120,13 +105,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
             except SystemExit as e:
                 assert self.mocked_exitval == 1
 
-        stderr_out = self.stderr.getvalue()
-        expected_stderr = '\n'.join((
-            startup_v3_warning,
-            ('STARTUP [ERROR] no such file, line -1: ' +
-             'message string\n')
-            ))
-        assert stderr_out == expected_stderr, stderr_out
+        err = self.stderr.getvalue()
+        expected = 'STARTUP [ERROR] no such file, line -1: message string'
+        assert_substr(err, expected)
 
     @istest
     def deploy_block_exception(self):
@@ -135,7 +116,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown BlockExceptions.
         """
-        ExecutionContext().transition(ExecutionContext.phases.STARTUP)
+        ExecutionContext().transition(ExecutionContext.phases.STARTUP,
+                                      quiet=True)
 
         fake_args = mock.Mock()
         fake_args.manifest = 'root.manifest'
@@ -149,14 +131,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 deploy.main(fake_args)
             except SystemExit as e:
                 assert self.mocked_exitval == 1
+            else:
+                assert False
 
-        stderr_out = self.stderr.getvalue()
-        expected_stderr = '\n'.join((
-            startup_v3_warning,
+        err = self.stderr.getvalue()
+        expected = '\n'.join((
             '[DEBUG] SALVE Execution Phase Transition [STARTUP] -> [PARSING]',
             'PARSING [ERROR] no such file, line -1: message string\n'
             ))
-        assert stderr_out == expected_stderr, stderr_out
+        assert_substr(err, expected)
 
     @istest
     def deploy_action_exception(self):
@@ -180,14 +163,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
             except SystemExit as e:
                 assert self.mocked_exitval == 1
 
-        stderr_out = self.stderr.getvalue()
-        expected_stderr = '\n'.join((
-            startup_v3_warning,
-            ('[DEBUG] SALVE Execution Phase Transition [STARTUP] -> ' +
-             '[COMPILATION]'),
-            'COMPILATION [ERROR] no such file, line -1: message string\n'
-            ))
-        assert stderr_out == expected_stderr, stderr_out
+        err = self.stderr.getvalue()
+        expected = 'COMPILATION [ERROR] no such file, line -1: message string'
+        assert_substr(err, expected)
 
     @istest
     def deploy_tokenization_exception(self):
@@ -213,13 +191,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
             except SystemExit as e:
                 assert self.mocked_exitval == 1
 
-        stderr_out = self.stderr.getvalue()
-        expected_stderr = '\n'.join((
-            startup_v3_warning,
-            "[DEBUG] SALVE Execution Phase Transition [STARTUP] -> [PARSING]",
-            "PARSING [ERROR] no such file, line -1: message string\n"
-            ))
-        assert stderr_out == expected_stderr, stderr_out
+        err = self.stderr.getvalue()
+        expected = "PARSING [ERROR] no such file, line -1: message string"
+        assert_substr(err, expected)
 
     @istest
     def deploy_parsing_exception(self):
@@ -243,13 +217,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
             except SystemExit as e:
                 assert self.mocked_exitval == 1
 
-        stderr_out = self.stderr.getvalue()
-        expected_stderr = '\n'.join((
-            startup_v3_warning,
-            '[DEBUG] SALVE Execution Phase Transition [STARTUP] -> [PARSING]',
-            'PARSING [ERROR] no such file, line -1: message string\n'
-            ))
-        assert stderr_out == expected_stderr, stderr_out
+        err = self.stderr.getvalue()
+        expected = 'PARSING [ERROR] no such file, line -1: message string'
+        assert_substr(err, expected)
 
     @istest
     def deploy_unexpected_exception(self):

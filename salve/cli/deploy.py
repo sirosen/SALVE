@@ -32,10 +32,6 @@ def run_on_manifest(root_manifest, args):
         cfg_file = args.configfile
     conf = SALVEConfig(filename=cfg_file)
 
-    # must be done after config is loaded to have correct override behavior
-    if args.verbosity:
-        ExecutionContext().set('verbosity', args.verbosity)
-
     root_dir = paths.containing_dir(root_manifest)
     if args.directory and not args.v3_relpath:
         root_dir = os.path.abspath(args.directory)
@@ -50,39 +46,10 @@ def run_on_manifest(root_manifest, args):
     root_action(ConcreteFilesys())
 
 
-def clean_and_validate_args(args):
-    """
-    Takes commandline arguments as parsed by argparse, and tidies them up.
-    Does higher level validation, rewrites to special values, warns about
-    option deprecations, and may raise exceptions if things look _very_ wrong
-    (i.e. agparse didn't keep us safe).
-    Doesn't return anything, but may modify the args object.
-
-    Args:
-        @args
-        `salve deploy` arguments parsed by argparse
-    """
-    # assert that argparse did minimal validation
-    assert args.manifest
-
-    # set all v3 options if version3 is set
-    if args.version3:
-        args.v3_relpath = True
-
-    # warn about deprecations coming in v3
-    if args.directory:
-        salve.logger.warn(
-            'Deprecation Warning: --directory will be ' +
-            'removed in version 3 as --version3-relative-paths becomes the ' +
-            'default.')
-
-
 def main(args):
     """
     The main method of SALVE deployment. Runs the core program end-to-end.
     """
-    clean_and_validate_args(args)
-
     try:
         run_on_manifest(args.manifest, args)
     except SALVEException as e:

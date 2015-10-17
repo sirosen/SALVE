@@ -19,7 +19,7 @@ class ScratchContainer(MockedGlobals):
         backup_dir=$HOME/backups
         backup_log=$HOME/backup.log
 
-        log_level=ALL
+        log_level=DEBUG
         # run_log=$HOME/.salve/run_log
 
         [default]

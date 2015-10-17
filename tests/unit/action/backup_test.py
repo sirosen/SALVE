@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import os
 import mock
 from nose.tools import istest
@@ -16,9 +14,9 @@ from tests.unit.action import dummy_file_context
 class TestWithScratchdir(scratch.ScratchContainer):
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
-        ExecutionContext().set('run_log', self.stderr)
-        ExecutionContext().set('backup_dir', '/etc/salve/backup')
-        ExecutionContext().set('backup_log', '/etc/salve/backup.log')
+        ExecutionContext()['run_log'] = self.stderr
+        ExecutionContext()['backup_dir'] = '/etc/salve/backup'
+        ExecutionContext()['backup_log'] = '/etc/salve/backup.log'
 
     @istest
     def file_target_name(self):

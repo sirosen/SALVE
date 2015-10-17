@@ -4,7 +4,6 @@ try:
 except ImportError:
     import ConfigParser as configparser
 
-from salve import paths
 import logging
 import os
 import string
@@ -123,19 +122,12 @@ class SALVEConfig(object):
                 salve.log.add_logfile(salve.logger, logging.NOTSET, val)
 
             # special handling for the log_level
-            # convert to a set of strings
+            # convert to a log level from logging
             if key == 'log_level':
-                val = set(t.strip() for t in val.split(','))
-                # if all appears in the set, replace it with the set of all
-                # defined log types
-                if 'ALL' in val:
-                    val = logging.NOTSET
+                val = salve.log.str_to_level(val)
+                salve.logger.setLevel(val)
 
-            # verbosity is an integer
-            if key == 'verbosity':
-                val = int(val)
-
-            ExecutionContext().set(key, val)
+            ExecutionContext()[key] = val
 
     def template(self, template_string):
         """

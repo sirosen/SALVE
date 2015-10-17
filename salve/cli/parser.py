@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 from __future__ import unicode_literals
 import argparse
 import textwrap
@@ -70,9 +68,9 @@ def get_parser():
                 '-c', '--config-file', dest='configfile',
                 default=None, help='A SALVE config file (INI format).')
             self.add_argument(
-                '-v', '--verbose', dest='verbosity',
-                default=0, action='count', help='Verbosity of log output. ' +
-                'Specify multiple times for higher verbosity.')
+                '-l', '--log-level', dest='log_level',
+                default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+                help='Log level to display.')
             self.add_argument(
                 '--version', action='version',
                 version="%(prog)s " + salve.__version__)
@@ -102,3 +100,32 @@ def get_parser():
     add_deploy_args(deploy_parser)
 
     return parser
+
+
+def load_args():
+    """
+    Generates a parser, reads commandline arguments, and then does basic
+    post-processing of arguments whose meanings and effects are either general
+    across subcommands or which have effects related to argument parsing (like
+    deprecation warnings).
+    """
+    parser = get_parser()
+    args = parser.parse_args()
+
+    if args.log_level:
+        salve.logger.setLevel(salve.log.str_to_level(args.log_level))
+
+    # do 'deploy' specific actions to clean/validate args
+    if args.func is salve.cli.deploy.main:
+        # set all v3 options if version3 is set
+        if args.version3:
+            args.v3_relpath = True
+
+        # warn about deprecations coming in v3
+        if args.directory:
+            salve.logger.warn(
+                'Deprecation Warning: --directory will be ' +
+                'removed in version 3 as --version3-relative-paths becomes ' +
+                'the default.')
+
+    return args

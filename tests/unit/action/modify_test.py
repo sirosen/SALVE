@@ -1,7 +1,6 @@
-#!/usr/bin/python
-
 import os
 import sys
+import logging
 import mock
 from nose.tools import istest
 
@@ -31,7 +30,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
-        ExecutionContext().set('log_level', set(('WARN', 'ERROR')))
+        ExecutionContext()['log_level'] = logging.DEBUG
 
     @istest
     def filechown_verify_nonroot(self):

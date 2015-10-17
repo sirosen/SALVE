@@ -41,3 +41,16 @@ def setup_stderr(logger):
     # attach the handler and set the log level to DEBUG
     logger.addHandler(hdlr)
     logger.setLevel(logging.DEBUG)
+
+
+def str_to_level(lvlstr):
+    mapping = {
+        'DEBUG': logging.DEBUG,
+        'INFO': logging.INFO,
+        'WARNING': logging.WARNING,
+        'ERROR': logging.ERROR
+    }
+    if lvlstr in mapping:
+        return mapping[lvlstr]
+    else:
+        raise ValueError('{0} is not a valid log level'.format(lvlstr))

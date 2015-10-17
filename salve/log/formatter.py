@@ -6,7 +6,7 @@ from salve.context import ExecutionContext
 # set unicode name depending on Py 2/3
 try:
         unicode
-except NameError:
+except NameError:  # pragma: no cover
         unicode = str
 
 

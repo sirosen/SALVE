@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import salve
 from salve import Enum, Singleton, with_metaclass
 
@@ -19,6 +17,15 @@ class ExecutionContext(with_metaclass(Singleton)):
     def __str__(self):
         return self.phase
 
+    def __setitem__(self, key, value):
+        self.vars[key] = value
+
+    def __getitem__(self, key):
+        return self.vars[key]
+
+    def __contains__(self, key):
+        return key in self.vars
+
     def transition(self, newphase, quiet=False):
         assert newphase in self.phases
 
@@ -33,12 +40,3 @@ class ExecutionContext(with_metaclass(Singleton)):
             salve.logger.debug(transition_text, extra=extra)
 
         self.phase = newphase
-
-    def set(self, key, value):
-        self.vars[key] = value
-
-    def get(self, key):
-        return self.vars[key]
-
-    def has(self, key):
-        return key in self.vars

@@ -35,14 +35,16 @@ class TestWithScratchdir(system.RunScratchContainer):
         argv = ['./salve.py', 'deploy', '-m', path]
         e = except_from_args(argv)
 
-        expected_stderr = '\n'.join((
+        expected = '\n'.join((
             parsing_transition_debug_string,
             'PARSING [INFO] Beginning Tokenization of "%s"' % path,
             ("PARSING [ERROR] %s, line 4: " % rpath +
              "Tokenizer ended in state BLOCK\n")
             ))
-        assert self.stderr.getvalue() == expected_stderr, \
-            self.stderr.getvalue()
+        err = self.stderr.getvalue()
+
+        assert expected in err, "{0} doesn't contain {1}".format(
+            err, expected)
         assert e.code == 1, "incorrect error code: %d" % e.code
 
     @istest

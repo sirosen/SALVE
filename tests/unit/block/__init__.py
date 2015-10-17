@@ -12,9 +12,9 @@ from salve.log import create_logger
 class ScratchWithExecCtx(scratch.ScratchContainer):
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
-        ExecutionContext().set('log_level', set())
-        ExecutionContext().set('backup_dir', '/m/n')
-        ExecutionContext().set('backup_log', '/m/n.log')
+        ExecutionContext()['log_level'] = logging.DEBUG
+        ExecutionContext()['backup_dir'] = '/m/n'
+        ExecutionContext()['backup_log'] = '/m/n.log'
 
 
 def mock_expanduser(string):
