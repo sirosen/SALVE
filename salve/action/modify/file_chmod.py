@@ -47,7 +47,6 @@ class FileChmodAction(ChmodAction):
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         logger.info('Performing FileChmod of \"%s\" to %s' %
-                    (self.target, '{0:o}'.format(self.mode)),
-                    min_verbosity=1)
+                    (self.target, '{0:o}'.format(self.mode)))
 
         filesys.chmod(self.target, self.mode)

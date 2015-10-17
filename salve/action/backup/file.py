@@ -74,23 +74,27 @@ class FileBackupAction(BackupAction, FileCopyAction):
             """
             return filesys.access(self.src, access_codes.R_OK)
 
-        logger.info('FileBackup: Checking source existence, \"%s\"' %
-                    self.src, file_context=self.file_context,
-                    min_verbosity=3)
+        logger.info(
+            '{0}: FileBackup: Checking source existence, \"{1}\"'.format(
+                str(self.file_context), self.src)
+            )
 
         if not existent_source():
             return self.verification_codes.NONEXISTENT_SOURCE
 
-        logger.info('FileBackup: Checking source is readable, \"%s\"' %
-                    self.src, file_context=self.file_context,
-                    min_verbosity=3)
+        logger.info(
+            '{0}: FileBackup: Checking source is readable, \"{1}\"'.format(
+                str(self.file_context), self.src)
+            )
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
 
-        logger.info('FileBackup: Checking destination is writable, ' +
-                    '\"%s\"' % self.dst, file_context=self.file_context,
-                    min_verbosity=3)
+        logger.info(
+            ('{0}: FileBackup: Checking destination ' +
+             'is writable, \"{1}\"').format(
+                str(self.file_context), self.dst)
+            )
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -108,22 +112,24 @@ class FileBackupAction(BackupAction, FileCopyAction):
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
             logstr = "FileBackup: Non-Readable source file \"%s\"" % self.src
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
         if vcode == self.verification_codes.NONEXISTENT_SOURCE:
             logstr = "FileBackup: Non-Existent source file \"%s\"" % self.src
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "FileBackup: Non-Writable target dir \"%s\"" % self.dst
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info('Performing File Backup of \"%s\"' % self.src,
-                    file_context=self.file_context, min_verbosity=1)
+        logger.info(
+            '{0}: Performing File Backup of \"{1}\"'.format(
+                str(self.file_context), self.src)
+            )
 
         filesys.mkdir(self.dst)
 

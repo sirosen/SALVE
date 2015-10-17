@@ -25,8 +25,8 @@ class BackupAction(with_metaclass(abc.ABCMeta, CopyAction)):
             @file_context
             The FileContext.
         """
-        backup_dir = os.path.normpath(ExecutionContext().get('backup_dir'))
-        backup_log = os.path.normpath(ExecutionContext().get('backup_log'))
+        backup_dir = os.path.normpath(ExecutionContext()['backup_dir'])
+        backup_log = os.path.normpath(ExecutionContext()['backup_log'])
         # in the default case, a Backup is a File Copy into the
         # backup_dir in which the target filename is @src's abspath
         # this leads to bad behavior if run as-is, but can serve as a

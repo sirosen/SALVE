@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import salve
 
 readme_text = ''
@@ -13,9 +13,7 @@ setup(
     version=salve.__version__,
 
     install_requires=['argparse'],
-    packages=['salve',
-              'salve.api', 'salve.action', 'salve.block', 'salve.cli',
-              'salve.filesys', 'salve.reader'],
+    packages=find_packages(exclude=['tests']),
     package_data={'': ['*.ini']},
     entry_points={'console_scripts': ['salve = salve.cli:main']},
 

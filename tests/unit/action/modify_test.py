@@ -1,7 +1,6 @@
-#!/usr/bin/python
-
 import os
 import sys
+import logging
 import mock
 from nose.tools import istest
 
@@ -31,7 +30,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
     def setUp(self):
         scratch.ScratchContainer.setUp(self)
-        ExecutionContext().set('log_level', set(('WARN', 'ERROR')))
+        ExecutionContext()['log_level'] = logging.DEBUG
 
     @istest
     def filechown_verify_nonroot(self):
@@ -88,9 +87,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.write_file('a', '')
         a_name = self.get_fullname('a')
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
 
         act = modify.FileChmodAction(a_name, '600', self.file_context)
 
@@ -112,9 +111,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_stat_result.st_uid = ugo.name_to_uid('user1') + 1
         mock_stat_result.st_gid = ugo.name_to_uid('nogroup') + 1
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
 
         act = modify.DirChownAction(a_name, 'user1', 'nogroup',
                                     self.file_context)
@@ -133,9 +132,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.make_dir('a')
         a_name = self.get_fullname('a')
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
 
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
@@ -151,9 +150,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.make_dir('a')
         a_name = self.get_fullname('a')
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
 
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
@@ -172,9 +171,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_chmod(f, mode):
             log['chmod'] = (f, mode)
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
+        # make the exec context transition silent
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
 
         act = modify.FileChmodAction('a', '600', self.file_context)
 
@@ -184,7 +183,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert log['chmod'] is None
         assert (self.stderr.getvalue() ==
-                ('[WARN] [VERIFICATION] ' +
+                ('VERIFICATION [WARNING] ' +
                  'FileChmod: Unowned target file "a"\n')
                 ), self.stderr.getvalue()
 
@@ -198,9 +197,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_lchown(f_or_d, uid, gid):
             lchown_args.append((f_or_d, uid, gid))
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context,
                                     recursive=True)
@@ -213,7 +212,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert len(lchown_args) == 0
         assert (self.stderr.getvalue() == (
-            '[WARN] [EXECUTION] ' +
+            'EXECUTION [WARNING] ' +
             'DirChown: Cannot Chown as Non-Root User\n')), \
             self.stderr.getvalue()
 
@@ -227,9 +226,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_chmod(f_or_d, mode):
             chmod_args.append((f_or_d, mode))
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         act = modify.DirChmodAction('a', '755', self.file_context,
                                     recursive=True)
@@ -242,7 +241,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert len(chmod_args) == 0
         assert (self.stderr.getvalue() == (
-            '[WARN] [EXECUTION] ' +
+            'EXECUTION [WARNING] ' +
             'DirChmod: Unowned target dir "a"\n')), self.stderr.getvalue()
 
     @istest
@@ -255,9 +254,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_lchown(f_or_d, uid, gid):
             lchown_args.append((f_or_d, uid, gid))
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
         with mock.patch('salve.action.modify.DirChownAction.verify_can_exec',
@@ -268,7 +267,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert len(lchown_args) == 0
         assert (self.stderr.getvalue() == (
-            '[WARN] [EXECUTION] ' +
+            'EXECUTION [WARNING] ' +
             'DirChown: Cannot Chown as Non-Root User\n')), \
             self.stderr.getvalue()
 
@@ -282,9 +281,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         def mock_chmod(f_or_d, mode):
             chmod_args.append((f_or_d, mode))
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         act = modify.DirChmodAction('a', '755', self.file_context)
 
@@ -298,7 +297,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert len(chmod_args) == 0
         assert (self.stderr.getvalue() == (
-            '[WARN] [EXECUTION] ' +
+            'EXECUTION [WARNING] ' +
             'DirChmod: Unowned target dir "a"\n')), self.stderr.getvalue()
 
     @istest

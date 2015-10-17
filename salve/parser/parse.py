@@ -1,6 +1,6 @@
 import salve
 
-from salve.exceptions import ParsingException
+from salve.exceptions import ParsingException, BlockException
 from salve.block import identifier
 from salve.parser.tokenize import Token, tokenize_stream
 
@@ -17,7 +17,7 @@ def parse_tokens(tokens):
         Unordered iterables won't work here, as parsing is very
         sensitive to token ordering.
     """
-    salve.logger.info('Beginning Parse of Token Stream', min_verbosity=2)
+    salve.logger.info('Beginning Parse of Token Stream')
 
     blocks = []
 
@@ -49,7 +49,7 @@ def parse_tokens(tokens):
             try:
                 current_block = identifier.block_from_identifier(token)
                 blocks.append(current_block)
-            except:
+            except BlockException:
                 raise ParsingException('Invalid block id ' +
                                        token.value, token.file_context)
             expected_token_types = [Token.types.BLOCK_START,
@@ -103,7 +103,7 @@ def parse_tokens(tokens):
         raise ParsingException('Incomplete block in token stream!',
                                current_block.file_context)
 
-    salve.logger.info('Finished Parsing Token Stream', min_verbosity=2)
+    salve.logger.info('Finished Parsing Token Stream')
 
     return blocks
 

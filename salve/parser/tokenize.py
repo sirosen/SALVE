@@ -112,8 +112,7 @@ def tokenize_stream(stream):
     tokens = []
     state = states.FREE
 
-    salve.logger.info('Beginning Tokenization of \"%s\"' % filename,
-                      min_verbosity=2)
+    salve.logger.info('Beginning Tokenization of \"%s\"' % filename)
     tokenizer = shlex.shlex(stream, posix=True)
     # Basically, everything other than BLOCK_START or BLOCK_END
     # is okay here, we'll let the os library handle it later wrt
@@ -212,7 +211,6 @@ def tokenize_stream(stream):
         raise TokenizationException('Tokenizer ended in state ' +
                                     state, ctx)
 
-    salve.logger.info('Finished Tokenization of \"%s\"' % filename,
-                      min_verbosity=2)
+    salve.logger.info('Finished Tokenization of \"%s\"' % filename)
 
     return tokens

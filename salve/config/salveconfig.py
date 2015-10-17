@@ -1,52 +1,23 @@
-#!/usr/bin/python
-
+# python 2/3 compatible use of configparser
 try:
     import configparser
 except ImportError:
     import ConfigParser as configparser
 
+import logging
 import os
 import string
 
 import salve
+import salve.log
 
-from salve import paths, ugo
+from salve import ugo
 from salve.context import FileContext, ExecutionContext
 from salve.exceptions import SALVEException
 
+from .parser import SALVEConfigParser
+
 SALVE_ENV_PREFIX = 'SALVE_'
-
-
-class SALVEConfigParser(configparser.ConfigParser):
-    """
-    The SALVE configuration parser.
-    Loads default values, then attempts to look up
-    the current user's rc file for overwrites to those
-    values.
-    """
-    def __init__(self, userhome, filename):
-        """
-        SALVEConfigParser constructor.
-        Creates a ConfigParser specialized for SALVE.
-
-        Args:
-            @userhome
-            The home directory of the running user ($SUDO_USER if
-            running under 'sudo').
-            @filename
-            The name of a specific config file to load.
-        """
-        # create a config parser
-        configparser.ConfigParser.__init__(self)
-
-        # first read the defaults
-        # either read the user's rc file, if not given a filename
-        # or read the given file
-        filenames = [paths.get_default_config(),
-                     os.path.join(userhome, '.salverc'),
-                     filename]
-        # filter out filename if it is None
-        self.read(f for f in filenames if f is not None)
 
 
 class SALVEConfig(object):
@@ -148,26 +119,15 @@ class SALVEConfig(object):
             # special handling for the run_log
             # convert to a file open in 'w' mode
             if key == 'run_log':
-                try:
-                    val = open(val, 'w')
-                    salve.logger.change_logfile(val)
-                except:  # pragma: no cover
-                    raise  # pragma: no cover
+                salve.log.add_logfile(salve.logger, logging.NOTSET, val)
 
             # special handling for the log_level
-            # convert to a set of strings
+            # convert to a log level from logging
             if key == 'log_level':
-                val = set(t.strip() for t in val.split(','))
-                # if all appears in the set, replace it with the set of all
-                # defined log types
-                if 'ALL' in val:
-                    val = set(salve.logger.log_types)
+                val = salve.log.str_to_level(val)
+                salve.logger.setLevel(val)
 
-            # verbosity is an integer
-            if key == 'verbosity':
-                val = int(val)
-
-            ExecutionContext().set(key, val)
+            ExecutionContext()[key] = val
 
     def template(self, template_string):
         """

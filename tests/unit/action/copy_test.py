@@ -193,7 +193,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         Unit: Directory Copy Action Execution, Unreadable Source
         """
-        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         unreadable_source_code = \
             copy.DirCopyAction.verification_codes.UNREADABLE_SOURCE
@@ -203,7 +204,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             dcp(ConcreteFilesys())
 
         err = self.stderr.getvalue()
-        expected = ('[WARN] [EXECUTION] no such file: ' +
+        expected = ('EXECUTION [WARNING] no such file: ' +
                     'DirCopy: Non-Readable source directory "a"\n')
         assert err == expected, "%s != %s" % (err, expected)
 
@@ -212,7 +213,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         Unit: Directory Copy Action Execution, Unwritable Target
         """
-        ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         unwritable_target_code = \
             copy.DirCopyAction.verification_codes.UNWRITABLE_TARGET
@@ -222,6 +224,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
             dcp(ConcreteFilesys())
 
         err = self.stderr.getvalue()
-        expected = ('[WARN] [EXECUTION] no such file: ' +
+        expected = ('EXECUTION [WARNING] no such file: ' +
                     'DirCopy: Non-Writable target directory "b/c"\n')
         assert err == expected, "%s != %s" % (err, expected)

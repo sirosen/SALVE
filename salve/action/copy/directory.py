@@ -50,16 +50,17 @@ class DirCopyAction(CopyAction):
             return filesys.access(paths.dirname(self.dst),
                                   access_codes.W_OK)
 
-        logger.info('DirCopy: Checking source is readable + ' +
-                    'traversable, \"%s\"' % self.dst,
-                    file_context=self.file_context, min_verbosity=3)
+        logstr = ('DirCopy: Checking source is readable + traversable, ' +
+                  '{0}'.format(self.dst))
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
 
-        logger.info('DirCopy: Checking target is writable, \"%s\"' %
-                    self.dst, file_context=self.file_context,
-                    min_verbosity=3)
+        logger.info(
+            ('{0}: DirCopy: Checking target is writeable, \"{1}\"').format(
+                self.file_context, self.dst)
+            )
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -74,19 +75,19 @@ class DirCopyAction(CopyAction):
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
             logstr = "DirCopy: Non-Readable source directory \"%s\"" % self.src
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "DirCopy: Non-Writable target directory \"%s\"" % self.dst
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info('Performing Directory Copy \"%s\" -> \"%s\"' %
-                    (self.src, self.dst), file_context=self.file_context,
-                    min_verbosity=1)
+        logstr = ('Performing Directory Copy \"%s\" -> \"%s\"' %
+                  (self.src, self.dst))
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         filesys.copy(self.src, self.dst)

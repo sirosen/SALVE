@@ -42,17 +42,15 @@ class DirCreateAction(CreateAction):
             ancestor = filesys.get_existing_ancestor(self.dst)
             return filesys.access(ancestor, access_codes.W_OK)
 
-        logger.info('DirCreate: Checking if target exists, \"%s\"' %
-                    self.dst, file_context=self.file_context,
-                    min_verbosity=3)
+        logstr = 'DirCreate: Checking if target exists, \"%s\"' % self.dst
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         # creation of existing dirs is always OK
         if filesys.exists(self.dst):
             return self.verification_codes.OK
 
-        logger.info('DirCreate: Checking target is writable, \"%s\"' %
-                    self.dst, file_context=self.file_context,
-                    min_verbosity=3)
+        logstr = 'DirCreate: Checking target is writable, \"%s\"' % self.dst
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -68,15 +66,14 @@ class DirCreateAction(CreateAction):
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = ("DirCreate: Non-Writable target dir \"%s\"" %
                       self.dst)
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info('Performing Directory Creation of \"%s\"'
-                    % self.dst, file_context=self.file_context,
-                    min_verbosity=1)
+        logstr = 'Performing Directory Creation of \"%s\"' % self.dst
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         # make the directory
         filesys.mkdir(self.dst)

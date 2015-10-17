@@ -54,9 +54,8 @@ class FileCreateAction(CreateAction):
             # not writable or doesn't exist
             return False
 
-        logger.info('FileCreate: Checking target is writable, \"%s\"' %
-                    self.dst, file_context=self.file_context,
-                    min_verbosity=3)
+        logstr = 'FileCreate: Checking target is writable, \"%s\"' % self.dst
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
@@ -73,14 +72,14 @@ class FileCreateAction(CreateAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = ("FileCreate: Non-Writable target file \"%s\"" % self.dst)
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info('Performing File Creation of \"%s\"' % self.dst,
-                    file_context=self.file_context, min_verbosity=1)
+        logstr = 'Performing File Creation of \"%s\"' % self.dst
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         # touch the file
         filesys.touch(self.dst)

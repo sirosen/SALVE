@@ -1,19 +1,51 @@
-#!/usr/bin/python
-
+import logging
 from nose.tools import istest
-from tests.util import scratch
 
-from salve.context import ExecutionContext
+import salve.log
+from tests.util import scratch, assert_substr, ensure_except
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
     @istest
-    def unmet_verbosity_log_silent(self):
+    def clear_logging_handlers(self):
         """
-        Unit: Log With Verbosity Too Low Is Silent
-        Verifies that a logging action with the verbosity set below the min
-        verbosity of the logging call is always silent.
+        Unit: Logging Clear Handlers
+        Tests that emptying logging handlers causes logging to "go dark".
         """
-        ExecutionContext().set('verbosity', 1)
-        self.logger.info('Vacuous message.', min_verbosity=2)
-        assert len(self.stderr.getvalue()) == 0, self.stderr.getvalue()
+        msg = 'test log msg'
+        expected = 'STARTUP [INFO] {0}\n'.format(msg)
+        self.logger.info(msg)
+        salve.log.clear_handlers(self.logger)
+        self.logger.info('no show log msg')
+
+        err = self.stderr.getvalue()
+
+        assert_substr(err, expected)
+        assert_substr(err, 'No handlers could be found for logger')
+
+        assert 'no show log msg' not in err, err
+
+    @istest
+    def str_to_loglevel(self):
+        """
+        Unit: Logging Str to Log Level
+        Tests that various log levels map correctly to stdlib logging log
+        levels
+        """
+        assert salve.log.str_to_level('DEBUG') == logging.DEBUG
+        assert salve.log.str_to_level('INFO') == logging.INFO
+        assert salve.log.str_to_level('WARNING') == logging.WARNING
+        assert salve.log.str_to_level('ERROR') == logging.ERROR
+
+    @istest
+    def invalid_str_to_loglevel(self):
+        """
+        Unit: Logging Invalid Str to Log Level
+        Tests that a bad log levels string produces a ValueError, when mapped
+        to a logging log level.
+        """
+        assert salve.log.str_to_level('DEBUG') == logging.DEBUG
+        assert salve.log.str_to_level('INFO') == logging.INFO
+        assert salve.log.str_to_level('WARNING') == logging.WARNING
+        assert salve.log.str_to_level('ERROR') == logging.ERROR
+        ensure_except(ValueError, salve.log.str_to_level, 'INVALID_LOG_LEVEL')

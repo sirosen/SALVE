@@ -4,6 +4,7 @@ from nose.tools import istest
 
 from salve import paths
 from salve.block import FileBlock
+from salve.exceptions import ParsingException
 from salve.parser import tokenize, parse
 
 from tests.util import scratch, ensure_except, full_path
@@ -169,9 +170,10 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         verifies the context of the raised exception.
         """
         path = full_path('invalid_block_id.manifest')
-        e = ensure_except(parse.ParsingException,
+        e = ensure_except(ParsingException,
                           parse_filename,
                           path)
+
         sctx = e.file_context
-        assert sctx.lineno == 7
+        assert sctx.lineno == 7, str(sctx)
         assert paths.clean_path(sctx.filename, absolute=True) == path

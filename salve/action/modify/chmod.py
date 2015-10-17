@@ -34,20 +34,20 @@ class ChmodAction(with_metaclass(abc.ABCMeta, ModifyAction)):
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         logger.info('Chmod: Checking target exists, \"%s\"' %
-                    self.target, min_verbosity=3)
+                    self.target)
 
         # a nonexistent file or dir can never be chmoded
         if not filesys.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
-        logger.info('Chmod: Checking if user is root', min_verbosity=3)
+        logger.info('Chmod: Checking if user is root')
 
         # as root, you can always perform a chmod on existing files
         if ugo.is_root():
             return self.verification_codes.OK
 
         logger.info('Chmod: Checking if user is owner of target, ' +
-                    '\"%s\"' % self.target, min_verbosity=3)
+                    '\"%s\"' % self.target)
 
         # now the file is known to exist and the user is not root
         if not ugo.is_owner(self.target):

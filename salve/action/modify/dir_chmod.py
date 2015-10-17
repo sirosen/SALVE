@@ -44,19 +44,18 @@ class DirChmodAction(ChmodAction, DirModifyAction):
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         logger.info('DirChmod: Checking if target exists, \"%s\"' %
-                    self.target, min_verbosity=3)
+                    self.target)
 
         if not filesys.access(self.target, access_codes.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
-        logger.info('DirChmod: Checking if user is root',
-                    min_verbosity=3)
+        logger.info('DirChmod: Checking if user is root')
 
         if ugo.is_root():
             return self.verification_codes.OK
 
         logger.info('DirChmod: Checking if user is target owner, ' +
-                    '\"%s\"' % self.target, min_verbosity=3)
+                    '\"%s\"' % self.target)
 
         if not ugo.is_owner(self.target):
             return self.verification_codes.UNOWNED_TARGET
@@ -85,8 +84,7 @@ class DirChmodAction(ChmodAction, DirModifyAction):
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         logger.info('Performing DirChmod of \"%s\" to %s' %
-                    (self.target, '{0:o}'.format(self.mode)),
-                    min_verbosity=1)
+                    (self.target, '{0:o}'.format(self.mode)))
 
         filesys.chmod(self.target, self.mode)
 

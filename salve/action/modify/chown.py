@@ -38,20 +38,20 @@ class ChownAction(with_metaclass(abc.ABCMeta, ModifyAction)):
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
         logger.info('Chown: Checking target exists, \"%s\"' %
-                    self.target, min_verbosity=3)
+                    self.target)
 
         if not filesys.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
         logger.info('Chown: Checking if execution can be skipped, ' +
-                    '\"%s\"' % self.target, min_verbosity=3)
+                    '\"%s\"' % self.target)
 
         # if the chown would do nothing, give skip exec
         if ugo.name_to_uid(self.user) == filesys.stat(self.target).st_uid and \
            ugo.name_to_gid(self.group) == filesys.stat(self.target).st_gid:
             return self.verification_codes.SKIP_EXEC
 
-        logger.info('Chown: Checking user is root', min_verbosity=3)
+        logger.info('Chown: Checking user is root')
 
         if not ugo.is_root():
             return self.verification_codes.NOT_ROOT

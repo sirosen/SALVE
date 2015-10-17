@@ -71,23 +71,21 @@ class FileCopyAction(CopyAction):
             """
             return filesys.lookup_type(self.src) is filesys.element_types.LINK
 
-        logger.info('FileCopy: Checking destination is writable, ' +
-                    '\"%s\"' % self.dst, file_context=self.file_context,
-                    min_verbosity=3)
+        logstr = 'FileCopy: Checking destination is writable, \"%s\"' % \
+            self.dst
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         if not writable_target():
             return self.verification_codes.UNWRITABLE_TARGET
 
-        logger.info('FileCopy: Checking if source is link, "%s"' %
-                    self.src, file_context=self.file_context,
-                    min_verbosity=3)
+        logstr = 'FileCopy: Checking if source is link, "%s"' % self.src
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         if source_islink():
             return self.verification_codes.OK
 
-        logger.info('FileCopy: Checking source is readable, \"%s\"' %
-                    self.src, file_context=self.file_context,
-                    min_verbosity=3)
+        logstr = 'FileCopy: Checking source is readable, \"%s\"' % self.src
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         if not readable_source():
             return self.verification_codes.UNREADABLE_SOURCE
@@ -105,19 +103,18 @@ class FileCopyAction(CopyAction):
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
             logstr = "FileCopy: Non-Writable target file \"%s\"" % self.dst
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
             logstr = "FileCopy: Non-Readable source file \"%s\"" % self.src
-            logger.warn(logstr, file_context=self.file_context)
+            logger.warn('{0}: {1}'.format(self.file_context, logstr))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info('Performing File Copy \"%s\" -> \"%s\"' %
-                    (self.src, self.dst), file_context=self.file_context,
-                    min_verbosity=1)
+        logstr = 'Performing File Copy \"%s\" -> \"%s\"' % (self.src, self.dst)
+        logger.info('{0}: {1}'.format(self.file_context, logstr))
 
         filesys.copy(self.src, self.dst)

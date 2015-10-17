@@ -1,6 +1,6 @@
 import sys
 
-import salve.cli.parser
+from .parser import load_args
 
 
 def run():
@@ -8,9 +8,8 @@ def run():
     Reads the commandline with a SALVE argument parser, and runs the function
     designated by the arguments.
     """
-    parser = salve.cli.parser.get_parser()
+    args = load_args()
 
-    args = parser.parse_args()
     args.func(args)
 
 

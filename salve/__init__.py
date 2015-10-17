@@ -1,6 +1,6 @@
 from .class_resources import Enum, Singleton, with_metaclass
-from .log import Logger
+from .log import create_logger
 
-__version__ = '2.3.2'
+__version__ = '2.5.0'
 
-logger = Logger()
+logger = create_logger(__name__)
