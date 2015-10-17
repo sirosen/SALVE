@@ -164,13 +164,13 @@ class SALVEConfig(object):
         # set any unset attrs in the config
         for key in relevant_attrs:
             if key not in block.attrs:
-                block.set(key, relevant_attrs[key])
+                block[key] = relevant_attrs[key]
 
         # set any remaining unspecified attributes using defaults
         for key in self.attributes['default']:
             if key not in block.attrs:
-                block.set(key, self.attributes['default'][key])
+                block[key] = self.attributes['default'][key]
 
         # template any block attrs
         for key in block.attrs:
-            block.set(key, self.template(block.get(key)))
+            block[key] = self.template(block[key])

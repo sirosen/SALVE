@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import os
 import mock
 from nose.tools import istest
@@ -25,12 +23,12 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies the result of converting a file copy block to an action.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('source', '/a/b/c')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '600')
+        b['action'] = 'copy'
+        b['source'] = '/a/b/c'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '600'
 
         with mock.patch('salve.logger', dummy_logger):
             act = b.compile()
@@ -71,11 +69,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies the result of converting a file create block to an action.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '0600')
+        b['action'] = 'create'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '0600'
         with mock.patch('os.path.exists', lambda f: True):
             with mock.patch('salve.ugo.is_root', lambda: False):
                 with mock.patch('salve.logger', dummy_logger):
@@ -114,11 +112,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         user attribute is unset skips the chown subaction, even as root.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('source', '/a/b/c')
-        b.set('target', '/p/q/r')
-        b.set('group', 'nogroup')
-        b.set('mode', '0600')
+        b['action'] = 'copy'
+        b['source'] = '/a/b/c'
+        b['target'] = '/p/q/r'
+        b['group'] = 'nogroup'
+        b['mode'] = '0600'
 
         with mock.patch('salve.ugo.is_root', lambda: True):
             with mock.patch('salve.logger', dummy_logger):
@@ -149,10 +147,10 @@ class TestWithScratchdir(ScratchWithExecCtx):
         user attribute is unset leaves out the chown.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('target', '/p/q/r')
-        b.set('group', 'nogroup')
-        b.set('mode', '0600')
+        b['action'] = 'create'
+        b['target'] = '/p/q/r'
+        b['group'] = 'nogroup'
+        b['mode'] = '0600'
 
         # skip backup just to generate a simpler action
         with mock.patch('salve.ugo.is_root', lambda: True):
@@ -179,11 +177,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         group attribute is unset raises a BlockException.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('source', '/a/b/c')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('mode', '0600')
+        b['action'] = 'copy'
+        b['source'] = '/a/b/c'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['mode'] = '0600'
 
         # skip backup just to generate a simpler action
         with mock.patch('salve.ugo.is_root', lambda: True):
@@ -216,10 +214,10 @@ class TestWithScratchdir(ScratchWithExecCtx):
         group attribute is unset raises a BlockException.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('mode', '0600')
+        b['action'] = 'create'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['mode'] = '0600'
 
         # skip backup just to generate a simpler action
         with mock.patch('salve.ugo.is_root', lambda: True):
@@ -246,11 +244,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         mode attribute is unset raises a BlockException.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('source', '/a/b/c')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
+        b['action'] = 'copy'
+        b['source'] = '/a/b/c'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
 
         # skip chown, for simplicity
         with mock.patch('salve.ugo.is_root', lambda: False):
@@ -284,10 +282,10 @@ class TestWithScratchdir(ScratchWithExecCtx):
         mode attribute is unset raises a BlockException.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
+        b['action'] = 'create'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
 
         # skip chown and backup just to generate a simpler action
         with mock.patch('salve.ugo.is_root', lambda: False):
@@ -315,11 +313,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         source attribute is unset raises a BlockException.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '0600')
+        b['action'] = 'copy'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '0600'
 
         with mock.patch('salve.logger', dummy_logger):
             ensure_except(BlockException, b.compile)
@@ -332,11 +330,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         target attribute is unset raises a BlockException.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('source', '/a/b/c')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '0600')
+        b['action'] = 'copy'
+        b['source'] = '/a/b/c'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '0600'
 
         with mock.patch('salve.logger', dummy_logger):
             ensure_except(BlockException, b.compile)
@@ -349,11 +347,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         target attribute is unset raises a BlockException.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('source', '/a/b/c')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '0600')
+        b['action'] = 'create'
+        b['source'] = '/a/b/c'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '0600'
 
         with mock.patch('salve.logger', dummy_logger):
             ensure_except(BlockException, b.compile)
@@ -365,14 +363,14 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Tests the results of expanding relative paths in a File block.
         """
         b = FileBlock(dummy_file_context)
-        b.set('source', 'p/q/r/s')
-        b.set('target', 't/u/v/w/x/y/z/1/2/3/../3')
+        b['source'] = 'p/q/r/s'
+        b['target'] = 't/u/v/w/x/y/z/1/2/3/../3'
         root_dir = 'file/root/directory'
         b.expand_file_paths(root_dir)
         source_loc = os.path.join(root_dir, 'p/q/r/s')
-        assert b.get('source') == source_loc
+        assert b['source'] == source_loc
         target_loc = os.path.join(root_dir, 't/u/v/w/x/y/z/1/2/3/../3')
-        assert b.get('target') == target_loc
+        assert b['target'] == target_loc
 
     @istest
     def file_path_expand_fail_notarget(self):
@@ -382,10 +380,10 @@ class TestWithScratchdir(ScratchWithExecCtx):
         a BlockException when paths are expanded.
         """
         b = FileBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('source', 'p/q/r/s')
-        b.set('user', 'user1')
-        b.set('group', 'user1')
-        b.set('mode', '644')
+        b['action'] = 'create'
+        b['source'] = 'p/q/r/s'
+        b['user'] = 'user1'
+        b['group'] = 'user1'
+        b['mode'] = '644'
         root_dir = 'file/root/directory'
         ensure_except(BlockException, b.expand_file_paths, root_dir)

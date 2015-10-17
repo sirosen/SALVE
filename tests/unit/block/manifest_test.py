@@ -84,9 +84,9 @@ class TestWithScratchdir(ScratchWithExecCtx):
         fblock = b.sub_blocks[1]
         assert isinstance(mblock, ManifestBlock)
         assert isinstance(fblock, FileBlock)
-        assert mblock.get('source') == full_path('empty.manifest')
-        assert fblock.get('source') == full_path('empty.manifest')
-        assert fblock.get('target') == paths.pjoin(sourcedir, 'a/b/c')
+        assert mblock['source'] == full_path('empty.manifest')
+        assert fblock['source'] == full_path('empty.manifest')
+        assert fblock['target'] == paths.pjoin(sourcedir, 'a/b/c')
 
     @istest
     def sub_block_compile(self):
@@ -105,9 +105,9 @@ class TestWithScratchdir(ScratchWithExecCtx):
         fblock = b.sub_blocks[1]
         assert isinstance(mblock, ManifestBlock)
         assert isinstance(fblock, FileBlock)
-        assert mblock.get('source') == full_path('empty.manifest')
-        assert fblock.get('source') == full_path('empty.manifest')
-        assert fblock.get('target') == os.path.join(sourcedir, 'a/b/c')
+        assert mblock['source'] == full_path('empty.manifest')
+        assert fblock['source'] == full_path('empty.manifest')
+        assert fblock['target'] == os.path.join(sourcedir, 'a/b/c')
 
         with mock.patch('salve.logger', dummy_logger):
             with mock.patch('os.path.exists', lambda f: True):

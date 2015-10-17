@@ -71,7 +71,7 @@ def parse_tokens(tokens):
             elif token.ty == Token.types.TEMPLATE:
                 expected_token_types = [Token.types.BLOCK_START,
                                         Token.types.IDENTIFIER]
-                current_block.set(current_block.primary_attr, token.value)
+                current_block[current_block.primary_attr] = token.value
 
         # i.e. in_block==True
         # look for block attribute,value pairs, or }
@@ -91,7 +91,7 @@ def parse_tokens(tokens):
             elif token.ty == Token.types.TEMPLATE:
                 expected_token_types = [Token.types.BLOCK_END,
                                         Token.types.IDENTIFIER]
-                current_block.set(current_attr, token.value)
+                current_block[current_attr] = token.value
                 current_attr = None
 
     # if the token list terminates and there is still a block in

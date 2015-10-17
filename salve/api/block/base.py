@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import abc
 
 from salve import Enum, with_metaclass
@@ -18,7 +16,7 @@ class Block(with_metaclass(abc.ABCMeta)):
     types = Enum('FILE', 'MANIFEST', 'DIRECTORY')
 
     @abc.abstractmethod
-    def has(self, attribute_name):
+    def __contains__(self, attribute_name):
         """
         Checks if the block has a value associated with a given
         attribute. Returns the T/F value of that check.
@@ -30,7 +28,7 @@ class Block(with_metaclass(abc.ABCMeta)):
         return False  # pragma: no cover
 
     @abc.abstractmethod
-    def set(self, attribute_name, value):
+    def __setitem__(self, attribute_name, value):
         """
         Set an attribute of the block to have a specific value. Note
         that this is a destructive overwrite if the attribute had a
@@ -46,7 +44,7 @@ class Block(with_metaclass(abc.ABCMeta)):
         pass  # pragma: no cover
 
     @abc.abstractmethod
-    def get(self, attribute_name):
+    def __getitem__(self, attribute_name):
         """
         Return the value of a given attribute of the block.
 

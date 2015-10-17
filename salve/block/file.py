@@ -60,7 +60,7 @@ class FileBlock(CoreBlock):
             """
             self.ensure_has_attrs(*args)
             for arg in args:
-                assert os.path.isabs(self.get(arg))
+                assert os.path.isabs(self[arg])
 
         def add_action(file_act, new, prepend=False):
             """
@@ -99,38 +99,38 @@ class FileBlock(CoreBlock):
 
         # set file action to the base action
         file_action = None
-        if self.get('action') == 'copy':
+        if self['action'] == 'copy':
             ensure_abspath_attrs('source', 'target')
-            file_action = copy.FileCopyAction(self.get('source'),
-                                              self.get('target'),
+            file_action = copy.FileCopyAction(self['source'],
+                                              self['target'],
                                               self.file_context)
-        elif self.get('action') == 'create':
+        elif self['action'] == 'create':
             ensure_abspath_attrs('target')
-            file_action = create.FileCreateAction(self.get('target'),
+            file_action = create.FileCreateAction(self['target'],
                                                   self.file_context)
         else:
             raise self.mk_except(
                 'Unsupported FileBlock action.')  # pragma: no cover
 
         # if 'mode' is set, append a chmod action
-        if self.has('mode'):
-            chmod = modify.FileChmodAction(self.get('target'),
-                                           self.get('mode'),
+        if 'mode' in self:
+            chmod = modify.FileChmodAction(self['target'],
+                                           self['mode'],
                                            self.file_context)
             file_action = add_action(file_action, chmod)
 
         # if 'user' and 'group' are set, append a chwon action
-        if self.has('user') and self.has('group'):
-            chown = modify.FileChownAction(self.get('target'),
-                                           self.get('user'),
-                                           self.get('group'),
+        if 'user' in self and 'group' in self:
+            chown = modify.FileChownAction(self['target'],
+                                           self['user'],
+                                           self['group'],
                                            self.file_context)
             file_action = add_action(file_action, chown)
 
         # if the action triggers a backup, add a backup action
-        if self.get('action') in triggers_backup:
+        if self['action'] in triggers_backup:
             backup_action = backup.FileBackupAction(
-                self.get('target'),
+                self['target'],
                 self.file_context)
             file_action = add_action(file_action,
                                      backup_action,
