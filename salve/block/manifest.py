@@ -1,14 +1,9 @@
-#!/usr/bin/python
-
-import os
-
 import salve
 from salve import paths
 
 from salve.action import ActionList
 from salve.context import ExecutionContext
 from salve.api import Block
-from salve.exceptions import BlockException
 
 from .base import CoreBlock
 

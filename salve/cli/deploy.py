@@ -9,7 +9,7 @@ import salve
 
 from salve import paths
 from salve.config import SALVEConfig
-from salve.context import FileContext, ExecutionContext
+from salve.context import FileContext
 from salve.exceptions import SALVEException
 from salve.block import ManifestBlock
 from salve.filesys import ConcreteFilesys

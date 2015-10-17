@@ -2,7 +2,6 @@
 
 import os
 import shutil
-import abc
 from contextlib import contextmanager
 
 from salve.filesys.abstract import Filesys
@@ -111,7 +110,7 @@ class ConcreteFilesys(Filesys):
         """
         Touch a file by opening it in append mode and closing it
         """
-        with self.open(path, 'a') as f:
+        with self.open(path, 'a'):
             pass
 
     def symlink(self, path, target):

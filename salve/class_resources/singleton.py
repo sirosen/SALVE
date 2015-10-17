@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 class Singleton(type):
     """
     A metaclass for making classes Singletons.

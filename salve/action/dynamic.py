@@ -1,6 +1,6 @@
 import abc
 
-from salve import Enum, with_metaclass
+from salve import with_metaclass
 from salve.action.base import Action
 from salve.exceptions import ActionException
 

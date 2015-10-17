@@ -1,7 +1,4 @@
-#!/usr/bin/python
-
 import abc
-import os
 from contextlib import contextmanager
 
 from salve import Enum, with_metaclass

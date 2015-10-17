@@ -6,7 +6,6 @@ import salve
 
 from salve.action import ActionList, backup, copy, create, modify
 from salve.api import Block
-from salve.exceptions import BlockException
 
 from .base import CoreBlock
 
