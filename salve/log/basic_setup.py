@@ -44,13 +44,11 @@ def setup_stderr(logger):
 
 
 def str_to_level(lvlstr):
-    mapping = {
-        'DEBUG': logging.DEBUG,
-        'INFO': logging.INFO,
-        'WARNING': logging.WARNING,
-        'ERROR': logging.ERROR
-    }
-    if lvlstr in mapping:
-        return mapping[lvlstr]
-    else:
+    try:
+        return dict(
+            (logging.getLevelName(l), l) for l in
+            [logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR,
+             logging.CRITICAL]
+            )[lvlstr.upper()]
+    except KeyError:
         raise ValueError('{0} is not a valid log level'.format(lvlstr))

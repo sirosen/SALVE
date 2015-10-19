@@ -64,7 +64,7 @@ class MockedGlobals(MockedIO):
     def setUp(self):
         # some tests will change the log level, so set it during setUp to
         # ensure that it's always correct
-        self.logger.setLevel('DEBUG')
+        self.logger.setLevel(logging.DEBUG)
 
         # always start tests in the startup phase
         ExecutionContext().transition(ExecutionContext.phases.STARTUP,
@@ -74,6 +74,7 @@ class MockedGlobals(MockedIO):
         clear_exec_context()
         self.logger_patch.start()
         self.logger.addHandler(gen_handler(stream=self.stderr))
+
         for p in self.action_logger_patches:
             p.start()
 
