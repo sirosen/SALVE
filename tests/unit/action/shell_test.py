@@ -4,7 +4,7 @@ from nose.tools import istest
 import mock
 
 from tests.util import ensure_except, scratch
-from salve.context import ExecutionContext, FileContext
+from salve.context import FileContext
 
 from salve.action import ShellAction
 from salve.exceptions import ActionException

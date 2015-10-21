@@ -5,7 +5,6 @@ from nose.tools import istest
 from tests.util import ensure_except
 
 from salve import action
-from salve.context import ExecutionContext
 from salve.action import backup, modify, create, copy
 from salve.exceptions import BlockException
 

@@ -173,7 +173,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         assert len(blocks) == 0
 
     @istest
-    def empty_block(self):
+    def empty_block_in_file(self):
         """
         Unit: Parser Empty Block In File
         Checks that parsing a file with an empty block is valid.

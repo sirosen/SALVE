@@ -5,7 +5,7 @@ import mock
 from nose.tools import istest
 from tests.util import ensure_except, full_path
 
-from salve import action, block, paths
+from salve import action, paths
 from salve.action import backup, copy
 from salve.exceptions import BlockException
 

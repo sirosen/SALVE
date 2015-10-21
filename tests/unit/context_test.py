@@ -1,4 +1,3 @@
-import mock
 from nose.tools import istest
 
 from tests.util import ensure_except

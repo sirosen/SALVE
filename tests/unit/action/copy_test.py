@@ -6,7 +6,6 @@ from nose.tools import istest
 
 from salve.context import ExecutionContext, FileContext
 
-from salve import action
 from salve.action import copy
 from salve.filesys import ConcreteFilesys
 from tests.util import scratch

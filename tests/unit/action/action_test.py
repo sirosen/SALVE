@@ -32,13 +32,10 @@ def dynamic_action_is_abstract():
 @istest
 def dynamic_action_execute_fails():
     """
-    Unit: Dynamic Action Invocation Generates & Executes
-    Verifies that calling a DynamicAction invokes its generation
-    function and then its execution function, even when generation
-    rewrites execution.
+    Unit: Dynamic Action No Execute Fails
+    Checks that a DynamicAction which doesn't create an execute method when it
+    generates will trigger an ActionException
     """
-    logged_funcs = []
-
     class DummyAction(DynamicAction):
         def generate(self):
             pass

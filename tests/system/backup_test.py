@@ -86,9 +86,6 @@ class TestWithScratchdir(system.RunScratchContainer):
 
         self.run_on_manifest('manifest')
 
-        backup_dir = 'home/user1/backups'
-        backup_log = 'home/usr1/backup.log'
-
         assert self.exists('b')
         assert self.exists('b/f1')
         s = self.read_file('b/f1').strip()
@@ -108,36 +105,6 @@ class TestWithScratchdir(system.RunScratchContainer):
         backup_file = os.path.join(backup, backup_files[0])
         s = self.read_file(backup_file).strip()
         assert s == 'old'
-
-    @istest
-    def unwritable_backupdir_cancel(self):
-        """
-        System: Unwritable Backup Dir Cancels Backup
-
-        Runs a file copy to trigger a backup with an unwritable backup dir.
-        Verifies that no backup action takes place.
-        """
-        backup_dir = 'home/user1/backups'
-        backup_log = 'home/user1/backup.log'
-        self.write_file(backup_log, '')
-        self.write_file('f1', '')
-
-        # set mode to not include write privileges
-        backup_path = self.get_backup_path(backup_dir)
-        self.make_dir(backup_path)
-        os.chmod(backup_path, int('500', 8))
-
-        content = 'file { action copy source 1.man target f1 }\n'
-
-        self.write_file('1.man', content)
-        self.run_on_manifest('1.man')
-
-        s = self.read_file('f1')
-        assert s == content, '%s' % s
-        s = self.read_file(backup_log).strip()
-        assert s == ''
-        assert len(os.listdir(backup_path)) == 0
-        os.chmod(backup_path, int('700', 8))
 
     @istest
     def unwritable_backupdir_cancel(self):

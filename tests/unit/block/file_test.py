@@ -2,10 +2,9 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.util import ensure_except, scratch
+from tests.util import ensure_except
 
 from salve import action
-from salve.context import ExecutionContext
 from salve.action import backup, create, modify, copy
 from salve.exceptions import BlockException
 
