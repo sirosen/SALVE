@@ -1,11 +1,9 @@
-#!/usr/bin/python
-
 from nose.tools import istest
 
 from salve import paths
 from salve.block import FileBlock
-from salve.exceptions import ParsingException
-from salve.parser import tokenize, parse
+from salve.exceptions import ParsingException, TokenizationException
+from salve.parser import parse
 
 from tests.util import scratch, ensure_except, full_path
 
@@ -13,6 +11,20 @@ from tests.util import scratch, ensure_except, full_path
 def parse_filename(filename):
     with open(filename) as f:
         return parse.parse_stream(f)
+
+
+def assert_parsing_fails(name, lineno=None,
+                         exception_type=TokenizationException):
+    path = full_path(name)
+    e = ensure_except(exception_type,
+                      parse_filename,
+                      path)
+    sctx = e.file_context
+    if lineno:
+        assert sctx.lineno == lineno
+    assert paths.clean_path(sctx.filename, absolute=True) == path
+
+    return e
 
 
 class TestWithScratchContainer(scratch.ScratchContainer):
@@ -89,13 +101,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = full_path('unclosed_block.manifest')
-        e = ensure_except(tokenize.TokenizationException,
-                          parse_filename,
-                          path)
-        sctx = e.file_context
-        assert sctx.lineno == 4
-        assert paths.clean_path(sctx.filename, absolute=True) == path
+        assert_parsing_fails('unclosed_block.manifest', lineno=4)
 
     @istest
     def missing_open_raises_TE(self):
@@ -105,13 +111,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = full_path('missing_open.manifest')
-        e = ensure_except(tokenize.TokenizationException,
-                          parse_filename,
-                          path)
-        sctx = e.file_context
-        assert sctx.lineno == 5
-        assert paths.clean_path(sctx.filename, absolute=True) == path
+        assert_parsing_fails('missing_open.manifest', lineno=5)
 
     @istest
     def missing_identifier_raises_TE(self):
@@ -121,13 +121,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = full_path('missing_id.manifest')
-        e = ensure_except(tokenize.TokenizationException,
-                          parse_filename,
-                          path)
-        sctx = e.file_context
-        assert sctx.lineno == 3
-        assert paths.clean_path(sctx.filename, absolute=True) == path
+        assert_parsing_fails('missing_id.manifest', lineno=3)
 
     @istest
     def missing_value_raises_TE(self):
@@ -137,13 +131,9 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = full_path('missing_attr_val.manifest')
-        e = ensure_except(tokenize.TokenizationException,
-                          parse_filename,
-                          path)
-        sctx = e.file_context
-        assert sctx.lineno == 5
-        assert paths.clean_path(sctx.filename, absolute=True) == path
+        assert_parsing_fails(
+            'missing_attr_val.manifest',
+            lineno=5)
 
     @istest
     def double_open_raises_TE(self):
@@ -153,13 +143,9 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = full_path('double_open.manifest')
-        e = ensure_except(tokenize.TokenizationException,
-                          parse_filename,
-                          path)
-        sctx = e.file_context
-        assert sctx.lineno == 3
-        assert paths.clean_path(sctx.filename, absolute=True) == path
+        assert_parsing_fails(
+            'double_open.manifest',
+            lineno=3)
 
     @istest
     def invalid_block_id_raises_PE(self):
@@ -169,11 +155,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Not only validates that a TokenizationException occurs, but also
         verifies the context of the raised exception.
         """
-        path = full_path('invalid_block_id.manifest')
-        e = ensure_except(ParsingException,
-                          parse_filename,
-                          path)
-
-        sctx = e.file_context
-        assert sctx.lineno == 7, str(sctx)
-        assert paths.clean_path(sctx.filename, absolute=True) == path
+        assert_parsing_fails(
+            'invalid_block_id.manifest',
+            lineno=7,
+            exception_type=ParsingException)

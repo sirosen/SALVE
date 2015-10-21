@@ -37,6 +37,18 @@ def ensure_ParsingException(tokens=None, filename=None):
             paths.clean_path(full_path(filename)))
 
 
+def _generate_tokens(*args):
+    return [Token(name, ty, dummy_context) for (name, ty) in args]
+
+
+def _check_blocks(block_list, *args):
+    assert len(block_list) == len(args)
+
+    for (i, (ty, num_attrs)) in enumerate(args):
+        assert isinstance(block_list[i], ty)
+        assert len(block_list[i].attrs) == num_attrs
+
+
 class TestParsingMockedGlobals(MockedGlobals):
     @istest
     def invalid_block_id(self):
@@ -45,9 +57,8 @@ class TestParsingMockedGlobals(MockedGlobals):
         Verifies that attempting to parse a token stream containing an
         unknown block identifier raises a ParsingException.
         """
-        invalid_id = Token('invalid_block_id', Token.types.IDENTIFIER,
-                           dummy_context)
-        ensure_ParsingException(tokens=[invalid_id])
+        ensure_ParsingException(tokens=_generate_tokens(
+            ('invalid_block_id', Token.types.IDENTIFIER)))
 
     @istest
     def invalid_block_id_from_file(self):
@@ -74,8 +85,8 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing a token list with a token that violates the
         SALVE grammar raises a ParsingException.
         """
-        bs_tok = Token('{', Token.types.BLOCK_START, dummy_context)
-        ensure_ParsingException(tokens=[bs_tok])
+        ensure_ParsingException(tokens=_generate_tokens(
+            ('{', Token.types.BLOCK_START)))
 
     @istest
     def unclosed_block1(self):
@@ -84,8 +95,8 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing a token list with an unclosed block raises a
         ParsingException.
         """
-        file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
-        ensure_ParsingException(tokens=[file_id])
+        ensure_ParsingException(tokens=_generate_tokens(
+            ('file', Token.types.IDENTIFIER)))
 
     @istest
     def unclosed_block2(self):
@@ -94,9 +105,8 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing a token list with an unclosed block raises a
         ParsingException.
         """
-        file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
-        bs_tok = Token('{', Token.types.BLOCK_START, dummy_context)
-        ensure_ParsingException(tokens=[file_id, bs_tok])
+        ensure_ParsingException(tokens=_generate_tokens(
+            ('file', Token.types.IDENTIFIER), ('{', Token.types.BLOCK_START)))
 
     @istest
     def unassigned_attr(self):
@@ -105,11 +115,10 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing a block with an attribute that is declared but
         is followed by a block close raises a ParsingException.
         """
-        file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
-        bs_tok = Token('{', Token.types.BLOCK_START, dummy_context)
-        attr_id = Token('source', Token.types.IDENTIFIER, dummy_context)
-        be_tok = Token('}', Token.types.BLOCK_END, dummy_context)
-        ensure_ParsingException(tokens=[file_id, bs_tok, attr_id, be_tok])
+        ensure_ParsingException(tokens=_generate_tokens(
+            ('file', Token.types.IDENTIFIER), ('{', Token.types.BLOCK_START),
+            ('source', Token.types.IDENTIFIER), ('}', Token.types.BLOCK_END)
+        ))
 
     @istest
     def empty_block(self):
@@ -117,10 +126,10 @@ class TestParsingMockedGlobals(MockedGlobals):
         Unit: Parser Empty Block
         Checks that parsing an empty block raises no errors.
         """
-        file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
-        bs_tok = Token('{', Token.types.BLOCK_START, dummy_context)
-        be_tok = Token('}', Token.types.BLOCK_END, dummy_context)
-        parse.parse_tokens([file_id, bs_tok, be_tok])
+        parse.parse_tokens(_generate_tokens(
+            ('file', Token.types.IDENTIFIER), ('{', Token.types.BLOCK_START),
+            ('}', Token.types.BLOCK_END)
+        ))
 
     @istest
     def single_attr_block(self):
@@ -128,16 +137,12 @@ class TestParsingMockedGlobals(MockedGlobals):
         Unit: Parser Empty Block
         Checks that parsing a block with one attribute raises no errors.
         """
-        file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
-        bs_tok = Token('{', Token.types.BLOCK_START, dummy_context)
-        attr_id = Token('source', Token.types.IDENTIFIER, dummy_context)
-        attr_val = Token('/tmp/txt', Token.types.TEMPLATE, dummy_context)
-        be_tok = Token('}', Token.types.BLOCK_END, dummy_context)
-        blocks = parse.parse_tokens([file_id, bs_tok,
-                                     attr_id, attr_val,
-                                     be_tok])
-        assert len(blocks) == 1
-        assert len(blocks[0].attrs) == 1
+        blocks = parse.parse_tokens(_generate_tokens(
+            ('file', Token.types.IDENTIFIER), ('{', Token.types.BLOCK_START),
+            ('source', Token.types.IDENTIFIER),
+            ('/tmp/txt', Token.types.TEMPLATE), ('}', Token.types.BLOCK_END)
+        ))
+        _check_blocks(blocks, (FileBlock, 1))
         assert blocks[0]['source'] == '/tmp/txt'
 
     @istest
@@ -147,19 +152,15 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing a block with several attributes raises no
         errors.
         """
-        file_id = Token('file', Token.types.IDENTIFIER, dummy_context)
-        bs_tok = Token('{', Token.types.BLOCK_START, dummy_context)
-        attr_id1 = Token('source', Token.types.IDENTIFIER, dummy_context)
-        attr_val1 = Token('/tmp/txt', Token.types.TEMPLATE, dummy_context)
-        attr_id2 = Token('target', Token.types.IDENTIFIER, dummy_context)
-        attr_val2 = Token('/tmp/txt2', Token.types.TEMPLATE, dummy_context)
-        be_tok = Token('}', Token.types.BLOCK_END, dummy_context)
-        blocks = parse.parse_tokens([file_id, bs_tok,
-                                     attr_id1, attr_val1,
-                                     attr_id2, attr_val2,
-                                     be_tok])
-        assert len(blocks) == 1
-        assert len(blocks[0].attrs) == 2
+        blocks = parse.parse_tokens(_generate_tokens(
+            ('file', Token.types.IDENTIFIER), ('{', Token.types.BLOCK_START),
+            ('source', Token.types.IDENTIFIER),
+            ('/tmp/txt', Token.types.TEMPLATE),
+            ('target', Token.types.IDENTIFIER),
+            ('/tmp/txt2', Token.types.TEMPLATE),
+            ('}', Token.types.BLOCK_END)
+        ))
+        _check_blocks(blocks, (FileBlock, 2))
         assert blocks[0]['source'] == '/tmp/txt'
         assert blocks[0]['target'] == '/tmp/txt2'
 
@@ -170,7 +171,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing an empty file produces an empty block list.
         """
         blocks = parse_filename(full_path('empty.manifest'))
-        assert len(blocks) == 0
+        _check_blocks(blocks)
 
     @istest
     def empty_block_in_file(self):
@@ -179,9 +180,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing a file with an empty block is valid.
         """
         blocks = parse_filename(full_path('empty_block.manifest'))
-        assert len(blocks) == 1
-        assert isinstance(blocks[0], FileBlock)
-        assert len(blocks[0].attrs) == 0
+        _check_blocks(blocks, (FileBlock, 0))
 
     @istest
     def attribute_with_spaces(self):
@@ -191,9 +190,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         does not raise an error and correctly assigns to the attribute.
         """
         blocks = parse_filename(full_path('spaced_attr.manifest'))
-        assert len(blocks) == 1
-        assert isinstance(blocks[0], FileBlock)
-        assert len(blocks[0].attrs) == 2
+        _check_blocks(blocks, (FileBlock, 2))
 
     @istest
     def file_primary_attr_assigned(self):
@@ -203,9 +200,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         any errors.
         """
         blocks = parse_filename(full_path('primary_attr.manifest'))
-        assert len(blocks) == 1
-        assert isinstance(blocks[0], FileBlock)
-        assert len(blocks[0].attrs) == 2
+        _check_blocks(blocks, (FileBlock, 2))
         assert blocks[0][blocks[0].primary_attr] == "/d/e/f/g"
 
     @istest
@@ -216,12 +211,8 @@ class TestParsingMockedGlobals(MockedGlobals):
         followed by an ordinary block.
         """
         blocks = parse_filename(full_path('primary_attr2.manifest'))
-        assert len(blocks) == 2
-        assert isinstance(blocks[0], ManifestBlock)
-        assert len(blocks[0].attrs) == 1
+        _check_blocks(blocks, (ManifestBlock, 1), (FileBlock, 2))
         assert blocks[0][blocks[0].primary_attr] == "man man"
-        assert isinstance(blocks[1], FileBlock)
-        assert len(blocks[1].attrs) == 2
         assert blocks[1]['source'] == "potato"
         assert blocks[1]['target'] == "mango"
 
@@ -233,8 +224,6 @@ class TestParsingMockedGlobals(MockedGlobals):
         nonempty body.
         """
         blocks = parse_filename(full_path('primary_attr5.manifest'))
-        assert len(blocks) == 1
-        assert isinstance(blocks[0], FileBlock)
-        assert len(blocks[0].attrs) == 2
+        _check_blocks(blocks, (FileBlock, 2))
         assert blocks[0][blocks[0].primary_attr] == "lobster"
         assert blocks[0]['source'] == "salad"
