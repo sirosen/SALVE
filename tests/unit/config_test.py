@@ -1,9 +1,6 @@
-#!/usr/bin/python
-
 import os
 import mock
 from nose.tools import istest, with_setup
-from os.path import dirname, abspath, relpath
 
 from salve import config, paths
 from salve.exceptions import SALVEException
@@ -224,8 +221,7 @@ def invalid_file():
     error is converted into a SALVEException.
     """
     try:
-        conf = config.SALVEConfig(
-            filename=full_path('unassigned_val.ini'))
+        config.SALVEConfig(filename=full_path('unassigned_val.ini'))
     except SALVEException as e:
         assert isinstance(e, SALVEException)
         assert ('Encountered an error while parsing' +

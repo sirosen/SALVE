@@ -1,14 +1,9 @@
-#!/usr/bin/python
-
-import os
-
 import salve
 from salve import paths
 
 from salve.action import ActionList
 from salve.context import ExecutionContext
 from salve.api import Block
-from salve.exceptions import BlockException
 
 from .base import CoreBlock
 
@@ -38,7 +33,7 @@ class ManifestBlock(CoreBlock):
         CoreBlock.__init__(self, Block.types.MANIFEST, file_context)
         self.sub_blocks = None
         if source:
-            self.set('source', source)
+            self['source'] = source
         self.path_attrs.add('source')
         self.min_attrs.add('source')
         self.primary_attr = 'source'
@@ -76,7 +71,7 @@ class ManifestBlock(CoreBlock):
         config.apply_to_block(self)
         self.expand_file_paths(root_dir)
         self.ensure_has_attrs('source')
-        filename = self.get('source')
+        filename = self['source']
 
         # We don't default ancestors=set() because that is only
         # evaluated once, which would cause strange problems with

@@ -6,7 +6,6 @@ import salve
 
 from salve.action import ActionList, backup, copy, create, modify
 from salve.api import Block
-from salve.exceptions import BlockException
 
 from .base import CoreBlock
 
@@ -43,10 +42,10 @@ class DirBlock(CoreBlock):
             absolute path in order to ensure correctness.
         """
         act = create.DirCreateAction(dirname, self.file_context)
-        if self.has('mode'):
+        if 'mode' in self:
             act = ActionList([act], self.file_context)
             act.append(modify.DirChmodAction(dirname,
-                                             self.get('mode'),
+                                             self['mode'],
                                              self.file_context))
         return act
 
@@ -57,19 +56,19 @@ class DirBlock(CoreBlock):
         """
         self.ensure_has_attrs('target')
         # TODO: replace with exception
-        assert os.path.isabs(self.get('target'))
+        assert os.path.isabs(self['target'])
         # create the target dir
-        act = self._mkdir(self.get('target'))
+        act = self._mkdir(self['target'])
 
         # if 'user' and 'group' are set add a non-recursive chown
         # as well, to set the correct permissions for the directory
         # but not its children
-        if self.has('user') and self.has('group'):
+        if 'user' in self and 'group' in self:
             if not isinstance(act, ActionList):
                 act = ActionList([act], self.file_context)
-            act.append(modify.DirChownAction(self.get('target'),
-                                             self.get('user'),
-                                             self.get('group'),
+            act.append(modify.DirChownAction(self['target'],
+                                             self['user'],
+                                             self['group'],
                                              self.file_context))
 
         return act
@@ -81,25 +80,25 @@ class DirBlock(CoreBlock):
         """
         self.ensure_has_attrs('source', 'target')
         # TODO: replace with exception
-        assert os.path.isabs(self.get('target'))
-        assert os.path.isabs(self.get('source'))
+        assert os.path.isabs(self['target'])
+        assert os.path.isabs(self['source'])
 
         # create the target directory; make the action an AL for
         # simplicity when adding actions to it
-        act = self._mkdir(self.get('target'))
+        act = self._mkdir(self['target'])
         if not isinstance(act, ActionList):
             act = ActionList([act], self.file_context)
 
         # walk over all files and subdirs in the directory, creating
         # directories and copying files
-        for d, subdirs, files in os.walk(self.get('source')):
+        for d, subdirs, files in os.walk(self['source']):
             # for every subdir, rewrite it to be prefixed with the
             # target and create that directory
             for sd in subdirs:
                 target_dir = os.path.join(
-                    self.get('target'),
+                    self['target'],
                     os.path.relpath(os.path.join(d, sd),
-                                    self.get('source'))
+                                    self['source'])
                     )
                 act.append(self._mkdir(target_dir))
             # for every file, first backup any file that is at the
@@ -107,8 +106,8 @@ class DirBlock(CoreBlock):
             for f in files:
                 fname = os.path.join(d, f)
                 target_dir = os.path.join(
-                    self.get('target'),
-                    os.path.relpath(d, self.get('source'))
+                    self['target'],
+                    os.path.relpath(d, self['source'])
                     )
                 target_fname = os.path.join(target_dir, f)
                 backup_act = backup.FileBackupAction(target_fname,
@@ -120,9 +119,9 @@ class DirBlock(CoreBlock):
                                       self.file_context)
                 act.append(file_act)
 
-        if self.has('mode'):
-            act.append(modify.DirChmodAction(self.get('target'),
-                                             self.get('mode'),
+        if 'mode' in self:
+            act.append(modify.DirChmodAction(self['target'],
+                                             self['mode'],
                                              self.file_context,
                                              recursive=True))
 
@@ -131,10 +130,10 @@ class DirBlock(CoreBlock):
         # TODO: replace with something less heavy handed (i.e. set
         # permissions for everything in the source tree, not the entire
         # dir)
-        if self.has('user') and self.has('group'):
-            chown_dir = modify.DirChownAction(self.get('target'),
-                                              self.get('user'),
-                                              self.get('group'),
+        if 'user' in self and 'group' in self:
+            chown_dir = modify.DirChownAction(self['target'],
+                                              self['user'],
+                                              self['group'],
                                               self.file_context,
                                               recursive=True)
             act.append(chown_dir)
@@ -160,9 +159,9 @@ class DirBlock(CoreBlock):
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will
         self.ensure_has_attrs('action')
-        if self.get('action') == 'create':
+        if self['action'] == 'create':
             dir_act = self.create_action()
-        elif self.get('action') == 'copy':
+        elif self['action'] == 'copy':
             dir_act = self.copy_action()
         else:
             raise self.mk_except('Unsupported DirectoryBlock action.')

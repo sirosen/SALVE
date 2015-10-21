@@ -49,7 +49,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         assert len(blocks) == 1
         fblock = blocks[0]
         assert isinstance(fblock, FileBlock)
-        assert fblock.get('source') == '/a/b/c'
+        assert fblock['source'] == '/a/b/c'
 
     @istest
     def multiple_attr_block(self):
@@ -63,8 +63,8 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         assert len(blocks) == 1
         fblock = blocks[0]
         assert isinstance(fblock, FileBlock)
-        assert fblock.get('source') == '/a/b/c'
-        assert fblock.get('target') == '/d/e'
+        assert fblock['source'] == '/a/b/c'
+        assert fblock['target'] == '/d/e'
 
     @istest
     def spaced_attr_block(self):
@@ -78,8 +78,8 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         assert len(blocks) == 1
         fblock = blocks[0]
         assert isinstance(fblock, FileBlock)
-        assert fblock.get('source') == '/a/b/c'
-        assert fblock.get('target') == '/d/e f/g'
+        assert fblock['source'] == '/a/b/c'
+        assert fblock['target'] == '/d/e f/g'
 
     @istest
     def unclosed_block_raises_TE(self):

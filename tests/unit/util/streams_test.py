@@ -1,7 +1,3 @@
-#!/usr/bin/python
-
-import os
-import timeit
 from nose.tools import istest
 
 from tests.util import full_path
@@ -29,7 +25,6 @@ def sha512_empty_match():
     """
     aname = full_path('a')
     bname = full_path('b')
-    ahash, bhash = None, None
     with open(aname) as f:
         ahash = salve.util.sha512(f)
     with open(bname) as f:
@@ -45,7 +40,6 @@ def sha512_nonempty_match():
     """
     cname = full_path('c')
     dname = full_path('d')
-    ahash, chash = None, None
     with open(cname) as f:
         chash = salve.util.sha512(f)
     with open(dname) as f:
@@ -61,7 +55,6 @@ def sha512_mismatch():
     """
     aname = full_path('a')
     cname = full_path('c')
-    ahash, chash = None, None
     with open(aname) as f:
         ahash = salve.util.sha512(f)
     with open(cname) as f:

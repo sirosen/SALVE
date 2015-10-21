@@ -1,4 +1,3 @@
-import os
 import sys
 import mock
 
@@ -102,7 +101,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
-            except SystemExit as e:
+            except SystemExit:
                 assert self.mocked_exitval == 1
 
         err = self.stderr.getvalue()
@@ -129,7 +128,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
-            except SystemExit as e:
+            except SystemExit:
                 assert self.mocked_exitval == 1
             else:
                 assert False
@@ -160,7 +159,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
-            except SystemExit as e:
+            except SystemExit:
                 assert self.mocked_exitval == 1
 
         err = self.stderr.getvalue()
@@ -188,7 +187,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
-            except SystemExit as e:
+            except SystemExit:
                 assert self.mocked_exitval == 1
 
         err = self.stderr.getvalue()
@@ -214,7 +213,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
             try:
                 deploy.main(fake_args)
-            except SystemExit as e:
+            except SystemExit:
                 assert self.mocked_exitval == 1
 
         err = self.stderr.getvalue()

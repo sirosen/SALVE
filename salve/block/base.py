@@ -41,7 +41,7 @@ class CoreBlock(with_metaclass(abc.ABCMeta, Block)):
         # typically block body parsing, following the block identifier
         self.primary_attr = None
 
-    def set(self, attribute_name, value):
+    def __setitem__(self, attribute_name, value):
         """
         Set an attribute of the block to have a specific value. Note
         that this is a destructive overwrite if the attribute had a
@@ -57,7 +57,7 @@ class CoreBlock(with_metaclass(abc.ABCMeta, Block)):
         """
         self.attrs[attribute_name] = value
 
-    def get(self, attribute_name):
+    def __getitem__(self, attribute_name):
         """
         Return the value of a given attribute of the block.
 
@@ -68,7 +68,7 @@ class CoreBlock(with_metaclass(abc.ABCMeta, Block)):
         """
         return self.attrs[attribute_name]
 
-    def has(self, attribute_name):
+    def __contains__(self, attribute_name):
         """
         Checks if the block has a value associated with a given
         attribute. Returns the T/F value of that check.
@@ -92,7 +92,7 @@ class CoreBlock(with_metaclass(abc.ABCMeta, Block)):
             checked.
         """
         for attr in args:
-            if not self.has(attr):
+            if attr not in self:
                 raise self.mk_except('Block(ty=' + self.block_type + ') ' +
                                      'missing attr "' + attr + '"')
 
@@ -123,9 +123,9 @@ class CoreBlock(with_metaclass(abc.ABCMeta, Block)):
         """
         # define a helper to expand attributes with the root_dir
         def expand_attr(attrname):
-            val = self.get(attrname)
+            val = self[attrname]
             if not paths.is_abs_or_var(val):
-                self.set(attrname, os.path.join(root_dir, val))
+                self[attrname] = os.path.join(root_dir, val)
 
         # find the minimal set of path attributes
         min_path_attrs = self.min_attrs.intersection(self.path_attrs)
@@ -142,5 +142,5 @@ class CoreBlock(with_metaclass(abc.ABCMeta, Block)):
         # then ensure that any of the non-minimal ones that are present
         # are also expanded
         for attr in non_min_path_attrs:
-            if self.has(attr):
+            if attr in self:
                 expand_attr(attr)

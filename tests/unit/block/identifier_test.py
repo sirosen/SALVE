@@ -1,4 +1,3 @@
-import os
 import mock
 from nose.tools import istest
 

@@ -138,7 +138,7 @@ class TestParsingMockedGlobals(MockedGlobals):
                                      be_tok])
         assert len(blocks) == 1
         assert len(blocks[0].attrs) == 1
-        assert blocks[0].get('source') == '/tmp/txt'
+        assert blocks[0]['source'] == '/tmp/txt'
 
     @istest
     def multiple_attr_block(self):
@@ -160,8 +160,8 @@ class TestParsingMockedGlobals(MockedGlobals):
                                      be_tok])
         assert len(blocks) == 1
         assert len(blocks[0].attrs) == 2
-        assert blocks[0].get('source') == '/tmp/txt'
-        assert blocks[0].get('target') == '/tmp/txt2'
+        assert blocks[0]['source'] == '/tmp/txt'
+        assert blocks[0]['target'] == '/tmp/txt2'
 
     @istest
     def empty_manifest(self):
@@ -173,7 +173,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         assert len(blocks) == 0
 
     @istest
-    def empty_block(self):
+    def empty_block_in_file(self):
         """
         Unit: Parser Empty Block In File
         Checks that parsing a file with an empty block is valid.
@@ -206,7 +206,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         assert len(blocks) == 1
         assert isinstance(blocks[0], FileBlock)
         assert len(blocks[0].attrs) == 2
-        assert blocks[0].get(blocks[0].primary_attr) == "/d/e/f/g"
+        assert blocks[0][blocks[0].primary_attr] == "/d/e/f/g"
 
     @istest
     def primary_attr_followed_by_block(self):
@@ -219,11 +219,11 @@ class TestParsingMockedGlobals(MockedGlobals):
         assert len(blocks) == 2
         assert isinstance(blocks[0], ManifestBlock)
         assert len(blocks[0].attrs) == 1
-        assert blocks[0].get(blocks[0].primary_attr) == "man man"
+        assert blocks[0][blocks[0].primary_attr] == "man man"
         assert isinstance(blocks[1], FileBlock)
         assert len(blocks[1].attrs) == 2
-        assert blocks[1].get('source') == "potato"
-        assert blocks[1].get('target') == "mango"
+        assert blocks[1]['source'] == "potato"
+        assert blocks[1]['target'] == "mango"
 
     @istest
     def file_primary_attr_with_body(self):
@@ -236,5 +236,5 @@ class TestParsingMockedGlobals(MockedGlobals):
         assert len(blocks) == 1
         assert isinstance(blocks[0], FileBlock)
         assert len(blocks[0].attrs) == 2
-        assert blocks[0].get(blocks[0].primary_attr) == "lobster"
-        assert blocks[0].get('source') == "salad"
+        assert blocks[0][blocks[0].primary_attr] == "lobster"
+        assert blocks[0]['source'] == "salad"

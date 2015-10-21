@@ -26,10 +26,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         a_name = self.get_fullname('a')
 
         try:
-            import builtins
+            import builtins  # flake8: noqa
             builtin_patch = mock.patch('builtins.open', mock_open, create=True)
         except ImportError:
-            import __builtin__ as builtins
+            import __builtin__ as builtins  # flake8: noqa
             builtin_patch = mock.patch('__builtin__.open', mock_open,
                                        create=True)
 

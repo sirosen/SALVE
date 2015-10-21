@@ -6,12 +6,16 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
+  - "3.5"
   - "pypy"
   - "pypy3"
 install:
   - pip install -r tests/requirements.txt
   - pip install argparse
   - pip install python-coveralls
+  - pip install flake8
+before_script:
+  - flake8 salve
 script:
   - nosetests -v --with-coverage --cover-package=salve
 after_success:

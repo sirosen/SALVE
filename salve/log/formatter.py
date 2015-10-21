@@ -1,5 +1,4 @@
 import logging
-import time
 
 from salve.context import ExecutionContext
 

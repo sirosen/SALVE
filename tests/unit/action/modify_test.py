@@ -1,12 +1,11 @@
 import os
-import sys
 import logging
 import mock
 from nose.tools import istest
 
 from salve.context import ExecutionContext, FileContext
 
-from salve import action, ugo
+from salve import ugo
 from salve.action import modify
 from salve.filesys import ConcreteFilesys
 

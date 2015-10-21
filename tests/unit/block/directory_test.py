@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import os
 import mock
 from nose.tools import istest
@@ -7,7 +5,6 @@ from nose.tools import istest
 from tests.util import ensure_except
 
 from salve import action
-from salve.context import ExecutionContext
 from salve.action import backup, modify, create, copy
 from salve.exceptions import BlockException
 
@@ -25,10 +22,10 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies the result of converting a Dir Block to an Action.
         """
         b = DirBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
+        b['action'] = 'create'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
 
         with mock.patch('salve.logger', dummy_logger):
             act = b.compile()
@@ -54,11 +51,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Block's mode is set.
         """
         b = DirBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '755')
+        b['action'] = 'create'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '755'
 
         with mock.patch('salve.logger', dummy_logger):
             dir_act = b.compile()
@@ -88,10 +85,10 @@ class TestWithScratchdir(ScratchWithExecCtx):
         user is root and the Block's user and group are set.
         """
         b = DirBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
+        b['action'] = 'create'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
         with mock.patch('salve.ugo.is_root', lambda: True):
             with mock.patch('salve.logger', dummy_logger):
                 dir_act = b.compile()
@@ -116,9 +113,9 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies the result of converting a Dir Block to an Action.
         """
         b = DirBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('source', '/a/b/c')
-        b.set('target', '/p/q/r')
+        b['action'] = 'copy'
+        b['source'] = '/a/b/c'
+        b['target'] = '/p/q/r'
         with mock.patch('os.walk', lambda d: []):
             with mock.patch('salve.logger', dummy_logger):
                 dir_act = b.compile()
@@ -148,9 +145,9 @@ class TestWithScratchdir(ScratchWithExecCtx):
         # create and compile a directory block which will trigger the mocked
         # os.walk() routine above
         b = DirBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('source', '/a/b/c')
-        b.set('target', '/p/q/r')
+        b['action'] = 'copy'
+        b['source'] = '/a/b/c'
+        b['target'] = '/p/q/r'
         with mock.patch('os.walk', mock_os_walk):
             with mock.patch('salve.logger', dummy_logger):
                 dir_act = b.compile()
@@ -223,11 +220,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies the result of converting a Dir Block to an Action.
         """
         b = DirBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('source', '/a/b/c')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
+        b['action'] = 'copy'
+        b['source'] = '/a/b/c'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
 
         with mock.patch('salve.ugo.is_root', lambda: True):
             with mock.patch('os.walk', lambda d: []):
@@ -255,11 +252,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         BlockException.
         """
         b = DirBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '755')
+        b['action'] = 'copy'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '755'
 
         with mock.patch('salve.logger', dummy_logger):
             ensure_except(BlockException, b.compile)
@@ -272,11 +269,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         BlockException.
         """
         b = DirBlock(dummy_file_context)
-        b.set('action', 'copy')
-        b.set('source', '/a/b/c')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '755')
+        b['action'] = 'copy'
+        b['source'] = '/a/b/c'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '755'
 
         with mock.patch('salve.logger', dummy_logger):
             ensure_except(BlockException, b.compile)
@@ -289,10 +286,10 @@ class TestWithScratchdir(ScratchWithExecCtx):
         BlockException.
         """
         b = DirBlock(dummy_file_context)
-        b.set('action', 'create')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '755')
+        b['action'] = 'create'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '755'
 
         with mock.patch('salve.logger', dummy_logger):
             ensure_except(BlockException, b.compile)
@@ -304,14 +301,14 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies the results of path expansion in a Dir block.
         """
         b = DirBlock(dummy_file_context)
-        b.set('source', 'p/q/r/s')
-        b.set('target', 't/u/v/w/x/y/z/1/2/3/../3')
+        b['source'] = 'p/q/r/s'
+        b['target'] = 't/u/v/w/x/y/z/1/2/3/../3'
         root_dir = 'file/root/directory'
         b.expand_file_paths(root_dir)
         source_loc = os.path.join(root_dir, 'p/q/r/s')
-        assert b.get('source') == source_loc
+        assert b['source'] == source_loc
         target_loc = os.path.join(root_dir, 't/u/v/w/x/y/z/1/2/3/../3')
-        assert b.get('target') == target_loc
+        assert b['target'] == target_loc
 
     @istest
     def dir_path_expand_fail_notarget(self):
@@ -322,20 +319,20 @@ class TestWithScratchdir(ScratchWithExecCtx):
         """
         # check that this is the case for a "create" action
         b1 = DirBlock(dummy_file_context)
-        b1.set('action', 'create')
-        b1.set('user', 'user1')
-        b1.set('group', 'user1')
-        b1.set('mode', '755')
+        b1['action'] = 'create'
+        b1['user'] = 'user1'
+        b1['group'] = 'user1'
+        b1['mode'] = '755'
         root_dir = 'file/root/directory'
         ensure_except(BlockException, b1.expand_file_paths, root_dir)
 
         # check that it also holds for a "copy" action with source set
         b2 = DirBlock(dummy_file_context)
-        b2.set('action', 'copy')
-        b2.set('user', 'user1')
-        b2.set('group', 'user1')
-        b2.set('mode', '755')
-        b2.set('source', 'p/q/r/s')
+        b2['action'] = 'copy'
+        b2['user'] = 'user1'
+        b2['group'] = 'user1'
+        b2['mode'] = '755'
+        b2['source'] = 'p/q/r/s'
         root_dir = 'file/root/directory'
         ensure_except(BlockException, b2.expand_file_paths, root_dir)
 
@@ -347,11 +344,11 @@ class TestWithScratchdir(ScratchWithExecCtx):
         "action" attribute.
         """
         b = DirBlock(dummy_file_context)
-        b.set('source', '/a/b/c')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '755')
+        b['source'] = '/a/b/c'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '755'
 
         with mock.patch('salve.logger', dummy_logger):
             ensure_except(BlockException, b.compile)
@@ -364,12 +361,12 @@ class TestWithScratchdir(ScratchWithExecCtx):
         attribute has an unrecognized value.
         """
         b = DirBlock(dummy_file_context)
-        b.set('action', 'UNDEFINED_ACTION')
-        b.set('source', '/a/b/c')
-        b.set('target', '/p/q/r')
-        b.set('user', 'user1')
-        b.set('group', 'nogroup')
-        b.set('mode', '755')
+        b['action'] = 'UNDEFINED_ACTION'
+        b['source'] = '/a/b/c'
+        b['target'] = '/p/q/r'
+        b['user'] = 'user1'
+        b['group'] = 'nogroup'
+        b['mode'] = '755'
 
         with mock.patch('salve.logger', dummy_logger):
             ensure_except(BlockException, b.compile)

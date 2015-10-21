@@ -1,13 +1,8 @@
-#!/usr/bin/python
-
 import os
-import mock
 import textwrap
 from nose.tools import istest
 
 from tests import system
-
-import salve
 
 
 class TestWithRunLog(system.RunScratchContainer):
