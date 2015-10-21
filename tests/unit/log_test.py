@@ -21,7 +21,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         err = self.stderr.getvalue()
 
         assert_substr(err, expected)
-        assert_substr(err, 'No handlers could be found for logger')
 
         assert 'no show log msg' not in err, err
 
