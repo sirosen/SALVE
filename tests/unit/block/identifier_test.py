@@ -9,70 +9,55 @@ from salve.block import identifier, FileBlock, ManifestBlock, DirBlock
 from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 
 
-@istest
-def invalid_block_id1():
-    """
-    Unit: Block Identifier Invalid Identifier Fails (1)
-    Checks that an invalid block identifier fails, even when it is of
-    type IDENTIFIER.
-    """
-    invalid_id = Token('invalid_block_id', Token.types.IDENTIFIER,
+def _mk_id_token(name):
+    return Token(name, Token.types.IDENTIFIER, dummy_file_context)
+
+
+def _block_from_name(name):
+    return identifier.block_from_identifier(_mk_id_token(name))
+
+
+class TestWithLoggerPatch(ScratchWithExecCtx):
+    @istest
+    def invalid_block_id1(self):
+        """
+        Unit: Block Identifier Invalid Identifier Fails (1)
+        Checks that an invalid block identifier fails, even when it is of
+        type IDENTIFIER.
+        """
+        ensure_except(BlockException, _block_from_name, 'invalid_block_id')
+
+    @istest
+    def invalid_block_id2(self):
+        """
+        Unit: Block Identifier Invalid Identifier Fails (2)
+        Checks that an invalid block identifier with a non-IDENTIFIER type
+        fails block creation.
+        """
+        bad_id = Token('invalid_block_id', Token.types.TEMPLATE,
                        dummy_file_context)
+        ensure_except(BlockException, identifier.block_from_identifier, bad_id)
 
-    with mock.patch('salve.logger', dummy_logger):
-        ensure_except(BlockException,
-                      identifier.block_from_identifier,
-                      invalid_id)
+    @istest
+    def valid_file_id(self):
+        """
+        Unit: Block Identifier File Identifier To Block
+        Checks that an identifier 'file' creates a file block.
+        """
+        assert isinstance(_block_from_name('file'), FileBlock)
 
+    @istest
+    def valid_manifest_id(self):
+        """
+        Unit: Block Identifier Manifest Identifier To Block
+        Checks that an identifier 'manifest' creates a manifest block.
+        """
+        assert isinstance(_block_from_name('manifest'), ManifestBlock)
 
-@istest
-def invalid_block_id2():
-    """
-    Unit: Block Identifier Invalid Identifier Fails (2)
-    Checks that an invalid block identifier with a non-IDENTIFIER type
-    fails block creation.
-    """
-    invalid_id = Token('invalid_block_id', Token.types.TEMPLATE,
-                       dummy_file_context)
-
-    with mock.patch('salve.logger', dummy_logger):
-        ensure_except(BlockException,
-                      identifier.block_from_identifier,
-                      invalid_id)
-
-
-@istest
-def valid_file_id():
-    """
-    Unit: Block Identifier File Identifier To Block
-    Checks that an identifier 'file' creates a file block.
-    """
-    file_id = Token('file', Token.types.IDENTIFIER, dummy_file_context)
-    with mock.patch('salve.logger', dummy_logger):
-        fb = identifier.block_from_identifier(file_id)
-    assert isinstance(fb, FileBlock)
-
-
-@istest
-def valid_manifest_id():
-    """
-    Unit: Block Identifier Manifest Identifier To Block
-    Checks that an identifier 'manifest' creates a manifest block.
-    """
-    manifest_id = Token('manifest', Token.types.IDENTIFIER, dummy_file_context)
-    with mock.patch('salve.logger', dummy_logger):
-        mb = identifier.block_from_identifier(manifest_id)
-    assert isinstance(mb, ManifestBlock)
-
-
-@istest
-def valid_directory_id():
-    """
-    Unit: Block Identifier Directory Identifier To Block
-    Checks that an identifier 'directory' creates a directory block.
-    """
-    manifest_id = Token('directory', Token.types.IDENTIFIER,
-                        dummy_file_context)
-    with mock.patch('salve.logger', dummy_logger):
-        dir_block = identifier.block_from_identifier(manifest_id)
-    assert isinstance(dir_block, DirBlock)
+    @istest
+    def valid_directory_id(self):
+        """
+        Unit: Block Identifier Directory Identifier To Block
+        Checks that an identifier 'directory' creates a directory block.
+        """
+        assert isinstance(_block_from_name('directory'), DirBlock)
