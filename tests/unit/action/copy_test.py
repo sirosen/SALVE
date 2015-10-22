@@ -8,7 +8,7 @@ from salve.context import ExecutionContext, FileContext
 
 from salve.action import copy
 from salve.filesys import ConcreteFilesys
-from tests.util import scratch
+from tests.util import scratch, assert_substr
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
@@ -16,23 +16,28 @@ class TestWithScratchdir(scratch.ScratchContainer):
         scratch.ScratchContainer.__init__(self)
         self.dummy_file_context = FileContext('no such file')
 
+        # a whole lot of file setup in the scratch dir
+        self.write_file('rw_file_1', 'file with R and W perms')
+        self.make_dir('rw_dir_1')
+        self.write_file('r_only_file_1', 'file with only R perms')
+        os.chmod(self.get_fullname('r_only_file_1'), 0o444)
+        self.make_dir('no_perms_dir_1')
+        os.chmod(self.get_fullname('no_perms_dir_1'), 0o000)
+        self.write_file('no_perms_file_1', 'file with no allowed perms')
+        os.chmod(self.get_fullname('no_perms_file_1'), 0o000)
+
     @istest
     def filecopy_execute(self):
         """
         Unit: File Copy Action Execution
         """
-        content = 'a b c d \n e f g'
-        self.write_file('a', content)
-        self.make_dir('b')
-        a_name = self.get_fullname('a')
-        b_name = self.get_fullname('b')
-
-        fcp = copy.FileCopyAction(a_name,
-                                  os.path.join(b_name, 'c'),
-                                  self.dummy_file_context)
+        fcp = copy.FileCopyAction(
+            self.get_fullname('rw_file_1'),
+            os.path.join(self.get_fullname('rw_dir_1'), 'c'),
+            self.dummy_file_context)
         fcp(ConcreteFilesys())
 
-        assert content == self.read_file('b/c')
+        assert self.read_file('rw_file_1') == self.read_file('rw_dir_1/c')
 
     @istest
     def canexec_unwritable_target(self):
@@ -41,19 +46,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks the results of a verification check when the target
         is an unwritable file.
         """
-        content = 'abc'
-        self.write_file('a', content)
-        content = 'efg'
-        self.write_file('b', content)
-        a_name = self.get_fullname('a')
-        b_name = self.get_fullname('b')
-
-        os.chmod(b_name, 0o444)
-        fcp = copy.FileCopyAction(a_name, b_name,
+        fcp = copy.FileCopyAction(self.get_fullname('rw_file_1'),
+                                  self.get_fullname('r_only_file_1'),
                                   self.dummy_file_context)
 
-        assert fcp.verify_can_exec(ConcreteFilesys()) == \
-            fcp.verification_codes.UNWRITABLE_TARGET
+        assert (fcp.verify_can_exec(ConcreteFilesys()) ==
+                fcp.verification_codes.UNWRITABLE_TARGET)
 
     @istest
     def canexec_unwritable_target_dir(self):
@@ -62,22 +60,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks the results of a verification check when the target
         is in an unwritable directory.
         """
-        content = 'abc'
-        self.write_file('a', content)
-        self.make_dir('b')
-        content = 'efg'
-        self.write_file('b/c', content)
-        a_name = self.get_fullname('a')
-        b_name = self.get_fullname('b')
-        c_name = self.get_fullname('b/c')
+        fcp = copy.FileCopyAction(
+            self.get_fullname('rw_file_1'),
+            self.get_fullname('no_perms_dir_1/otherfile'),
+            self.dummy_file_context)
 
-        os.chmod(b_name, 0o000)
-        fcp = copy.FileCopyAction(a_name, c_name,
-                                  self.dummy_file_context)
-
-        vcode = fcp.verify_can_exec(ConcreteFilesys())
-
-        assert vcode == fcp.verification_codes.UNWRITABLE_TARGET
+        assert (fcp.verify_can_exec(ConcreteFilesys()) ==
+                fcp.verification_codes.UNWRITABLE_TARGET)
 
     @istest
     def canexec_unreadable_source(self):
@@ -86,19 +75,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks the results of a verification check when the source
         is an unreadable file.
         """
-        content = 'abc'
-        self.write_file('a', content)
-        content = 'efg'
-        self.write_file('b', content)
-        a_name = self.get_fullname('a')
-        b_name = self.get_fullname('b')
-
-        os.chmod(a_name, 0o000)
-        fcp = copy.FileCopyAction(a_name, b_name,
+        fcp = copy.FileCopyAction(self.get_fullname('no_perms_file_1'),
+                                  self.get_fullname('rw_file_1'),
                                   self.dummy_file_context)
 
-        assert fcp.verify_can_exec(ConcreteFilesys()) == \
-            fcp.verification_codes.UNREADABLE_SOURCE
+        assert (fcp.verify_can_exec(ConcreteFilesys()) ==
+                fcp.verification_codes.UNREADABLE_SOURCE)
 
     @istest
     def dir_canexec_unreadable_source(self):
@@ -107,19 +89,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks the results of a verification check when the source
         is an unreadable dir.
         """
-        self.make_dir('a')
-        a_name = self.get_fullname('a')
-        b_name = self.get_fullname('b')
-
-        dcp = copy.DirCopyAction(a_name, b_name,
+        dcp = copy.DirCopyAction(self.get_fullname('no_perms_dir_1'),
+                                 self.get_fullname('rw_dir_1'),
                                  self.dummy_file_context)
 
-        mock_access = mock.Mock()
-        mock_access.return_value = False
-
-        with mock.patch('salve.filesys.ConcreteFilesys.access', mock_access):
-            assert dcp.verify_can_exec(ConcreteFilesys()) == \
-                dcp.verification_codes.UNREADABLE_SOURCE
+        assert (dcp.verify_can_exec(ConcreteFilesys()) ==
+                dcp.verification_codes.UNREADABLE_SOURCE)
 
     @istest
     def dir_canexec_unwritable_target(self):
@@ -128,19 +103,12 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks the results of a verification check when the target
         is an unwritable directory.
         """
-        self.make_dir('a')
-        self.make_dir('b')
-
-        a_name = self.get_fullname('a')
-        b_name = self.get_fullname('b')
-        os.chmod(b_name, 0o444)
-
-        c_name = self.get_fullname('b/c')
-        dcp = copy.DirCopyAction(a_name, c_name,
+        dcp = copy.DirCopyAction(self.get_fullname('rw_dir_1'),
+                                 self.get_fullname('no_perms_dir_1/abc'),
                                  self.dummy_file_context)
 
-        assert dcp.verify_can_exec(ConcreteFilesys()) == \
-            dcp.verification_codes.UNWRITABLE_TARGET
+        assert (dcp.verify_can_exec(ConcreteFilesys()) ==
+                dcp.verification_codes.UNWRITABLE_TARGET)
 
     @istest
     def stringification_test_generator(self):
@@ -157,29 +125,20 @@ class TestWithScratchdir(scratch.ScratchContainer):
             yield check_func
 
     @istest
-    def dircopy_execute(self):
+    @mock.patch('os.access', lambda x, y: True)
+    @mock.patch('salve.filesys.ConcreteFilesys.copy')
+    def dircopy_execute(self, mock_copy):
         """
         Unit: Directory Copy Action Execution
         """
-        mock_copy = mock.Mock()
-        mock_copy.return_value = None
-
-        def mock_name_to_uid(username):
-            return 1
-
-        def mock_name_to_gid(groupname):
-            return 2
-
-        with mock.patch('salve.filesys.ConcreteFilesys.copy', mock_copy):
-            with mock.patch('os.access', lambda x, y: True):
-                dcp = copy.DirCopyAction('a',
-                                         'b/c',
-                                         self.dummy_file_context)
-                dcp(ConcreteFilesys())
+        dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
+        dcp(ConcreteFilesys())
 
         mock_copy.assert_called_once_with('a', 'b/c')
 
     @istest
+    @mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
+                lambda self, fs: self.verification_codes.UNREADABLE_SOURCE)
     def dircopy_unreadable_source_execute(self):
         """
         Unit: Directory Copy Action Execution, Unreadable Source
@@ -187,19 +146,17 @@ class TestWithScratchdir(scratch.ScratchContainer):
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
                                       quiet=True)
 
-        unreadable_source_code = \
-            copy.DirCopyAction.verification_codes.UNREADABLE_SOURCE
-        with mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
-                        lambda x, fs: unreadable_source_code):
-            dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
-            dcp(ConcreteFilesys())
+        dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
+        dcp(ConcreteFilesys())
 
         err = self.stderr.getvalue()
         expected = ('EXECUTION [WARNING] no such file: ' +
                     'DirCopy: Non-Readable source directory "a"\n')
-        assert err == expected, "%s != %s" % (err, expected)
+        assert_substr(expected, err)
 
     @istest
+    @mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
+                lambda self, fs: self.verification_codes.UNWRITABLE_TARGET)
     def dircopy_unwritable_target_execute(self):
         """
         Unit: Directory Copy Action Execution, Unwritable Target
@@ -207,14 +164,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
                                       quiet=True)
 
-        unwritable_target_code = \
-            copy.DirCopyAction.verification_codes.UNWRITABLE_TARGET
-        with mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
-                        lambda x, fs: unwritable_target_code):
-            dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
-            dcp(ConcreteFilesys())
+        dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
+        dcp(ConcreteFilesys())
 
         err = self.stderr.getvalue()
         expected = ('EXECUTION [WARNING] no such file: ' +
                     'DirCopy: Non-Writable target directory "b/c"\n')
-        assert err == expected, "%s != %s" % (err, expected)
+        assert_substr(expected, err)
