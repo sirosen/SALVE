@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import os
 import mock
 from nose.tools import istest
@@ -11,8 +9,7 @@ from salve.exceptions import BlockException
 
 from salve.block import ManifestBlock, FileBlock
 
-from tests.unit.block import dummy_file_context, dummy_conf, dummy_logger, \
-    ScratchWithExecCtx
+from tests.unit.block import dummy_file_context, dummy_conf, ScratchWithExecCtx
 
 
 class TestWithScratchdir(ScratchWithExecCtx):
@@ -23,9 +20,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that a Manifest block raises a BlockException when
         compiled if the action attribute is unspecified.
         """
-        with mock.patch('salve.logger', dummy_logger):
-            b = ManifestBlock(dummy_file_context)
-            ensure_except(BlockException, b.compile)
+        b = ManifestBlock(dummy_file_context)
+        ensure_except(BlockException, b.compile)
 
     @istest
     def sourceless_manifest_expand_error(self):
@@ -34,11 +30,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that a Manifest block raises a BlockException when paths
         are expanded if the source attribute is unspecified.
         """
-        with mock.patch('salve.logger', dummy_logger):
-            b = ManifestBlock(dummy_file_context)
-            ensure_except(BlockException,
-                          b.expand_blocks, '/',
-                          dummy_conf, False)
+        b = ManifestBlock(dummy_file_context)
+        ensure_except(BlockException, b.expand_blocks, '/', dummy_conf, False)
 
     @istest
     def empty_manifest_expand(self):
@@ -47,11 +40,9 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that a Manifest block with no sub-blocks expands without
         errors.
         """
-        with mock.patch('salve.logger', dummy_logger):
-            b = ManifestBlock(
-                dummy_file_context,
-                source=full_path('empty.manifest'))
-            b.expand_blocks('/', dummy_conf, False)
+        b = ManifestBlock(dummy_file_context,
+                          source=full_path('empty.manifest'))
+        b.expand_blocks('/', dummy_conf, False)
         assert len(b.sub_blocks) == 0
 
     @istest
@@ -63,10 +54,9 @@ class TestWithScratchdir(ScratchWithExecCtx):
         """
         invalid1_path = full_path('self_include.manifest')
         sourcedir = paths.containing_dir(invalid1_path)
-        with mock.patch('salve.logger', dummy_logger):
-            b = ManifestBlock(dummy_file_context, source=invalid1_path)
-            ensure_except(BlockException,
-                          b.expand_blocks, sourcedir, dummy_conf, False)
+        b = ManifestBlock(dummy_file_context, source=invalid1_path)
+        ensure_except(BlockException,
+                      b.expand_blocks, sourcedir, dummy_conf, False)
 
     @istest
     def sub_block_expand(self):
@@ -76,9 +66,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         """
         valid2_path = full_path('empty_and_file.manifest')
         sourcedir = paths.containing_dir(valid2_path)
-        with mock.patch('salve.logger', dummy_logger):
-            b = ManifestBlock(dummy_file_context, source=valid2_path)
-            b.expand_blocks(sourcedir, dummy_conf, False)
+        b = ManifestBlock(dummy_file_context, source=valid2_path)
+        b.expand_blocks(sourcedir, dummy_conf, False)
         assert len(b.sub_blocks) == 2
         mblock = b.sub_blocks[0]
         fblock = b.sub_blocks[1]
@@ -97,9 +86,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         """
         valid2_path = full_path('empty_and_file.manifest')
         sourcedir = paths.containing_dir(valid2_path)
-        with mock.patch('salve.logger', dummy_logger):
-            b = ManifestBlock(dummy_file_context, source=valid2_path)
-            b.expand_blocks(sourcedir, dummy_conf, False)
+        b = ManifestBlock(dummy_file_context, source=valid2_path)
+        b.expand_blocks(sourcedir, dummy_conf, False)
         assert len(b.sub_blocks) == 2
         mblock = b.sub_blocks[0]
         fblock = b.sub_blocks[1]
@@ -109,10 +97,9 @@ class TestWithScratchdir(ScratchWithExecCtx):
         assert fblock['source'] == full_path('empty.manifest')
         assert fblock['target'] == os.path.join(sourcedir, 'a/b/c')
 
-        with mock.patch('salve.logger', dummy_logger):
-            with mock.patch('os.path.exists', lambda f: True):
-                with mock.patch('os.access', lambda f, p: True):
-                    act = b.compile()
+        with mock.patch('os.path.exists', lambda f: True):
+            with mock.patch('os.access', lambda f, p: True):
+                act = b.compile()
 
         assert isinstance(act, action.ActionList)
         assert len(act.actions) == 2

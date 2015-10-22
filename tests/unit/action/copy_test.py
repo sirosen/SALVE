@@ -143,26 +143,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
             dcp.verification_codes.UNWRITABLE_TARGET
 
     @istest
-    def filecopy_to_str(self):
-        """
-        Unit: File Copy Action String Conversion
-        """
-        fcp = copy.FileCopyAction('a', 'b/c', self.dummy_file_context)
+    def stringification_test_generator(self):
+        class_tuples = [(copy.FileCopyAction, 'FileCopyAction'),
+                        (copy.DirCopyAction, 'DirCopyAction')]
 
-        assert str(fcp) == ('FileCopyAction(src=a,dst=b/c,context=' +
-                            repr(self.dummy_file_context) + ')')
+        for (klass, name) in class_tuples:
+            def check_func():
+                act = klass('a', 'b/c', self.dummy_file_context)
+                assert str(act) == '{0}(src=a,dst=b/c,context={1})'.format(
+                    name, repr(self.dummy_file_context))
+            check_func.description = "Unit: {0} String Conversion".format(name)
 
-    @istest
-    def dircopy_to_str(self):
-        """
-        Unit: Directory Copy Action String Conversion
-        """
-        dcp = copy.DirCopyAction('a',
-                                 'b/c',
-                                 self.dummy_file_context)
-
-        assert str(dcp) == ('DirCopyAction(src=a,dst=b/c,context=' +
-                            repr(self.dummy_file_context) + ')')
+            yield check_func
 
     @istest
     def dircopy_execute(self):

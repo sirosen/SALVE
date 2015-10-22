@@ -10,8 +10,87 @@ from salve.exceptions import BlockException
 
 from salve.block import FileBlock
 
-from tests.unit.block import dummy_file_context, dummy_logger, \
-    ScratchWithExecCtx
+from tests.unit.block import dummy_file_context, ScratchWithExecCtx
+
+
+def _common_patchset(isroot, fexists):
+    @mock.patch('os.path.exists', lambda f: isroot)
+    @mock.patch('os.path.exists', lambda f: fexists)
+    def wrapper(f):
+        return f
+
+    return wrapper
+
+
+def disambiguate_by_class(klass, obj1, obj2):
+    """
+    Take two objects and a class, and return them in a tuple such that the
+    first element matches the given class. Doesn't check the second object.
+
+    Args:
+        @klass
+        The class to match against.
+
+        @obj1, @obj2
+        Objects to inspect, unordered
+    """
+    if isinstance(obj1, klass):
+        return obj1, obj2
+    else:
+        return obj2, obj1
+
+
+def _generic_check_act(act, klass, attrs):
+    assert isinstance(act, klass)
+    for k, v in attrs.items():
+        assert act.__getattribute__(k) == v, act.__getattribute__(k)
+
+
+def check_backup_act(act, src, bak_dir, logfile):
+    _generic_check_act(act, backup.FileBackupAction,
+                       {'src': src, 'backup_dir': bak_dir, 'logfile': logfile})
+
+
+def check_create_act(act, dst):
+    _generic_check_act(act, create.FileCreateAction, {'dst': dst})
+
+
+def check_copy_act(act, src, dst):
+    _generic_check_act(act, copy.FileCopyAction, {'src': src, 'dst': dst})
+
+
+def check_chmod_act(act, mode, target):
+    _generic_check_act(act, modify.FileChmodAction, {'target': target})
+    assert '{0:o}'.format(act.mode) == mode, str(act.mode)
+
+
+def check_chown_act(act, user, group, target):
+    _generic_check_act(act, modify.FileChownAction,
+                       {'user': user, 'group': group, 'target': target})
+
+
+def check_list_act(act, list_len):
+    _generic_check_act(act, action.ActionList, {})
+    assert len(act.actions) == list_len
+
+
+def check_actions_against_defaults(copy=None, create=None, chmod=None,
+                                   chown=None, backup=None,
+                                   chown_chmod_pair=None):
+    if chown_chmod_pair:
+        chmod, chown = disambiguate_by_class(
+            modify.FileChmodAction, chown_chmod_pair[0], chown_chmod_pair[1])
+
+    if copy:
+        check_copy_act(copy, '/a/b/c', '/p/q/r')
+    if create:
+        check_create_act(create, '/p/q/r')
+    if backup:
+        check_backup_act(backup, '/p/q/r', '/m/n', '/m/n.log')
+    if chmod:
+        check_chmod_act(chmod, '600', '/p/q/r')
+    if chown:
+        check_chown_act(chown, 'user1', 'nogroup', '/p/q/r')
 
 
 class TestWithScratchdir(ScratchWithExecCtx):

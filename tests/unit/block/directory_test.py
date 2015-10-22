@@ -10,8 +10,7 @@ from salve.exceptions import BlockException
 
 from salve.block import DirBlock
 
-from tests.unit.block import dummy_file_context, dummy_logger, \
-    ScratchWithExecCtx
+from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 
 
 class TestWithScratchdir(ScratchWithExecCtx):
@@ -27,8 +26,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['user'] = 'user1'
         b['group'] = 'nogroup'
 
-        with mock.patch('salve.logger', dummy_logger):
-            act = b.compile()
+        act = b.compile()
 
         assert isinstance(act, action.ActionList)
         assert len(act.actions) == 2
@@ -57,8 +55,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['group'] = 'nogroup'
         b['mode'] = '755'
 
-        with mock.patch('salve.logger', dummy_logger):
-            dir_act = b.compile()
+        dir_act = b.compile()
 
         assert isinstance(dir_act, action.ActionList)
         assert len(dir_act.actions) == 3
@@ -90,8 +87,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['user'] = 'user1'
         b['group'] = 'nogroup'
         with mock.patch('salve.ugo.is_root', lambda: True):
-            with mock.patch('salve.logger', dummy_logger):
-                dir_act = b.compile()
+            dir_act = b.compile()
 
         assert isinstance(dir_act, action.ActionList)
         assert len(dir_act.actions) == 2
@@ -117,8 +113,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['source'] = '/a/b/c'
         b['target'] = '/p/q/r'
         with mock.patch('os.walk', lambda d: []):
-            with mock.patch('salve.logger', dummy_logger):
-                dir_act = b.compile()
+            dir_act = b.compile()
 
         assert isinstance(dir_act, action.ActionList)
         assert len(dir_act.actions) == 1
@@ -149,8 +144,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['source'] = '/a/b/c'
         b['target'] = '/p/q/r'
         with mock.patch('os.walk', mock_os_walk):
-            with mock.patch('salve.logger', dummy_logger):
-                dir_act = b.compile()
+            dir_act = b.compile()
 
         # there should be seven component actions in all: four for each of the
         # directories (counting the containing dir) and three for the three
@@ -228,8 +222,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
 
         with mock.patch('salve.ugo.is_root', lambda: True):
             with mock.patch('os.walk', lambda d: []):
-                with mock.patch('salve.logger', dummy_logger):
-                    al = b.compile()
+                al = b.compile()
 
         assert isinstance(al, action.ActionList)
         assert len(al.actions) == 2
@@ -258,8 +251,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['group'] = 'nogroup'
         b['mode'] = '755'
 
-        with mock.patch('salve.logger', dummy_logger):
-            ensure_except(BlockException, b.compile)
+        ensure_except(BlockException, b.compile)
 
     @istest
     def dir_copy_fails_notarget(self):
@@ -275,8 +267,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['group'] = 'nogroup'
         b['mode'] = '755'
 
-        with mock.patch('salve.logger', dummy_logger):
-            ensure_except(BlockException, b.compile)
+        ensure_except(BlockException, b.compile)
 
     @istest
     def dir_create_fails_notarget(self):
@@ -291,8 +282,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['group'] = 'nogroup'
         b['mode'] = '755'
 
-        with mock.patch('salve.logger', dummy_logger):
-            ensure_except(BlockException, b.compile)
+        ensure_except(BlockException, b.compile)
 
     @istest
     def dir_path_expand(self):
@@ -350,8 +340,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['group'] = 'nogroup'
         b['mode'] = '755'
 
-        with mock.patch('salve.logger', dummy_logger):
-            ensure_except(BlockException, b.compile)
+        ensure_except(BlockException, b.compile)
 
     @istest
     def dir_compile_fail_unknown_action(self):
@@ -368,5 +357,4 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b['group'] = 'nogroup'
         b['mode'] = '755'
 
-        with mock.patch('salve.logger', dummy_logger):
-            ensure_except(BlockException, b.compile)
+        ensure_except(BlockException, b.compile)

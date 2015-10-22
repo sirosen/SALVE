@@ -1,4 +1,3 @@
-import mock
 from nose.tools import istest
 
 from tests.util import ensure_except
@@ -7,7 +6,7 @@ from salve.exceptions import BlockException
 
 from salve.block import identifier, FileBlock, ManifestBlock, DirBlock
 
-from tests.unit.block import dummy_file_context, dummy_logger
+from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 
 
 @istest

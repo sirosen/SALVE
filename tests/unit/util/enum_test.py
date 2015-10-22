@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 from nose.tools import istest
 
 from salve import Enum
