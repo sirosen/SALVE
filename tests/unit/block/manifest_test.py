@@ -1,15 +1,19 @@
-import os
 import mock
 from nose.tools import istest
 from tests.util import ensure_except, full_path
 
-from salve import action, paths
-from salve.action import backup, copy
+from salve import paths
 from salve.exceptions import BlockException
 
 from salve.block import ManifestBlock, FileBlock
 
 from tests.unit.block import dummy_file_context, dummy_conf, ScratchWithExecCtx
+from .helpers import check_list_act
+
+
+def _man_block_and_containing_dir(name):
+    return (ManifestBlock(dummy_file_context, source=full_path(name)),
+            paths.containing_dir(full_path(name)))
 
 
 class TestWithScratchdir(ScratchWithExecCtx):
@@ -40,8 +44,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that a Manifest block with no sub-blocks expands without
         errors.
         """
-        b = ManifestBlock(dummy_file_context,
-                          source=full_path('empty.manifest'))
+        b, d = _man_block_and_containing_dir('empty.manifest')
         b.expand_blocks('/', dummy_conf, False)
         assert len(b.sub_blocks) == 0
 
@@ -52,11 +55,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that a Manifest block which includes itself raises a
         BlockException when expanded.
         """
-        invalid1_path = full_path('self_include.manifest')
-        sourcedir = paths.containing_dir(invalid1_path)
-        b = ManifestBlock(dummy_file_context, source=invalid1_path)
-        ensure_except(BlockException,
-                      b.expand_blocks, sourcedir, dummy_conf, False)
+        b, d = _man_block_and_containing_dir('self_include.manifest')
+        ensure_except(BlockException, b.expand_blocks, d, dummy_conf, False)
 
     @istest
     def sub_block_expand(self):
@@ -64,10 +64,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Unit: Manifest Block SubBlock Expand
         Verifies that Manifest block expansion works normally.
         """
-        valid2_path = full_path('empty_and_file.manifest')
-        sourcedir = paths.containing_dir(valid2_path)
-        b = ManifestBlock(dummy_file_context, source=valid2_path)
-        b.expand_blocks(sourcedir, dummy_conf, False)
+        b, d = _man_block_and_containing_dir('empty_and_file.manifest')
+        b.expand_blocks(d, dummy_conf, False)
         assert len(b.sub_blocks) == 2
         mblock = b.sub_blocks[0]
         fblock = b.sub_blocks[1]
@@ -75,39 +73,22 @@ class TestWithScratchdir(ScratchWithExecCtx):
         assert isinstance(fblock, FileBlock)
         assert mblock['source'] == full_path('empty.manifest')
         assert fblock['source'] == full_path('empty.manifest')
-        assert fblock['target'] == paths.pjoin(sourcedir, 'a/b/c')
+        assert fblock['target'] == paths.pjoin(d, 'a/b/c')
 
     @istest
+    @mock.patch('os.path.exists', lambda f: True)
+    @mock.patch('os.access', lambda f, p: True)
     def sub_block_compile(self):
         """
         Unit: Manifest Block SubBlock Compile
         Verifies that Manifest block expansion followed by action
         conversion works normally.
         """
-        valid2_path = full_path('empty_and_file.manifest')
-        sourcedir = paths.containing_dir(valid2_path)
-        b = ManifestBlock(dummy_file_context, source=valid2_path)
-        b.expand_blocks(sourcedir, dummy_conf, False)
-        assert len(b.sub_blocks) == 2
-        mblock = b.sub_blocks[0]
-        fblock = b.sub_blocks[1]
-        assert isinstance(mblock, ManifestBlock)
-        assert isinstance(fblock, FileBlock)
-        assert mblock['source'] == full_path('empty.manifest')
-        assert fblock['source'] == full_path('empty.manifest')
-        assert fblock['target'] == os.path.join(sourcedir, 'a/b/c')
+        b, d = _man_block_and_containing_dir('empty_and_file.manifest')
+        b.expand_blocks(d, dummy_conf, False)
 
-        with mock.patch('os.path.exists', lambda f: True):
-            with mock.patch('os.access', lambda f, p: True):
-                act = b.compile()
+        act = b.compile()
 
-        assert isinstance(act, action.ActionList)
-        assert len(act.actions) == 2
-        assert isinstance(act.actions[0], action.ActionList)
-        assert len(act.actions[0].actions) == 0
-        file_act = act.actions[1]
-        assert isinstance(file_act, action.ActionList)
-        assert isinstance(file_act.actions[0],
-                          backup.FileBackupAction)
-        assert isinstance(file_act.actions[1],
-                          copy.FileCopyAction)
+        check_list_act(act, 2)
+        check_list_act(act.actions[0], 0)
+        check_list_act(act.actions[1], 4)

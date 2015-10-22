@@ -11,5 +11,6 @@ __all__ = [
 
     'ensure_except',
     'ensure_SystemExit_with_code',
-    'assert_substr'
+    'assert_substr',
+    'disambiguate_by_class'
 ]
