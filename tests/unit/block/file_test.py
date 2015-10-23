@@ -13,15 +13,6 @@ from salve.block import FileBlock
 from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 
 
-def _common_patchset(isroot, fexists):
-    @mock.patch('os.path.exists', lambda f: isroot)
-    @mock.patch('os.path.exists', lambda f: fexists)
-    def wrapper(f):
-        return f
-
-    return wrapper
-
-
 def disambiguate_by_class(klass, obj1, obj2):
     """
     Take two objects and a class, and return them in a tuple such that the
