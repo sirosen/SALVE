@@ -41,45 +41,14 @@ class FileBackupAction(BackupAction, FileCopyAction):
                 ",context=" + str(self.file_context) + ")")
 
     def verify_can_exec(self, filesys):
-        # transition to the action verification phase,
-        # confirming execution will work
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
-
-        def writable_target():
-            """
-            Checks if the backup target dir is writable.
-            """
-            if filesys.access(self.dst, access_codes.W_OK):
-                return True
-
-            if filesys.access(self.dst, access_codes.F_OK):
-                return False  # pragma: no cover
-
-            # at this point, the dir is known not to exist
-            # now check properties of the containing dir
-            containing_dir = filesys.get_existing_ancestor(self.dst)
-            if filesys.access(containing_dir, access_codes.W_OK):
-                return True
-
-            # if the dir doesn't exist, and the dir containing it
-            # isn't writable, then the dir can't be written
-            return False
-
-        def existent_source():
-            return filesys.access(self.src, access_codes.F_OK)
-
-        def readable_source():
-            """
-            Checks if the source is a readable file.
-            """
-            return filesys.access(self.src, access_codes.R_OK)
 
         logger.info(
             '{0}: FileBackup: Checking source existence, \"{1}\"'.format(
                 str(self.file_context), self.src)
             )
 
-        if not existent_source():
+        if not filesys.exists(self.src):
             return self.verification_codes.NONEXISTENT_SOURCE
 
         logger.info(
@@ -87,7 +56,7 @@ class FileBackupAction(BackupAction, FileCopyAction):
                 str(self.file_context), self.src)
             )
 
-        if not readable_source():
+        if not filesys.access(self.src, access_codes.R_OK):
             return self.verification_codes.UNREADABLE_SOURCE
 
         logger.info(
@@ -96,7 +65,7 @@ class FileBackupAction(BackupAction, FileCopyAction):
                 str(self.file_context), self.dst)
             )
 
-        if not writable_target():
+        if not filesys.writable_path_or_ancestor(self.dst):
             return self.verification_codes.UNWRITABLE_TARGET
 
         return self.verification_codes.OK

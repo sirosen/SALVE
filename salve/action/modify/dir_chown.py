@@ -65,6 +65,24 @@ class DirChownAction(ChownAction, DirModifyAction):
 
         return self.verification_codes.OK
 
+    def _execute_on_contents(self, filesys):
+        """
+        Recursive execution on directory contents.
+        """
+        for directory, subdirs, files in filesys.walk(self.target):
+            # chown on all subdirectories
+            for sd in subdirs:
+                # synthesize a new action and invoke it
+                synth = DirChownAction(paths.pjoin(directory, sd), self.user,
+                                       self.group, self.file_context)
+                synth(filesys)
+            # chown on all files in the directory
+            for f in files:
+                # synthesize a new action and invoke it
+                synth = FileChownAction(paths.pjoin(directory, f), self.user,
+                                        self.group, self.file_context)
+                synth(filesys)
+
     def execute(self, filesys):
         """
         DirChownAction execution.
@@ -74,44 +92,23 @@ class DirChownAction(ChownAction, DirModifyAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            logstr = "DirChown: Non-Existent target dir \"%s\"" % self.target
-            logger.warn(logstr)
+            logger.warn("DirChown: Non-Existent target dir \"%s\"" %
+                        self.target)
             return
         if vcode == self.verification_codes.NOT_ROOT:
-            logstr = "DirChown: Cannot Chown as Non-Root User"
-            logger.warn(logstr)
+            logger.warn("DirChown: Cannot Chown as Non-Root User")
+            return
+        if vcode == self.verification_codes.SKIP_EXEC:
             return
 
-        # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         logger.info('Performing DirChown of \"%s\" to %s:%s' %
                     (self.target, self.user, self.group))
 
-        if vcode != self.verification_codes.SKIP_EXEC:
-            uid = ugo.name_to_uid(self.user)
-            gid = ugo.name_to_gid(self.group)
-            # chown without following symlinks
-            filesys.chown(self.target, uid, gid)
+        # chown without following symlinks
+        filesys.chown(self.target, ugo.name_to_uid(self.user),
+                      ugo.name_to_gid(self.group))
 
         if self.recursive:
-            for directory, subdirs, files in filesys.walk(self.target):
-                # chown on all subdirectories
-                for sd in subdirs:
-                    target = paths.pjoin(directory, sd)
-                    # synthesize a new action and invoke it
-                    synth = DirChownAction(target,
-                                           self.user,
-                                           self.group,
-                                           self.file_context,
-                                           recursive=False)
-                    synth(filesys)
-                # chown on all files in the directory
-                for f in files:
-                    target = paths.pjoin(directory, f)
-                    # synthesize a new action and invoke it
-                    synth = FileChownAction(target,
-                                            self.user,
-                                            self.group,
-                                            self.file_context)
-                    synth(filesys)
+            self._execute_on_contents(filesys)

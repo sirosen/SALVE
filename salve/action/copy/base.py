@@ -32,3 +32,8 @@ class CopyAction(with_metaclass(abc.ABCMeta, Action)):
         Action.__init__(self, file_context)
         self.src = os.path.normpath(src)
         self.dst = os.path.normpath(dst)
+
+    def __str__(self):
+        return ("{0}(src={1},dst={2},context={3})"
+                .format(self.__class__.__name__, self.src, self.dst,
+                        repr(self.file_context)))

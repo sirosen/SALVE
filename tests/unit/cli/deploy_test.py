@@ -1,15 +1,16 @@
-import sys
 import mock
 
 from nose.tools import istest
 
 from salve.cli import deploy
 
-from salve.exceptions import SALVEException, ActionException, BlockException, \
-    ParsingException
+from salve.exceptions import (SALVEException, ActionException, BlockException,
+                              ParsingException, TokenizationException)
+
 from salve.context import ExecutionContext, FileContext
 
-from tests.util import ensure_except, scratch, assert_substr
+from tests.util import (ensure_except, ensure_SystemExit_with_code,
+                        scratch, assert_substr)
 
 
 startup_v3_warning = ('STARTUP [WARNING] Deprecation Warning: --directory ' +
@@ -23,25 +24,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
         dummy_file_context = FileContext('no such file', -1)
         self.ctx = dummy_file_context
 
-        self.mocked_exitval = None
-        real_exit = sys.exit
-
-        def mock_exit(n):
-            self.mocked_exitval = n
-            real_exit(n)
-
-        self.exit_patch = mock.patch('sys.exit', mock_exit)
-
-    def setUp(self):
-        scratch.ScratchContainer.setUp(self)
-        self.exit_patch.start()
-
-    def tearDown(self):
-        scratch.ScratchContainer.tearDown(self)
-        self.exit_patch.stop()
-
     @istest
-    def deploy_main(self):
+    @mock.patch('salve.cli.deploy.SALVEConfig')
+    @mock.patch('salve.config.SALVEConfig')
+    @mock.patch('salve.cli.deploy.ManifestBlock')
+    def deploy_main(self, mock_man, mock_config, mock_deploy_config):
         """
         Unit: Deploy Command Dummy Manifest Block Expand And Run
         Checks that running the deploy main function expands and runs
@@ -51,39 +38,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fake_args.manifest = 'root.manifest'
         fake_args.directory = '.'
 
-        have_run = {
-            'action_execute': False,
-            'expand_blocks': False
-        }
+        mock_action = mock.Mock()
+        mock_man_instance = mock.Mock()
+        mock_man_instance.compile.return_value = mock_action
+        mock_man.return_value = mock_man_instance
 
-        class MockAction(object):
-            def __init__(self):
-                pass
+        deploy.main(fake_args)
 
-            def __call__(self, filesys):
-                self.execute(filesys)
-
-            def execute(self, filesys):
-                have_run['action_execute'] = True
-
-        class MockManifest(object):
-            def __init__(self, exec_context, source=None):
-                assert source == 'root.manifest'
-
-            def expand_blocks(self, x, y, z):
-                have_run['expand_blocks'] = True
-
-            def compile(self):
-                return MockAction()
-
-        with mock.patch('salve.cli.deploy.ManifestBlock',
-                        MockManifest):
-            with mock.patch('salve.config.SALVEConfig', mock.Mock()):
-                with mock.patch('salve.cli.deploy.SALVEConfig', mock.Mock()):
-                    deploy.main(fake_args)
-
-        assert have_run['action_execute']
-        assert have_run['expand_blocks']
+        assert mock_action.called
+        assert mock_man_instance.expand_blocks.called
 
     @istest
     def deploy_salve_exception(self):
@@ -99,14 +62,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
             raise SALVEException('message string', self.ctx)
 
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
-            try:
-                deploy.main(fake_args)
-            except SystemExit:
-                assert self.mocked_exitval == 1
+            ensure_SystemExit_with_code(1, deploy.main, fake_args)
 
-        err = self.stderr.getvalue()
-        expected = 'STARTUP [ERROR] no such file, line -1: message string'
-        assert_substr(err, expected)
+        assert_substr(self.stderr.getvalue(),
+                      'STARTUP [ERROR] no such file, line -1: message string')
 
     @istest
     def deploy_block_exception(self):
@@ -115,9 +74,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown BlockExceptions.
         """
-        ExecutionContext().transition(ExecutionContext.phases.STARTUP,
-                                      quiet=True)
-
         fake_args = mock.Mock()
         fake_args.manifest = 'root.manifest'
 
@@ -126,19 +82,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
             raise BlockException('message string', self.ctx)
 
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
-            try:
-                deploy.main(fake_args)
-            except SystemExit:
-                assert self.mocked_exitval == 1
-            else:
-                assert False
+            ensure_SystemExit_with_code(1, deploy.main, fake_args)
 
         err = self.stderr.getvalue()
-        expected = '\n'.join((
-            '[DEBUG] SALVE Execution Phase Transition [STARTUP] -> [PARSING]',
-            'PARSING [ERROR] no such file, line -1: message string\n'
-            ))
-        assert_substr(err, expected)
+        assert_substr(err, ('[DEBUG] SALVE Execution Phase Transition ' +
+                            '[STARTUP] -> [PARSING]'))
+        assert_substr(err, ('PARSING [ERROR] no such file, ' +
+                            'line -1: message string'))
 
     @istest
     def deploy_action_exception(self):
@@ -147,8 +97,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown ActionExceptions.
         """
-        ExecutionContext().transition(ExecutionContext.phases.STARTUP)
-
         fake_args = mock.Mock()
         fake_args.manifest = 'root.manifest'
 
@@ -157,14 +105,11 @@ class TestWithScratchdir(scratch.ScratchContainer):
             raise ActionException('message string', self.ctx)
 
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
-            try:
-                deploy.main(fake_args)
-            except SystemExit:
-                assert self.mocked_exitval == 1
+            ensure_SystemExit_with_code(1, deploy.main, fake_args)
 
-        err = self.stderr.getvalue()
-        expected = 'COMPILATION [ERROR] no such file, line -1: message string'
-        assert_substr(err, expected)
+        assert_substr(
+            self.stderr.getvalue(),
+            'COMPILATION [ERROR] no such file, line -1: message string')
 
     @istest
     def deploy_tokenization_exception(self):
@@ -173,10 +118,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown TokenizationExceptions.
         """
-        from salve.exceptions import TokenizationException
-
-        ExecutionContext().transition(ExecutionContext.phases.STARTUP)
-
         fake_args = mock.Mock()
         fake_args.manifest = 'root.manifest'
 
@@ -185,14 +126,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
             raise TokenizationException('message string', self.ctx)
 
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
-            try:
-                deploy.main(fake_args)
-            except SystemExit:
-                assert self.mocked_exitval == 1
+            ensure_SystemExit_with_code(1, deploy.main, fake_args)
 
-        err = self.stderr.getvalue()
-        expected = "PARSING [ERROR] no such file, line -1: message string"
-        assert_substr(err, expected)
+        assert_substr(self.stderr.getvalue(),
+                      "PARSING [ERROR] no such file, line -1: message string")
 
     @istest
     def deploy_parsing_exception(self):
@@ -201,8 +138,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Checks that running the deploy main function catches and pretty
         prints any thrown ParsingExceptions.
         """
-        ExecutionContext().transition(ExecutionContext.phases.STARTUP)
-
         fake_args = mock.Mock()
         fake_args.manifest = 'root.manifest'
 
@@ -211,14 +146,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
             raise ParsingException('message string', self.ctx)
 
         with mock.patch('salve.cli.deploy.run_on_manifest', mock_run):
-            try:
-                deploy.main(fake_args)
-            except SystemExit:
-                assert self.mocked_exitval == 1
+            ensure_SystemExit_with_code(1, deploy.main, fake_args)
 
-        err = self.stderr.getvalue()
-        expected = 'PARSING [ERROR] no such file, line -1: message string'
-        assert_substr(err, expected)
+        assert_substr(self.stderr.getvalue(),
+                      'PARSING [ERROR] no such file, line -1: message string')
 
     @istest
     def deploy_unexpected_exception(self):

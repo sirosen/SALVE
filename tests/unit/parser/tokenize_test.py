@@ -1,10 +1,9 @@
-#!/usr/bin/python
-
 from nose.tools import istest
 
 from salve import paths
 from salve.context import FileContext
 from salve.parser import tokenize
+from salve.parser.tokenize import Token
 
 from tests.util import ensure_except, full_path, MockedGlobals
 
@@ -22,7 +21,19 @@ def ensure_TokenizationException(filename):
     assert (paths.clean_path(e.file_context.filename) ==
             paths.clean_path(path))
 
-# failure tests
+
+def assert_tokens_match_types(tokens, types):
+    assert len(tokens) == len(types)
+
+    for (tok, ty) in zip(tokens, types):
+        assert tok.ty == ty
+
+
+# useful lists for piecing together expected series of tokens
+empty_block_tys = [Token.types.BLOCK_START, Token.types.BLOCK_END]
+id_and_empty_block_tys = [Token.types.IDENTIFIER] + empty_block_tys
+id_and_start_tys = [Token.types.IDENTIFIER, Token.types.BLOCK_START]
+id_and_template_tys = [Token.types.IDENTIFIER, Token.types.TEMPLATE]
 
 
 class TestTokenizeMockedGlobals(MockedGlobals):
@@ -104,10 +115,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         containing the identifier, a block open, and a block close.
         """
         tokens = tokenize_filename(full_path('empty_block.manifest'))
-        assert len(tokens) == 3
-        assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[1].ty == tokenize.Token.types.BLOCK_START
-        assert tokens[2].ty == tokenize.Token.types.BLOCK_END
+        assert_tokens_match_types(tokens, id_and_empty_block_tys)
 
     @istest
     def invalid_id_nofail(self):
@@ -117,15 +125,11 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         unknown block identifier.
         """
         tokens = tokenize_filename(full_path('invalid_block_id.manifest'))
-        assert len(tokens) == 8
-        assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[1].ty == tokenize.Token.types.BLOCK_START
-        assert tokens[2].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[3].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[4].ty == tokenize.Token.types.BLOCK_END
-        assert tokens[5].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[6].ty == tokenize.Token.types.BLOCK_START
-        assert tokens[7].ty == tokenize.Token.types.BLOCK_END
+        assert_tokens_match_types(
+            tokens,
+            id_and_start_tys + id_and_template_tys +
+            [Token.types.BLOCK_END] + id_and_empty_block_tys
+        )
 
     @istest
     def attribute_with_spaces(self):
@@ -135,14 +139,10 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         value is a quoted string containing spaces.
         """
         tokens = tokenize_filename(full_path('spaced_attr.manifest'))
-        assert len(tokens) == 7
-        assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[1].ty == tokenize.Token.types.BLOCK_START
-        assert tokens[2].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[3].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[4].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[5].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[6].ty == tokenize.Token.types.BLOCK_END
+        assert_tokens_match_types(
+            tokens,
+            id_and_start_tys + 2*id_and_template_tys + [Token.types.BLOCK_END]
+        )
 
     @istest
     def primary_attr_block_followed_by_block(self):
@@ -152,16 +152,11 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Attribute" style block is followed by an ordinary block.
         """
         tokens = tokenize_filename(full_path('primary_attr2.manifest'))
-        assert len(tokens) == 9
-        assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[1].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[2].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[3].ty == tokenize.Token.types.BLOCK_START
-        assert tokens[4].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[5].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[6].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[7].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[8].ty == tokenize.Token.types.BLOCK_END
+        assert_tokens_match_types(
+            tokens,
+            id_and_template_tys + id_and_start_tys +
+            2*id_and_template_tys + [Token.types.BLOCK_END]
+        )
 
     @istest
     def primary_attr_block_series(self):
@@ -171,15 +166,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Attribute" style blocks are given in series
         """
         tokens = tokenize_filename(full_path('primary_attr3.manifest'))
-        assert len(tokens) == 8
-        assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[1].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[2].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[3].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[4].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[5].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[6].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[7].ty == tokenize.Token.types.TEMPLATE
+        assert_tokens_match_types(tokens, 4*id_and_template_tys)
 
     @istest
     def primary_attr_block_empty_body(self):
@@ -189,11 +176,8 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Attribute" style block is given a "{}" body
         """
         tokens = tokenize_filename(full_path('primary_attr4.manifest'))
-        assert len(tokens) == 4
-        assert tokens[0].ty == tokenize.Token.types.IDENTIFIER
-        assert tokens[1].ty == tokenize.Token.types.TEMPLATE
-        assert tokens[2].ty == tokenize.Token.types.BLOCK_START
-        assert tokens[3].ty == tokenize.Token.types.BLOCK_END
+        assert_tokens_match_types(tokens,
+                                  id_and_template_tys + empty_block_tys)
 
     @istest
     def token_to_string(self):
@@ -202,6 +186,6 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Checks the result of invoking Token.__str__
         """
         ctx = FileContext('a/b/c', 2)
-        file_tok = tokenize.Token('file', tokenize.Token.types.IDENTIFIER, ctx)
+        file_tok = Token('file', Token.types.IDENTIFIER, ctx)
         assert (str(file_tok) ==
                 'Token(value=file,ty=IDENTIFIER,lineno=2,filename=a/b/c)')

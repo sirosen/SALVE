@@ -3,7 +3,7 @@ import shlex
 
 import salve
 from salve import paths, Enum
-from salve.context import FileContext
+from salve.context import FileContext, ExecutionContext
 from salve.exceptions import TokenizationException
 
 from salve.util import stream_filename
@@ -48,6 +48,128 @@ class Token(object):
         return 'Token(' + ','.join(attrs) + ')'
 
 
+"""
+State definitions
+    FREE: Waiting for a block identifier or EOF
+
+    IDENTIFIER_FOUND: Got a block identifier, waiting for a { or primary
+    attr (template string)
+
+    PRIMARY_ATTR_FOUND: Found a primary block attr, next is either { or
+    another identifier, or EOF
+
+    BLOCK: Inside of a block, waiting for an attribute identifier
+        or }
+
+    IDENTIFIER_FOUND_BLOCK: Inside of a block, got an attribute
+        identifier, waiting for a template string value
+"""
+tokenizing_states = Enum('FREE', 'IDENTIFIER_FOUND', 'PRIMARY_ATTR_FOUND',
+                         'BLOCK', 'IDENTIFIER_FOUND_BLOCK')
+state_map = {
+    tokenizing_states.FREE: Token.types.IDENTIFIER,
+    tokenizing_states.IDENTIFIER_FOUND: [Token.types.BLOCK_START,
+                                         Token.types.TEMPLATE],
+    tokenizing_states.PRIMARY_ATTR_FOUND: Token.types.BLOCK_START,
+    tokenizing_states.BLOCK: [Token.types.BLOCK_END, Token.types.IDENTIFIER],
+    tokenizing_states.IDENTIFIER_FOUND_BLOCK: Token.types.TEMPLATE
+}
+
+
+def add_token(tok, ty):
+    """
+    Add a token to the list in progress.
+
+    Args:
+        @tok
+        The string that was tokenized.
+        @ty
+        The Token type of @tok
+    """
+    ExecutionContext()['tokenizing']['tokens'].append(
+        Token(tok, ty, ExecutionContext()['tokenizing']['filectx']))
+
+
+def validate_end_state():
+    """
+    Verify that the tokenizer is exiting in a non-failure state.
+    """
+    # we can either be FREE (i.e. last saw a '}') or PRIMARY_ATTR_FOUND (i.e.
+    # last saw a '<block_id> <attr_val>') at the end of the file
+    tokenizing_ctx = ExecutionContext()['tokenizing']
+    state = tokenizing_ctx['state']
+    if state not in (tokenizing_states.FREE,
+                     tokenizing_states.PRIMARY_ATTR_FOUND):
+        raise TokenizationException('Tokenizer ended in state ' +
+                                    state, tokenizing_ctx['filectx'])
+
+
+def process_token(token_str, shlexer):
+    tokenizing_ctx = ExecutionContext()['tokenizing']
+
+    def _reject_unexpected(reject_start=False, reject_end=False):
+        def _reject():
+            raise TokenizationException(
+                'Unexpected token: ' + token_str +
+                ' Expected ' + str(tokenizing_ctx['expected_types']) +
+                ' instead.', tokenizing_ctx['filectx'])
+
+        if reject_start and token_str == '{':
+            _reject()
+        elif reject_end and token_str == '}':
+            _reject()
+
+    def _add_token(ty, target_state):
+        add_token(token_str, ty)
+        tokenizing_ctx['state'] = target_state
+
+    def _add_delim_or_fallback(delim_state, fallback_ty, fallback_state):
+        if token_str == '{':
+            _add_token(Token.types.BLOCK_START, delim_state)
+        elif token_str == '}':
+            _add_token(Token.types.BLOCK_END, delim_state)
+        else:
+            _add_token(fallback_ty, fallback_state)
+
+    # generate a new FileContext
+    ctx = FileContext(tokenizing_ctx['filename'], lineno=shlexer.lineno)
+    tokenizing_ctx['filectx'] = ctx
+
+    tokenizing_ctx['expected_types'] = state_map[tokenizing_ctx['state']]
+
+    # if we have not found a block, the expectation is that we will
+    # find a block identifier as the first token
+    if tokenizing_ctx['state'] is tokenizing_states.FREE:
+        _reject_unexpected(reject_start=True, reject_end=True)
+        _add_token(Token.types.IDENTIFIER, tokenizing_states.IDENTIFIER_FOUND)
+
+    # if we have found a block identifier, the next token must be
+    # a block start, '{', or the primary attr
+    elif tokenizing_ctx['state'] is tokenizing_states.IDENTIFIER_FOUND:
+        _reject_unexpected(reject_end=True)
+        _add_delim_or_fallback(tokenizing_states.BLOCK, Token.types.TEMPLATE,
+                               tokenizing_states.PRIMARY_ATTR_FOUND)
+
+    elif tokenizing_ctx['state'] is tokenizing_states.PRIMARY_ATTR_FOUND:
+        _reject_unexpected(reject_end=True)
+        _add_delim_or_fallback(tokenizing_states.BLOCK, Token.types.IDENTIFIER,
+                               tokenizing_states.IDENTIFIER_FOUND)
+
+    # if we are in a block, the next token is either a block end,
+    # '}', or an attribute identifier
+    elif tokenizing_ctx['state'] is tokenizing_states.BLOCK:
+        _reject_unexpected(reject_start=True)
+        _add_delim_or_fallback(tokenizing_states.FREE, Token.types.IDENTIFIER,
+                               tokenizing_states.IDENTIFIER_FOUND_BLOCK)
+
+    # if we are in a block and have found an attribute identifier,
+    # then the next token must be the template string for that
+    # attribute's value
+    elif tokenizing_ctx['state'] is tokenizing_states.IDENTIFIER_FOUND_BLOCK:
+        _reject_unexpected(reject_start=True, reject_end=True)
+        _add_token(Token.types.TEMPLATE, tokenizing_states.BLOCK)
+
+
 def tokenize_stream(stream):
     """
     Convert an input stream into a list of Tokens.
@@ -60,157 +182,36 @@ def tokenize_stream(stream):
         validation that the token order is valid, and tag tokens with
         their types.
     """
-    def is_block_delim(token):
-        """
-        Check if a token is a BLOCK_START or BLOCK_END
-
-        Args:
-            @token
-            Not a Token, but a raw string being examined.
-        """
-        return token == '{' or token == '}'
-
-    def unexpected_token(token_str, expected, file_context):
-        """
-        Raise an exception due to an unexpected Token being fund in the
-        input stream. Usually means that there are out of order tokens.
-
-        Args:
-            @token_str
-            Not a Token, but a string that was found in the stream.
-            @expected
-            The expected type(s) of the Token.
-            @file_context
-            The FileContext.
-        """
-        raise TokenizationException(
-            'Unexpected token: ' + token_str +
-            ' Expected ' + str(expected) + ' instead.',
-            file_context)
-
-    """
-    State definitions
-        FREE: Waiting for a block identifier or EOF
-
-        IDENTIFIER_FOUND: Got a block identifier, waiting for a { or primary
-        attr (template string)
-
-        PRIMARY_ATTR_FOUND: Found a primary block attr, next is either { or
-        another identifier, or EOF
-
-        BLOCK: Inside of a block, waiting for an attribute identifier
-            or }
-
-        IDENTIFIER_FOUND_BLOCK: Inside of a block, got an attribute
-            identifier, waiting for a template string value
-    """
-    states = Enum('FREE', 'IDENTIFIER_FOUND', 'PRIMARY_ATTR_FOUND', 'BLOCK',
-                  'IDENTIFIER_FOUND_BLOCK')
-
     filename = paths.clean_path(stream_filename(stream), absolute=True)
 
-    tokens = []
-    state = states.FREE
+    # use the exec context to store parsing state as a dict
+    ExecutionContext()['tokenizing'] = {}
+    tokenizing_ctx = ExecutionContext()['tokenizing']
+
+    tokenizing_ctx['tokens'] = []
+    tokenizing_ctx['state'] = tokenizing_states.FREE
+    tokenizing_ctx['filename'] = filename
+    tokenizing_ctx['expected_types'] = Token.types.IDENTIFIER
 
     salve.logger.info('Beginning Tokenization of \"%s\"' % filename)
-    tokenizer = shlex.shlex(stream, posix=True)
+    shlexer = shlex.shlex(stream, posix=True)
     # Basically, everything other than BLOCK_START or BLOCK_END
     # is okay here, we'll let the os library handle it later wrt
     # whether or not a path is valid
-    tokenizer.wordchars = (string.ascii_letters + string.digits +
-                           '_-+=^&@`/\|~$()[].,<>*?!%#')
-
-    def add_token(tok, ty, file_context):
-        """
-        Add a token to the list in progress.
-
-        Args:
-            @tok
-            The string that was tokenized.
-            @ty
-            The Token type of @tok
-            @file_context
-            The FileContext.
-        """
-        tokens.append(Token(tok, ty, file_context))
+    shlexer.wordchars = (string.ascii_letters + string.digits +
+                         '_-+=^&@`/\|~$()[].,<>*?!%#')
 
     # The tokenizer acts as a state machine, reading tokens and making
     # state transitions based on the token values
     # get the first Maybe(Token)
-    current = tokenizer.get_token()
+    current = shlexer.get_token()
     while current is not None:
-        # generate a new FileContext
-        ctx = FileContext(filename, lineno=tokenizer.lineno)
-        # if we have not found a block, the expectation is that we will
-        # find a block identifier as the first token
-        if state is states.FREE:
-            if is_block_delim(current):
-                unexpected_token(current, Token.types.IDENTIFIER, ctx)
-            add_token(current, Token.types.IDENTIFIER, ctx)
-            state = states.IDENTIFIER_FOUND
-
-        # if we have found a block identifier, the next token must be
-        # a block start, '{', or the primary attr
-        elif state is states.IDENTIFIER_FOUND:
-            # if it's a block open, cool
-            if current == '{':
-                add_token(current, Token.types.BLOCK_START, ctx)
-                state = states.BLOCK
-            # if it's a block close, uncool
-            elif current == '}':
-                unexpected_token(current, [Token.types.BLOCK_START,
-                                           Token.types.TEMPLATE], ctx)
-            # anything else must be  primary attr
-            else:
-                add_token(current, Token.types.TEMPLATE, ctx)
-                state = states.PRIMARY_ATTR_FOUND
-
-        elif state is states.PRIMARY_ATTR_FOUND:
-            # if it's a block open, cool
-            if current == '{':
-                add_token(current, Token.types.BLOCK_START, ctx)
-                state = states.BLOCK
-            # if it's a block close, uncool
-            elif current == '}':
-                unexpected_token(current, [Token.types.BLOCK_START,
-                                           Token.types.TEMPLATE], ctx)
-            # anything else is a new block identifier, so no block body
-            else:
-                add_token(current, Token.types.IDENTIFIER, ctx)
-                state = states.IDENTIFIER_FOUND
-
-        # if we are in a block, the next token is either a block end,
-        # '}', or an attribute identifier
-        elif state is states.BLOCK:
-            if current == '{':
-                unexpected_token(current,
-                                 [Token.types.BLOCK_END,
-                                  Token.types.IDENTIFIER], ctx)
-            elif current == '}':
-                add_token(current, Token.types.BLOCK_END, ctx)
-                state = states.FREE
-            else:
-                add_token(current, Token.types.IDENTIFIER, ctx)
-                state = states.IDENTIFIER_FOUND_BLOCK
-
-        # if we are in a block and have found an attribute identifier,
-        # then the next token must be the template string for that
-        # attribute's value
-        elif state is states.IDENTIFIER_FOUND_BLOCK:
-            if is_block_delim(current):
-                unexpected_token(current, Token.types.TEMPLATE, ctx)
-            add_token(current, Token.types.TEMPLATE, ctx)
-            state = states.BLOCK
-
+        process_token(current, shlexer)
         # get the next Maybe(Token)
-        current = tokenizer.get_token()
+        current = shlexer.get_token()
 
-    # we can either be FREE (i.e. last saw a '}') or PRIMARY_ATTR_FOUND (i.e.
-    # last saw a '<block_id> <attr_val>') at the end of the file
-    if state not in (states.FREE, states.PRIMARY_ATTR_FOUND):
-        raise TokenizationException('Tokenizer ended in state ' +
-                                    state, ctx)
+    validate_end_state()
 
     salve.logger.info('Finished Tokenization of \"%s\"' % filename)
 
-    return tokens
+    return tokenizing_ctx['tokens']
