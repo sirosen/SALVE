@@ -5,10 +5,6 @@ from salve.context import ExecutionContext
 
 
 class DirCopyAction(CopyAction):
-    def __str__(self):
-        return ("DirCopyAction(src=" + str(self.src) + ",dst=" +
-                str(self.dst) + ",context=" + repr(self.file_context) + ")")
-
     def verify_can_exec(self, filesys):
         """
         Check to ensure that execution can proceed without errors.

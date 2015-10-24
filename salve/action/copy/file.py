@@ -5,13 +5,6 @@ from salve.context import ExecutionContext
 
 
 class FileCopyAction(CopyAction):
-    def __str__(self):
-        """
-        Stringification into type, source, dst, and context.
-        """
-        return ("FileCopyAction(src=" + str(self.src) + ",dst=" +
-                str(self.dst) + ",context=" + repr(self.file_context) + ")")
-
     def verify_can_exec(self, filesys):
         """
         Check to ensure that execution can proceed without errors.

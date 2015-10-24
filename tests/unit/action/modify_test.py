@@ -267,50 +267,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         assert_substr(err, expected)
 
     @istest
-    def filechown_to_str(self):
-        """
-        Unit: File Chown Action String Conversion
-        """
-        act = modify.FileChownAction('a', 'user1', 'nogroup',
-                                     self.file_context)
-
-        assert str(act) == ('FileChownAction(target=a,user=user1,' +
-                            'group=nogroup,context=' +
-                            repr(self.file_context) + ')')
-
-    @istest
-    def filechmod_to_str(self):
-        """
-        Unit: File Chmod Action String Conversion
-        """
-        act = modify.FileChmodAction('a', '600', self.file_context)
-
-        assert str(act) == ('FileChmodAction(target=a,mode=600,' +
-                            'context=' + repr(self.file_context) + ')')
-
-    @istest
-    def dirchown_to_str(self):
-        """
-        Unit: Directory Chown Action String Conversion
-        """
-        act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
-
-        assert str(act) == ('DirChownAction(target=a,user=user1,' +
-                            'group=nogroup,recursive=False,' +
-                            'context=' + repr(self.file_context) + ')')
-
-    @istest
-    def dirchmod_to_str(self):
-        """
-        Unit: Directory Chmod Action String Conversion
-        """
-        act = modify.DirChmodAction('a', '600', self.file_context)
-
-        assert str(act) == ('DirChmodAction(target=a,mode=600,' +
-                            'recursive=False,context=' +
-                            repr(self.file_context) + ')')
-
-    @istest
     @mock.patch('salve.filesys.ConcreteFilesys.exists', lambda fs, x: True)
     @mock.patch('salve.ugo.is_root', lambda: True)
     def filechmod_verify_root(self):
@@ -464,3 +420,34 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         chmod_args = arglist_from_mock(mock_chmod)
         assert chmod_args == [('a', int('755', 8))]
+
+    @istest
+    def stringification_test_generator(self):
+        class_tuples = [(modify.FileChownAction, 'FileChownAction'),
+                        (modify.FileChmodAction, 'FileChmodAction'),
+                        (modify.DirChownAction, 'DirChownAction'),
+                        (modify.DirChmodAction, 'DirChmodAction')]
+
+        for (klass, name) in class_tuples:
+            def check_func():
+                args = [('target', 'a')]
+                if 'Chmod' in name:
+                    args.append(('mode', '600'))
+                    act = klass('a', '600', self.file_context)
+                elif 'Chown' in name:
+                    args.append(('user', 'user1'))
+                    args.append(('group', 'nogroup'))
+                    act = klass('a', 'user1', 'nogroup', self.file_context)
+                else:
+                    assert False
+
+                if 'Dir' in name:
+                    args.append(('recursive', False))
+
+                assert str(act) == '{0}({1},context={2})'.format(
+                    name,
+                    ','.join(['{0}={1}'.format(k, v) for (k, v) in args]),
+                    repr(self.file_context))
+            check_func.description = "Unit: {0} String Conversion".format(name)
+
+            yield check_func
