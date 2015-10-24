@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import subprocess
 
 from salve.action.base import Action
@@ -36,7 +34,6 @@ class ShellAction(Action):
         Invokes the ShellAction's command, and fails if it returns a
         nonzero exit code, and returns its stdout and stderr.
         """
-        # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         # run the command, passing output to PIPE

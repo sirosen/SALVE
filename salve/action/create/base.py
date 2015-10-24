@@ -13,3 +13,16 @@ class CreateAction(with_metaclass(abc.ABCMeta, Action)):
     """
     verification_codes = \
         Action.verification_codes.extend('UNWRITABLE_TARGET')
+
+    def __init__(self, dst, file_context):
+        """
+        CreateAction initializer
+
+        Args:
+            @dst
+            Destination path.
+            @file_context
+            The FileContext.
+        """
+        Action.__init__(self, file_context)
+        self.dst = dst

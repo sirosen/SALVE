@@ -70,7 +70,6 @@ class DirBackupAction(ActionList, BackupAction):
             # for now, to keep it super-simple, we ignore empty dirs
             for f in files:
                 filename = paths.pjoin(dirname, f)
-                self.append(FileBackupAction(filename,
-                                             self.file_context))
+                self.append(FileBackupAction(filename, self.file_context))
 
         ActionList.execute(self, filesys)

@@ -11,13 +11,12 @@ class DynamicAction(with_metaclass(abc.ABCMeta, Action)):
     that they are instantiated. Is an ABC.
     """
     @abc.abstractmethod
-    def generate(self):
+    def generate(self):  # pragma: no cover
         """
         Generates the action body -- can consist of a rewrite of
         self.execute(), for example -- so that when execution takes
         place, it will be valid / possible.
         """
-        pass  # pragma: no cover
 
     def execute(self, filesys):
         """
