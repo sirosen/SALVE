@@ -8,8 +8,8 @@
     :alt: PyPi Version
     :target: https://badge.fury.io/py/salve
 .. image:: https://codeclimate.com/github/sirosen/SALVE/badges/gpa.svg
-   :target: https://codeclimate.com/github/sirosen/SALVE
    :alt: Code Climate
+   :target: https://codeclimate.com/github/sirosen/SALVE
 
 SALVE
 =====
@@ -22,7 +22,7 @@ a wide class of deployment actions.
 It also backs up the preexisting versions of files that it changes when
 possible so that you can recover them if necessary at a later date.
 
-More information is available at `SALVE Website <http://salve.sirosen.net/>`_.
+More information is available at the `SALVE Website <http://salve.sirosen.net/>`_.
 
 How do I use it?
 ================
