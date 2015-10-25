@@ -1,6 +1,3 @@
-#!/usr/bin/python
-
-import mock
 from nose.tools import istest
 
 from tests.util import ensure_except
@@ -61,3 +58,16 @@ def execctx_transition_failure_nonexistent():
     ctx = context.ExecutionContext(
         startphase=context.ExecutionContext.phases.STARTUP)
     ensure_except(AssertionError, ctx.transition, 'STARTUP2')
+
+
+@istest
+def execctx_contains():
+    """
+    Unit: ExecutionContext Contains Value
+    Tests the __contains__ method on an execution context to make sure that it
+    works.
+    """
+    ctx = context.ExecutionContext(
+        startphase=context.ExecutionContext.phases.STARTUP)
+    ctx['x'] = 1
+    assert 'x' in ctx

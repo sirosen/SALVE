@@ -1,8 +1,6 @@
-#!/usr/bin/python
-
 from nose.tools import istest
 
-from salve.util import Enum
+from salve import Enum
 
 
 @istest
@@ -46,3 +44,17 @@ def mixed_mapping():
     assert(x.A == 'A')
     assert(x.B == 'x.B')
     assert(x.C is func)
+
+
+@istest
+def elem_iter():
+    """
+    Unit: Enum Util Iteration
+    Tests that iteration over an enum produces the sequence of elements in that
+    enum.
+    """
+    x = Enum(A=1, B=2, C=3)
+    x_set = set(v for v in x)
+    assert 'A' in x_set
+    assert 'B' in x_set
+    assert 'C' in x_set

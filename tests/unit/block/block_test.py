@@ -3,7 +3,7 @@
 from nose.tools import istest
 from tests.util import ensure_except
 
-from salve.block import Block
+from salve.api import Block
 from salve.context import FileContext
 
 
@@ -14,4 +14,4 @@ def block_is_abstract():
     Ensures that a Block cannot be instantiated.
     """
     ensure_except(TypeError, Block, Block.types.FILE,
-            FileContext('no such file'))
+                  FileContext('no such file'))

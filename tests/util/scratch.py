@@ -6,7 +6,6 @@ import shutil
 
 import mock
 import textwrap
-import string
 
 from salve import paths
 from tests.util import MockedGlobals
@@ -19,7 +18,7 @@ class ScratchContainer(MockedGlobals):
         backup_dir=$HOME/backups
         backup_log=$HOME/backup.log
 
-        log_level=ALL
+        log_level=DEBUG
         # run_log=$HOME/.salve/run_log
 
         [default]
@@ -90,11 +89,9 @@ class ScratchContainer(MockedGlobals):
         real_uid = os.geteuid()
         real_gid = os.getegid()
         self.patches.add(mock.patch('salve.ugo.name_to_uid',
-            lambda x: real_uid)
-            )
+                         lambda x: real_uid))
         self.patches.add(mock.patch('salve.ugo.name_to_gid',
-            lambda x: real_gid)
-            )
+                         lambda x: real_gid))
 
         self.patches.add(
             mock.patch('os.path.expanduser', expanduser)
@@ -103,13 +100,13 @@ class ScratchContainer(MockedGlobals):
         # use the builtins import to check if we are in Py3
         # more foolproof than using sys.version_info
         try:
-            import builtins
+            import builtins  # flake8: noqa
             self.patches.add(
                 mock.patch('builtins.open', mock_open)
                 )
         # if it fails with an import error, we are in Py2
         except ImportError:
-            import __builtin__ as builtins
+            import __builtin__ as builtins  # flake8: noqa
             self.patches.add(
                 mock.patch('__builtin__.open', mock_open)
                 )

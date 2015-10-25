@@ -1,285 +1,229 @@
-#!/usr/bin/python
-
 import os
 import mock
 from nose.tools import istest
 
-from tests.util import ensure_except
+from tests.util import ensure_except, disambiguate_by_class
 
-from salve import action
-from salve.action import backup, modify, create
-from salve.block import BlockException, directory_block
+from salve.action import modify
+from salve.exceptions import BlockException
 
-from tests.unit.block import dummy_file_context, dummy_logger
+from salve.block import DirBlock
 
+from tests.unit.block import dummy_file_context, ScratchWithExecCtx
+from .helpers import (
+    check_list_act, check_dir_create_act,
+    check_dir_chown_act, check_dir_chmod_act,
 
-@istest
-def dir_create_compile():
-    """
-    Unit: Directory Block Create Compile
-    Verifies the result of converting a Dir Block to an Action.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'create')
-    b.set('target', '/p/q/r')
-    b.set('user', 'user1')
-    b.set('group', 'nogroup')
-
-    with mock.patch('salve.logger', dummy_logger):
-        act = b.compile()
-
-    assert isinstance(act, action.ActionList)
-    assert len(act.actions) == 2
-
-    mkdir = act.actions[0]
-    chown = act.actions[1]
-    assert isinstance(mkdir, create.DirCreateAction)
-    assert isinstance(chown, modify.DirChownAction)
-
-    assert str(mkdir.dst) == '/p/q/r'
-    assert chown.user == 'user1'
-    assert chown.group == 'nogroup'
-    assert chown.target == str(mkdir.dst)
+    check_file_backup_act, check_file_copy_act,
+    assign_block_attrs
+)
 
 
-@istest
-def dir_create_compile_chmod():
-    """
-    Unit: Directory Block Create Compile With Chmod
-    Verifies the result of converting a Dir Block to an Action when the
-    Block's mode is set.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'create')
-    b.set('target', '/p/q/r')
-    b.set('user', 'user1')
-    b.set('group', 'nogroup')
-    b.set('mode', '755')
+def check_actions_against_defaults(create=None, chmod=None, chown=None,
+                                   chown_chmod_pair=None):
+    if chown_chmod_pair:
+        chmod, chown = disambiguate_by_class(
+            modify.DirChmodAction, chown_chmod_pair[0], chown_chmod_pair[1])
 
-    with mock.patch('salve.logger', dummy_logger):
-        dir_act = b.compile()
-
-    assert isinstance(dir_act, action.ActionList)
-    assert len(dir_act.actions) == 3
-
-    mkdir = dir_act.actions[0]
-    chmod = dir_act.actions[1]
-    chown = dir_act.actions[2]
-    assert isinstance(mkdir, create.DirCreateAction)
-    assert isinstance(chmod, modify.DirChmodAction)
-    assert isinstance(chown, modify.DirChownAction)
-
-    assert str(mkdir.dst) == '/p/q/r'
-    assert chmod.target == str(mkdir.dst)
-    assert chmod.mode == int('755', 8)
-    assert chown.user == 'user1'
-    assert chown.group == 'nogroup'
-    assert chown.target == str(mkdir.dst)
+    if create:
+        check_dir_create_act(create, '/p/q/r')
+    if chmod:
+        check_dir_chmod_act(chmod, '755', '/p/q/r')
+    if chown:
+        check_dir_chown_act(chown, 'user1', 'nogroup', '/p/q/r')
 
 
-@istest
-def dir_create_chown_as_root():
-    """
-    Unit: Directory Block Create Compile With Chown
-    Verifies the result of converting a Dir Block to an Action when the
-    user is root and the Block's user and group are set.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'create')
-    b.set('target', '/p/q/r')
-    b.set('user', 'user1')
-    b.set('group', 'nogroup')
-    with mock.patch('salve.ugo.is_root', lambda: True):
-        with mock.patch('salve.logger', dummy_logger):
-            dir_act = b.compile()
-
-    assert isinstance(dir_act, action.ActionList)
-    assert len(dir_act.actions) == 2
-    mkdir = dir_act.actions[0]
-    chown = dir_act.actions[1]
-
-    assert isinstance(mkdir, create.DirCreateAction)
-    assert isinstance(chown, modify.DirChownAction)
-
-    assert str(mkdir.dst) == '/p/q/r'
-    assert chown.target == '/p/q/r'
-    assert chown.user == 'user1'
-    assert chown.group == 'nogroup'
+def make_dir_block(action='copy', source='/a/b/c', target='/p/q/r',
+                   user='user1', group='nogroup', mode='755'):
+    b = DirBlock(dummy_file_context)
+    assign_block_attrs(b, action=action, source=source, target=target,
+                       user=user, group=group, mode=mode)
+    return b
 
 
-@istest
-def empty_dir_copy_compile():
-    """
-    Unit: Directory Block Copy Compile (Empty Dir)
-    Verifies the result of converting a Dir Block to an Action.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'copy')
-    b.set('source', '/a/b/c')
-    b.set('target', '/p/q/r')
-    with mock.patch('os.walk', lambda d: []):
-        with mock.patch('salve.logger', dummy_logger):
-            dir_act = b.compile()
+class TestWithScratchdir(ScratchWithExecCtx):
+    @istest
+    def dir_create_compile(self):
+        """
+        Unit: Directory Block Create Compile
+        Verifies the result of converting a Dir Block to an Action.
+        """
+        act = make_dir_block(action='create', mode=None).compile()
 
-    assert isinstance(dir_act, action.ActionList)
-    assert len(dir_act.actions) == 1
-    mkdir_act = dir_act.actions[0]
+        check_list_act(act, 2)
+        check_actions_against_defaults(create=act.actions[0],
+                                       chown=act.actions[1])
 
-    assert isinstance(mkdir_act, create.DirCreateAction)
+    @istest
+    def dir_create_compile_chmod(self):
+        """
+        Unit: Directory Block Create Compile With Chmod
+        Verifies the result of converting a Dir Block to an Action when the
+        Block's mode is set.
+        """
+        act = make_dir_block(action='create').compile()
 
-    assert str(mkdir_act.dst) == '/p/q/r'
+        check_list_act(act, 3)
+        check_actions_against_defaults(
+            create=act.actions[0],
+            chown_chmod_pair=(act.actions[1], act.actions[2]))
 
+    @istest
+    def dir_create_chown_as_root(self):
+        """
+        Unit: Directory Block Create Compile With Chown
+        Verifies the result of converting a Dir Block to an Action when the
+        user is root and the Block's user and group are set.
+        """
+        with mock.patch('salve.ugo.is_root', lambda: True):
+            act = make_dir_block(action='create', mode=None).compile()
 
-@istest
-def dir_copy_chown_as_root():
-    """
-    Unit: Directory Block Copy Compile (As Root)
-    Verifies the result of converting a Dir Block to an Action.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'copy')
-    b.set('source', '/a/b/c')
-    b.set('target', '/p/q/r')
-    b.set('user', 'user1')
-    b.set('group', 'nogroup')
+        check_list_act(act, 2)
+        check_actions_against_defaults(create=act.actions[0],
+                                       chown=act.actions[1])
 
-    with mock.patch('salve.ugo.is_root', lambda: True):
+    @istest
+    def empty_dir_copy_compile(self):
+        """
+        Unit: Directory Block Copy Compile (Empty Dir)
+        Verifies the result of converting a Dir Block to an Action.
+        """
         with mock.patch('os.walk', lambda d: []):
-            with mock.patch('salve.logger', dummy_logger):
-                al = b.compile()
+            act = make_dir_block(action='copy', mode=None, user=None,
+                                 group=None).compile()
 
-    assert isinstance(al, action.ActionList)
-    assert len(al.actions) == 2
-    mkdir_act = al.actions[0]
-    chown_act = al.actions[1]
+        check_list_act(act, 1)
+        check_actions_against_defaults(create=act.actions[0])
 
-    assert isinstance(mkdir_act, create.DirCreateAction)
-    assert isinstance(chown_act, modify.DirChownAction)
+    @istest
+    def nested_dir_copy_compile(self):
+        """
+        Unit: Directory Block Copy Compile (Nested Dirs)
+        Verifies the result of converting a Dir Block to an Action.
+        """
+        def mock_os_walk(dirname):
+            return [
+                (dirname, ['subdir1', 'subdir2'], ['file1']),
+                (os.path.join(dirname, 'subdir1'), ['subdir3'], ['file2']),
+                (os.path.join(dirname, 'subdir2'), [], []),
+                (os.path.join(dirname, 'subdir1', 'subdir3'), [], ['file3'])
+                ]
 
-    assert str(mkdir_act.dst) == '/p/q/r'
-    assert chown_act.target == '/p/q/r'
-    assert chown_act.user == 'user1'
-    assert chown_act.group == 'nogroup'
+        def _check_file_act(fileact, fpath):
+            src = os.path.join('/a/b/c', fpath)
+            dst = os.path.join('/p/q/r', fpath)
+            check_list_act(fileact, 2)
+            check_file_backup_act(fileact.actions[0], dst, '/m/n', '/m/n.log')
+            check_file_copy_act(fileact.actions[1], src, dst)
 
+        with mock.patch('os.walk', mock_os_walk):
+            act = make_dir_block(mode=None, user=None, group=None).compile()
 
-@istest
-def dir_copy_fails_nosource():
-    """
-    Unit: Directory Block Copy Fails Without Source
-    Verifies that converting a Dir Block to an Action raises a
-    BlockException.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'copy')
-    b.set('target', '/p/q/r')
-    b.set('user', 'user1')
-    b.set('group', 'nogroup')
-    b.set('mode', '755')
+        # there should be seven component actions in all: four for each of the
+        # directories (counting the containing dir) and three for the three
+        # files
+        check_list_act(act, 7)
+        check_dir_create_act(act.actions[0], '/p/q/r')
+        check_dir_create_act(act.actions[1], '/p/q/r/subdir1')
+        check_dir_create_act(act.actions[2], '/p/q/r/subdir2')
+        _check_file_act(act.actions[3], 'file1')
+        check_dir_create_act(act.actions[4], '/p/q/r/subdir1/subdir3')
+        _check_file_act(act.actions[5], 'subdir1/file2')
+        _check_file_act(act.actions[6], 'subdir1/subdir3/file3')
 
-    with mock.patch('salve.logger', dummy_logger):
+    @istest
+    @mock.patch('salve.ugo.is_root', lambda: True)
+    @mock.patch('os.walk', lambda d: [])
+    def dir_copy_chown_as_root(self):
+        """
+        Unit: Directory Block Copy Compile (As Root)
+        Verifies the result of converting a Dir Block to an Action.
+        """
+        act = make_dir_block(mode=None).compile()
+
+        check_list_act(act, 2)
+        check_actions_against_defaults(create=act.actions[0],
+                                       chown=act.actions[1])
+
+    @istest
+    def dir_copy_fails_nosource(self):
+        """
+        Unit: Directory Block Copy Fails Without Source
+        Verifies that converting a Dir Block to an Action raises a
+        BlockException.
+        """
+        b = make_dir_block(source=None)
         ensure_except(BlockException, b.compile)
 
-
-@istest
-def dir_copy_fails_notarget():
-    """
-    Unit: Directory Block Copy Compilation Fails Without Target
-    Verifies that converting a Dir Block to an Action raises a
-    BlockException.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'copy')
-    b.set('source', '/a/b/c')
-    b.set('user', 'user1')
-    b.set('group', 'nogroup')
-    b.set('mode', '755')
-
-    with mock.patch('salve.logger', dummy_logger):
+    @istest
+    def dir_copy_fails_notarget(self):
+        """
+        Unit: Directory Block Copy Compilation Fails Without Target
+        Verifies that converting a Dir Block to an Action raises a
+        BlockException.
+        """
+        b = make_dir_block(target=None)
         ensure_except(BlockException, b.compile)
 
-
-@istest
-def dir_create_fails_notarget():
-    """
-    Unit: Directory Block Create Compilation Fails Without Target
-    Verifies that converting a Dir Block to an Action raises a
-    BlockException.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'create')
-    b.set('user', 'user1')
-    b.set('group', 'nogroup')
-    b.set('mode', '755')
-
-    with mock.patch('salve.logger', dummy_logger):
+    @istest
+    def dir_create_fails_notarget(self):
+        """
+        Unit: Directory Block Create Compilation Fails Without Target
+        Verifies that converting a Dir Block to an Action raises a
+        BlockException.
+        """
+        b = make_dir_block(action='create', target=None)
         ensure_except(BlockException, b.compile)
 
+    @istest
+    def dir_path_expand(self):
+        """
+        Unit: Directory Block Path Expand
+        Verifies the results of path expansion in a Dir block.
+        """
+        src_path = 'p/q/r/s'
+        dst_path = 't/u/v/w/x/y/z/1/2/3/../3'
+        root_dir = 'file/root/directory'
 
-@istest
-def dir_path_expand():
-    """
-    Unit: Directory Block Path Expand
-    Verifies the results of path expansion in a Dir block.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('source', 'p/q/r/s')
-    b.set('target', 't/u/v/w/x/y/z/1/2/3/../3')
-    root_dir = 'file/root/directory'
-    b.expand_file_paths(root_dir)
-    source_loc = os.path.join(root_dir, 'p/q/r/s')
-    assert b.get('source') == source_loc
-    target_loc = os.path.join(root_dir, 't/u/v/w/x/y/z/1/2/3/../3')
-    assert b.get('target') == target_loc
+        b = make_dir_block(source=src_path, target=dst_path)
+        b.expand_file_paths(root_dir)
 
+        assert b['source'] == os.path.join(root_dir, src_path)
+        assert b['target'] == os.path.join(root_dir, dst_path)
 
-@istest
-def dir_path_expand_fail_notarget():
-    """
-    Unit: Directory Block Path Expand Fails Without Target
-    Verifies that path expansion fails when there is no "target"
-    attribute.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'create')
-    b.set('user', 'user1')
-    b.set('group', 'user1')
-    b.set('mode', '755')
-    root_dir = 'file/root/directory'
-    ensure_except(BlockException, b.expand_file_paths, root_dir)
+    @istest
+    def dir_path_expand_fail_notarget(self):
+        """
+        Unit: Directory Block Path Expand Fails Without Target
+        Verifies that path expansion fails when there is no "target"
+        attribute.
+        """
+        # check that this is the case for a "create" action
+        root_dir = 'file/root/directory'
+        b1 = make_dir_block(action='create', target=None)
+        ensure_except(BlockException, b1.expand_file_paths, root_dir)
 
+        # check that it also holds for a "copy" action with source set
+        b2 = DirBlock(dummy_file_context)
+        b2 = make_dir_block(target=None)
+        ensure_except(BlockException, b2.expand_file_paths, root_dir)
 
-@istest
-def dir_compile_fail_noaction():
-    """
-    Unit: Directory Block Compilation Fails Without Action
-    Verifies that block to action conversion fails when there is no
-    "action" attribute.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('source', '/a/b/c')
-    b.set('target', '/p/q/r')
-    b.set('user', 'user1')
-    b.set('group', 'nogroup')
-    b.set('mode', '755')
-
-    with mock.patch('salve.logger', dummy_logger):
+    @istest
+    def dir_compile_fail_noaction(self):
+        """
+        Unit: Directory Block Compilation Fails Without Action
+        Verifies that block to action conversion fails when there is no
+        "action" attribute.
+        """
+        b = make_dir_block(action=None)
         ensure_except(BlockException, b.compile)
 
-
-@istest
-def dir_compile_fail_unknown_action():
-    """
-    Unit: Directory Block Compilation Fails Unknown Action
-    Verifies that block to action conversion fails when the "action"
-    attribute has an unrecognized value.
-    """
-    b = directory_block.DirBlock(dummy_file_context)
-    b.set('action', 'UNDEFINED_ACTION')
-    b.set('source', '/a/b/c')
-    b.set('target', '/p/q/r')
-    b.set('user', 'user1')
-    b.set('group', 'nogroup')
-    b.set('mode', '755')
-
-    with mock.patch('salve.logger', dummy_logger):
+    @istest
+    def dir_compile_fail_unknown_action(self):
+        """
+        Unit: Directory Block Compilation Fails Unknown Action
+        Verifies that block to action conversion fails when the "action"
+        attribute has an unrecognized value.
+        """
+        b = make_dir_block(action='UNDEFINED_ACTION')
         ensure_except(BlockException, b.compile)

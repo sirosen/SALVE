@@ -1,7 +1,4 @@
-#!/usr/bin/python
-
 import os
-import mock
 from nose.tools import istest
 
 from tests import system
@@ -150,7 +147,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         assert len(self.listdir('2')) == 0
 
         err = self.stderr.getvalue()
-        expected = ('[WARN] [VERIFICATION] %s, line 1: DirCreate: ' +
-            'Non-Writable target dir "%s"\n'
-            ) % (self.get_fullname('1.man'), fullname_sub)
+        expected = ('VERIFICATION [WARNING] %s, line 1: DirCreate: ' +
+                    'Non-Writable target dir "%s"\n'
+                    ) % (self.get_fullname('1.man'), fullname_sub)
         assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)

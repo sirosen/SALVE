@@ -1,7 +1,4 @@
-#!/usr/bin/python
-
 import os
-import mock
 from nose.tools import istest
 
 from tests import system
@@ -47,9 +44,8 @@ class TestWithScratchdir(system.RunScratchContainer):
         the destination files.
         """
         self.write_file('1.man',
-            'file { action copy source f1 target f1prime }\n' +
-            'file { source f2 target f2prime }\n'
-            )
+                        'file { action copy source f1 target f1prime }\n' +
+                        'file { source f2 target f2prime }\n')
         f1_content = 'alpha beta\n'
         f2_content = 'gamma\ndelta\n'
         self.write_file('f1', f1_content)
@@ -166,10 +162,15 @@ class TestWithScratchdir(system.RunScratchContainer):
         assert s == '', s
 
         err = self.stderr.getvalue()
-        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCopy: ' +
-            'Non-Writable target file "%s"\n') % (self.get_fullname('1.man'),
-            fullname)
-        assert err == expected, "%s != %s" % (err, expected)
+        expected1 = ('STARTUP [WARNING] ' +
+                     'Deprecation Warning: --directory will be removed in ' +
+                     'version 3 as --version3-relative-paths becomes the ' +
+                     'default.')
+        expected2 = (('VERIFICATION [WARNING] %s, line 1: FileCopy: ' +
+                      'Non-Writable target file "%s"') %
+                     (self.get_fullname('1.man'), fullname))
+        assert expected1 in err, "%s doesn't contain %s" % (err, expected1)
+        assert expected2 in err, "%s doesn't contain %s" % (err, expected2)
 
     @istest
     def copy_unreadable_source(self):
@@ -190,9 +191,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         assert not self.exists('2')
 
         err = self.stderr.getvalue()
-        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCopy: ' +
-            'Non-Readable source file "%s"\n') % (self.get_fullname('1.man'),
-            fullname)
+        expected = (('VERIFICATION [WARNING] %s, line 1: FileCopy: ' +
+                     'Non-Readable source file "%s"\n') %
+                    (self.get_fullname('1.man'), fullname))
         assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
 
     @istest
@@ -214,9 +215,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.run_on_manifest('1.man')
 
         err = self.stderr.getvalue()
-        expected = ('[WARN] [VERIFICATION] %s, line 1: FileCreate: ' +
-            'Non-Writable target file "%s"\n') % (self.get_fullname('1.man'),
-            fullname)
+        expected = (('VERIFICATION [WARNING] %s, line 1: FileCreate: ' +
+                     'Non-Writable target file "%s"\n') %
+                    (self.get_fullname('1.man'), fullname))
         assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
 
     @istest
@@ -239,7 +240,28 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.run_on_manifest('1.man')
 
         err = self.stderr.getvalue()
-        expected = (('[WARN] [VERIFICATION] %s, line 1: FileCreate: ' +
-            'Non-Writable target file "%s"\n') %
-            (self.get_fullname('1.man'), fullname_b))
+        expected = (('VERIFICATION [WARNING] %s, line 1: FileCreate: ' +
+                     'Non-Writable target file "%s"\n') %
+                    (self.get_fullname('1.man'), fullname_b))
         assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
+
+    @istest
+    def create_with_v3_path(self):
+        """
+        System: Create File With v3 Relative Path
+
+        Runs a manifest which creates a file, in version 3 relative path mode.
+        """
+        content = 'file gamma { action create }\n'
+        self.make_dir('a')
+        self.write_file('a/1.man', content)
+        self.run_on_manifest('a/1.man')
+        assert self.exists('gamma')
+        s = self.read_file('gamma')
+        assert s == '', s
+
+        assert not self.exists('a/gamma')
+        self.run_on_manifest('a/1.man', argv=['--ver3'])
+        assert self.exists('a/gamma')
+        s = self.read_file('a/gamma')
+        assert s == '', s

@@ -7,58 +7,72 @@
 .. image:: https://badge.fury.io/py/salve.svg
     :alt: PyPi Version
     :target: https://badge.fury.io/py/salve
+.. image:: https://codeclimate.com/github/sirosen/SALVE/badges/gpa.svg
+   :alt: Code Climate
+   :target: https://codeclimate.com/github/sirosen/SALVE
 
 SALVE
 =====
 
-Authors: Stephen Rosen
+SALVE takes files and directories in a git repository, and handles the messy
+process of deploying those files onto a machine.
+It is safer to use than shell scripts in a number of ways, and guarantees
+idempotence -- an oft-sought property for configuration management tools -- for
+a wide class of deployment actions.
+It also backs up the preexisting versions of files that it changes when
+possible so that you can recover them if necessary at a later date.
 
-Version: 2.3.0
+More information is available at the `SALVE Website <http://salve.sirosen.net/>`_.
 
-More information is available at `SALVE Website`_.
+How do I use it?
+================
 
-.. _SALVE Website:
-    http://salve.sirosen.net/
+SALVE is a language, but also a compiler for that language written in python.
+You write "manifests" which describe where your files are meant to go, and
+SALVE validates that you can put them where you want before doing anything at
+all.
+It means learning a new language, but it also lets you specify how your config
+should be deployed in a more natural way, and protects you from a wide range of
+dangerous errors.
+The language is small and simple enough that you can learn all of the important
+parts in a few minutes, and answer any remaining questions in under half an
+hour.
 
-What can it do?
-===============
+To start writing manifests, you can go to the `Quick-Start Guide <http://salve.sirosen.net/quickstart.html>`_.
+For a more detailed description of the SALVE language, the `Language Page <http://salve.sirosen.net/lang>`_ and the `Examples Page <http://salve.sirosen.net/lang/examples.html>`_ are good resources.
 
-SALVE versions files and directories in a git repository, and handles the messy process of deploying those files onto a machine.
-It is safer to use than shell scripts in a few ways, and guarantees idempotence for a wide class of deployment actions.
-It also backs up the preexisting versions of files that it changes when possible so that you can recover them if necessary at a later date.
+Once you have a manifest you want to run, simply do a ``salve deploy`` with them.
+If you have installed the pip package, you can run
 
-To start writing manifests, you can go to the `Quick-Start Guide`_.
-For a more detailed description of the SALVE language, the `Language Page`_ and the `Examples Page`_ are good resources.
+    salve deploy --manifest path/to/root.manifest
 
-.. _Quick-Start Guide:
-    http://salve.sirosen.net/quickstart.html
-.. _Language Page:
-    http://salve.sirosen.net/lang.html
-.. _Examples Page:
-    http://salve.sirosen.net/examples.html
+or, if you are using the git repo as your source
+
+    python SALVE/salve.py deploy --manifest path/to/root.manifest
 
 What do I need to run it?
 =========================
 
-SALVE is fully compatible with Python 2.7, 3.2, 3.3, and 3.4
+SALVE is fully compatible with Python 2.6, 2.7, 3.2, 3.3, 3.4, and 3.5.
+It also works on pypy and pypy3.
 
 It has no dependencies on python packages, so as long as you have one of these
 versions of Python installed, you can run SALVE.
+That means that you can always pull down the git repo and run it even on
+machines that don't have ``pip`` or ``easy_install``.
+
+Python 2.6 Support
+------------------
+
+Python 2.6 is supported, but because OptParse is deprecated in Python 3.x,
+SALVE depends upon ``argparse``.
+
+To run SALVE with Python 2.6, you will need to install the ``argparse``
+package, or do a ``pip`` or ``easy_install`` of ``salve`` to pull in the
+dependency automatically.
 
 Roadmap
 =======
 
-These are the features and fixes currently in the pipeline for SALVE.
-Generally Fixes are prioritized over Features, depending on their severity.
-
-Features
---------
- - Plugin framework
- - Variable and attribute definition in manifest blocks to propogate down the block tree as defaults
- - Automatic file backup recovery using dates, generation numbers, and so forth
-
-Fixes
------
- - ``~`` and ``*`` expansion does not offer useful error messages.
- - Verification is performed on a rolling basis, rather than once at the start of execution
- - Dir alterations (chown/chmod) are based on walks at generation time, not execution time
+The Roadmap has been replaced with
+`GitHub issues <https://github.com/sirosen/SALVE/issues>`_.

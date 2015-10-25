@@ -1,5 +1,13 @@
 Changelog
 =========
+ * 2.4.1
+    * SALVE now uses the python standard library for logging, rather than
+      custom logging
+    * Entire codebase (including tests) is now PEP8 and passes ``flake8``
+    * Significant refactoring to improve Code Climate scoring
+ * 2.4.0
+    * Paths can be expanded relative to the manifest being processed, rather than
+      relative to the root manifest (this will become the default in version 3)
  * 2.3.1
     * Fixes to setuptools usage
     * Change markdown documents to reST

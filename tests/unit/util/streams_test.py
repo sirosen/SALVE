@@ -1,12 +1,16 @@
-#!/usr/bin/python
-
-import os
-import timeit
 from nose.tools import istest
 
 from tests.util import full_path
 
 import salve.util
+
+
+def compare_shas(f1, f2):
+    with open(full_path(f1)) as f:
+        f1hash = salve.util.sha512(f)
+    with open(full_path(f2)) as f:
+        f2hash = salve.util.sha512(f)
+    return f1hash == f2hash
 
 
 @istest
@@ -27,14 +31,7 @@ def sha512_empty_match():
     Unit: Streams Util SHA512 Empty File Match
     Ensures that the sha512 hashes of two empty files match.
     """
-    aname = full_path('a')
-    bname = full_path('b')
-    ahash, bhash = None, None
-    with open(aname) as f:
-        ahash = salve.util.sha512(f)
-    with open(bname) as f:
-        bhash = salve.util.sha512(f)
-    assert ahash == bhash
+    assert compare_shas('a', 'b')
 
 
 @istest
@@ -43,14 +40,7 @@ def sha512_nonempty_match():
     Unit: Streams Util SHA512 Non-Empty File Match
     Ensures that the sha512 hashes of two nonempty files match.
     """
-    cname = full_path('c')
-    dname = full_path('d')
-    ahash, chash = None, None
-    with open(cname) as f:
-        chash = salve.util.sha512(f)
-    with open(dname) as f:
-        dhash = salve.util.sha512(f)
-    assert chash == dhash
+    assert compare_shas('c', 'd')
 
 
 @istest
@@ -59,11 +49,4 @@ def sha512_mismatch():
     Unit: Streams Util SHA512 File Mismatch
     Ensures that the sha512 hashes of nonmatching files don't match.
     """
-    aname = full_path('a')
-    cname = full_path('c')
-    ahash, chash = None, None
-    with open(aname) as f:
-        ahash = salve.util.sha512(f)
-    with open(cname) as f:
-        chash = salve.util.sha512(f)
-    assert ahash != chash
+    assert not compare_shas('a', 'c')

@@ -11,8 +11,11 @@ class RunScratchContainer(scratch.ScratchContainer):
         with mock.patch('sys.argv', argv):
             return cli.main()
 
-    def run_on_manifest(self, manifest):
+    def run_on_manifest(self, manifest, argv=None):
         man_path = self.get_fullname(manifest)
-        argv = ['./salve.py', 'deploy', '-m', man_path,
-                '-d', self.scratch_dir]
-        self.run_on_args(argv)
+        arguments = ['./salve.py', 'deploy', '-m', man_path]
+        if argv is None:
+            arguments += ['-d', self.scratch_dir]
+        else:
+            arguments += argv
+        self.run_on_args(arguments)

@@ -1,13 +1,8 @@
-#!/usr/bin/python
-
 import os
-import mock
 import textwrap
 from nose.tools import istest
 
 from tests import system
-
-import salve
 
 
 class TestWithRunLog(system.RunScratchContainer):
@@ -17,9 +12,8 @@ class TestWithRunLog(system.RunScratchContainer):
         backup_dir=$HOME/backups
         backup_log=$HOME/backup.log
 
-        log_level=ALL
+        log_level=DEBUG
         run_log=$HOME/run_log
-        verbosity=3
 
         [default]
         user=$USER # an inline comment
@@ -51,6 +45,5 @@ class TestWithRunLog(system.RunScratchContainer):
         assert self.exists('2.man')
         s = self.read_file('2.man')
         assert s == content, '%s' % s
-        salve.logger.logfile.flush()
         s = self.read_file(os.path.join(self.userhome, 'run_log'))
         assert len(s) > 0

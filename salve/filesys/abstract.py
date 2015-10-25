@@ -1,10 +1,8 @@
-#!/usr/bin/python
-
 import abc
-import os
 from contextlib import contextmanager
 
-from salve.util import Enum, with_metaclass
+from salve import Enum, with_metaclass
+from .access import access_codes
 
 
 class Filesys(with_metaclass(abc.ABCMeta)):
@@ -277,3 +275,28 @@ class Filesys(with_metaclass(abc.ABCMeta)):
             @path
             An absolute path whose prefix should be inspected.
         """
+
+    def writable_path_or_ancestor(self, path):
+        """
+        Check if a path points at a writable file/dir.
+        Doesn't restrict itself to the results of access(), but also checks
+        access on parent dirs,
+
+        Args:
+            @path
+            An absolute path to a file/dir which should be inspected.
+        """
+        if self.access(path, access_codes.W_OK):
+            return True
+        if self.access(path, access_codes.F_OK):
+            return False
+
+        # at this point, the file/dir is known not to exist
+        # now check properties of the containing dir
+        containing_dir = self.get_existing_ancestor(path)
+        if self.access(containing_dir, access_codes.W_OK):
+            return True
+
+        # if the file doesn't exist, and the dir containing it
+        # isn't writable, then @path can't be written
+        return False

@@ -1,17 +1,15 @@
-#!/usr/bin/python
-
 import os
-import sys
+import logging
 import mock
 from nose.tools import istest
 
 from salve.context import ExecutionContext, FileContext
 
-from salve import action, ugo
+from salve import ugo
 from salve.action import modify
-from salve.filesys import real_fs
+from salve.filesys import ConcreteFilesys
 
-from tests.util import scratch
+from tests.util import scratch, assert_substr
 
 
 def mock_os_walk(dir):
@@ -19,19 +17,49 @@ def mock_os_walk(dir):
          ('a/b', [], []),
          ('a/c', ['x'], ['2', '3']),
          ('a/c/x', [], ['4'])
-        ]
+         ]
     for (d, sd, f) in l:
         yield (d, sd, f)
+
+
+def mock_uid_and_gid(uid, gid):
+    def wrapper(f):
+        return mock.patch('salve.ugo.name_to_uid', lambda x: uid)(
+            mock.patch('salve.ugo.name_to_gid', lambda x: gid)(
+                f
+            )
+        )
+    return wrapper
+
+
+def ensure_uid_and_gid_mismatch(mock_stat):
+    mock_stat.return_value.st_uid = ugo.name_to_uid('user1') + 1
+    mock_stat.return_value.st_gid = ugo.name_to_gid('nogroup') + 1
+
+
+def arglist_from_mock(mock_func):
+    return [args[0] for args in mock_func.call_args_list]
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
     def __init__(self):
         scratch.ScratchContainer.__init__(self)
-        self.exec_context.set('log_level', set(('WARN', 'ERROR')))
+        self.walk_patch = mock.patch('os.walk', mock_os_walk)
         self.file_context = FileContext('no such file')
 
+    def setUp(self):
+        scratch.ScratchContainer.setUp(self)
+        self.walk_patch.start()
+        ExecutionContext()['log_level'] = logging.DEBUG
+
+    def tearDown(self):
+        scratch.ScratchContainer.tearDown(self)
+        self.walk_patch.stop()
+
     @istest
-    def filechown_verify_nonroot(self):
+    @mock.patch('salve.ugo.is_root', lambda: False)
+    @mock.patch('salve.filesys.ConcreteFilesys.stat')
+    def filechown_verify_nonroot(self, mock_stat):
         """
         Unit: File Chown Action Verify as Non-Root
         """
@@ -39,22 +67,16 @@ class TestWithScratchdir(scratch.ScratchContainer):
         a_name = self.get_fullname('a')
 
         act = modify.FileChownAction(a_name, 'user1', 'nogroup',
-                self.file_context)
-        mock_stat_result = mock.Mock()
-        # ensure a uid/gid mismatch
-        mock_stat_result.st_uid = ugo.name_to_uid('user1') + 1
-        mock_stat_result.st_gid = ugo.name_to_gid('nogroup') + 1
+                                     self.file_context)
+        ensure_uid_and_gid_mismatch(mock_stat)
 
-        # have to mock to be 100% certain that we are not root
-        with mock.patch('salve.ugo.is_root', lambda: False):
-            with mock.patch('salve.filesys.real_fs.stat',
-                    lambda x: mock_stat_result):
-                code = act.verify_can_exec(real_fs)
-
+        code = act.verify_can_exec(ConcreteFilesys())
         assert code == act.verification_codes.NOT_ROOT, str(code)
 
     @istest
-    def filechown_execute_nonroot(self):
+    @mock.patch('salve.filesys.ConcreteFilesys.chown')
+    @mock.patch('salve.action.modify.FileChownAction.verify_can_exec')
+    def filechown_execute_nonroot(self, mock_verify, mock_chown):
         """
         Unit: File Chown Action Execute as Non-Root
         """
@@ -62,67 +84,52 @@ class TestWithScratchdir(scratch.ScratchContainer):
         a_name = self.get_fullname('a')
 
         act = modify.FileChownAction(a_name, 'user1', 'nogroup',
-                self.file_context)
+                                     self.file_context)
+        mock_verify.return_value = act.verification_codes.NOT_ROOT
 
-        mock_chown = mock.Mock()
-
-        mock_verify = mock.Mock()
-        mock_verify.return_value = \
-                modify.FileChownAction.verification_codes.NOT_ROOT
-
-        with mock.patch('salve.action.modify.FileChownAction.verify_can_exec',
-                mock_verify):
-            with mock.patch('salve.filesys.real_fs.chown', mock_chown):
-                act(real_fs)
+        act(ConcreteFilesys())
 
         assert not mock_chown.called
 
     @istest
+    @mock.patch('salve.ugo.is_owner', lambda x: False)
     def filechmod_verify_nonowner(self):
         """
         Unit: File Chmod Action Verify as Non-Owner
         """
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
+
         self.write_file('a', '')
         a_name = self.get_fullname('a')
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
-
         act = modify.FileChmodAction(a_name, '600', self.file_context)
 
-        with mock.patch('salve.ugo.is_owner', lambda x: False):
-            code = act.verify_can_exec(real_fs)
-            assert code == act.verification_codes.UNOWNED_TARGET, str(code)
+        code = act.verify_can_exec(ConcreteFilesys())
+        assert code == act.verification_codes.UNOWNED_TARGET, str(code)
 
     @istest
-    def dirchown_verify_nonroot(self):
+    @mock.patch('salve.ugo.is_root', lambda: False)
+    @mock.patch('salve.filesys.ConcreteFilesys.stat')
+    def dirchown_verify_nonroot(self, mock_stat):
         """
         Unit: Dir Chown Action Verify as Non-Root
         """
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
         self.make_dir('a')
         a_name = self.get_fullname('a')
 
-        # ensure mismatch between name_to_uid/name_to_gid and
-        # os.stat results
-        mock_stat_result = mock.Mock()
-        mock_stat_result.st_uid = ugo.name_to_uid('user1') + 1
-        mock_stat_result.st_gid = ugo.name_to_uid('nogroup') + 1
-
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ensure_uid_and_gid_mismatch(mock_stat)
 
         act = modify.DirChownAction(a_name, 'user1', 'nogroup',
-                self.file_context)
+                                    self.file_context)
 
-        with mock.patch('salve.filesys.real_fs.stat',
-                lambda x: mock_stat_result):
-            with mock.patch('salve.ugo.is_root', lambda: False):
-                code = act.verify_can_exec(real_fs)
-                assert code == act.verification_codes.NOT_ROOT, str(code)
+        code = act.verify_can_exec(ConcreteFilesys())
+        assert code == act.verification_codes.NOT_ROOT, str(code)
 
     @istest
+    @mock.patch('salve.ugo.is_root', lambda: True)
     def dirchmod_verify_root(self):
         """
         Unit: Dir Chmod Action Verify as Root
@@ -130,17 +137,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.make_dir('a')
         a_name = self.get_fullname('a')
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
 
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
-        with mock.patch('salve.ugo.is_root', lambda: True):
-            code = act.verify_can_exec(real_fs)
-            assert code == act.verification_codes.OK, str(code)
+        code = act.verify_can_exec(ConcreteFilesys())
+        assert code == act.verification_codes.OK, str(code)
 
     @istest
+    @mock.patch('salve.ugo.is_root', lambda: False)
+    @mock.patch('salve.ugo.is_owner', lambda x: False)
     def dirchmod_verify_nonowner(self):
         """
         Unit: Dir Chmod Action Verify as Non-Owner
@@ -148,423 +156,298 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.make_dir('a')
         a_name = self.get_fullname('a')
 
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        # do the transition silently (suppresses debug output)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
 
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
-        with mock.patch('salve.ugo.is_root', lambda: False):
-            with mock.patch('salve.ugo.is_owner', lambda x: False):
-                code = act.verify_can_exec(real_fs)
-                assert code == act.verification_codes.UNOWNED_TARGET, str(code)
+        code = act.verify_can_exec(ConcreteFilesys())
+        assert code == act.verification_codes.UNOWNED_TARGET, str(code)
 
     @istest
-    def filechmod_execute_nonowner(self):
+    @mock.patch('salve.action.modify.FileChmodAction.verify_can_exec')
+    def filechmod_execute_nonowner(self, mock_verify):
         """
         Unit: File Chmod Action Execute as Non-Owner
         """
-        log = {'chmod': None}
-
-        def mock_chmod(f, mode):
-            log['chmod'] = (f, mode)
-
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.VERIFICATION)
+        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION,
+                                      quiet=True)
 
         act = modify.FileChmodAction('a', '600', self.file_context)
+        mock_verify.return_value = act.verification_codes.UNOWNED_TARGET
 
-        with mock.patch('salve.action.modify.FileChmodAction.verify_can_exec',
-                lambda x, fs: x.verification_codes.UNOWNED_TARGET):
-            act(real_fs)
+        act(ConcreteFilesys())
 
-        assert log['chmod'] is None
-        assert (self.stderr.getvalue() ==
-            ('[WARN] [VERIFICATION] ' +
-             'FileChmod: Unowned target file "a"\n')), self.stderr.getvalue()
+        err = self.stderr.getvalue()
+        expected = 'VERIFICATION [WARNING] FileChmod: Unowned target file "a"'
+        assert_substr(err, expected)
 
     @istest
-    def dirchown_execute_nonroot(self):
+    @mock.patch('os.lchown')
+    @mock.patch('salve.action.modify.DirChownAction.verify_can_exec')
+    def dirchown_execute_nonroot(self, mock_verify, mock_lchown):
         """
         Unit: Dir Chown Action Execute as Non-Root
         """
-        lchown_args = []
-
-        def mock_lchown(f_or_d, uid, gid):
-            lchown_args.append((f_or_d, uid, gid))
-
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context,
-                recursive=True)
+                                    recursive=True)
+        mock_verify.return_value = act.verification_codes.NOT_ROOT
 
-        with mock.patch('salve.action.modify.DirChownAction.verify_can_exec',
-                lambda x, fs:
-                modify.DirChownAction.verification_codes.NOT_ROOT):
-            with mock.patch('os.lchown', mock_lchown):
-                act(real_fs)
+        act(ConcreteFilesys())
 
-        assert len(lchown_args) == 0
-        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
-            'DirChown: Cannot Chown as Non-Root User\n')), \
-            self.stderr.getvalue()
+        assert not mock_lchown.called
+        err = self.stderr.getvalue()
+        expected = (
+            'EXECUTION [WARNING] DirChown: Cannot Chown as Non-Root User')
+        assert_substr(err, expected)
 
     @istest
-    def dirchmod_execute_nonowner(self):
+    @mock.patch('os.chmod')
+    @mock.patch('salve.action.modify.DirChmodAction.verify_can_exec')
+    def dirchmod_execute_nonowner(self, mock_verify, mock_chmod):
         """
         Unit: Dir Chmod Action Execute as Non-Owner
         """
-        chmod_args = []
-
-        def mock_chmod(f_or_d, mode):
-            chmod_args.append((f_or_d, mode))
-
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         act = modify.DirChmodAction('a', '755', self.file_context,
-                recursive=True)
-        with mock.patch('os.walk', mock_os_walk):
-            with mock.patch(
-                    'salve.action.modify.DirChmodAction.verify_can_exec',
-                    lambda self, fs: self.verification_codes.UNOWNED_TARGET):
-                with mock.patch('os.chmod', mock_chmod):
-                    act(real_fs)
+                                    recursive=True)
+        mock_verify.return_value = act.verification_codes.UNOWNED_TARGET
+        act(ConcreteFilesys())
 
-        assert len(chmod_args) == 0
-        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
-             'DirChmod: Unowned target dir "a"\n')), self.stderr.getvalue()
+        assert not mock_chmod.called
+        err = self.stderr.getvalue()
+        expected = 'EXECUTION [WARNING] DirChmod: Unowned target dir "a"'
+        assert_substr(err, expected)
 
     @istest
-    def dirchown_execute_nonrecursive_nonroot(self):
+    @mock.patch('os.lchown')
+    @mock.patch('salve.action.modify.DirChownAction.verify_can_exec')
+    def dirchown_execute_nonrecursive_nonroot(self, mock_verify, mock_lchown):
         """
         Unit: Dir Chown Action Execute Non-Recursive as Non-Root
         """
-        lchown_args = []
-
-        def mock_lchown(f_or_d, uid, gid):
-            lchown_args.append((f_or_d, uid, gid))
-
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
-        with mock.patch('salve.action.modify.DirChownAction.verify_can_exec',
-                        lambda self, fs: self.verification_codes.NOT_ROOT):
-            with mock.patch('os.walk', mock_os_walk):
-                with mock.patch('os.lchown', mock_lchown):
-                    act(real_fs)
+        mock_verify.return_value = act.verification_codes.NOT_ROOT
+        act(ConcreteFilesys())
 
-        assert len(lchown_args) == 0
-        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
-            'DirChown: Cannot Chown as Non-Root User\n')), \
-            self.stderr.getvalue()
+        assert not mock_lchown.called
+        err = self.stderr.getvalue()
+        expected = (
+            'EXECUTION [WARNING] DirChown: Cannot Chown as Non-Root User')
+        assert_substr(err, expected)
 
     @istest
-    def dirchmod_execute_nonrecursive_nonroot_nonowner(self):
+    @mock.patch('os.chmod')
+    @mock.patch('salve.action.modify.DirChmodAction.verify_can_exec')
+    def dirchmod_execute_nonrecursive_nonroot_nonowner(
+            self, mock_verify, mock_chmod):
         """
         Unit: Dir Chmod Action Execute Non-Recursive as Non-Root, Non-Owner
         """
-        chmod_args = []
-
-        def mock_chmod(f_or_d, mode):
-            chmod_args.append((f_or_d, mode))
-
-        # exec context transitions are silent, only higher level context
-        # transitions are noisy
-        self.exec_context.transition(ExecutionContext.phases.EXECUTION)
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
         act = modify.DirChmodAction('a', '755', self.file_context)
+        mock_verify.return_value = act.verification_codes.UNOWNED_TARGET
 
-        unowned_target_code = \
-                modify.DirChmodAction.verification_codes.UNOWNED_TARGET
-        with mock.patch('salve.action.modify.DirChmodAction.verify_can_exec',
-                lambda x, fs: unowned_target_code):
-            with mock.patch('os.walk', mock_os_walk):
-                with mock.patch('os.chmod', mock_chmod):
-                    act(real_fs)
+        act(ConcreteFilesys())
 
-        assert len(chmod_args) == 0
-        assert (self.stderr.getvalue() == ('[WARN] [EXECUTION] ' +
-             'DirChmod: Unowned target dir "a"\n')), self.stderr.getvalue()
+        assert not mock_chmod.called
+        err = self.stderr.getvalue()
+        expected = 'EXECUTION [WARNING] DirChmod: Unowned target dir "a"'
+        assert_substr(err, expected)
 
     @istest
-    def filechown_to_str(self):
-        """
-        Unit: File Chown Action String Conversion
-        """
-        act = modify.FileChownAction('a', 'user1', 'nogroup',
-                self.file_context)
-
-        assert str(act) == ('FileChownAction(target=a,user=user1,' +
-                            'group=nogroup,context=' +
-                            repr(self.file_context) + ')')
-
-    @istest
-    def filechmod_to_str(self):
-        """
-        Unit: File Chmod Action String Conversion
-        """
-        act = modify.FileChmodAction('a', '600', self.file_context)
-
-        assert str(act) == ('FileChmodAction(target=a,mode=600,' +
-                            'context=' + repr(self.file_context) + ')')
-
-    @istest
-    def dirchown_to_str(self):
-        """
-        Unit: Directory Chown Action String Conversion
-        """
-        act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
-
-        assert str(act) == ('DirChownAction(target=a,user=user1,' +
-                            'group=nogroup,recursive=False,' +
-                            'context=' + repr(self.file_context) + ')')
-
-    @istest
-    def dirchmod_to_str(self):
-        """
-        Unit: Directory Chmod Action String Conversion
-        """
-        act = modify.DirChmodAction('a', '600', self.file_context)
-
-        assert str(act) == ('DirChmodAction(target=a,mode=600,' +
-                            'recursive=False,context=' +
-                            repr(self.file_context) + ')')
-
-    @istest
+    @mock.patch('salve.filesys.ConcreteFilesys.exists', lambda fs, x: True)
+    @mock.patch('salve.ugo.is_root', lambda: True)
     def filechmod_verify_root(self):
         """
         Unit: File Chmod Action Verify (as Root)
         """
         act = modify.FileChmodAction('a', '0000', self.file_context)
 
-        with mock.patch('salve.filesys.real_fs.exists', lambda x: True):
-            with mock.patch('salve.ugo.is_root', lambda: True):
-                assert act.verify_can_exec(real_fs) == \
-                        act.verification_codes.OK
+        assert (act.verify_can_exec(ConcreteFilesys()) ==
+                act.verification_codes.OK)
 
     @istest
-    def filechown_verify(self):
+    @mock.patch('salve.filesys.ConcreteFilesys.exists', lambda fs, x: True)
+    @mock.patch('salve.ugo.is_root', lambda: True)
+    @mock.patch('salve.filesys.ConcreteFilesys.stat')
+    def filechown_verify(self, mock_stat):
         """
         Unit: File Chown Action Verify
         """
         act = modify.FileChownAction('a', 'user1', 'nogroup',
-                self.file_context)
+                                     self.file_context)
+        ensure_uid_and_gid_mismatch(mock_stat)
 
-        mock_stat_result = mock.Mock()
-        mock_stat_result.st_gid = 1
-        mock_stat_result.st_uid = 1
-
-        with mock.patch('salve.filesys.real_fs.stat',
-                lambda x: mock_stat_result):
-            with mock.patch('salve.filesys.real_fs.exists', lambda x: True):
-                with mock.patch('salve.ugo.name_to_uid', lambda x: 0):
-                    with mock.patch('salve.ugo.name_to_gid', lambda x: 0):
-                        with mock.patch('salve.ugo.is_root',
-                                lambda: True):
-                            assert act.verify_can_exec(real_fs) == \
-                                    act.verification_codes.OK
+        assert (act.verify_can_exec(ConcreteFilesys()) ==
+                act.verification_codes.OK)
 
     @istest
-    def dirchown_verify(self):
+    @mock.patch('salve.ugo.is_root', lambda: True)
+    @mock.patch('salve.filesys.ConcreteFilesys.access')
+    @mock.patch('salve.filesys.ConcreteFilesys.stat')
+    def dirchown_verify(self, mock_stat, mock_access):
         """
         Unit: Dir Chown Action Verify
         """
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
 
-        mock_stat_result = mock.Mock()
-        mock_stat_result.st_gid = 1
-        mock_stat_result.st_uid = 1
+        ensure_uid_and_gid_mismatch(mock_stat)
+        mock_access.return_value = True
 
-        with mock.patch('salve.filesys.real_fs.stat',
-                lambda x: mock_stat_result):
-            with mock.patch('salve.filesys.real_fs.access', lambda x, y: True):
-                with mock.patch('salve.ugo.name_to_uid', lambda x: 0):
-                    with mock.patch('salve.ugo.name_to_gid',
-                            lambda x: 0):
-                        with mock.patch('salve.ugo.is_root',
-                                lambda: True):
-                            assert act.verify_can_exec(real_fs) == \
-                                    act.verification_codes.OK
+        assert (act.verify_can_exec(ConcreteFilesys()) ==
+                act.verification_codes.OK)
 
     @istest
-    def filechown_execute(self):
+    @mock_uid_and_gid(1, 2)
+    @mock.patch('salve.ugo.is_root', lambda: True)
+    @mock.patch('os.access', lambda x, y: True)
+    @mock.patch('os.lchown')
+    @mock.patch('salve.action.modify.FileChownAction.verify_can_exec')
+    def filechown_execute(self, mock_verify, mock_lchown):
         """
         Unit: File Chown Action Execute
         """
         act = modify.FileChownAction('a', 'user1', 'nogroup',
-                self.file_context)
+                                     self.file_context)
+        mock_verify.return_value = act.verification_codes.OK
 
-        log = {'lchown': None}
+        act(ConcreteFilesys())
 
-        def mock_lchown(f, uid, gid):
-            log['lchown'] = (f, uid, gid)
-
-        chown_verify_name = \
-                'salve.action.modify.FileChownAction.verify_can_exec'
-        mocked_verify_code = modify.FileChownAction.verification_codes.OK
-        with mock.patch('os.lchown', mock_lchown):
-            with mock.patch('os.access', lambda x, y: True):
-                with mock.patch('salve.ugo.name_to_uid', lambda x: 1):
-                    with mock.patch('salve.ugo.name_to_gid', lambda x: 2):
-                        with mock.patch('salve.ugo.is_root',
-                                lambda: True):
-                            with mock.patch(chown_verify_name,
-                                    lambda self, fs: mocked_verify_code):
-                                act(real_fs)
-
-        assert log['lchown'] == ('a', 1, 2)
+        mock_lchown.assert_called_once_with('a', 1, 2)
 
     @istest
-    def filechmod_execute(self):
+    @mock.patch('salve.filesys.ConcreteFilesys.access', lambda fs, x, y: True)
+    @mock.patch('salve.filesys.ConcreteFilesys.exists', lambda fs, x: True)
+    @mock.patch('salve.ugo.is_owner', lambda x: True)
+    @mock.patch('salve.filesys.ConcreteFilesys.chmod')
+    @mock.patch('salve.filesys.ConcreteFilesys.stat')
+    def filechmod_execute(self, mock_stat, mock_chmod):
         """
         Unit: File Chmod Action Execute
         """
         act = modify.FileChmodAction('a', '600', self.file_context)
 
-        mock_chmod = mock.Mock()
-        mock_stat_result = mock.Mock()
-        mock_stat_result.st_uid = os.getuid()
+        mock_stat.return_value.st_uid = os.getuid()
 
-        with mock.patch('salve.filesys.real_fs.chmod', mock_chmod):
-            with mock.patch('salve.filesys.real_fs.access', lambda x, y: True):
-                with mock.patch('salve.filesys.real_fs.exists',
-                        lambda x: True):
-                    with mock.patch('salve.filesys.real_fs.stat',
-                            lambda x: mock_stat_result):
-                        with mock.patch('salve.ugo.is_owner',
-                                lambda x: True):
-                            act(real_fs)
+        act(ConcreteFilesys())
 
         mock_chmod.assert_called_once_with('a', int('600', 8))
 
     @istest
-    def dirchown_execute(self):
+    @mock_uid_and_gid(1, 2)
+    @mock.patch('os.lchown')
+    @mock.patch('salve.action.modify.DirChownAction.verify_can_exec')
+    @mock.patch('salve.action.modify.FileChownAction.verify_can_exec')
+    def dirchown_execute(self, file_verify, dir_verify, mock_lchown):
         """
         Unit: Directory Chown Action Execute
         """
-        lchown_args = []
-
-        def mock_lchown(f_or_d, uid, gid):
-            lchown_args.append((f_or_d, uid, gid))
-
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context,
-                recursive=True)
+                                    recursive=True)
 
-        dir_verify_name = 'salve.action.modify.DirChownAction.verify_can_exec'
-        file_verify_name = \
-                'salve.action.modify.FileChownAction.verify_can_exec'
-        with mock.patch('os.walk', mock_os_walk):
-            with mock.patch('salve.ugo.name_to_uid', lambda x: 1):
-                with mock.patch('salve.ugo.name_to_gid', lambda x: 2):
-                    with mock.patch(dir_verify_name,
-                            lambda x, fs:
-                            modify.DirChownAction.verification_codes.OK):
-                        with mock.patch(file_verify_name,
-                                lambda x, fs:
-                                modify.FileChownAction.verification_codes.OK):
-                            with mock.patch('os.lchown', mock_lchown):
-                                act(real_fs)
+        dir_verify.return_value = modify.DirChownAction.verification_codes.OK
+        file_verify.return_value = modify.FileChownAction.verification_codes.OK
 
+        act(ConcreteFilesys())
+
+        lchown_args = arglist_from_mock(mock_lchown)
         assert len(lchown_args) == 8
-        assert ('a', 1, 2) in lchown_args
-        assert ('a/b', 1, 2) in lchown_args
-        assert ('a/c', 1, 2) in lchown_args
-        assert ('a/1', 1, 2) in lchown_args
-        assert ('a/c/2', 1, 2) in lchown_args
-        assert ('a/c/3', 1, 2) in lchown_args
-        assert ('a/c/x', 1, 2) in lchown_args
-        assert ('a/c/x/4', 1, 2) in lchown_args
+        for name in ['a', 'a/b', 'a/c', 'a/1', 'a/c/2', 'a/c/3', 'a/c/x',
+                     'a/c/x/4']:
+            assert (name, 1, 2) in lchown_args
 
     @istest
-    def dirchmod_recursive_execute(self):
+    @mock.patch('os.chmod')
+    @mock.patch('salve.action.modify.DirChmodAction.verify_can_exec')
+    @mock.patch('salve.action.modify.FileChmodAction.verify_can_exec')
+    def dirchmod_recursive_execute(self, file_verify, dir_verify, mock_chmod):
         """
         Unit: Directory Chmod Action Recursive Execute
         """
-        chmod_args = []
-
-        def mock_chmod(f_or_d, mode):
-            chmod_args.append((f_or_d, mode))
-
-        mock_stat_result = mock.Mock()
-        mock_stat_result.st_uid = os.getuid()
-
         act = modify.DirChmodAction('a', '755', self.file_context,
-                recursive=True)
+                                    recursive=True)
 
-        dir_verify_name = 'salve.action.modify.DirChmodAction.verify_can_exec'
-        file_verify_name = \
-                'salve.action.modify.FileChmodAction.verify_can_exec'
-        with mock.patch('os.walk', mock_os_walk):
-            with mock.patch(dir_verify_name,
-                    lambda x, fs: modify.DirChmodAction.verification_codes.OK):
-                with mock.patch(file_verify_name,
-                        lambda x, fs:
-                        modify.FileChmodAction.verification_codes.OK):
-                    with mock.patch('os.chmod', mock_chmod):
-                        act(real_fs)
+        dir_verify.return_code = modify.DirChmodAction.verification_codes.OK
+        file_verify.return_code = modify.FileChmodAction.verification_codes.OK
 
+        act(ConcreteFilesys())
+
+        chmod_args = arglist_from_mock(mock_chmod)
         assert len(chmod_args) == 8
         mode = int('755', 8)
-        assert ('a', mode) in chmod_args
-        assert ('a/b', mode) in chmod_args
-        assert ('a/c', mode) in chmod_args
-        assert ('a/1', mode) in chmod_args
-        assert ('a/c/2', mode) in chmod_args
-        assert ('a/c/3', mode) in chmod_args
-        assert ('a/c/x', mode) in chmod_args
-        assert ('a/c/x/4', mode) in chmod_args
+        for name in ['a', 'a/b', 'a/c', 'a/1', 'a/c/2', 'a/c/3', 'a/c/x',
+                     'a/c/x/4']:
+            assert (name, mode) in chmod_args
 
     @istest
-    def dirchown_execute_nonrecursive(self):
+    @mock_uid_and_gid(1, 2)
+    @mock.patch('os.lchown')
+    @mock.patch('salve.action.modify.DirChownAction.verify_can_exec')
+    def dirchown_execute_nonrecursive(self, mock_verify, mock_lchown):
         """
         Unit: Directory Chown Action Execute Non-Recursive
         """
-        lchown_args = []
-
-        def mock_lchown(f_or_d, uid, gid):
-            lchown_args.append((f_or_d, uid, gid))
-
         act = modify.DirChownAction('a', 'user1', 'nogroup', self.file_context)
+        mock_verify.return_value = act.verification_codes.OK
 
-        dir_verify_name = 'salve.action.modify.DirChownAction.verify_can_exec'
-        with mock.patch('os.walk', mock_os_walk):
-            with mock.patch('salve.ugo.name_to_uid', lambda x: 1):
-                with mock.patch('salve.ugo.name_to_gid', lambda x: 2):
-                    with mock.patch(dir_verify_name,
-                            lambda x, fs:
-                            modify.DirChownAction.verification_codes.OK):
-                        with mock.patch('os.lchown', mock_lchown):
-                            act(real_fs)
+        act(ConcreteFilesys())
 
-        assert len(lchown_args) == 1
-        assert ('a', 1, 2) in lchown_args
+        lchown_args = arglist_from_mock(mock_lchown)
+        assert lchown_args == [('a', 1, 2)]
 
     @istest
-    def dirchmod_execute_nonrecursive_owner(self):
+    @mock.patch('os.chmod')
+    @mock.patch('salve.action.modify.DirChmodAction.verify_can_exec')
+    def dirchmod_execute_nonrecursive_owner(self, mock_verify, mock_chmod):
         """
         Unit: Directory Chmod Action Execute Non-Recursive
         """
-        chmod_args = []
-
-        def mock_chmod(f_or_d, mode):
-            chmod_args.append((f_or_d, mode))
-
-        mock_stat_result = mock.Mock()
-        mock_stat_result.st_uid = os.getuid()
-
         act = modify.DirChmodAction('a', '755', self.file_context)
-        with mock.patch('salve.action.modify.DirChmodAction.verify_can_exec',
-                    lambda x, fs: modify.DirChmodAction.verification_codes.OK):
-            with mock.patch('os.chmod', mock_chmod):
-                act(real_fs)
+        mock_verify.return_value = act.verification_codes.OK
+        act(ConcreteFilesys())
 
-        assert len(chmod_args) == 1
-        mode = int('755', 8)
-        assert ('a', mode) in chmod_args
+        chmod_args = arglist_from_mock(mock_chmod)
+        assert chmod_args == [('a', int('755', 8))]
+
+    @istest
+    def stringification_test_generator(self):
+        class_tuples = [(modify.FileChownAction, 'FileChownAction'),
+                        (modify.FileChmodAction, 'FileChmodAction'),
+                        (modify.DirChownAction, 'DirChownAction'),
+                        (modify.DirChmodAction, 'DirChmodAction')]
+
+        for (klass, name) in class_tuples:
+            def check_func():
+                args = [('target', 'a')]
+                if 'Chmod' in name:
+                    args.append(('mode', '600'))
+                    act = klass('a', '600', self.file_context)
+                elif 'Chown' in name:
+                    args.append(('user', 'user1'))
+                    args.append(('group', 'nogroup'))
+                    act = klass('a', 'user1', 'nogroup', self.file_context)
+                else:
+                    assert False
+
+                if 'Dir' in name:
+                    args.append(('recursive', False))
+
+                assert str(act) == '{0}({1},context={2})'.format(
+                    name,
+                    ','.join(['{0}={1}'.format(k, v) for (k, v) in args]),
+                    repr(self.file_context))
+            check_func.description = "Unit: {0} String Conversion".format(name)
+
+            yield check_func

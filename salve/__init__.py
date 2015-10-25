@@ -1,9 +1,17 @@
-import salve.log
-import salve.context
+from .class_resources import Enum, Singleton, with_metaclass
+from .log import create_logger
 
-__version__ = '2.3.1'
+__version__ = '2.4.1'
 
-exec_context = salve.context.ExecutionContext(
-        startphase=salve.context.ExecutionContext.phases.STARTUP)
+logger = create_logger(__name__)
 
-logger = salve.log.Logger(exec_context)
+
+__all__ = [
+    'Enum', 'Singleton',
+    'with_metaclass',
+    'create_logger',
+
+    'logger',
+
+    '__version__'
+]
