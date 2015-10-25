@@ -1,9 +1,9 @@
-.. image:: https://travis-ci.org/sirosen/SALVE.svg?branch=dev
+.. image:: https://travis-ci.org/sirosen/SALVE.svg?branch=stable
     :alt: Build Status
     :target: https://travis-ci.org/sirosen/SALVE
-.. image:: https://coveralls.io/repos/sirosen/SALVE/badge.png?branch=dev
+.. image:: https://coveralls.io/repos/sirosen/SALVE/badge.png?branch=stable
     :alt: Coverage Status
-    :target: https://coveralls.io/r/sirosen/SALVE?branch=dev
+    :target: https://coveralls.io/r/sirosen/SALVE?branch=stable
 .. image:: https://badge.fury.io/py/salve.svg
     :alt: PyPi Version
     :target: https://badge.fury.io/py/salve
