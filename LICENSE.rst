@@ -1,6 +1,6 @@
 Copyright
 ---------
-Copyright 2013-2014, Stephen Rosen
+Copyright 2013-2015, Stephen Rosen
 
 License
 -------
