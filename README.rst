@@ -7,13 +7,20 @@
 .. image:: https://badge.fury.io/py/salve.svg
     :alt: PyPi Version
     :target: https://badge.fury.io/py/salve
+.. image:: https://codeclimate.com/github/sirosen/SALVE/badges/gpa.svg
+   :target: https://codeclimate.com/github/sirosen/SALVE
+   :alt: Code Climate
 
 SALVE
 =====
 
-SALVE versions files and directories in a git repository, and handles the messy process of deploying those files onto a machine.
-It is safer to use than shell scripts in a few ways, and guarantees idempotence for a wide class of deployment actions.
-It also backs up the preexisting versions of files that it changes when possible so that you can recover them if necessary at a later date.
+SALVE takes files and directories in a git repository, and handles the messy
+process of deploying those files onto a machine.
+It is safer to use than shell scripts in a number of ways, and guarantees
+idempotence -- an oft-sought property for configuration management tools -- for
+a wide class of deployment actions.
+It also backs up the preexisting versions of files that it changes when
+possible so that you can recover them if necessary at a later date.
 
 More information is available at `SALVE Website <http://salve.sirosen.net/>`_.
 
@@ -34,30 +41,20 @@ hour.
 To start writing manifests, you can go to the `Quick-Start Guide <http://salve.sirosen.net/quickstart.html>`_.
 For a more detailed description of the SALVE language, the `Language Page <http://salve.sirosen.net/lang>`_ and the `Examples Page <http://salve.sirosen.net/lang/examples.html>`_ are good resources.
 
-Once you have a manifest you want to run, simply do a ``salve deploy`` with them:
+Once you have a manifest you want to run, simply do a ``salve deploy`` with them.
+If you have installed the pip package, you can run
 
     salve deploy --manifest path/to/root.manifest
 
-or, if you are using the git repo as your source:
+or, if you are using the git repo as your source
 
     python SALVE/salve.py deploy --manifest path/to/root.manifest
-
-What if my filesystem is changing while I run SALVE?
-----------------------------------------------------
-
-It is considered unsafe to run SALVE when the files it is operating on are in a
-state of flux.
-One of the core assumptions made is that no files specified either as sources
-of information, or as the targets for actions, are changing while the program
-is being run.
-
-Running SALVE on such files results in undefined behavior, and is strongly
-disrecommended.
 
 What do I need to run it?
 =========================
 
-SALVE is fully compatible with Python 2.7, 3.2, 3.3, and 3.4
+SALVE is fully compatible with Python 2.6, 2.7, 3.2, 3.3, 3.4, and 3.5.
+It also works on pypy and pypy3.
 
 It has no dependencies on python packages, so as long as you have one of these
 versions of Python installed, you can run SALVE.
@@ -77,20 +74,5 @@ dependency automatically.
 Roadmap
 =======
 
-These are the features and fixes currently in the pipeline for SALVE.
-Generally Fixes are prioritized over Features, depending on their severity and
-importance to the project.
-
-They are listed in priority order.
-
-Fixes
------
- - Verification is performed on a rolling basis, rather than once at the start of execution
- - ``~`` and ``*`` expansion does not offer useful error messages.
- - Dir alterations (chown/chmod) are based on walks at generation time, not execution time
-
-Features
---------
- - Plugin framework allowing extensible block types
- - Automatic file backup recovery using dates, generation numbers, and so forth
- - Variable and attribute definition in manifest blocks to propogate down the block tree as defaults
+The Roadmap has been replaced with
+`GitHub issues <https://github.com/sirosen/SALVE/issues>`_.
