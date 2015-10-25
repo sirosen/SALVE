@@ -1,9 +1,7 @@
-#!/usr/bin/python
-
 from nose.tools import istest
 import mock
 
-from tests.util import ensure_except, scratch
+from tests.framework import ensure_except, scratch
 from salve.context import FileContext
 
 from salve.action import ShellAction

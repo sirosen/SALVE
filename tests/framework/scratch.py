@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import os
 import tempfile
 import shutil
@@ -8,7 +6,7 @@ import mock
 import textwrap
 
 from salve import paths
-from tests.util import MockedGlobals
+from tests.framework import MockedGlobals
 
 
 class ScratchContainer(MockedGlobals):

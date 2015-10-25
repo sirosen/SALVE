@@ -5,7 +5,7 @@ from salve.block import FileBlock
 from salve.exceptions import ParsingException, TokenizationException
 from salve.parser import parse
 
-from tests.util import scratch, ensure_except, full_path
+from tests.framework import scratch, ensure_except, full_path
 
 
 def parse_filename(filename):

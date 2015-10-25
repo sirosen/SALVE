@@ -5,7 +5,7 @@ from salve import action
 from salve.action import backup, create, modify, copy
 from salve.context import ExecutionContext
 
-from tests.util import testfile_dir, scratch
+from tests.framework import testfile_dir, scratch
 
 
 class ScratchWithExecCtx(scratch.ScratchContainer):

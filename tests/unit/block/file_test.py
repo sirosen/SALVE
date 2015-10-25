@@ -2,7 +2,7 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.util import ensure_except, disambiguate_by_class
+from tests.framework import ensure_except, disambiguate_by_class
 
 from salve.action import modify
 from salve.exceptions import BlockException

@@ -1,12 +1,10 @@
-#!/usr/bin/python
-
 import os
 import hashlib
 
 import mock
 
 from nose.tools import istest
-from tests.util import ensure_except, scratch
+from tests.framework import ensure_except, scratch
 
 from salve.filesys import ConcreteFilesys
 

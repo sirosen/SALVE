@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import os
 import mock
 from nose.tools import istest
@@ -8,7 +6,7 @@ from salve.context import ExecutionContext, FileContext
 
 from salve.action import copy
 from salve.filesys import ConcreteFilesys
-from tests.util import scratch, assert_substr
+from tests.framework import scratch, assert_substr
 
 
 class TestWithScratchdir(scratch.ScratchContainer):

@@ -9,7 +9,7 @@ from salve import ugo
 from salve.action import modify
 from salve.filesys import ConcreteFilesys
 
-from tests.util import scratch, assert_substr
+from tests.framework import scratch, assert_substr
 
 
 def mock_os_walk(dir):

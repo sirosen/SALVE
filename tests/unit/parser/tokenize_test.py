@@ -5,7 +5,7 @@ from salve.context import FileContext
 from salve.parser import tokenize
 from salve.parser.tokenize import Token
 
-from tests.util import ensure_except, full_path, MockedGlobals
+from tests.framework import ensure_except, full_path, MockedGlobals
 
 
 def tokenize_filename(filename):

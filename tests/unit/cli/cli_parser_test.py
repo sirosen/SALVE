@@ -4,8 +4,8 @@ from nose.tools import istest
 import logging
 import salve
 from salve.cli import parser, deploy
-from tests.util import (ensure_except, ensure_SystemExit_with_code,
-                        MockedGlobals)
+from tests.framework import (ensure_except, ensure_SystemExit_with_code,
+                             MockedGlobals)
 
 
 class TestsWithMockedIO(MockedGlobals):

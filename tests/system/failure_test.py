@@ -2,7 +2,7 @@ import os
 import mock
 
 from nose.tools import istest
-from tests.util import ensure_except, full_path, assert_substr
+from tests.framework import ensure_except, full_path, assert_substr
 from tests import system
 
 from salve import cli

@@ -1,6 +1,6 @@
 from nose.tools import istest
 
-from tests.util import ensure_except
+from tests.framework import ensure_except
 from salve.parser import Token
 from salve.exceptions import BlockException
 

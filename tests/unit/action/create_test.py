@@ -5,7 +5,7 @@ from salve.context import ExecutionContext, FileContext
 
 from salve.action import create
 from salve.filesys import ConcreteFilesys
-from tests.util import scratch
+from tests.framework import scratch
 
 dummy_file_context = FileContext('no such file')
 dummy_exec_context = ExecutionContext()
