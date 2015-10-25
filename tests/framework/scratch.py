@@ -38,7 +38,6 @@ class ScratchContainer(MockedGlobals):
     def __init__(self):
         MockedGlobals.__init__(self)
 
-        self.patches = set()
         self.scratch_dir = tempfile.mkdtemp()
 
         mock_env = {
@@ -109,11 +108,6 @@ class ScratchContainer(MockedGlobals):
                 mock.patch('__builtin__.open', mock_open)
                 )
 
-    def setUp(self):
-        MockedGlobals.setUp(self)
-        for p in self.patches:
-            p.start()
-
     def tearDown(self):
         MockedGlobals.tearDown(self)
 
@@ -126,9 +120,6 @@ class ScratchContainer(MockedGlobals):
 
         recursive_chmod(self.scratch_dir)
         shutil.rmtree(self.scratch_dir)
-
-        for p in self.patches:
-            p.stop()
 
     def get_backup_path(self, backup_dir):
         return os.path.join(self.get_fullname(backup_dir), 'files')

@@ -1,7 +1,7 @@
 import logging
 import mock
 
-from salve.log import gen_handler
+from salve.log import gen_handler, clear_handlers
 from salve.context import ExecutionContext
 
 from .mockedio import MockedIO
@@ -14,40 +14,31 @@ class MockedGlobals(MockedIO):
         self.logger = logging.getLogger(__name__)
         self.logger.propagate = False
 
-        self.logger_patch = mock.patch('salve.logger', self.logger)
-        self.action_logger_patches = [
-            mock.patch('salve.action.%s.logger' % loc,
-                       self.logger)
-            for loc in [
-                'backup.file', 'backup.directory',
-                'copy.file', 'create.file',
-                'copy.directory', 'create.directory',
-                'modify.chmod', 'modify.chown',
-                'modify.file_chmod', 'modify.file_chown',
-                'modify.dir_chmod', 'modify.dir_chown'
-            ]
-        ]
+        for loc in ['backup.file', 'backup.directory',
+                    'copy.file', 'create.file',
+                    'copy.directory', 'create.directory',
+                    'modify.chmod', 'modify.chown',
+                    'modify.file_chmod', 'modify.file_chown',
+                    'modify.dir_chmod', 'modify.dir_chown'
+                    ]:
+            self.patches.add(mock.patch('salve.action.%s.logger' % loc,
+                                        self.logger))
+        self.patches.add(mock.patch('salve.logger', self.logger))
 
     def setUp(self):
         # some tests will change the log level, so set it during setUp to
         # ensure that it's always correct
         self.logger.setLevel(logging.DEBUG)
+        # point the logger back at stderr
+        self.logger.addHandler(gen_handler(stream=self.stderr))
 
         # always start tests in the startup phase
+        clear_exec_context()
         ExecutionContext().transition(ExecutionContext.phases.STARTUP,
                                       quiet=True)
 
         MockedIO.setUp(self)
-        clear_exec_context()
-        self.logger_patch.start()
-        self.logger.addHandler(gen_handler(stream=self.stderr))
-
-        for p in self.action_logger_patches:
-            p.start()
 
     def tearDown(self):
         MockedIO.tearDown(self)
-        self.logger_patch.stop()
-        self.logger.handlers = []
-        for p in self.action_logger_patches:
-            p.stop()
+        clear_handlers(self.logger)
