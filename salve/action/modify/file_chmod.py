@@ -1,4 +1,4 @@
-from salve import logger
+import salve
 from salve.action.modify.chmod import ChmodAction
 from salve.context import ExecutionContext
 
@@ -35,18 +35,18 @@ class FileChmodAction(ChmodAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            logstr = "FileChmod: Non-Existent target file \"%s\"" % self.target
-            logger.warn(logstr)
+            salve.logger.warn('FileChmod: Non-Existent target file "{0}"'
+                              .format(self.target))
             return
         if vcode == self.verification_codes.UNOWNED_TARGET:
-            logstr = "FileChmod: Unowned target file \"%s\"" % self.target
-            logger.warn(logstr)
+            salve.logger.warn('FileChmod: Unowned target file "{0}"'
+                              .format(self.target))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info('Performing FileChmod of \"%s\" to %s' %
-                    (self.target, '{0:o}'.format(self.mode)))
+        salve.logger.info('Performing FileChmod of "{0}" to {1:o}'
+                          .format(self.target, self.mode))
 
         filesys.chmod(self.target, self.mode)

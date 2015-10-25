@@ -70,7 +70,7 @@ class SALVEConfig(object):
         except configparser.Error as e:
             raise SALVEException(
                 'Encountered an error while parsing your ' +
-                'configuration file(s).\n%s' % e.message,
+                'configuration file(s).\n{0}'.format(e.message),
                 FileContext(filename))
         sections = conf.sections()
         # the loaded configuration is stored in the config object as a

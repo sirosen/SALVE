@@ -1,4 +1,4 @@
-from salve import logger
+import salve
 from salve.action.copy.base import CopyAction
 from salve.filesys import access_codes
 from salve.context import ExecutionContext
@@ -13,21 +13,21 @@ class FileCopyAction(CopyAction):
         """
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
-        logstr = 'FileCopy: Checking destination is writable, \"%s\"' % \
-            self.dst
-        logger.info('{0}: {1}'.format(self.file_context, logstr))
+        salve.logger.info(
+            '{0}: FileCopy: Checking destination is writable, "{1}"'
+            .format(self.file_context, self.dst))
 
         if not filesys.writable_path_or_ancestor(self.dst):
             return self.verification_codes.UNWRITABLE_TARGET
 
-        logstr = 'FileCopy: Checking if source is link, "%s"' % self.src
-        logger.info('{0}: {1}'.format(self.file_context, logstr))
+        salve.logger.info('{0}: FileCopy: Checking if source is link, "{1}"'
+                          .format(self.file_context, self.src))
 
         if filesys.lookup_type(self.src) is filesys.element_types.LINK:
             return self.verification_codes.OK
 
-        logstr = 'FileCopy: Checking source is readable, \"%s\"' % self.src
-        logger.info('{0}: {1}'.format(self.file_context, logstr))
+        salve.logger.info('{0}: FileCopy: Checking source is readable, "{1}"'
+                          .format(self.file_context, self.src))
 
         if not filesys.access(self.src, access_codes.R_OK):
             return self.verification_codes.UNREADABLE_SOURCE
@@ -44,18 +44,18 @@ class FileCopyAction(CopyAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            logstr = "FileCopy: Non-Writable target file \"%s\"" % self.dst
-            logger.warn('{0}: {1}'.format(self.file_context, logstr))
+            salve.logger.warn('{0}: FileCopy: Non-Writable target file "{1}"'
+                              .format(self.file_context, self.dst))
             return
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
-            logstr = "FileCopy: Non-Readable source file \"%s\"" % self.src
-            logger.warn('{0}: {1}'.format(self.file_context, logstr))
+            salve.logger.warn('{0}: FileCopy: Non-Readable source file "{1}"'
+                              .format(self.file_context, self.src))
             return
 
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logstr = 'Performing File Copy \"%s\" -> \"%s\"' % (self.src, self.dst)
-        logger.info('{0}: {1}'.format(self.file_context, logstr))
+        salve.logger.info('{0}: Performing File Copy "{1}" -> "{2}"'
+                          .format(self.file_context, self.src, self.dst))
 
         filesys.copy(self.src, self.dst)

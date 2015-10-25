@@ -193,7 +193,7 @@ def tokenize_stream(stream):
     tokenizing_ctx['filename'] = filename
     tokenizing_ctx['expected_types'] = Token.types.IDENTIFIER
 
-    salve.logger.info('Beginning Tokenization of \"%s\"' % filename)
+    salve.logger.info('Beginning Tokenization of "{0}"'.format(filename))
     shlexer = shlex.shlex(stream, posix=True)
     # Basically, everything other than BLOCK_START or BLOCK_END
     # is okay here, we'll let the os library handle it later wrt
@@ -212,6 +212,6 @@ def tokenize_stream(stream):
 
     validate_end_state()
 
-    salve.logger.info('Finished Tokenization of \"%s\"' % filename)
+    salve.logger.info('Finished Tokenization of "{0}"'.format(filename))
 
     return tokenizing_ctx['tokens']

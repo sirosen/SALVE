@@ -14,15 +14,6 @@ class MockedGlobals(MockedIO):
         self.logger = logging.getLogger(__name__)
         self.logger.propagate = False
 
-        for loc in ['backup.file', 'backup.directory',
-                    'copy.file', 'create.file',
-                    'copy.directory', 'create.directory',
-                    'modify.chmod', 'modify.chown',
-                    'modify.file_chmod', 'modify.file_chown',
-                    'modify.dir_chmod', 'modify.dir_chown'
-                    ]:
-            self.patches.add(mock.patch('salve.action.%s.logger' % loc,
-                                        self.logger))
         self.patches.add(mock.patch('salve.logger', self.logger))
 
     def setUp(self):

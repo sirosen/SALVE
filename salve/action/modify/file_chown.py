@@ -1,4 +1,5 @@
-from salve import logger, ugo
+import salve
+from salve import ugo
 from salve.action.modify.chown import ChownAction
 from salve.context import ExecutionContext
 
@@ -37,12 +38,11 @@ class FileChownAction(ChownAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            logstr = "FileChown: Non-Existent target file \"%s\"" % self.target
-            logger.warn(logstr)
+            salve.logger.warn('FileChown: Non-Existent target file "{0}"'
+                              .format(self.target))
             return
         if vcode == self.verification_codes.NOT_ROOT:
-            logstr = "FileChown: Cannot Chown as Non-Root User"
-            logger.warn(logstr)
+            salve.logger.warn("FileChown: Cannot Chown as Non-Root User")
             return
         # if verification says that we skip without performing any action
         # then there should be no warning message
@@ -52,9 +52,8 @@ class FileChownAction(ChownAction):
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info(
-            'Performing FileChown of \"%s\" to %s:%s' %
-            (self.target, self.user, self.group))
+        salve.logger.info('Performing FileChown of "{0}" to {1}:{2}'
+                          .format(self.target, self.user, self.group))
 
         # chown without following symlinks
         filesys.chown(self.target, ugo.name_to_uid(self.user),

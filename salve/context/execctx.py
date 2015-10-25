@@ -33,10 +33,9 @@ class ExecutionContext(with_metaclass(Singleton)):
             return
 
         if not quiet:
-            transition_text = ('SALVE Execution Phase Transition ' +
-                               '[%s] -> [%s]' %
-                               (self.phase, newphase))
-            extra = {'hide_salve_context': True}
-            salve.logger.debug(transition_text, extra=extra)
+            salve.logger.debug(
+                'SALVE Execution Phase Transition [{0}] -> [{1}]'
+                .format(self.phase, newphase),
+                extra={'hide_salve_context': True})
 
         self.phase = newphase
