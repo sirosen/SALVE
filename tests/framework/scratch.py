@@ -35,38 +35,42 @@ class ScratchContainer(MockedGlobals):
         """
     )
 
-    def __init__(self):
-        MockedGlobals.__init__(self)
-
-        self.scratch_dir = tempfile.mkdtemp()
-
-        mock_env = {
-            'SUDO_USER': 'user1',
-            'USER': 'user1',
-            'HOME': self.get_fullname('home/user1')
-        }
+    def _inithelper_mockenv(self):
         self.username = 'user1'
-        self.sudouser = 'user1'
-        self.userhome = 'home/user1'
-        os.makedirs(mock_env['HOME'])
+        self.userhome = self.get_fullname('home/user1')
+        os.makedirs(self.userhome)
+        mock_env = {
+            'SUDO_USER': self.username,
+            'USER': self.username,
+            'HOME': self.userhome
+        }
         self.patches.add(mock.patch.dict('os.environ', mock_env))
 
+    def _inithelper_mockgroupname(self):
         def get_groupname(user):
-            if user == 'user1':
+            if user == self.username:
                 return 'group1'
             else:
                 return 'nogroup'
 
+        self.patches.add(mock.patch('salve.ugo.get_group_from_username',
+                                    get_groupname))
+
+    def _inithelper_mockexpanduser(self):
         real_expanduser = os.path.expanduser
 
         def expanduser(path):
-            if path.strip() == '~user1':
-                return mock_env['HOME']
+            if path.strip() == '~{0}'.format(self.username):
+                return self.userhome
             else:
                 return real_expanduser(path)
 
-        settings_loc = os.path.join(mock_env['HOME'], 'settings.ini')
+        self.patches.add(mock.patch('os.path.expanduser', expanduser))
+
+    def _inithelper_mocksettings(self):
+        settings_loc = os.path.join(self.userhome, 'settings.ini')
         self.write_file(settings_loc, self.default_settings_content)
+
         real_open = open
 
         def mock_open(path, *args, **kwargs):
@@ -75,38 +79,34 @@ class ScratchContainer(MockedGlobals):
             else:
                 return real_open(path, *args, **kwargs)
 
-        self.patches.add(
-            mock.patch('salve.ugo.get_group_from_username',
-                       get_groupname)
-            )
+        # use the builtins import to check if we are in Py3
+        # more foolproof than using sys.version_info because it will work even
+        # on unexpected python versions as long as the builtins module doesn't
+        # get renamed again
+        try:  # flake8: noqa
+            import builtins
+            self.patches.add(mock.patch('builtins.open', mock_open))
+        # if it fails with an import error, we are in Py2
+        except ImportError:  # flake8: noqa
+            import __builtin__ as builtins
+            self.patches.add(mock.patch('__builtin__.open', mock_open))
+
+    def __init__(self):
+        MockedGlobals.__init__(self)
+        self.scratch_dir = tempfile.mkdtemp()
+
+        self._inithelper_mockenv()
+        self._inithelper_mockgroupname()
+        self._inithelper_mockexpanduser()
+        self._inithelper_mocksettings()
 
         # mock the gid and uid helpers -- this allows dummy user lookups
         # with this mocking in place, the dummy user looks like the real
         # user
-        real_uid = os.geteuid()
-        real_gid = os.getegid()
         self.patches.add(mock.patch('salve.ugo.name_to_uid',
-                         lambda x: real_uid))
+                                    lambda x: os.geteuid()))
         self.patches.add(mock.patch('salve.ugo.name_to_gid',
-                         lambda x: real_gid))
-
-        self.patches.add(
-            mock.patch('os.path.expanduser', expanduser)
-            )
-
-        # use the builtins import to check if we are in Py3
-        # more foolproof than using sys.version_info
-        try:
-            import builtins  # flake8: noqa
-            self.patches.add(
-                mock.patch('builtins.open', mock_open)
-                )
-        # if it fails with an import error, we are in Py2
-        except ImportError:
-            import __builtin__ as builtins  # flake8: noqa
-            self.patches.add(
-                mock.patch('__builtin__.open', mock_open)
-                )
+                                    lambda x: os.getegid()))
 
     def tearDown(self):
         MockedGlobals.tearDown(self)
