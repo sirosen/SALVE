@@ -3,6 +3,7 @@ from nose.tools import istest
 from tests.util import ensure_except, full_path
 
 from salve import paths
+from salve.context import ExecutionContext
 from salve.exceptions import BlockException
 
 from salve.block import ManifestBlock, FileBlock
@@ -17,6 +18,10 @@ def _man_block_and_containing_dir(name):
 
 
 class TestWithScratchdir(ScratchWithExecCtx):
+    def setUp(self):
+        ScratchWithExecCtx.setUp(self)
+        ExecutionContext()['config'] = dummy_conf
+
     @istest
     def sourceless_manifest_compile_error(self):
         """
@@ -35,7 +40,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         are expanded if the source attribute is unspecified.
         """
         b = ManifestBlock(dummy_file_context)
-        ensure_except(BlockException, b.expand_blocks, '/', dummy_conf, False)
+        ensure_except(BlockException, b.expand_blocks, '/', False)
 
     @istest
     def empty_manifest_expand(self):
@@ -45,7 +50,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         errors.
         """
         b, d = _man_block_and_containing_dir('empty.manifest')
-        b.expand_blocks('/', dummy_conf, False)
+        b.expand_blocks('/', False)
         assert len(b.sub_blocks) == 0
 
     @istest
@@ -56,7 +61,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         BlockException when expanded.
         """
         b, d = _man_block_and_containing_dir('self_include.manifest')
-        ensure_except(BlockException, b.expand_blocks, d, dummy_conf, False)
+        ensure_except(BlockException, b.expand_blocks, d, False)
 
     @istest
     def sub_block_expand(self):
@@ -65,7 +70,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         Verifies that Manifest block expansion works normally.
         """
         b, d = _man_block_and_containing_dir('empty_and_file.manifest')
-        b.expand_blocks(d, dummy_conf, False)
+        b.expand_blocks(d, False)
         assert len(b.sub_blocks) == 2
         mblock = b.sub_blocks[0]
         fblock = b.sub_blocks[1]
@@ -85,7 +90,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         conversion works normally.
         """
         b, d = _man_block_and_containing_dir('empty_and_file.manifest')
-        b.expand_blocks(d, dummy_conf, False)
+        b.expand_blocks(d, False)
 
         act = b.compile()
 

@@ -3,6 +3,8 @@ import argparse
 import textwrap
 
 import salve
+from salve.config import SALVEConfig
+from salve.context import ExecutionContext
 import salve.cli.deploy
 import salve.cli.backup
 
@@ -111,6 +113,10 @@ def load_args():
     """
     parser = get_parser()
     args = parser.parse_args()
+
+    # load and store config data from config file (if present)
+    conf = SALVEConfig(filename=args.configfile)
+    ExecutionContext()['config'] = conf
 
     if args.log_level:
         salve.logger.setLevel(salve.log.str_to_level(args.log_level))
