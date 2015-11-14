@@ -8,6 +8,8 @@ from salve.action import copy
 from salve.filesys import ConcreteFilesys
 from tests.framework import scratch, assert_substr
 
+from .helpers import verification_produces_code
+
 
 class TestWithScratchdir(scratch.ScratchContainer):
     def __init__(self):
@@ -47,9 +49,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fcp = copy.FileCopyAction(self.get_fullname('rw_file_1'),
                                   self.get_fullname('r_only_file_1'),
                                   self.dummy_file_context)
-
-        assert (fcp.verify_can_exec(ConcreteFilesys()) ==
-                fcp.verification_codes.UNWRITABLE_TARGET)
+        verification_produces_code(fcp, 'UNWRITABLE_TARGET')
 
     @istest
     def canexec_unwritable_target_dir(self):
@@ -62,9 +62,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             self.get_fullname('rw_file_1'),
             self.get_fullname('no_perms_dir_1/otherfile'),
             self.dummy_file_context)
-
-        assert (fcp.verify_can_exec(ConcreteFilesys()) ==
-                fcp.verification_codes.UNWRITABLE_TARGET)
+        verification_produces_code(fcp, 'UNWRITABLE_TARGET')
 
     @istest
     def canexec_unreadable_source(self):
@@ -76,9 +74,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fcp = copy.FileCopyAction(self.get_fullname('no_perms_file_1'),
                                   self.get_fullname('rw_file_1'),
                                   self.dummy_file_context)
-
-        assert (fcp.verify_can_exec(ConcreteFilesys()) ==
-                fcp.verification_codes.UNREADABLE_SOURCE)
+        verification_produces_code(fcp, 'UNREADABLE_SOURCE')
 
     @istest
     def dir_canexec_unreadable_source(self):
@@ -90,9 +86,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         dcp = copy.DirCopyAction(self.get_fullname('no_perms_dir_1'),
                                  self.get_fullname('rw_dir_1'),
                                  self.dummy_file_context)
-
-        assert (dcp.verify_can_exec(ConcreteFilesys()) ==
-                dcp.verification_codes.UNREADABLE_SOURCE)
+        verification_produces_code(dcp, 'UNREADABLE_SOURCE')
 
     @istest
     def dir_canexec_unwritable_target(self):
@@ -104,9 +98,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         dcp = copy.DirCopyAction(self.get_fullname('rw_dir_1'),
                                  self.get_fullname('no_perms_dir_1/abc'),
                                  self.dummy_file_context)
-
-        assert (dcp.verify_can_exec(ConcreteFilesys()) ==
-                dcp.verification_codes.UNWRITABLE_TARGET)
+        verification_produces_code(dcp, 'UNWRITABLE_TARGET')
 
     @istest
     def stringification_test_generator(self):
