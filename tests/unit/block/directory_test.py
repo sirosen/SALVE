@@ -2,7 +2,7 @@ import os
 import mock
 from nose.tools import istest
 
-from tests.framework import ensure_except, disambiguate_by_class
+from tests.framework import ensure_except
 
 from salve.action import modify
 from salve.exceptions import BlockException
@@ -15,22 +15,18 @@ from .helpers import (
     check_dir_chown_act, check_dir_chmod_act,
 
     check_file_backup_act, check_file_copy_act,
+    generic_check_action_list,
     assign_block_attrs
 )
 
 
-def check_actions_against_defaults(create=None, chmod=None, chown=None,
-                                   chown_chmod_pair=None):
-    if chown_chmod_pair:
-        chmod, chown = disambiguate_by_class(
-            modify.DirChmodAction, chown_chmod_pair[0], chown_chmod_pair[1])
-
-    if create:
-        check_dir_create_act(create, '/p/q/r')
-    if chmod:
-        check_dir_chmod_act(chmod, '755', '/p/q/r')
-    if chown:
-        check_dir_chown_act(chown, 'user1', 'nogroup', '/p/q/r')
+def check_action_list_against_defaults(actions, action_names):
+    generic_check_action_list(
+        actions, action_names,
+        {'create': check_dir_create_act,
+         'chmod': check_dir_chmod_act,
+         'chown': check_dir_chown_act},
+        modify.DirChmodAction)
 
 
 def make_dir_block(action='copy', source='/a/b/c', target='/p/q/r',
@@ -50,9 +46,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         """
         act = make_dir_block(action='create', mode=None).compile()
 
-        check_list_act(act, 2)
-        check_actions_against_defaults(create=act.actions[0],
-                                       chown=act.actions[1])
+        check_action_list_against_defaults(act, ['create', 'chown'])
 
     @istest
     def dir_create_compile_chmod(self):
@@ -63,10 +57,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         """
         act = make_dir_block(action='create').compile()
 
-        check_list_act(act, 3)
-        check_actions_against_defaults(
-            create=act.actions[0],
-            chown_chmod_pair=(act.actions[1], act.actions[2]))
+        check_action_list_against_defaults(
+            act, ['create', 'chown_or_chmod', 'chown_or_chmod'])
 
     @istest
     def dir_create_chown_as_root(self):
@@ -78,9 +70,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         with mock.patch('salve.ugo.is_root', lambda: True):
             act = make_dir_block(action='create', mode=None).compile()
 
-        check_list_act(act, 2)
-        check_actions_against_defaults(create=act.actions[0],
-                                       chown=act.actions[1])
+        check_action_list_against_defaults(
+            act, ['create', 'chown'])
 
     @istest
     def empty_dir_copy_compile(self):
@@ -92,8 +83,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
             act = make_dir_block(action='copy', mode=None, user=None,
                                  group=None).compile()
 
-        check_list_act(act, 1)
-        check_actions_against_defaults(create=act.actions[0])
+        check_action_list_against_defaults(act, ['create'])
 
     @istest
     def nested_dir_copy_compile(self):
@@ -141,9 +131,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         """
         act = make_dir_block(mode=None).compile()
 
-        check_list_act(act, 2)
-        check_actions_against_defaults(create=act.actions[0],
-                                       chown=act.actions[1])
+        check_action_list_against_defaults(
+            act, ['create', 'chown'])
 
     @istest
     def dir_copy_fails_nosource(self):

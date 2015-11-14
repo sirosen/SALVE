@@ -5,7 +5,7 @@ from salve import action
 from salve.action import backup, create, modify, copy
 from salve.context import ExecutionContext
 
-from tests.framework import testfile_dir, scratch
+from tests.framework import testfile_dir, scratch, disambiguate_by_class
 
 
 class ScratchWithExecCtx(scratch.ScratchContainer):
@@ -69,11 +69,29 @@ def check_dir_create_act(act, dst='/p/q/r'):
     _generic_check_act(act, create.DirCreateAction, {'dst': dst})
 
 
-def check_dir_chown_act(act, user, group, target):
+def check_dir_chown_act(act, user='user1', group='nogroup', target='/p/q/r'):
     _generic_check_act(act, modify.DirChownAction,
                        {'user': user, 'group': group, 'target': target})
 
 
-def check_dir_chmod_act(act, mode, target):
+def check_dir_chmod_act(act, mode='755', target='/p/q/r'):
     _generic_check_act(act, modify.DirChmodAction, {'target': target})
     assert '{0:o}'.format(act.mode) == mode, str(act.mode)
+
+
+def generic_check_action_list(actions, action_names, check_map, chmod_class):
+    check_list_act(actions, len(action_names))
+    actions_with_names = zip(actions, action_names)
+
+    modify_acts = []
+    check_map['chown_or_chmod'] = modify_acts.append
+
+    for (act, name) in actions_with_names:
+        check_map[name](act)
+
+    if modify_acts:
+        assert len(modify_acts) is 2
+        chmod, chown = disambiguate_by_class(
+            chmod_class, modify_acts[0], modify_acts[1])
+        check_map['chmod'](chmod)
+        check_map['chown'](chown)
