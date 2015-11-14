@@ -1,5 +1,8 @@
 Changelog
 =========
+ * 2.4.2
+    * Fix a bug with setting the log level
+    * Make the ``deploy`` subcommand the default when no subcommand is given
  * 2.4.1
     * SALVE now uses the python standard library for logging, rather than
       custom logging
