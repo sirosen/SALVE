@@ -41,30 +41,31 @@ def check_list_act(act, list_len):
     assert len(act.actions) == list_len
 
 
-def check_file_backup_act(act, src, bak_dir, logfile):
+def check_file_backup_act(act, src='/p/q/r', bak_dir='/m/n',
+                          logfile='/m/n.log'):
     _generic_check_act(act, backup.FileBackupAction,
                        {'src': src, 'backup_dir': bak_dir, 'logfile': logfile})
 
 
-def check_file_create_act(act, dst):
+def check_file_create_act(act, dst='/p/q/r'):
     _generic_check_act(act, create.FileCreateAction, {'dst': dst})
 
 
-def check_file_copy_act(act, src, dst):
+def check_file_copy_act(act, src='/a/b/c', dst='/p/q/r'):
     _generic_check_act(act, copy.FileCopyAction, {'src': src, 'dst': dst})
 
 
-def check_file_chmod_act(act, mode, target):
+def check_file_chmod_act(act, mode='600', target='/p/q/r'):
     _generic_check_act(act, modify.FileChmodAction, {'target': target})
     assert '{0:o}'.format(act.mode) == mode, str(act.mode)
 
 
-def check_file_chown_act(act, user, group, target):
+def check_file_chown_act(act, user='user1', group='nogroup', target='/p/q/r'):
     _generic_check_act(act, modify.FileChownAction,
                        {'user': user, 'group': group, 'target': target})
 
 
-def check_dir_create_act(act, dst):
+def check_dir_create_act(act, dst='/p/q/r'):
     _generic_check_act(act, create.DirCreateAction, {'dst': dst})
 
 

@@ -17,23 +17,27 @@ from .helpers import (
 )
 
 
-def check_actions_against_defaults(copy=None, create=None, chmod=None,
-                                   chown=None, backup=None,
-                                   chown_chmod_pair=None):
-    if chown_chmod_pair:
-        chmod, chown = disambiguate_by_class(
-            modify.FileChmodAction, chown_chmod_pair[0], chown_chmod_pair[1])
+def check_actions_against_defaults(actions, action_names):
+    actions_with_names = zip(actions, action_names)
 
-    if copy:
-        check_file_copy_act(copy, '/a/b/c', '/p/q/r')
-    if create:
-        check_file_create_act(create, '/p/q/r')
-    if backup:
-        check_file_backup_act(backup, '/p/q/r', '/m/n', '/m/n.log')
-    if chmod:
-        check_file_chmod_act(chmod, '600', '/p/q/r')
-    if chown:
-        check_file_chown_act(chown, 'user1', 'nogroup', '/p/q/r')
+    modify_acts = []
+    check_map = {
+        'copy': check_file_copy_act,
+        'create': check_file_create_act,
+        'backup': check_file_backup_act,
+        'chmod': check_file_chmod_act,
+        'chown': check_file_chown_act,
+        'chown_or_chmod': modify_acts.append
+    }
+
+    for (act, name) in actions_with_names:
+        check_map[name](act)
+
+    if modify_acts:
+        chmod, chown = disambiguate_by_class(
+            modify.FileChmodAction, modify_acts[0], modify_acts[1])
+        check_map['chmod'](chmod)
+        check_map['chown'](chown)
 
 
 def make_file_block(action='copy', source='/a/b/c', target='/p/q/r',
@@ -64,8 +68,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
 
         check_list_act(act, 4)
         check_actions_against_defaults(
-            copy=act.actions[1], backup=act.actions[0],
-            chown_chmod_pair=(act.actions[2], act.actions[3]))
+            act, ['backup', 'copy', 'chown_or_chmod', 'chown_or_chmod'])
 
     @istest
     @_common_patchset(False, True)
@@ -78,8 +81,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
 
         check_list_act(act, 3)
         check_actions_against_defaults(
-            create=act.actions[0],
-            chown_chmod_pair=(act.actions[1], act.actions[2]))
+            act, ['create', 'chown_or_chmod', 'chown_or_chmod'])
 
     @istest
     @_common_patchset(True, True)
@@ -92,8 +94,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         act = make_file_block(user=None).compile()
 
         check_list_act(act, 3)
-        check_actions_against_defaults(
-            copy=act.actions[1], backup=act.actions[0], chmod=act.actions[2])
+        check_actions_against_defaults(act, ['backup', 'copy', 'chmod'])
 
     @istest
     @_common_patchset(True, False)
@@ -106,8 +107,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         act = make_file_block(action='create', user=None).compile()
 
         check_list_act(act, 2)
-        check_actions_against_defaults(
-            create=act.actions[0], chmod=act.actions[1])
+        check_actions_against_defaults(act, ['create', 'chmod'])
 
     @istest
     @_common_patchset(True, False)
@@ -120,8 +120,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         act = make_file_block(group=None).compile()
 
         check_list_act(act, 3)
-        check_actions_against_defaults(
-            backup=act.actions[0], copy=act.actions[1], chmod=act.actions[2])
+        check_actions_against_defaults(act, ['backup', 'copy', 'chmod'])
 
     @istest
     @_common_patchset(True, False)
@@ -134,8 +133,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         act = make_file_block(action='create', group=None).compile()
 
         check_list_act(act, 2)
-        check_actions_against_defaults(
-            create=act.actions[0], chmod=act.actions[1])
+        check_actions_against_defaults(act, ['create', 'chmod'])
 
     @istest
     @_common_patchset(False, False)
@@ -148,8 +146,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         act = make_file_block(mode=None).compile()
 
         check_list_act(act, 3)
-        check_actions_against_defaults(
-            backup=act.actions[0], copy=act.actions[1], chown=act.actions[2])
+        check_actions_against_defaults(act, ['backup', 'copy', 'chown'])
 
     @istest
     @_common_patchset(False, False)
@@ -162,8 +159,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         act = make_file_block(action='create', mode=None).compile()
 
         check_list_act(act, 2)
-        check_actions_against_defaults(
-            create=act.actions[0], chown=act.actions[1])
+        check_actions_against_defaults(act, ['create', 'chown'])
 
     @istest
     def file_copy_fails_nosource(self):
