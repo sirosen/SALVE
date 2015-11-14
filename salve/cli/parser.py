@@ -3,6 +3,9 @@ import argparse
 import textwrap
 
 import salve
+from salve.config import SALVEConfig
+from salve.context import ExecutionContext
+from salve.cli.default_subparser import set_default_subparser
 import salve.cli.deploy
 import salve.cli.backup
 
@@ -99,6 +102,9 @@ def get_parser():
         ' tree and deploy the described configuration.')
     add_deploy_args(deploy_parser)
 
+    # make the deploy subcommand the default
+    set_default_subparser(parser, 'deploy')
+
     return parser
 
 
@@ -111,6 +117,10 @@ def load_args():
     """
     parser = get_parser()
     args = parser.parse_args()
+
+    # load and store config data from config file (if present)
+    conf = SALVEConfig(filename=args.configfile)
+    ExecutionContext()['config'] = conf
 
     if args.log_level:
         salve.logger.setLevel(salve.log.str_to_level(args.log_level))

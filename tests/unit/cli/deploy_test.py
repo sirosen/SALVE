@@ -25,10 +25,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.ctx = dummy_file_context
 
     @istest
-    @mock.patch('salve.cli.deploy.SALVEConfig')
     @mock.patch('salve.config.SALVEConfig')
     @mock.patch('salve.cli.deploy.ManifestBlock')
-    def deploy_main(self, mock_man, mock_config, mock_deploy_config):
+    def deploy_main(self, mock_man, mock_config):
         """
         Unit: Deploy Command Dummy Manifest Block Expand And Run
         Checks that running the deploy main function expands and runs

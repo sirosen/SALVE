@@ -8,7 +8,6 @@ import sys
 import salve
 
 from salve import paths
-from salve.config import SALVEConfig
 from salve.context import FileContext
 from salve.exceptions import SALVEException
 from salve.block import ManifestBlock
@@ -27,11 +26,6 @@ def run_on_manifest(root_manifest, args):
         @args
         The options, as parsed from the commandline.
     """
-    cfg_file = None
-    if args.configfile:
-        cfg_file = args.configfile
-    conf = SALVEConfig(filename=cfg_file)
-
     root_dir = paths.containing_dir(root_manifest)
     if args.directory and not args.v3_relpath:
         root_dir = os.path.abspath(args.directory)
@@ -40,7 +34,7 @@ def run_on_manifest(root_manifest, args):
     # manifest
     root_block = ManifestBlock(FileContext('no such file'),
                                source=root_manifest)
-    root_block.expand_blocks(root_dir, conf, args.v3_relpath)
+    root_block.expand_blocks(root_dir, args.v3_relpath)
 
     root_action = root_block.compile()
     root_action(ConcreteFilesys())
