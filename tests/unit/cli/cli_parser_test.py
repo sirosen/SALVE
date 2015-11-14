@@ -3,8 +3,9 @@ from nose.tools import istest
 
 import logging
 import salve
-from salve.cli import parser
-from tests.util import ensure_except, MockedGlobals
+from salve.cli import parser, deploy
+from tests.util import (ensure_except, ensure_SystemExit_with_code,
+                        MockedGlobals)
 
 
 class TestsWithMockedIO(MockedGlobals):
@@ -83,3 +84,35 @@ class TestsWithMockedIO(MockedGlobals):
         assert args.log_level == 'INFO'
 
         assert salve.logger.level == logging.INFO
+
+    @istest
+    @mock.patch('sys.argv',
+                ['./salve.py', '-c', 'p/q', '-m', 'root.man'])
+    def parse_cmd6(self):
+        """
+        Unit: Command Line Parse Default Subcommand is 'deploy'
+        Verifies that if no subcommand is given, the parser will failover to
+        the 'deploy' subcommand
+        """
+        p = parser.get_parser()
+        args = p.parse_args()
+
+        assert args.configfile == 'p/q'
+        assert args.directory is None
+        assert args.manifest == 'root.man'
+
+        assert args.func is deploy.main
+
+    @istest
+    @mock.patch('sys.argv', ['./salve.py', '-h'])
+    def parse_cmd7(self):
+        """
+        Unit: Command Line Parse Global Help
+        Checks that nothing breaks if we ask for '-h' or '--help' without
+        giving sufficient additional arguments. We should trigger a SystemExit
+        upon seeing these args. FIXME: this test should actually check that we
+        print help and aren't crashing hard during arg parsing in some way.
+        """
+        p = parser.get_parser()
+
+        ensure_SystemExit_with_code(0, p.parse_args)
