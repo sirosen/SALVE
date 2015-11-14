@@ -5,6 +5,7 @@ import textwrap
 import salve
 from salve.config import SALVEConfig
 from salve.context import ExecutionContext
+from salve.cli.default_subparser import set_default_subparser
 import salve.cli.deploy
 import salve.cli.backup
 
@@ -100,6 +101,9 @@ def get_parser():
         'deploy', help='Run on a manifest' +
         ' tree and deploy the described configuration.')
     add_deploy_args(deploy_parser)
+
+    # make the deploy subcommand the default
+    set_default_subparser(parser, 'deploy')
 
     return parser
 
