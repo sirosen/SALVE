@@ -1,7 +1,7 @@
 from .class_resources import Enum, Singleton, with_metaclass
 from .log import create_logger
 
-__version__ = '2.4.1'
+__version__ = '2.4.2'
 
 logger = create_logger(__name__)
 
