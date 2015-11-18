@@ -9,12 +9,9 @@ from salve.block import identifier, FileBlock, ManifestBlock, DirBlock
 from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 
 
-def _mk_id_token(name):
-    return Token(name, Token.types.IDENTIFIER, dummy_file_context)
-
-
 def _block_from_name(name):
-    return identifier.block_from_identifier(_mk_id_token(name))
+    return identifier.block_from_identifier(
+        Token(name, Token.types.IDENTIFIER, dummy_file_context))
 
 
 class TestWithLoggerPatch(ScratchWithExecCtx):
@@ -39,25 +36,17 @@ class TestWithLoggerPatch(ScratchWithExecCtx):
         ensure_except(BlockException, identifier.block_from_identifier, bad_id)
 
     @istest
-    def valid_file_id(self):
-        """
-        Unit: Block Identifier File Identifier To Block
-        Checks that an identifier 'file' creates a file block.
-        """
-        assert isinstance(_block_from_name('file'), FileBlock)
+    def valid_block_id_test_generator(self):
+        params = [
+            ('file', FileBlock, 'File'),
+            ('manifest', ManifestBlock, 'Manifest'),
+            ('directory', DirBlock, 'Directory'),
+        ]
+        for (tok, klass, name) in params:
+            def check():
+                assert isinstance(_block_from_name(tok), klass)
+            check.description = (
+                'Unit: {0} Identifier File Identifier To Block'
+                .format(name))
 
-    @istest
-    def valid_manifest_id(self):
-        """
-        Unit: Block Identifier Manifest Identifier To Block
-        Checks that an identifier 'manifest' creates a manifest block.
-        """
-        assert isinstance(_block_from_name('manifest'), ManifestBlock)
-
-    @istest
-    def valid_directory_id(self):
-        """
-        Unit: Block Identifier Directory Identifier To Block
-        Checks that an identifier 'directory' creates a directory block.
-        """
-        assert isinstance(_block_from_name('directory'), DirBlock)
+            yield check

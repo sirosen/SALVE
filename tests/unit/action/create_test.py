@@ -48,22 +48,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
 
 @istest
-def filecreate_to_str():
-    """
-    Unit: File Create Action String Conversion
-    """
-    fc = create.FileCreateAction('a', dummy_file_context)
+def stringification_test_generator():
+    params = [(create.FileCreateAction, 'FileCreateAction'),
+              (create.DirCreateAction, 'DirCreateAction')]
 
-    assert str(fc) == ('FileCreateAction(dst=a,context=' +
-                       repr(dummy_file_context) + ')')
+    for (klass, name) in params:
+        def check_func():
+            act = klass('a', dummy_file_context)
+            assert str(act) == ('{0}(dst=a,context={1})'
+                                .format(name, repr(dummy_file_context)))
+        check_func.description = 'Unit: {0} String Conversion'.format(name)
 
-
-@istest
-def dircreate_to_str():
-    """
-    Unit: Directory Create Action String Conversion
-    """
-    dc = create.DirCreateAction('a', dummy_file_context)
-
-    assert str(dc) == ('DirCreateAction(dst=a,context=' +
-                       repr(dummy_file_context) + ')')
+        yield check_func

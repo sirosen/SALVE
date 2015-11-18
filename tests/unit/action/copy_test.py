@@ -2,7 +2,7 @@ import os
 import mock
 from nose.tools import istest
 
-from salve.context import ExecutionContext, FileContext
+from salve.context import FileContext
 
 from salve.action import copy
 from salve.filesys import ConcreteFilesys
@@ -40,65 +40,36 @@ class TestWithScratchdir(scratch.ScratchContainer):
         assert self.read_file('rw_file_1') == self.read_file('rw_dir_1/c')
 
     @istest
-    def canexec_unwritable_target(self):
-        """
-        Unit: File Copy Action Verify Unwritable Target
-        Checks the results of a verification check when the target
-        is an unwritable file.
-        """
-        fcp = copy.FileCopyAction(self.get_fullname('rw_file_1'),
-                                  self.get_fullname('r_only_file_1'),
-                                  self.dummy_file_context)
-        verification_produces_code(fcp, 'UNWRITABLE_TARGET')
+    def verify_fails_generator(self):
+        parameters = [
+            ('rw_file_1', 'r_only_file_1',
+             'UNWRITABLE_TARGET', copy.FileCopyAction,
+             'Unit: File Copy Action Verify Unwritable Target'),
+            ('rw_file_1', 'no_perms_dir_1/otherfile',
+             'UNWRITABLE_TARGET', copy.FileCopyAction,
+             'Unit: File Copy Action Verify Unwritable Target Directory'),
+            ('no_perms_file_1', 'rw_file_1',
+             'UNREADABLE_SOURCE', copy.FileCopyAction,
+             'Unit: File Copy Action Verify Unreadable Source'),
+            ('no_perms_file_1', 'rw_file_1',
+             'UNREADABLE_SOURCE', copy.FileCopyAction,
+             'Unit: File Copy Action Verify Unreadable Source'),
+            ('no_perms_dir_1', 'rw_dir_1',
+             'UNREADABLE_SOURCE', copy.DirCopyAction,
+             'Unit: Dir Copy Action Verify Unreadable Source'),
+            ('rw_dir_1', 'no_perms_dir_1/abc',
+             'UNWRITABLE_TARGET', copy.DirCopyAction,
+             'Unit: Dir Copy Action Verify Unwritable Target'),
+        ]
 
-    @istest
-    def canexec_unwritable_target_dir(self):
-        """
-        Unit: File Copy Action Verify Unwritable Target Directory
-        Checks the results of a verification check when the target
-        is in an unwritable directory.
-        """
-        fcp = copy.FileCopyAction(
-            self.get_fullname('rw_file_1'),
-            self.get_fullname('no_perms_dir_1/otherfile'),
-            self.dummy_file_context)
-        verification_produces_code(fcp, 'UNWRITABLE_TARGET')
+        for (src, dst, code, klass, description) in parameters:
+            def check_func():
+                act = klass(self.get_fullname(src), self.get_fullname(dst),
+                            self.dummy_file_context)
+                verification_produces_code(act, code)
+            check_func.description = description
 
-    @istest
-    def canexec_unreadable_source(self):
-        """
-        Unit: File Copy Action Verify Unreadable Source
-        Checks the results of a verification check when the source
-        is an unreadable file.
-        """
-        fcp = copy.FileCopyAction(self.get_fullname('no_perms_file_1'),
-                                  self.get_fullname('rw_file_1'),
-                                  self.dummy_file_context)
-        verification_produces_code(fcp, 'UNREADABLE_SOURCE')
-
-    @istest
-    def dir_canexec_unreadable_source(self):
-        """
-        Unit: Dir Copy Action Verify Unreadable Source
-        Checks the results of a verification check when the source
-        is an unreadable dir.
-        """
-        dcp = copy.DirCopyAction(self.get_fullname('no_perms_dir_1'),
-                                 self.get_fullname('rw_dir_1'),
-                                 self.dummy_file_context)
-        verification_produces_code(dcp, 'UNREADABLE_SOURCE')
-
-    @istest
-    def dir_canexec_unwritable_target(self):
-        """
-        Unit: Dir Copy Action Verify Unwritable Target
-        Checks the results of a verification check when the target
-        is an unwritable directory.
-        """
-        dcp = copy.DirCopyAction(self.get_fullname('rw_dir_1'),
-                                 self.get_fullname('no_perms_dir_1/abc'),
-                                 self.dummy_file_context)
-        verification_produces_code(dcp, 'UNWRITABLE_TARGET')
+            yield check_func
 
     @istest
     def stringification_test_generator(self):
@@ -127,37 +98,27 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_copy.assert_called_once_with('a', 'b/c')
 
     @istest
-    @mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
-                lambda self, fs: self.verification_codes.UNREADABLE_SOURCE)
-    def dircopy_unreadable_source_execute(self):
-        """
-        Unit: Directory Copy Action Execution, Unreadable Source
-        """
-        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
-                                      quiet=True)
+    def dircopy_execute_failure_generator(self):
+        parameters = [
+            ('UNREADABLE_SOURCE',
+             ('EXECUTION [WARNING] no such file: ' +
+              'DirCopy: Non-Readable source directory "a"\n'),
+             'Unit: Directory Copy Action Execution, Unreadable Source'),
+            ('UNWRITABLE_TARGET',
+             ('EXECUTION [WARNING] no such file: ' +
+              'DirCopy: Non-Writable target directory "b/c"\n'),
+             'Unit: Directory Copy Action Execution, Unwritable Target'),
+        ]
 
-        dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
-        dcp(ConcreteFilesys())
+        for (code, expected_err, description) in parameters:
+            @mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
+                        lambda self, fs: self.verification_codes[code])
+            def check_func():
+                dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
+                dcp(ConcreteFilesys())
 
-        err = self.stderr.getvalue()
-        expected = ('EXECUTION [WARNING] no such file: ' +
-                    'DirCopy: Non-Readable source directory "a"\n')
-        assert_substr(expected, err)
+                err = self.stderr.getvalue()
+                assert_substr(expected_err, err)
+            check_func.description = description
 
-    @istest
-    @mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
-                lambda self, fs: self.verification_codes.UNWRITABLE_TARGET)
-    def dircopy_unwritable_target_execute(self):
-        """
-        Unit: Directory Copy Action Execution, Unwritable Target
-        """
-        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
-                                      quiet=True)
-
-        dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
-        dcp(ConcreteFilesys())
-
-        err = self.stderr.getvalue()
-        expected = ('EXECUTION [WARNING] no such file: ' +
-                    'DirCopy: Non-Writable target directory "b/c"\n')
-        assert_substr(expected, err)
+            yield check_func
