@@ -1,6 +1,7 @@
 from nose.tools import istest
 
 from salve import paths
+from salve.exceptions import TokenizationException
 from salve.context import FileContext
 from salve.parser import tokenize
 from salve.parser.tokenize import Token
@@ -15,7 +16,7 @@ def tokenize_filename(filename):
 
 def ensure_TokenizationException(filename):
     path = full_path(filename)
-    e = ensure_except(tokenize.TokenizationException,
+    e = ensure_except(TokenizationException,
                       tokenize_filename,
                       path)
     assert (paths.clean_path(e.file_context.filename) ==

@@ -70,6 +70,7 @@ class Enum(object):
         return self.enum_elems[key]
 
     def __setitem__(self, key, value):
+        self.__dict__[key] = value
         self.enum_elems[key] = value
 
     def add(self, *seq, **named):
