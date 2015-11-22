@@ -29,12 +29,9 @@ def check_action_list_against_defaults(actions, action_names):
         modify.FileChmodAction)
 
 
-def make_file_block(action='copy', source='/a/b/c', target='/p/q/r',
-                    user='user1', group='nogroup', mode='600'):
-    b = FileBlock(dummy_file_context)
-    assign_block_attrs(b, action=action, source=source, target=target,
-                       user=user, group=group, mode=mode)
-    return b
+def make_file_block(mode='600', **kwargs):
+    return assign_block_attrs(FileBlock(dummy_file_context),
+                              mode=mode, **kwargs)
 
 
 class TestWithScratchdir(ScratchWithExecCtx):

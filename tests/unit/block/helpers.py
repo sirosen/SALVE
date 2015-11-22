@@ -25,9 +25,27 @@ def mock_expanduser(string):
 
 
 def assign_block_attrs(block, **kwargs):
+    # assign attrs from the default mapping if they are not being passed
+    # explicitly
+    # it's not necessarily sufficient to assign and then overwrite them, as it
+    # may be that an attr is passed as 'None' to indicate that it should not be
+    # assigned at all, even to a None value
+    shared_defaults = {
+        'action': 'copy',
+        'source': '/a/b/c',
+        'target': '/p/q/r',
+        'user': 'user1',
+        'group': 'nogroup'
+    }
+    for k, v in shared_defaults.items():
+        if k not in kwargs:
+            block[k] = v
+
     for k, v in kwargs.items():
         if v:
             block[k] = v
+
+    return block
 
 
 def _generic_check_act(act, klass, attrs):
