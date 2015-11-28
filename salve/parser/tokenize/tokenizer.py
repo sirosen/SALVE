@@ -56,12 +56,6 @@ class Tokenizer(object):
             self.states.IDENTIFIER_FOUND_BLOCK: Token.types.TEMPLATE
         }
 
-    def add_state(self, state):
-        self.states[state.name] = state
-
-    def get_state(self, name):
-        return self.states[name]
-
     def get_allowed_token_types(self):
         return self.allowed_token_types[self.state]
 

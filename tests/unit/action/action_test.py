@@ -1,7 +1,8 @@
 import mock
 from nose.tools import istest
+from nose_parameterized import parameterized
 
-from tests.framework import ensure_except, scratch
+from tests.framework import ensure_except, scratch, first_param_docfunc
 from tests.unit.action import dummy_file_context
 
 from salve.exceptions import ActionException
@@ -10,15 +11,13 @@ from salve.filesys import ConcreteFilesys
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
+    @parameterized.expand(
+        [('Unit: Action Base Class Is Abstract', Action),
+         ('Unit: Dynamic Action Base Class Is Abstract', DynamicAction)],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def action_abc_test_generator(self):
-        for (klass, name) in [(Action, 'Action'),
-                              (DynamicAction, 'Dynamic Action')]:
-            def check():
-                ensure_except(TypeError, klass, dummy_file_context)
-            check.description = 'Unit: {0} Base Class Is Abstract'.format(name)
-
-            yield check
+    def base_action_classes_abc(self, description, klass):
+        ensure_except(TypeError, klass, dummy_file_context)
 
     @istest
     def dynamic_action_execute_fails(self):

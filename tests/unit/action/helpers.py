@@ -6,5 +6,6 @@ def verification_produces_code(act, code_name, filesys=None):
         filesys = ConcreteFilesys()
 
     code = act.verification_codes[code_name]
+    produced_code = act.verify_can_exec(filesys)
 
-    assert act.verify_can_exec(filesys) == code
+    assert produced_code == code, produced_code

@@ -1,13 +1,10 @@
 import os
 import mock
+
 from nose.tools import istest
+from nose_parameterized import parameterized, param
 
-from tests.framework import ensure_except
-
-from salve.action import modify
-from salve.exceptions import BlockException
-
-from salve.block import FileBlock
+from tests.framework import ensure_except, first_param_docfunc
 
 from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 from .helpers import (
@@ -16,6 +13,10 @@ from .helpers import (
     generic_check_action_list,
     assign_block_attrs
 )
+
+from salve.action import modify
+from salve.exceptions import BlockException
+from salve.block import FileBlock
 
 
 def check_action_list_against_defaults(actions, action_names):
@@ -35,71 +36,49 @@ def make_file_block(mode='600', **kwargs):
 
 
 class TestWithScratchdir(ScratchWithExecCtx):
+    @parameterized.expand(
+        [param('Unit: File Block Copy Compile',
+               ['backup', 'copy', 'chown_or_chmod', 'chown_or_chmod'],
+               True, True),
+         param('Unit: File Block Create Compile',
+               ['create', 'chown_or_chmod', 'chown_or_chmod'],
+               False, True, action='create'),
+         param('Unit: File Block Copy Without User Skips Chown',
+               ['backup', 'copy', 'chmod'], True, True, user=None),
+         param('Unit: File Block Create Without User Skips Chown',
+               ['create', 'chmod'], True, False, action='create', user=None),
+         param('Unit: File Block Copy Without Group Skips Chown',
+               ['backup', 'copy', 'chmod'], True, False, group=None),
+         param('Unit: File Block Create Without Group Skips Chown',
+               ['create', 'chmod'], True, False, action='create', group=None),
+         param('Unit: File Block Copy Without Mode Skips Chmod',
+               ['backup', 'copy', 'chown'], False, False, mode=None),
+         param('Unit: File Block Create Without Mode Skips Chmod',
+               ['create', 'chown'], False, False, action='create', mode=None),
+         ],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def check_against_defaults_generator(self):
-        parameters = [
-            ({},
-             ['backup', 'copy', 'chown_or_chmod', 'chown_or_chmod'],
-             'Unit: File Block Copy Compile',
-             True, True),
-            ({'action': 'create'},
-             ['create', 'chown_or_chmod', 'chown_or_chmod'],
-             'Unit: File Block Create Compile',
-             False, True),
-            ({'user': None},
-             ['backup', 'copy', 'chmod'],
-             'Unit: File Block Copy Without User Skips Chown',
-             True, True),
-            ({'action': 'create', 'user': None},
-             ['create', 'chmod'],
-             'Unit: File Block Create Without User Skips Chown',
-             True, False),
-            ({'group': None},
-             ['backup', 'copy', 'chmod'],
-             'Unit: File Block Copy Without Group Skips Chown',
-             True, False),
-            ({'action': 'create', 'group': None},
-             ['create', 'chmod'],
-             'Unit: File Block Create Without Group Skips Chown',
-             True, False),
-            ({'mode': None},
-             ['backup', 'copy', 'chown'],
-             'Unit: File Block Copy Without Mode Skips Chmod',
-             False, False),
-            ({'action': 'create', 'mode': None},
-             ['create', 'chown'],
-             'Unit: File Block Create Without Mode Skips Chmod',
-             False, False),
-        ]
+    def check_against_defaults(self, description, expected_al,
+                               isroot, fexists, **kwargs):
 
-        for (kwargs, expected_al, description, isroot, fexists) in parameters:
-            @mock.patch('salve.ugo.is_root', lambda f: isroot)
-            @mock.patch('os.path.exists', lambda f: fexists)
-            def check_func():
+        with mock.patch('salve.ugo.is_root', lambda f: isroot):
+            with mock.patch('os.path.exists', lambda f: fexists):
                 act = make_file_block(**kwargs).compile()
                 check_action_list_against_defaults(act, expected_al)
-            check_func.description = description
 
-            yield check_func
-
+    @parameterized.expand(
+        [param('Unit: File Block Copy Compilation Fails Without Source',
+               source=None),
+         param('Unit: File Block Copy Compilation Fails Without Target',
+               target=None),
+         param('Unit: File Block Create Compilation Fails Without Target',
+               action='create', target=None),
+         ],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def compilation_blockexception_generator(self):
-        parameters = [
-            ({'source': None},
-             'Unit: File Block Copy Compilation Fails Without Source'),
-            ({'target': None},
-             'Unit: File Block Copy Compilation Fails Without Target'),
-            ({'action': 'create', 'target': None},
-             'Unit: File Block Create Compilation Fails Without Target'),
-        ]
-
-        for (kwargs, description) in parameters:
-            def check_func():
-                b = make_file_block(**kwargs)
-                ensure_except(BlockException, b.compile)
-            check_func.description = description
-
-            yield check_func
+    def compilation_blockexception(self, description, **kwargs):
+        b = make_file_block(**kwargs)
+        ensure_except(BlockException, b.compile)
 
     @istest
     def file_path_expand(self):

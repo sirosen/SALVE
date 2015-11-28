@@ -1,11 +1,11 @@
 import mock
 from nose.tools import istest
+from nose_parameterized import parameterized
+from tests.framework import scratch, first_param_docfunc
 
 from salve.context import ExecutionContext, FileContext
-
 from salve.action import create
 from salve.filesys import ConcreteFilesys
-from tests.framework import scratch
 
 dummy_file_context = FileContext('no such file')
 dummy_exec_context = ExecutionContext()
@@ -47,16 +47,14 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_mkdirs.assert_called_once_with(a_name)
 
 
+@parameterized.expand(
+    [('Unit: FileCreateAction String Conversion',
+      create.FileCreateAction, 'FileCreateAction'),
+     ('Unit: DirCreateAction String Conversion',
+      create.DirCreateAction, 'DirCreateAction')],
+    testcase_func_doc=first_param_docfunc)
 @istest
-def stringification_test_generator():
-    params = [(create.FileCreateAction, 'FileCreateAction'),
-              (create.DirCreateAction, 'DirCreateAction')]
-
-    for (klass, name) in params:
-        def check_func():
-            act = klass('a', dummy_file_context)
-            assert str(act) == ('{0}(dst=a,context={1})'
-                                .format(name, repr(dummy_file_context)))
-        check_func.description = 'Unit: {0} String Conversion'.format(name)
-
-        yield check_func
+def create_action_stringification(description, klass, name):
+    act = klass('a', dummy_file_context)
+    assert str(act) == ('{0}(dst=a,context={1})'
+                        .format(name, repr(dummy_file_context)))

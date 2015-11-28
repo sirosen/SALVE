@@ -2,9 +2,9 @@ import os
 import hashlib
 
 import mock
-
 from nose.tools import istest
-from tests.framework import ensure_except, scratch
+from nose_parameterized import parameterized
+from tests.framework import ensure_except, scratch, first_param_docfunc
 
 from salve.filesys import ConcreteFilesys
 
@@ -145,31 +145,27 @@ class TestWithScratchdir(scratch.ScratchContainer):
         assert os.path.islink(full_path)
         assert link_target == os.readlink(full_path)
 
-    @istest
-    def create_dir_nonrecursive(self):
-        """
-        Unit: Filesys Concrete Dir Create (Non-Recursive)
-        Creating a single level of a directory tree should always succeed
-        """
-        full_path = self.get_fullname('a')
+    def _check_create(self, dirname, recursive):
+        full_path = self.get_fullname(dirname)
+        assert not os.path.isdir(full_path)
 
         fs = ConcreteFilesys()
-        fs.mkdir(full_path, recursive=False)
+        fs.mkdir(full_path, recursive=recursive)
 
         assert os.path.isdir(full_path)
         assert len(os.listdir(full_path)) == 0
 
+    @parameterized.expand(
+        [('Unit: Filesys Concrete Dir Create (Non-Recursive)', 'a', False),
+         ('Unit: Filesys Concrete Dir Create (Recursive)', 'a/b/c', True)],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def create_dir_recursive(self):
-        """
-        Unit: Filesys Concrete Dir Create (Recursive)
-        Creating a path of a directory tree should always succeed if recursive
-        is set.
-        """
-        full_path = self.get_fullname('a/b/c')
+    def create_dir_recursivity(self, description, dirname, recursive):
+        full_path = self.get_fullname(dirname)
+        assert not os.path.isdir(full_path)
 
         fs = ConcreteFilesys()
-        fs.mkdir(full_path, recursive=True)
+        fs.mkdir(full_path, recursive=recursive)
 
         assert os.path.isdir(full_path)
         assert len(os.listdir(full_path)) == 0

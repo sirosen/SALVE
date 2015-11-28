@@ -44,3 +44,27 @@ def disambiguate_by_class(klass, obj1, obj2):
         return obj1, obj2
     else:
         return obj2, obj1
+
+
+def first_param_docfunc(func, num, params):
+    """
+    A generic docfunc for usage with nose_parameterized
+    Takes the first argument given to the function and uses it as the
+    description, without doing any logic. Lets a raw docstring get inserted
+    into the parameter list. As an unfortunate side-effect it must then be
+    passed to the test function itself.
+
+    Args:
+        @func
+        The test function itself.
+
+        @num
+        The index of @params in the list of parameters.
+
+        @params
+        A pair (args, kwargs) which will be passed to @func
+        We really just care about the args[0] value here, since that's the
+        first value in the arg list.
+    """
+    (args, kwargs) = params
+    return args[0]

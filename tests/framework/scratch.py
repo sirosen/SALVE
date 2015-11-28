@@ -35,7 +35,7 @@ class ScratchContainer(MockedGlobals):
         """
     )
 
-    def _inithelper_mockenv(self):
+    def setup_mockenv(self):
         self.username = 'user1'
         self.userhome = self.get_fullname('home/user1')
         os.makedirs(self.userhome)
@@ -46,7 +46,7 @@ class ScratchContainer(MockedGlobals):
         }
         self.patches.add(mock.patch.dict('os.environ', mock_env))
 
-    def _inithelper_mockgroupname(self):
+    def setup_mockgroupname(self):
         def get_groupname(user):
             if user == self.username:
                 return 'group1'
@@ -56,7 +56,7 @@ class ScratchContainer(MockedGlobals):
         self.patches.add(mock.patch('salve.ugo.get_group_from_username',
                                     get_groupname))
 
-    def _inithelper_mockexpanduser(self):
+    def setup_mockexpanduser(self):
         real_expanduser = os.path.expanduser
 
         def expanduser(path):
@@ -67,7 +67,7 @@ class ScratchContainer(MockedGlobals):
 
         self.patches.add(mock.patch('os.path.expanduser', expanduser))
 
-    def _inithelper_mocksettings(self):
+    def setup_mocksettings(self):
         settings_loc = os.path.join(self.userhome, 'settings.ini')
         self.write_file(settings_loc, self.default_settings_content)
 
@@ -91,14 +91,13 @@ class ScratchContainer(MockedGlobals):
             import __builtin__ as builtins
             self.patches.add(mock.patch('__builtin__.open', mock_open))
 
-    def __init__(self):
-        MockedGlobals.__init__(self)
+    def setUp(self):
         self.scratch_dir = tempfile.mkdtemp()
 
-        self._inithelper_mockenv()
-        self._inithelper_mockgroupname()
-        self._inithelper_mockexpanduser()
-        self._inithelper_mocksettings()
+        self.setup_mockenv()
+        self.setup_mockgroupname()
+        self.setup_mockexpanduser()
+        self.setup_mocksettings()
 
         # mock the gid and uid helpers -- this allows dummy user lookups
         # with this mocking in place, the dummy user looks like the real
@@ -107,6 +106,8 @@ class ScratchContainer(MockedGlobals):
                                     lambda x: os.geteuid()))
         self.patches.add(mock.patch('salve.ugo.name_to_gid',
                                     lambda x: os.getegid()))
+
+        MockedGlobals.setUp(self)
 
     def tearDown(self):
         MockedGlobals.tearDown(self)

@@ -1,12 +1,13 @@
 import os
+
 import mock
 from nose.tools import istest
-
-from salve.context import FileContext
+from nose_parameterized import parameterized
+from tests.framework import scratch, assert_substr, first_param_docfunc
 
 from salve.action import copy
 from salve.filesys import ConcreteFilesys
-from tests.framework import scratch, assert_substr
+from salve.context import ExecutionContext, FileContext
 
 from .helpers import verification_produces_code
 
@@ -15,6 +16,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
     def __init__(self):
         scratch.ScratchContainer.__init__(self)
         self.dummy_file_context = FileContext('no such file')
+
+    def setUp(self):
+        scratch.ScratchContainer.setUp(self)
 
         # a whole lot of file setup in the scratch dir
         self.write_file('rw_file_1', 'file with R and W perms')
@@ -39,51 +43,44 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert self.read_file('rw_file_1') == self.read_file('rw_dir_1/c')
 
+    @parameterized.expand(
+        [('Unit: File Copy Action Verify Unwritable Target',
+          'rw_file_1', 'r_only_file_1', 'UNWRITABLE_TARGET',
+          copy.FileCopyAction),
+         ('Unit: File Copy Action Verify Unwritable Target Directory',
+          'rw_file_1', 'no_perms_dir_1/otherfile', 'UNWRITABLE_TARGET',
+          copy.FileCopyAction),
+         ('Unit: File Copy Action Verify Unreadable Source',
+          'no_perms_file_1', 'rw_file_1', 'UNREADABLE_SOURCE',
+          copy.FileCopyAction),
+         ('Unit: File Copy Action Verify Unreadable Source',
+          'no_perms_file_1', 'rw_file_1', 'UNREADABLE_SOURCE',
+          copy.FileCopyAction),
+         ('Unit: Dir Copy Action Verify Unreadable Source',
+          'no_perms_dir_1', 'rw_dir_1', 'UNREADABLE_SOURCE',
+          copy.DirCopyAction),
+         ('Unit: Dir Copy Action Verify Unwritable Target',
+          'rw_dir_1', 'no_perms_dir_1/abc', 'UNWRITABLE_TARGET',
+          copy.DirCopyAction),
+         ],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def verify_fails_generator(self):
-        parameters = [
-            ('rw_file_1', 'r_only_file_1',
-             'UNWRITABLE_TARGET', copy.FileCopyAction,
-             'Unit: File Copy Action Verify Unwritable Target'),
-            ('rw_file_1', 'no_perms_dir_1/otherfile',
-             'UNWRITABLE_TARGET', copy.FileCopyAction,
-             'Unit: File Copy Action Verify Unwritable Target Directory'),
-            ('no_perms_file_1', 'rw_file_1',
-             'UNREADABLE_SOURCE', copy.FileCopyAction,
-             'Unit: File Copy Action Verify Unreadable Source'),
-            ('no_perms_file_1', 'rw_file_1',
-             'UNREADABLE_SOURCE', copy.FileCopyAction,
-             'Unit: File Copy Action Verify Unreadable Source'),
-            ('no_perms_dir_1', 'rw_dir_1',
-             'UNREADABLE_SOURCE', copy.DirCopyAction,
-             'Unit: Dir Copy Action Verify Unreadable Source'),
-            ('rw_dir_1', 'no_perms_dir_1/abc',
-             'UNWRITABLE_TARGET', copy.DirCopyAction,
-             'Unit: Dir Copy Action Verify Unwritable Target'),
-        ]
+    def verify_copy_fails(self, description, src, dst, code, klass):
+        act = klass(self.get_fullname(src), self.get_fullname(dst),
+                    self.dummy_file_context)
+        verification_produces_code(act, code)
 
-        for (src, dst, code, klass, description) in parameters:
-            def check_func():
-                act = klass(self.get_fullname(src), self.get_fullname(dst),
-                            self.dummy_file_context)
-                verification_produces_code(act, code)
-            check_func.description = description
-
-            yield check_func
-
+    @parameterized.expand(
+        [('Unit: FileCopyAction String Conversion',
+          'FileCopyAction', copy.FileCopyAction),
+         ('Unit: DirCopyAction String Conversion',
+          'DirCopyAction', copy.DirCopyAction)],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def stringification_test_generator(self):
-        class_tuples = [(copy.FileCopyAction, 'FileCopyAction'),
-                        (copy.DirCopyAction, 'DirCopyAction')]
-
-        for (klass, name) in class_tuples:
-            def check_func():
-                act = klass('a', 'b/c', self.dummy_file_context)
-                assert str(act) == '{0}(src=a,dst=b/c,context={1})'.format(
-                    name, repr(self.dummy_file_context))
-            check_func.description = "Unit: {0} String Conversion".format(name)
-
-            yield check_func
+    def copy_action_stringification(self, description, name, klass):
+        act = klass('a', 'b/c', self.dummy_file_context)
+        assert str(act) == '{0}(src=a,dst=b/c,context={1})'.format(
+            name, repr(self.dummy_file_context))
 
     @istest
     @mock.patch('os.access', lambda x, y: True)
@@ -97,28 +94,25 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         mock_copy.assert_called_once_with('a', 'b/c')
 
+    @parameterized.expand(
+        [('Unit: Directory Copy Action Execution, Unreadable Source',
+          'UNREADABLE_SOURCE',
+          ('EXECUTION [WARNING] no such file: ' +
+           'DirCopy: Non-Readable source directory "a"')),
+         ('Unit: Directory Copy Action Execution, Unwritable Target',
+          'UNWRITABLE_TARGET',
+          ('EXECUTION [WARNING] no such file: ' +
+           'DirCopy: Non-Writable target directory "b/c"'))],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def dircopy_execute_failure_generator(self):
-        parameters = [
-            ('UNREADABLE_SOURCE',
-             ('EXECUTION [WARNING] no such file: ' +
-              'DirCopy: Non-Readable source directory "a"\n'),
-             'Unit: Directory Copy Action Execution, Unreadable Source'),
-            ('UNWRITABLE_TARGET',
-             ('EXECUTION [WARNING] no such file: ' +
-              'DirCopy: Non-Writable target directory "b/c"\n'),
-             'Unit: Directory Copy Action Execution, Unwritable Target'),
-        ]
+    def dircopy_execute_failure(self, description, code, expected_err):
+        ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
+                                      quiet=True)
 
-        for (code, expected_err, description) in parameters:
-            @mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
-                        lambda self, fs: self.verification_codes[code])
-            def check_func():
-                dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
-                dcp(ConcreteFilesys())
+        with mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
+                        lambda self, fs: self.verification_codes[code]):
+            dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
+            dcp(ConcreteFilesys())
 
-                err = self.stderr.getvalue()
-                assert_substr(expected_err, err)
-            check_func.description = description
-
-            yield check_func
+            err = self.stderr.getvalue()
+            assert_substr(err, expected_err)
