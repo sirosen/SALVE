@@ -73,6 +73,9 @@ class TestWithScratchdir(ScratchWithExecCtx):
                target=None),
          param('Unit: File Block Create Compilation Fails Without Target',
                action='create', target=None),
+         param(('Unit: File Block Create Compilation Fails With '
+                'Relative Target'),
+               action='create', target='a/b/c'),
          ],
         testcase_func_doc=first_param_docfunc)
     @istest
