@@ -1,9 +1,8 @@
-#!/usr/bin/python
-
 import mock
 from nose.tools import istest
+from nose_parameterized import parameterized
 
-from tests.util import ensure_except, scratch
+from tests.framework import ensure_except, scratch, first_param_docfunc
 from tests.unit.action import dummy_file_context
 
 from salve.exceptions import ActionException
@@ -12,21 +11,13 @@ from salve.filesys import ConcreteFilesys
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
+    @parameterized.expand(
+        [('Unit: Action Base Class Is Abstract', Action),
+         ('Unit: Dynamic Action Base Class Is Abstract', DynamicAction)],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def action_is_abstract(self):
-        """
-        Unit: Action Base Class Is Abstract
-        Verifies that instantiating an Action raises an error.
-        """
-        ensure_except(TypeError, Action, dummy_file_context)
-
-    @istest
-    def dynamic_action_is_abstract(self):
-        """
-        Unit: Dynamic Action Base Class Is Abstract
-        Verifies that instantiating a DynamicAction raises an error.
-        """
-        ensure_except(TypeError, DynamicAction, dummy_file_context)
+    def base_action_classes_abc(self, description, klass):
+        ensure_except(TypeError, klass, dummy_file_context)
 
     @istest
     def dynamic_action_execute_fails(self):
@@ -50,22 +41,14 @@ class TestWithScratchdir(scratch.ScratchContainer):
         function and then its execution function, even when generation
         rewrites execution.
         """
-        logged_funcs = []
+        mock_exec = mock.Mock()
 
         class DummyAction(DynamicAction):
             def generate(self):
-                logged_funcs.append('generate')
+                self.execute = mock_exec
+        DummyAction(dummy_file_context)()
 
-                def execute_replacement():
-                    logged_funcs.append('execute_replacement')
-                self.execute = execute_replacement
-
-        act = DummyAction(dummy_file_context)
-        act()
-
-        assert len(logged_funcs) == 2
-        assert logged_funcs[0] == 'generate'
-        assert logged_funcs[1] == 'execute_replacement'
+        mock_exec.assert_called_once_with()
 
     @istest
     def empty_action_list(self):
@@ -73,17 +56,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Unit: Action List Empty List Is No-Op
         Verifies that executing an empty ActionList does nothing.
         """
-        done_actions = []
-
-        def mock_execute(self):
-            done_actions.append(self)
-
         # Just ensuring that an empty action list is valid
-        with mock.patch('salve.action.Action.execute', mock_execute):
+        with mock.patch('salve.action.Action.execute',
+                        autospec=True) as mock_exec:
             actions = ActionList([], dummy_file_context)
             actions(ConcreteFilesys())
 
-        assert len(done_actions) == 0
+            assert not mock_exec.called
 
     @istest
     def empty_action_list_to_string(self):
@@ -92,10 +71,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         Checks the string repr of an empty AL.
         """
-        act = ActionList([], dummy_file_context)
-
-        assert str(act) == ('ActionList([],context=' +
-                            repr(dummy_file_context) + ')')
+        assert str(ActionList([], dummy_file_context)) == (
+            'ActionList([],context={0})'.format(repr(dummy_file_context)))
 
     @istest
     def action_list_inorder(self):
@@ -104,22 +81,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Verifies that executing an ActionList runs the actions in it in the
         specified order.
         """
-        done_actions = []
-
         class DummyAction(Action):
-            def __init__(self, ctx):
-                Action.__init__(self, ctx)
-
             def execute(self, filesys):
-                done_actions.append(self)
+                raise NotImplementedError()
+        mock_exec = mock.create_autospec(DummyAction.execute)
+        DummyAction.execute = mock_exec
 
         a = DummyAction(dummy_file_context)
         b = DummyAction(dummy_file_context)
-        al = ActionList([a, b], dummy_file_context)
-        al(ConcreteFilesys())
+        fs = ConcreteFilesys()
+        ActionList([a, b], dummy_file_context)(fs)
 
-        assert done_actions[0] == a
-        assert done_actions[1] == b
+        mock_exec.assert_has_calls([mock.call(a, fs), mock.call(b, fs)])
 
     @istest
     def action_verifies_OK(self):
@@ -129,14 +102,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         override verification will produce an OK status.
         """
         class DummyAction(Action):
-            def __init__(self, ctx):
-                Action.__init__(self, ctx)
-
             def execute(self):
-                pass
+                raise NotImplementedError()
 
         a = DummyAction(dummy_file_context)
 
-        verify_code = a.verify_can_exec(ConcreteFilesys())
-
-        assert verify_code == a.verification_codes.OK
+        assert a.verify_can_exec(ConcreteFilesys()) == a.verification_codes.OK

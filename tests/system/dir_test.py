@@ -1,38 +1,22 @@
 import os
 from nose.tools import istest
+from nose_parameterized import parameterized
 
+from tests.framework import first_param_docfunc
 from tests import system
 
 
 class TestWithScratchdir(system.RunScratchContainer):
+    @parameterized.expand(
+        [('System: Copy an Empty Directory',
+          'directory { action copy source a target b }\n'),
+         ('System: Copy Directory Implicit Action',
+          'directory { source a target b }\n')],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def copy_empty_dir(self):
-        """
-        System: Copy an Empty Directory
-
-        Runs a manifest which copies an empty directory. Verifies that
-        the target is created, and that it is empty as well.
-        """
+    def parameterized_copy_dir_test(self, description, manifest_source):
         self.make_dir('a')
-        content = 'directory { action copy source a target b }\n'
-        self.write_file('1.man', content)
-        self.run_on_manifest('1.man')
-
-        assert self.exists('b')
-        # make sure the original is unharmed
-        assert self.exists('a')
-        assert len(self.listdir('b')) == 0
-
-    @istest
-    def implicit_copy_action(self):
-        """
-        System: Copy Directory Implicit Action
-
-        Runs a manifest which copies an empty directory. Verifies that
-        the target is created, and that it is empty as well.
-        """
-        self.make_dir('a')
-        content = 'directory { source a target b }\n'
+        content = manifest_source
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
 

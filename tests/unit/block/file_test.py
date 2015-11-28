@@ -1,201 +1,83 @@
 import os
 import mock
+
 from nose.tools import istest
+from nose_parameterized import parameterized, param
 
-from tests.util import ensure_except, disambiguate_by_class
-
-from salve.action import modify
-from salve.exceptions import BlockException
-
-from salve.block import FileBlock
+from tests.framework import ensure_except, first_param_docfunc
 
 from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 from .helpers import (
-    check_list_act, check_file_backup_act, check_file_create_act,
+    check_file_backup_act, check_file_create_act,
     check_file_copy_act, check_file_chmod_act, check_file_chown_act,
+    generic_check_action_list,
     assign_block_attrs
 )
 
-
-def check_actions_against_defaults(copy=None, create=None, chmod=None,
-                                   chown=None, backup=None,
-                                   chown_chmod_pair=None):
-    if chown_chmod_pair:
-        chmod, chown = disambiguate_by_class(
-            modify.FileChmodAction, chown_chmod_pair[0], chown_chmod_pair[1])
-
-    if copy:
-        check_file_copy_act(copy, '/a/b/c', '/p/q/r')
-    if create:
-        check_file_create_act(create, '/p/q/r')
-    if backup:
-        check_file_backup_act(backup, '/p/q/r', '/m/n', '/m/n.log')
-    if chmod:
-        check_file_chmod_act(chmod, '600', '/p/q/r')
-    if chown:
-        check_file_chown_act(chown, 'user1', 'nogroup', '/p/q/r')
+from salve.action import modify
+from salve.exceptions import BlockException
+from salve.block import FileBlock
 
 
-def make_file_block(action='copy', source='/a/b/c', target='/p/q/r',
-                    user='user1', group='nogroup', mode='600'):
-    b = FileBlock(dummy_file_context)
-    assign_block_attrs(b, action=action, source=source, target=target,
-                       user=user, group=group, mode=mode)
-    return b
+def check_action_list_against_defaults(actions, action_names):
+    generic_check_action_list(
+        actions, action_names,
+        {'copy': check_file_copy_act,
+         'create': check_file_create_act,
+         'backup': check_file_backup_act,
+         'chmod': check_file_chmod_act,
+         'chown': check_file_chown_act},
+        modify.FileChmodAction)
 
 
-def _common_patchset(isroot, fexists):
-    @mock.patch('os.path.exists', lambda f: isroot)
-    @mock.patch('os.path.exists', lambda f: fexists)
-    def wrapper(f):
-        return f
-
-    return wrapper
+def make_file_block(mode='600', **kwargs):
+    return assign_block_attrs(FileBlock(dummy_file_context),
+                              mode=mode, **kwargs)
 
 
 class TestWithScratchdir(ScratchWithExecCtx):
+    @parameterized.expand(
+        [param('Unit: File Block Copy Compile',
+               ['backup', 'copy', 'chown_or_chmod', 'chown_or_chmod'],
+               True, True),
+         param('Unit: File Block Create Compile',
+               ['create', 'chown_or_chmod', 'chown_or_chmod'],
+               False, True, action='create'),
+         param('Unit: File Block Copy Without User Skips Chown',
+               ['backup', 'copy', 'chmod'], True, True, user=None),
+         param('Unit: File Block Create Without User Skips Chown',
+               ['create', 'chmod'], True, False, action='create', user=None),
+         param('Unit: File Block Copy Without Group Skips Chown',
+               ['backup', 'copy', 'chmod'], True, False, group=None),
+         param('Unit: File Block Create Without Group Skips Chown',
+               ['create', 'chmod'], True, False, action='create', group=None),
+         param('Unit: File Block Copy Without Mode Skips Chmod',
+               ['backup', 'copy', 'chown'], False, False, mode=None),
+         param('Unit: File Block Create Without Mode Skips Chmod',
+               ['create', 'chown'], False, False, action='create', mode=None),
+         ],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def file_copy_compile(self):
-        """
-        Unit: File Block Copy Compile
-        Verifies the result of converting a file copy block to an action.
-        """
-        act = make_file_block().compile()
+    def check_against_defaults(self, description, expected_al,
+                               isroot, fexists, **kwargs):
 
-        check_list_act(act, 4)
-        check_actions_against_defaults(
-            copy=act.actions[1], backup=act.actions[0],
-            chown_chmod_pair=(act.actions[2], act.actions[3]))
+        with mock.patch('salve.ugo.is_root', lambda f: isroot):
+            with mock.patch('os.path.exists', lambda f: fexists):
+                act = make_file_block(**kwargs).compile()
+                check_action_list_against_defaults(act, expected_al)
 
+    @parameterized.expand(
+        [param('Unit: File Block Copy Compilation Fails Without Source',
+               source=None),
+         param('Unit: File Block Copy Compilation Fails Without Target',
+               target=None),
+         param('Unit: File Block Create Compilation Fails Without Target',
+               action='create', target=None),
+         ],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    @_common_patchset(False, True)
-    def file_create_compile(self):
-        """
-        Unit: File Block Create Compile
-        Verifies the result of converting a file create block to an action.
-        """
-        act = make_file_block(action='create').compile()
-
-        check_list_act(act, 3)
-        check_actions_against_defaults(
-            create=act.actions[0],
-            chown_chmod_pair=(act.actions[1], act.actions[2]))
-
-    @istest
-    @_common_patchset(True, True)
-    def file_copy_nouser(self):
-        """
-        Unit: File Block Copy Without User Skips Chown
-        Verifies that converting a file copy block to an action when the
-        user attribute is unset skips the chown subaction, even as root.
-        """
-        act = make_file_block(user=None).compile()
-
-        check_list_act(act, 3)
-        check_actions_against_defaults(
-            copy=act.actions[1], backup=act.actions[0], chmod=act.actions[2])
-
-    @istest
-    @_common_patchset(True, False)
-    def file_create_nouser(self):
-        """
-        Unit: File Block Create Without User Skips Chown
-        Verifies that converting a file create block to an action when the
-        user attribute is unset leaves out the chown.
-        """
-        act = make_file_block(action='create', user=None).compile()
-
-        check_list_act(act, 2)
-        check_actions_against_defaults(
-            create=act.actions[0], chmod=act.actions[1])
-
-    @istest
-    @_common_patchset(True, False)
-    def file_copy_nogroup(self):
-        """
-        Unit: File Block Copy Without Group Skips Chown
-        Verifies that converting a file copy block to an action when the
-        group attribute is unset leaves out the chown.
-        """
-        act = make_file_block(group=None).compile()
-
-        check_list_act(act, 3)
-        check_actions_against_defaults(
-            backup=act.actions[0], copy=act.actions[1], chmod=act.actions[2])
-
-    @istest
-    @_common_patchset(True, False)
-    def file_create_nogroup(self):
-        """
-        Unit: File Block Create Without Group Skips Chown
-        Verifies that converting a file create block to an action when the
-        group attribute is unset raises a BlockException.
-        """
-        act = make_file_block(action='create', group=None).compile()
-
-        check_list_act(act, 2)
-        check_actions_against_defaults(
-            create=act.actions[0], chmod=act.actions[1])
-
-    @istest
-    @_common_patchset(False, False)
-    def file_copy_nomode(self):
-        """
-        Unit: File Block Copy Without Mode Skips Chmod
-        Verifies that converting a file copy block to an action when the
-        mode attribute is unset raises a BlockException.
-        """
-        act = make_file_block(mode=None).compile()
-
-        check_list_act(act, 3)
-        check_actions_against_defaults(
-            backup=act.actions[0], copy=act.actions[1], chown=act.actions[2])
-
-    @istest
-    @_common_patchset(False, False)
-    def file_create_nomode(self):
-        """
-        Unit: File Block Create Without Mode Skips Chmod
-        Verifies that converting a file create block to an action when the
-        mode attribute is unset raises a BlockException.
-        """
-        act = make_file_block(action='create', mode=None).compile()
-
-        check_list_act(act, 2)
-        check_actions_against_defaults(
-            create=act.actions[0], chown=act.actions[1])
-
-    @istest
-    def file_copy_fails_nosource(self):
-        """
-        Unit: File Block Copy Fails Without Source
-        Verifies that converting a file copy block to an action when the
-        source attribute is unset raises a BlockException.
-        """
-        b = make_file_block(source=None)
-
-        ensure_except(BlockException, b.compile)
-
-    @istest
-    def file_copy_fails_notarget(self):
-        """
-        Unit: File Block Copy Compilation Fails Without Target
-        Verifies that converting a file copy block to an action when the
-        target attribute is unset raises a BlockException.
-        """
-        b = make_file_block(target=None)
-
-        ensure_except(BlockException, b.compile)
-
-    @istest
-    def file_create_fails_notarget(self):
-        """
-        Unit: File Block Create Compilation Fails Without Target
-        Verifies that converting a file create block to an action when the
-        target attribute is unset raises a BlockException.
-        """
-        b = make_file_block(action='create', target=None)
-
+    def compilation_blockexception(self, description, **kwargs):
+        b = make_file_block(**kwargs)
         ensure_except(BlockException, b.compile)
 
     @istest

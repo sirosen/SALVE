@@ -66,6 +66,13 @@ class Enum(object):
         for x in self.enum_elems:
             yield x
 
+    def __getitem__(self, key):
+        return self.enum_elems[key]
+
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
+        self.enum_elems[key] = value
+
     def add(self, *seq, **named):
         """
         Adds elements to the enum.

@@ -1,10 +1,8 @@
-#!/usr/bin/python
-
 import mock
 from nose.tools import istest
 
 from salve import cli
-from tests.util import ensure_except
+from tests.framework import ensure_except
 
 
 @istest

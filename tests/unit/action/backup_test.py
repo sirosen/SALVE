@@ -7,7 +7,7 @@ from salve.action import backup
 from salve.filesys import ConcreteFilesys
 from salve.context import ExecutionContext
 
-from tests.util import ensure_except, scratch, full_path
+from tests.framework import ensure_except, scratch, full_path
 from tests.unit.action import dummy_file_context
 
 

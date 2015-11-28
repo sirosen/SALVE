@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 from nose.tools import istest
 
 from salve import paths
@@ -7,7 +5,7 @@ from salve.parser import parse, Token
 from salve.context import FileContext
 from salve.block import FileBlock, ManifestBlock
 
-from tests.util import ensure_except, full_path, MockedGlobals
+from tests.framework import ensure_except, full_path, MockedGlobals
 
 dummy_context = FileContext('no such file')
 

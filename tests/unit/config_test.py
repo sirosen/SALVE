@@ -5,7 +5,7 @@ from nose.tools import istest, with_setup
 from salve import config, paths
 from salve.exceptions import SALVEException
 
-from tests.util import ensure_except, full_path
+from tests.framework import ensure_except, full_path
 
 _active_patches = set()
 

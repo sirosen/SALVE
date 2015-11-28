@@ -2,7 +2,7 @@ import logging
 from nose.tools import istest
 
 import salve.log
-from tests.util import scratch, assert_substr, ensure_except
+from tests.framework import scratch, assert_substr, ensure_except
 
 
 class TestWithScratchdir(scratch.ScratchContainer):

@@ -1,11 +1,11 @@
 import mock
 from nose.tools import istest
+from nose_parameterized import parameterized
+from tests.framework import scratch, first_param_docfunc
 
 from salve.context import ExecutionContext, FileContext
-
 from salve.action import create
 from salve.filesys import ConcreteFilesys
-from tests.util import scratch
 
 dummy_file_context = FileContext('no such file')
 dummy_exec_context = ExecutionContext()
@@ -47,23 +47,14 @@ class TestWithScratchdir(scratch.ScratchContainer):
         mock_mkdirs.assert_called_once_with(a_name)
 
 
+@parameterized.expand(
+    [('Unit: FileCreateAction String Conversion',
+      create.FileCreateAction, 'FileCreateAction'),
+     ('Unit: DirCreateAction String Conversion',
+      create.DirCreateAction, 'DirCreateAction')],
+    testcase_func_doc=first_param_docfunc)
 @istest
-def filecreate_to_str():
-    """
-    Unit: File Create Action String Conversion
-    """
-    fc = create.FileCreateAction('a', dummy_file_context)
-
-    assert str(fc) == ('FileCreateAction(dst=a,context=' +
-                       repr(dummy_file_context) + ')')
-
-
-@istest
-def dircreate_to_str():
-    """
-    Unit: Directory Create Action String Conversion
-    """
-    dc = create.DirCreateAction('a', dummy_file_context)
-
-    assert str(dc) == ('DirCreateAction(dst=a,context=' +
-                       repr(dummy_file_context) + ')')
+def create_action_stringification(description, klass, name):
+    act = klass('a', dummy_file_context)
+    assert str(act) == ('{0}(dst=a,context={1})'
+                        .format(name, repr(dummy_file_context)))

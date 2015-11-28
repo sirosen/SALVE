@@ -1,6 +1,6 @@
 import mock
 from nose.tools import istest
-from tests.util import ensure_except, full_path
+from tests.framework import ensure_except, full_path
 
 from salve import paths
 from salve.context import ExecutionContext

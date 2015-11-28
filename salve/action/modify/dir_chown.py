@@ -1,4 +1,5 @@
-from salve import logger, paths, ugo
+import salve
+from salve import paths, ugo
 from salve.action.modify.chown import ChownAction
 from salve.action.modify.file_chown import FileChownAction
 from salve.action.modify.directory import DirModifyAction
@@ -45,20 +46,21 @@ class DirChownAction(ChownAction, DirModifyAction):
         # confirming execution will work
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
-        logger.info('DirChown: Checking target exists, \"%s\"' %
-                    self.target)
+        salve.logger.info('DirChown: Checking target exists, "{0}"'
+                          .format(self.target))
 
         if not filesys.access(self.target, access_codes.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
-        logger.info('DirChown: Checking if execution can be skipped, ' +
-                    '\"%s\"' % self.target)
+        salve.logger.info(
+            'DirChown: Checking if execution can be skipped, "{0}"'
+            .format(self.target))
 
         if filesys.stat(self.target).st_uid == ugo.name_to_uid(self.user) and \
            filesys.stat(self.target).st_gid == ugo.name_to_gid(self.group):
             return self.verification_codes.SKIP_EXEC
 
-        logger.info('DirChown: Checking if user is root')
+        salve.logger.info('DirChown: Checking if user is root')
 
         if not ugo.is_root():
             return self.verification_codes.NOT_ROOT
@@ -92,19 +94,19 @@ class DirChownAction(ChownAction, DirModifyAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            logger.warn("DirChown: Non-Existent target dir \"%s\"" %
-                        self.target)
+            salve.logger.warn('DirChown: Non-Existent target dir "{0}"'
+                              .format(self.target))
             return
         if vcode == self.verification_codes.NOT_ROOT:
-            logger.warn("DirChown: Cannot Chown as Non-Root User")
+            salve.logger.warn("DirChown: Cannot Chown as Non-Root User")
             return
         if vcode == self.verification_codes.SKIP_EXEC:
             return
 
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info('Performing DirChown of \"%s\" to %s:%s' %
-                    (self.target, self.user, self.group))
+        salve.logger.info('Performing DirChown of "{0}" to {1}:{2}'
+                          .format(self.target, self.user, self.group))
 
         # chown without following symlinks
         filesys.chown(self.target, ugo.name_to_uid(self.user),

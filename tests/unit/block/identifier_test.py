@@ -1,20 +1,17 @@
 from nose.tools import istest
+from nose_parameterized import parameterized
 
-from tests.util import ensure_except
-from salve.parser import Token
-from salve.exceptions import BlockException
-
-from salve.block import identifier, FileBlock, ManifestBlock, DirBlock
-
+from tests.framework import ensure_except, first_param_docfunc
 from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 
-
-def _mk_id_token(name):
-    return Token(name, Token.types.IDENTIFIER, dummy_file_context)
+from salve.parser import Token
+from salve.exceptions import BlockException
+from salve.block import identifier, FileBlock, ManifestBlock, DirBlock
 
 
 def _block_from_name(name):
-    return identifier.block_from_identifier(_mk_id_token(name))
+    return identifier.block_from_identifier(
+        Token(name, Token.types.IDENTIFIER, dummy_file_context))
 
 
 class TestWithLoggerPatch(ScratchWithExecCtx):
@@ -38,26 +35,11 @@ class TestWithLoggerPatch(ScratchWithExecCtx):
                        dummy_file_context)
         ensure_except(BlockException, identifier.block_from_identifier, bad_id)
 
+    @parameterized.expand(
+        [('Unit: File Identifier To Block', 'file', FileBlock),
+         ('Unit: Manifest Identifier To Block', 'manifest', ManifestBlock),
+         ('Unit: Directory Identifier To Block', 'directory', DirBlock)],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def valid_file_id(self):
-        """
-        Unit: Block Identifier File Identifier To Block
-        Checks that an identifier 'file' creates a file block.
-        """
-        assert isinstance(_block_from_name('file'), FileBlock)
-
-    @istest
-    def valid_manifest_id(self):
-        """
-        Unit: Block Identifier Manifest Identifier To Block
-        Checks that an identifier 'manifest' creates a manifest block.
-        """
-        assert isinstance(_block_from_name('manifest'), ManifestBlock)
-
-    @istest
-    def valid_directory_id(self):
-        """
-        Unit: Block Identifier Directory Identifier To Block
-        Checks that an identifier 'directory' creates a directory block.
-        """
-        assert isinstance(_block_from_name('directory'), DirBlock)
+    def valid_block_ids(self, description, tok, klass):
+        assert isinstance(_block_from_name(tok), klass)

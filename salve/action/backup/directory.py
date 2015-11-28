@@ -1,4 +1,5 @@
-from salve import logger, paths
+import salve
+from salve import paths
 from salve.action.list import ActionList
 from salve.action.backup.base import BackupAction
 from salve.action.backup.file import FileBackupAction
@@ -34,10 +35,9 @@ class DirBackupAction(ActionList, BackupAction):
         # confirming execution will work
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
-        logger.info(
-            '{0}: DirBackup: Checking destination is writable, \"{1}\"'.format(
-                self.file_context, self.dst)
-            )
+        salve.logger.info(
+            '{0}: DirBackup: Checking destination is writable, "{1}"'
+            .format(self.file_context, self.dst))
 
         if not filesys.exists(self.src):
             return self.verification_codes.NONEXISTENT_SOURCE
@@ -53,17 +53,16 @@ class DirBackupAction(ActionList, BackupAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_SOURCE:
-            logstr = "DirBackup: Non-Existent source dir \"%s\"" % self.src
-            logger.warn('{0}: {1}'.format(self.file_context, logstr))
+            salve.logger.warn('{0}: DirBackup: Non-Existent source dir "{1}"'
+                              .format(self.file_context, self.src))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info(
-            '{0}: Performing Directory Backup of \"{1}\"'.format(
-                self.file_context, self.src)
-            )
+        salve.logger.info(
+            '{0}: Performing Directory Backup of "{1}"'
+            .format(self.file_context, self.src))
 
         # append a file backup for each file in @src
         for dirname, subdirs, files in filesys.walk(self.src):

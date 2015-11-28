@@ -1,4 +1,4 @@
-from salve import logger
+import salve
 from salve.action.create.base import CreateAction
 
 from salve.context import ExecutionContext
@@ -18,15 +18,15 @@ class DirCreateAction(CreateAction):
         """
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
-        logstr = 'DirCreate: Checking if target exists, \"%s\"' % self.dst
-        logger.info('{0}: {1}'.format(self.file_context, logstr))
+        salve.logger.info('{0}: DirCreate: Checking if target exists, "{1}"'
+                          .format(self.file_context, self.dst))
 
         # creation of existing dirs is always OK
         if filesys.exists(self.dst):
             return self.verification_codes.OK
 
-        logstr = 'DirCreate: Checking target is writable, \"%s\"' % self.dst
-        logger.info('{0}: {1}'.format(self.file_context, logstr))
+        salve.logger.info('{0}: DirCreate: Checking target is writable, "{1}"'
+                          .format(self.file_context, self.dst))
 
         if not filesys.writable_path_or_ancestor(self.dst):
             return self.verification_codes.UNWRITABLE_TARGET
@@ -40,15 +40,14 @@ class DirCreateAction(CreateAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            logstr = ("DirCreate: Non-Writable target dir \"%s\"" %
-                      self.dst)
-            logger.warn('{0}: {1}'.format(self.file_context, logstr))
+            salve.logger.warn('{0}: DirCreate: Non-Writable target dir "{1}"'
+                              .format(self.file_context, self.dst))
             return
 
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logstr = 'Performing Directory Creation of \"%s\"' % self.dst
-        logger.info('{0}: {1}'.format(self.file_context, logstr))
+        salve.logger.info('{0}: Performing Directory Creation of "{1}"'
+                          .format(self.file_context, self.dst))
 
         # make the directory
         filesys.mkdir(self.dst)

@@ -1,7 +1,8 @@
 from .mockedglobals import MockedGlobals
 from .paths import full_path, testfile_dir
 from .helpers import (ensure_except, ensure_SystemExit_with_code,
-                      assert_substr, disambiguate_by_class)
+                      assert_substr, disambiguate_by_class,
+                      first_param_docfunc)
 
 __all__ = [
     'MockedGlobals',
@@ -12,5 +13,6 @@ __all__ = [
     'ensure_except',
     'ensure_SystemExit_with_code',
     'assert_substr',
-    'disambiguate_by_class'
+    'disambiguate_by_class',
+    'first_param_docfunc',
 ]

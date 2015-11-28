@@ -1,4 +1,5 @@
-from salve import logger, paths, ugo
+import salve
+from salve import paths, ugo
 from salve.action.modify.chmod import ChmodAction
 from salve.action.modify.file_chmod import FileChmodAction
 from salve.action.modify.directory import DirModifyAction
@@ -43,19 +44,19 @@ class DirChmodAction(ChmodAction, DirModifyAction):
         # confirming execution will work
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
-        logger.info('DirChmod: Checking if target exists, \"%s\"' %
-                    self.target)
+        salve.logger.info('DirChmod: Checking if target exists, "{0}"'
+                          .format(self.target))
 
         if not filesys.access(self.target, access_codes.F_OK):
             return self.verification_codes.NONEXISTENT_TARGET
 
-        logger.info('DirChmod: Checking if user is root')
+        salve.logger.info('DirChmod: Checking if user is root')
 
         if ugo.is_root():
             return self.verification_codes.OK
 
-        logger.info('DirChmod: Checking if user is target owner, ' +
-                    '\"%s\"' % self.target)
+        salve.logger.info('DirChmod: Checking if user is target owner, "{0}"'
+                          .format(self.target))
 
         if not ugo.is_owner(self.target):
             return self.verification_codes.UNOWNED_TARGET
@@ -71,20 +72,20 @@ class DirChmodAction(ChmodAction, DirModifyAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            logstr = "DirChmod: Non-Existent target dir \"%s\"" % self.target
-            logger.warn(logstr)
+            salve.logger.warn('DirChmod: Non-Existent target dir "{0}"'
+                              .format(self.target))
             return
 
         if vcode == self.verification_codes.UNOWNED_TARGET:
-            logstr = "DirChmod: Unowned target dir \"%s\"" % self.target
-            logger.warn(logstr)
+            salve.logger.warn('DirChmod: Unowned target dir "{0}"'
+                              .format(self.target))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info('Performing DirChmod of \"%s\" to %s' %
-                    (self.target, '{0:o}'.format(self.mode)))
+        salve.logger.info('Performing DirChmod of "{0}" to {1:o}'
+                          .format(self.target, self.mode))
 
         filesys.chmod(self.target, self.mode)
 

@@ -1,6 +1,7 @@
 import abc
 
-from salve import logger, ugo, with_metaclass
+import salve
+from salve import ugo, with_metaclass
 from salve.action.modify.base import ModifyAction
 from salve.context import ExecutionContext
 
@@ -33,21 +34,21 @@ class ChmodAction(with_metaclass(abc.ABCMeta, ModifyAction)):
         # confirming execution will work
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
-        logger.info('Chmod: Checking target exists, \"%s\"' %
-                    self.target)
+        salve.logger.info('Chmod: Checking target exists, "{0}"'
+                          .format(self.target))
 
         # a nonexistent file or dir can never be chmoded
         if not filesys.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
-        logger.info('Chmod: Checking if user is root')
+        salve.logger.info('Chmod: Checking if user is root')
 
         # as root, you can always perform a chmod on existing files
         if ugo.is_root():
             return self.verification_codes.OK
 
-        logger.info('Chmod: Checking if user is owner of target, ' +
-                    '\"%s\"' % self.target)
+        salve.logger.info('Chmod: Checking if user is owner of target, "{0}"'
+                          .format(self.target))
 
         # now the file is known to exist and the user is not root
         if not ugo.is_owner(self.target):

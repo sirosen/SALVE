@@ -2,6 +2,7 @@ import os
 import logging
 import mock
 from nose.tools import istest
+from nose_parameterized import parameterized
 
 from salve.context import ExecutionContext, FileContext
 
@@ -9,7 +10,7 @@ from salve import ugo
 from salve.action import modify
 from salve.filesys import ConcreteFilesys
 
-from tests.util import scratch, assert_substr
+from tests.framework import scratch, assert_substr, first_param_docfunc
 
 
 def mock_os_walk(dir):
@@ -421,33 +422,34 @@ class TestWithScratchdir(scratch.ScratchContainer):
         chmod_args = arglist_from_mock(mock_chmod)
         assert chmod_args == [('a', int('755', 8))]
 
+    @parameterized.expand(
+        [('Unit: FileChownAction String Conversion', modify.FileChownAction,
+          'FileChownAction'),
+         ('Unit: FileChmodAction String Conversion', modify.FileChmodAction,
+          'FileChmodAction'),
+         ('Unit: DirChownAction String Conversion', modify.DirChownAction,
+          'DirChownAction'),
+         ('Unit: DirChmodAction String Conversion', modify.DirChmodAction,
+          'DirChmodAction'),
+         ],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def stringification_test_generator(self):
-        class_tuples = [(modify.FileChownAction, 'FileChownAction'),
-                        (modify.FileChmodAction, 'FileChmodAction'),
-                        (modify.DirChownAction, 'DirChownAction'),
-                        (modify.DirChmodAction, 'DirChmodAction')]
+    def modify_action_stringification(self, description, klass, name):
+        args = [('target', 'a')]
+        if 'Chmod' in name:
+            args.append(('mode', '600'))
+            act = klass('a', '600', self.file_context)
+        elif 'Chown' in name:
+            args.append(('user', 'user1'))
+            args.append(('group', 'nogroup'))
+            act = klass('a', 'user1', 'nogroup', self.file_context)
+        else:
+            assert False
 
-        for (klass, name) in class_tuples:
-            def check_func():
-                args = [('target', 'a')]
-                if 'Chmod' in name:
-                    args.append(('mode', '600'))
-                    act = klass('a', '600', self.file_context)
-                elif 'Chown' in name:
-                    args.append(('user', 'user1'))
-                    args.append(('group', 'nogroup'))
-                    act = klass('a', 'user1', 'nogroup', self.file_context)
-                else:
-                    assert False
+        if 'Dir' in name:
+            args.append(('recursive', False))
 
-                if 'Dir' in name:
-                    args.append(('recursive', False))
-
-                assert str(act) == '{0}({1},context={2})'.format(
-                    name,
-                    ','.join(['{0}={1}'.format(k, v) for (k, v) in args]),
-                    repr(self.file_context))
-            check_func.description = "Unit: {0} String Conversion".format(name)
-
-            yield check_func
+        assert str(act) == '{0}({1},context={2})'.format(
+            name,
+            ','.join(['{0}={1}'.format(k, v) for (k, v) in args]),
+            repr(self.file_context))

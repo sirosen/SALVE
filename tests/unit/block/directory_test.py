@@ -1,8 +1,9 @@
 import os
 import mock
 from nose.tools import istest
+from nose_parameterized import parameterized, param
 
-from tests.util import ensure_except, disambiguate_by_class
+from tests.framework import ensure_except, first_param_docfunc
 
 from salve.action import modify
 from salve.exceptions import BlockException
@@ -15,85 +16,76 @@ from .helpers import (
     check_dir_chown_act, check_dir_chmod_act,
 
     check_file_backup_act, check_file_copy_act,
+    generic_check_action_list,
     assign_block_attrs
 )
 
 
-def check_actions_against_defaults(create=None, chmod=None, chown=None,
-                                   chown_chmod_pair=None):
-    if chown_chmod_pair:
-        chmod, chown = disambiguate_by_class(
-            modify.DirChmodAction, chown_chmod_pair[0], chown_chmod_pair[1])
-
-    if create:
-        check_dir_create_act(create, '/p/q/r')
-    if chmod:
-        check_dir_chmod_act(chmod, '755', '/p/q/r')
-    if chown:
-        check_dir_chown_act(chown, 'user1', 'nogroup', '/p/q/r')
+def check_action_list_against_defaults(actions, action_names):
+    generic_check_action_list(
+        actions, action_names,
+        {'create': check_dir_create_act,
+         'chmod': check_dir_chmod_act,
+         'chown': check_dir_chown_act},
+        modify.DirChmodAction)
 
 
-def make_dir_block(action='copy', source='/a/b/c', target='/p/q/r',
-                   user='user1', group='nogroup', mode='755'):
-    b = DirBlock(dummy_file_context)
-    assign_block_attrs(b, action=action, source=source, target=target,
-                       user=user, group=group, mode=mode)
-    return b
+def make_dir_block(mode='755', **kwargs):
+    return assign_block_attrs(DirBlock(dummy_file_context),
+                              mode=mode, **kwargs)
+
+
+dirblock_creation_params = [
+    param('Unit: Directory Block Create Compile', ['create', 'chown'], [],
+          action='create', mode=None),
+    param('Unit: Directory Block Create Compile With Chmod',
+          ['create', 'chown_or_chmod', 'chown_or_chmod'], [],
+          action='create'),
+    param('Unit: Directory Block Create Compile With Chown (As Root)',
+          ['create', 'chown'], [mock.patch('salve.ugo.is_root', lambda: True)],
+          action='create', mode=None),
+    param('Unit: Directory Block Copy Compile (Empty Dir)', ['create'],
+          [mock.patch('os.walk', lambda d: [])],
+          action='copy', mode=None, user=None, group=None),
+    param('Unit: Directory Block Copy Compile (As Root)', ['create', 'chown'],
+          [mock.patch('salve.ugo.is_root', lambda: True),
+           mock.patch('os.walk', lambda d: [])],
+          mode=None),
+]
+
+dirblock_compilefail_params = [
+    param('Unit: Directory Block Copy Fails Without Source', source=None),
+    param('Unit: Directory Block Copy Compilation Fails Without Target',
+          target=None),
+    param('Unit: Directory Block Create Compilation Fails Without Target',
+          action='create', target=None),
+    param('Unit: Directory Block Compilation Fails Without Action',
+          action=None),
+    param('Unit: Directory Block Compilation Fails Unknown Action',
+          action='UNDEFINED_ACTION'),
+]
 
 
 class TestWithScratchdir(ScratchWithExecCtx):
+    @parameterized.expand(dirblock_creation_params,
+                          testcase_func_doc=first_param_docfunc)
     @istest
-    def dir_create_compile(self):
-        """
-        Unit: Directory Block Create Compile
-        Verifies the result of converting a Dir Block to an Action.
-        """
-        act = make_dir_block(action='create', mode=None).compile()
+    def dir_compilation_parameterized(self, description, expected_al, patches,
+                                      **kwargs):
+        for p in patches:
+            p.start()
+        act = make_dir_block(**kwargs).compile()
+        for p in patches:
+            p.stop()
 
-        check_list_act(act, 2)
-        check_actions_against_defaults(create=act.actions[0],
-                                       chown=act.actions[1])
+        check_action_list_against_defaults(act, expected_al)
 
+    @parameterized.expand(dirblock_compilefail_params,
+                          testcase_func_doc=first_param_docfunc)
     @istest
-    def dir_create_compile_chmod(self):
-        """
-        Unit: Directory Block Create Compile With Chmod
-        Verifies the result of converting a Dir Block to an Action when the
-        Block's mode is set.
-        """
-        act = make_dir_block(action='create').compile()
-
-        check_list_act(act, 3)
-        check_actions_against_defaults(
-            create=act.actions[0],
-            chown_chmod_pair=(act.actions[1], act.actions[2]))
-
-    @istest
-    def dir_create_chown_as_root(self):
-        """
-        Unit: Directory Block Create Compile With Chown
-        Verifies the result of converting a Dir Block to an Action when the
-        user is root and the Block's user and group are set.
-        """
-        with mock.patch('salve.ugo.is_root', lambda: True):
-            act = make_dir_block(action='create', mode=None).compile()
-
-        check_list_act(act, 2)
-        check_actions_against_defaults(create=act.actions[0],
-                                       chown=act.actions[1])
-
-    @istest
-    def empty_dir_copy_compile(self):
-        """
-        Unit: Directory Block Copy Compile (Empty Dir)
-        Verifies the result of converting a Dir Block to an Action.
-        """
-        with mock.patch('os.walk', lambda d: []):
-            act = make_dir_block(action='copy', mode=None, user=None,
-                                 group=None).compile()
-
-        check_list_act(act, 1)
-        check_actions_against_defaults(create=act.actions[0])
+    def dir_compilation_fails_parameterized(self, description, **kwargs):
+        b = make_dir_block(**kwargs)
+        ensure_except(BlockException, b.compile)
 
     @istest
     def nested_dir_copy_compile(self):
@@ -132,50 +124,6 @@ class TestWithScratchdir(ScratchWithExecCtx):
         _check_file_act(act.actions[6], 'subdir1/subdir3/file3')
 
     @istest
-    @mock.patch('salve.ugo.is_root', lambda: True)
-    @mock.patch('os.walk', lambda d: [])
-    def dir_copy_chown_as_root(self):
-        """
-        Unit: Directory Block Copy Compile (As Root)
-        Verifies the result of converting a Dir Block to an Action.
-        """
-        act = make_dir_block(mode=None).compile()
-
-        check_list_act(act, 2)
-        check_actions_against_defaults(create=act.actions[0],
-                                       chown=act.actions[1])
-
-    @istest
-    def dir_copy_fails_nosource(self):
-        """
-        Unit: Directory Block Copy Fails Without Source
-        Verifies that converting a Dir Block to an Action raises a
-        BlockException.
-        """
-        b = make_dir_block(source=None)
-        ensure_except(BlockException, b.compile)
-
-    @istest
-    def dir_copy_fails_notarget(self):
-        """
-        Unit: Directory Block Copy Compilation Fails Without Target
-        Verifies that converting a Dir Block to an Action raises a
-        BlockException.
-        """
-        b = make_dir_block(target=None)
-        ensure_except(BlockException, b.compile)
-
-    @istest
-    def dir_create_fails_notarget(self):
-        """
-        Unit: Directory Block Create Compilation Fails Without Target
-        Verifies that converting a Dir Block to an Action raises a
-        BlockException.
-        """
-        b = make_dir_block(action='create', target=None)
-        ensure_except(BlockException, b.compile)
-
-    @istest
     def dir_path_expand(self):
         """
         Unit: Directory Block Path Expand
@@ -207,23 +155,3 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b2 = DirBlock(dummy_file_context)
         b2 = make_dir_block(target=None)
         ensure_except(BlockException, b2.expand_file_paths, root_dir)
-
-    @istest
-    def dir_compile_fail_noaction(self):
-        """
-        Unit: Directory Block Compilation Fails Without Action
-        Verifies that block to action conversion fails when there is no
-        "action" attribute.
-        """
-        b = make_dir_block(action=None)
-        ensure_except(BlockException, b.compile)
-
-    @istest
-    def dir_compile_fail_unknown_action(self):
-        """
-        Unit: Directory Block Compilation Fails Unknown Action
-        Verifies that block to action conversion fails when the "action"
-        attribute has an unrecognized value.
-        """
-        b = make_dir_block(action='UNDEFINED_ACTION')
-        ensure_except(BlockException, b.compile)

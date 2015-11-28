@@ -1,9 +1,7 @@
-#!/usr/bin/python
-
 import mock
 
 from salve import cli
-from tests.util import scratch
+from tests.framework import scratch
 
 
 class RunScratchContainer(scratch.ScratchContainer):

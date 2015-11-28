@@ -2,7 +2,8 @@ from __future__ import print_function
 
 import time
 
-from salve import logger, paths
+import salve
+from salve import paths
 from salve.action.backup.base import BackupAction
 from salve.action.copy import FileCopyAction
 
@@ -43,27 +44,21 @@ class FileBackupAction(BackupAction, FileCopyAction):
     def verify_can_exec(self, filesys):
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
-        logger.info(
-            '{0}: FileBackup: Checking source existence, \"{1}\"'.format(
-                str(self.file_context), self.src)
-            )
+        salve.logger.info('{0}: FileBackup: Checking source existence, "{1}"'
+                          .format(self.file_context, self.src))
 
         if not filesys.exists(self.src):
             return self.verification_codes.NONEXISTENT_SOURCE
 
-        logger.info(
-            '{0}: FileBackup: Checking source is readable, \"{1}\"'.format(
-                str(self.file_context), self.src)
-            )
+        salve.logger.info('{0}: FileBackup: Checking source is readable, "{1}"'
+                          .format(self.file_context, self.src))
 
         if not filesys.access(self.src, access_codes.R_OK):
             return self.verification_codes.UNREADABLE_SOURCE
 
-        logger.info(
-            ('{0}: FileBackup: Checking destination ' +
-             'is writable, \"{1}\"').format(
-                str(self.file_context), self.dst)
-            )
+        salve.logger.info(
+            '{0}: FileBackup: Checking destination is writable, "{1}"'
+            .format(self.file_context, self.dst))
 
         if not filesys.writable_path_or_ancestor(self.dst):
             return self.verification_codes.UNWRITABLE_TARGET
@@ -80,25 +75,23 @@ class FileBackupAction(BackupAction, FileCopyAction):
         vcode = self.verify_can_exec(filesys)
 
         if vcode == self.verification_codes.UNREADABLE_SOURCE:
-            logstr = "FileBackup: Non-Readable source file \"%s\"" % self.src
-            logger.warn('{0}: {1}'.format(self.file_context, logstr))
+            salve.logger.warn('{0}: FileBackup: Non-Readable source file "{1}"'
+                              .format(self.file_context, self.src))
             return
         if vcode == self.verification_codes.NONEXISTENT_SOURCE:
-            logstr = "FileBackup: Non-Existent source file \"%s\"" % self.src
-            logger.warn('{0}: {1}'.format(self.file_context, logstr))
+            salve.logger.warn('{0}: FileBackup: Non-Existent source file "{1}"'
+                              .format(self.file_context, self.src))
             return
         if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            logstr = "FileBackup: Non-Writable target dir \"%s\"" % self.dst
-            logger.warn('{0}: {1}'.format(self.file_context, logstr))
+            salve.logger.warn('{0}: FileBackup: Non-Writable target dir "{1}"'
+                              .format(self.file_context, self.dst))
             return
 
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
-        logger.info(
-            '{0}: Performing File Backup of \"{1}\"'.format(
-                str(self.file_context), self.src)
-            )
+        salve.logger.info('{0}: Performing File Backup of "{1}"'
+                          .format(self.file_context, self.src))
 
         filesys.mkdir(self.dst)
 

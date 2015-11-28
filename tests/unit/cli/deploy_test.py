@@ -1,16 +1,13 @@
 import mock
-
 from nose.tools import istest
 
 from salve.cli import deploy
-
 from salve.exceptions import (SALVEException, ActionException, BlockException,
                               ParsingException, TokenizationException)
-
 from salve.context import ExecutionContext, FileContext
 
-from tests.util import (ensure_except, ensure_SystemExit_with_code,
-                        scratch, assert_substr)
+from tests.framework import (ensure_except, ensure_SystemExit_with_code,
+                             scratch, assert_substr)
 
 
 startup_v3_warning = ('STARTUP [WARNING] Deprecation Warning: --directory ' +

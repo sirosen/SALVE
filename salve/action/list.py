@@ -71,3 +71,41 @@ class ActionList(Action):
         """
         for act in self:
             act(filesys)
+
+
+def action_list_merge(original, new, prepend=False):
+    """
+    A helper method to merge actions into ALs when it is unknown
+    if the original action is an AL. Returns the merged action,
+    and makes no guarantees about preserving the originals.
+
+    Args:
+        @original
+        The original action to be extended with @new
+        @new
+        The action being appended or prepended to @original
+
+    KWArgs:
+        @prepend=False
+        When True, prepend @new to @original. When False, append
+        instead.
+    """
+    # if original is falsey, then @new is the entire "merged" action --
+    # typically useful to do an action_list_merge(None, XYZ)
+    if not original:  # pragma: no cover
+        return new
+
+    # otherwise, check if @original is an AL, and convert
+    # it into one if it is not
+    if not isinstance(original, ActionList):
+        original = ActionList([original], original.file_context)
+
+    # prepend or append @new, as per the @prepend arg
+    if prepend:
+        original.prepend(new)
+    else:
+        original.append(new)
+
+    # original action may have been modified or replaced, return the result
+    # either way
+    return original

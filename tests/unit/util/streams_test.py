@@ -1,6 +1,6 @@
 from nose.tools import istest
 
-from tests.util import full_path
+from tests.framework import full_path
 
 import salve.util
 
