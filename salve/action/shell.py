@@ -25,7 +25,7 @@ class ShellAction(Action):
         self.cmd = command
 
     def __str__(self):
-        return 'ShellAction(' + str(self.cmd) + ')'
+        return '{0}({1})'.format(self.prettyname, self.cmd)
 
     def execute(self, filesys):
         """

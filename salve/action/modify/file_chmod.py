@@ -22,9 +22,8 @@ class FileChmodAction(ChmodAction):
         ChmodAction.__init__(self, target, mode, file_context)
 
     def __str__(self):
-        return ("FileChmodAction(target=" + str(self.target) +
-                ",mode=" + '{0:o}'.format(self.mode) +
-                ",context=" + repr(self.file_context) + ")")
+        return '{0}(target={1},mode={2:o},context={3!r})'.format(
+            self.prettyname, self.target, self.mode, self.file_context)
 
     def execute(self, filesys):
         """

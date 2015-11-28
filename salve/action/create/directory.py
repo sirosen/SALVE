@@ -8,10 +8,6 @@ class DirCreateAction(CreateAction):
     """
     An action to create a directory.
     """
-    def __str__(self):
-        return ("DirCreateAction(dst=" + self.dst + ",context=" +
-                repr(self.file_context) + ")")
-
     def verify_can_exec(self, filesys):
         """
         Checks if the target dir already exists, or if its parent is writable.

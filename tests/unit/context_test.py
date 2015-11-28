@@ -1,4 +1,4 @@
-from nose.tools import istest
+from nose.tools import istest, eq_
 
 from tests.framework import ensure_except
 from salve import context
@@ -13,7 +13,7 @@ def filectx_tostring():
     Unit: FileContext to String
     Tests the conversion from a FileContext to a string.
     """
-    assert str(basic_filectx1) == '/a/b/c, line 10'
+    eq_(str(basic_filectx1), '/a/b/c, line 10')
 
 
 @istest
@@ -22,7 +22,7 @@ def filectx_repr():
     Unit: FileContext Invoke repr()
     Tests the conversion from a FileContext to a string using __repr__
     """
-    assert repr(basic_filectx1) == 'FileContext(filename=/a/b/c,lineno=10)'
+    eq_(repr(basic_filectx1), 'FileContext(filename=/a/b/c,lineno=10)')
 
 
 @istest
@@ -33,7 +33,7 @@ def execctx_tostring():
     """
     ctx = context.ExecutionContext(
         startphase=context.ExecutionContext.phases.STARTUP)
-    assert str(ctx) == 'STARTUP'
+    eq_(str(ctx), 'STARTUP')
 
 
 @istest
@@ -45,9 +45,9 @@ def execctx_transition():
     ctx = context.ExecutionContext(
         startphase=context.ExecutionContext.phases.STARTUP)
     ctx.transition(context.ExecutionContext.phases.EXECUTION, quiet=True)
-    assert ctx.phase == 'EXECUTION'
+    eq_(ctx.phase, 'EXECUTION')
     ctx.transition('STARTUP', quiet=True)
-    assert ctx.phase == 'STARTUP'
+    eq_(ctx.phase, 'STARTUP')
 
 
 @istest

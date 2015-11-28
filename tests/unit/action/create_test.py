@@ -1,5 +1,5 @@
 import mock
-from nose.tools import istest
+from nose.tools import istest, eq_
 from nose_parameterized import parameterized
 from tests.framework import scratch, first_param_docfunc
 
@@ -56,5 +56,5 @@ class TestWithScratchdir(scratch.ScratchContainer):
 @istest
 def create_action_stringification(description, klass, name):
     act = klass('a', dummy_file_context)
-    assert str(act) == ('{0}(dst=a,context={1})'
-                        .format(name, repr(dummy_file_context)))
+    eq_(str(act), ('{0}(dst=a,context={1!r})'
+                   .format(name, dummy_file_context)))

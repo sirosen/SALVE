@@ -32,9 +32,9 @@ class ActionList(Action):
             yield act
 
     def __str__(self):
-        return ("ActionList([" +
-                ",".join(str(a) for a in self.actions) +
-                "],context=" + repr(self.file_context) + ")")
+        return '{0}([{1}],context={2!r})'.format(
+            self.prettyname, ','.join(str(a) for a in self.actions),
+            self.file_context)
 
     def append(self, act):
         """

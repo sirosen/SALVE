@@ -1,7 +1,7 @@
 import os
 
 import mock
-from nose.tools import istest
+from nose.tools import istest, eq_
 from nose_parameterized import parameterized
 from tests.framework import scratch, assert_substr, first_param_docfunc
 
@@ -79,8 +79,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def copy_action_stringification(self, description, name, klass):
         act = klass('a', 'b/c', self.dummy_file_context)
-        assert str(act) == '{0}(src=a,dst=b/c,context={1})'.format(
-            name, repr(self.dummy_file_context))
+        eq_(str(act), '{0}(src=a,dst=b/c,context={1!r})'
+                      .format(name, self.dummy_file_context))
 
     @istest
     @mock.patch('os.access', lambda x, y: True)

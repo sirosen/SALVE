@@ -25,9 +25,9 @@ class FileChownAction(ChownAction):
         ChownAction.__init__(self, target, user, group, file_context)
 
     def __str__(self):
-        return ("FileChownAction(target=" + str(self.target) +
-                ",user=" + str(self.user) + ",group=" + str(self.group) +
-                ",context=" + repr(self.file_context) + ")")
+        return '{0}(target={1},user={2},group={3},context={4!r})'.format(
+            self.prettyname, self.target, self.user, self.group,
+            self.file_context)
 
     def execute(self, filesys):
         """

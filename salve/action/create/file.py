@@ -8,10 +8,6 @@ class FileCreateAction(CreateAction):
     """
     An action to create a single file.
     """
-    def __str__(self):
-        return ("FileCreateAction(dst=" + self.dst +
-                ",context=" + repr(self.file_context) + ")")
-
     def verify_can_exec(self, filesys):
         """
         Ensures that the target file exists and is writable, or that

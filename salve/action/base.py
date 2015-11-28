@@ -26,6 +26,21 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
         """
         self.file_context = file_context
 
+    @property
+    def prettyname(self):
+        """
+        Get the Pretty Name for this type of Action.
+        Really, it would be desirable for this to be wrapped as both a
+        classmethod and a property, but python doesn't have a built-in notion
+        of a "classproperty", so just defining it as a property is fine.
+        We don't really want a setter -- just a getter -- but it's okay if an
+        action instance wants to be able to change its prettyname. It's just
+        not clear why/how that would be useful, and it seems confusing.
+        The "out of the box" functionality is just sugar for getting
+        __class__.__name__, and no setter
+        """
+        return self.__class__.__name__
+
     def verify_can_exec(self, filesys):
         """
         Verifies that the action can be executed. Returns a verification code
@@ -43,7 +58,7 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
         return self.verification_codes.OK
 
     @abc.abstractmethod
-    def execute(self, filesys):
+    def execute(self, filesys):  # pragma: no cover
         """
         Executes the Action.
 
@@ -56,7 +71,6 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
             transition actions between operation on the real and virtualized
             filesystem.
         """
-        pass  # pragma: no cover
 
     def __call__(self, *args, **kwargs):
         """

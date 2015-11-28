@@ -26,3 +26,7 @@ class CreateAction(with_metaclass(abc.ABCMeta, Action)):
         """
         Action.__init__(self, file_context)
         self.dst = dst
+
+    def __str__(self):
+        return '{0}(dst={1},context={2!r})'.format(
+            self.prettyname, self.dst, self.file_context)

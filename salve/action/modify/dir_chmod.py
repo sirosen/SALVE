@@ -34,10 +34,9 @@ class DirChmodAction(ChmodAction, DirModifyAction):
         self.recursive = recursive
 
     def __str__(self):
-        return ("DirChmodAction(target=" + str(self.target) +
-                ",mode=" + '{0:o}'.format(self.mode) +
-                ",recursive=" + str(self.recursive) +
-                ",context=" + repr(self.file_context) + ")")
+        return '{0}(target={1},mode={2:o},recursive={3},context={4!r})'.format(
+            self.prettyname, self.target, self.mode, self.recursive,
+            self.file_context)
 
     def verify_can_exec(self, filesys):
         # transition to the action verification phase,

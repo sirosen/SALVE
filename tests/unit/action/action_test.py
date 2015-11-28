@@ -1,5 +1,5 @@
 import mock
-from nose.tools import istest
+from nose.tools import istest, eq_
 from nose_parameterized import parameterized
 
 from tests.framework import ensure_except, scratch, first_param_docfunc
@@ -71,8 +71,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         Checks the string repr of an empty AL.
         """
-        assert str(ActionList([], dummy_file_context)) == (
-            'ActionList([],context={0})'.format(repr(dummy_file_context)))
+        eq_(str(ActionList([], dummy_file_context)),
+            'ActionList([],context={0!r})'.format(dummy_file_context))
 
     @istest
     def action_list_inorder(self):
@@ -105,6 +105,5 @@ class TestWithScratchdir(scratch.ScratchContainer):
             def execute(self):
                 raise NotImplementedError()
 
-        a = DummyAction(dummy_file_context)
-
-        assert a.verify_can_exec(ConcreteFilesys()) == a.verification_codes.OK
+        eq_(DummyAction(dummy_file_context).verify_can_exec(ConcreteFilesys()),
+            DummyAction.verification_codes.OK)

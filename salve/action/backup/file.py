@@ -37,9 +37,9 @@ class FileBackupAction(BackupAction, FileCopyAction):
         self.hash_val = None
 
     def __str__(self):
-        return ("FileBackupAction(src=" + self.src + ",backup_dir=" +
-                self.backup_dir + ",backup_log=" + self.logfile +
-                ",context=" + str(self.file_context) + ")")
+        return '{0}(src={1},backup_dir={2},backup_log={3},context={4})'.format(
+            self.prettyname, self.src, self.backup_dir, self.logfile,
+            self.file_context)
 
     def verify_can_exec(self, filesys):
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)

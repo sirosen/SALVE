@@ -36,10 +36,10 @@ class DirChownAction(ChownAction, DirModifyAction):
         self.recursive = recursive
 
     def __str__(self):
-        return ("DirChownAction(target=" + str(self.target) +
-                ",user=" + str(self.user) + ",group=" + str(self.group) +
-                ",recursive=" + str(self.recursive) +
-                ",context=" + repr(self.file_context) + ")")
+        return (('{0}(target={1},user={2},group={3},recursive={4},'
+                 'context={5!r})')
+                .format(self.prettyname, self.target, self.user, self.group,
+                        self.recursive, self.file_context))
 
     def verify_can_exec(self, filesys):
         # transition to the action verification phase,

@@ -1,16 +1,15 @@
 import os
 import logging
-import mock
-from nose.tools import istest
-from nose_parameterized import parameterized
 
-from salve.context import ExecutionContext, FileContext
+import mock
+from nose.tools import istest, eq_
+from nose_parameterized import parameterized
+from tests.framework import scratch, assert_substr, first_param_docfunc
 
 from salve import ugo
+from salve.context import ExecutionContext, FileContext
 from salve.action import modify
 from salve.filesys import ConcreteFilesys
-
-from tests.framework import scratch, assert_substr, first_param_docfunc
 
 
 def mock_os_walk(dir):
@@ -71,8 +70,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
                                      self.file_context)
         ensure_uid_and_gid_mismatch(mock_stat)
 
-        code = act.verify_can_exec(ConcreteFilesys())
-        assert code == act.verification_codes.NOT_ROOT, str(code)
+        eq_(act.verify_can_exec(ConcreteFilesys()),
+            act.verification_codes.NOT_ROOT)
 
     @istest
     @mock.patch('salve.filesys.ConcreteFilesys.chown')
@@ -106,8 +105,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         act = modify.FileChmodAction(a_name, '600', self.file_context)
 
-        code = act.verify_can_exec(ConcreteFilesys())
-        assert code == act.verification_codes.UNOWNED_TARGET, str(code)
+        eq_(act.verify_can_exec(ConcreteFilesys()),
+            act.verification_codes.UNOWNED_TARGET)
 
     @istest
     @mock.patch('salve.ugo.is_root', lambda: False)
@@ -127,7 +126,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                                     self.file_context)
 
         code = act.verify_can_exec(ConcreteFilesys())
-        assert code == act.verification_codes.NOT_ROOT, str(code)
+        eq_(code, act.verification_codes.NOT_ROOT)
 
     @istest
     @mock.patch('salve.ugo.is_root', lambda: True)
@@ -145,7 +144,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
         code = act.verify_can_exec(ConcreteFilesys())
-        assert code == act.verification_codes.OK, str(code)
+        eq_(code, act.verification_codes.OK)
 
     @istest
     @mock.patch('salve.ugo.is_root', lambda: False)
@@ -164,7 +163,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act = modify.DirChmodAction(a_name, '0600', self.file_context)
 
         code = act.verify_can_exec(ConcreteFilesys())
-        assert code == act.verification_codes.UNOWNED_TARGET, str(code)
+        eq_(code, act.verification_codes.UNOWNED_TARGET)
 
     @istest
     @mock.patch('salve.action.modify.FileChmodAction.verify_can_exec')
@@ -276,8 +275,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         act = modify.FileChmodAction('a', '0000', self.file_context)
 
-        assert (act.verify_can_exec(ConcreteFilesys()) ==
-                act.verification_codes.OK)
+        eq_(act.verify_can_exec(ConcreteFilesys()),
+            act.verification_codes.OK)
 
     @istest
     @mock.patch('salve.filesys.ConcreteFilesys.exists', lambda fs, x: True)
@@ -291,8 +290,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
                                      self.file_context)
         ensure_uid_and_gid_mismatch(mock_stat)
 
-        assert (act.verify_can_exec(ConcreteFilesys()) ==
-                act.verification_codes.OK)
+        eq_(act.verify_can_exec(ConcreteFilesys()),
+            act.verification_codes.OK)
 
     @istest
     @mock.patch('salve.ugo.is_root', lambda: True)
@@ -307,8 +306,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         ensure_uid_and_gid_mismatch(mock_stat)
         mock_access.return_value = True
 
-        assert (act.verify_can_exec(ConcreteFilesys()) ==
-                act.verification_codes.OK)
+        eq_(act.verify_can_exec(ConcreteFilesys()),
+            act.verification_codes.OK)
 
     @istest
     @mock_uid_and_gid(1, 2)
@@ -364,7 +363,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act(ConcreteFilesys())
 
         lchown_args = arglist_from_mock(mock_lchown)
-        assert len(lchown_args) == 8
+        eq_(len(lchown_args), 8)
         for name in ['a', 'a/b', 'a/c', 'a/1', 'a/c/2', 'a/c/3', 'a/c/x',
                      'a/c/x/4']:
             assert (name, 1, 2) in lchown_args
@@ -386,7 +385,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act(ConcreteFilesys())
 
         chmod_args = arglist_from_mock(mock_chmod)
-        assert len(chmod_args) == 8
+        eq_(len(chmod_args), 8)
         mode = int('755', 8)
         for name in ['a', 'a/b', 'a/c', 'a/1', 'a/c/2', 'a/c/3', 'a/c/x',
                      'a/c/x/4']:
@@ -406,7 +405,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act(ConcreteFilesys())
 
         lchown_args = arglist_from_mock(mock_lchown)
-        assert lchown_args == [('a', 1, 2)]
+        eq_(lchown_args, [('a', 1, 2)])
 
     @istest
     @mock.patch('os.chmod')
@@ -420,7 +419,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act(ConcreteFilesys())
 
         chmod_args = arglist_from_mock(mock_chmod)
-        assert chmod_args == [('a', int('755', 8))]
+        eq_(chmod_args, [('a', int('755', 8))])
 
     @parameterized.expand(
         [('Unit: FileChownAction String Conversion', modify.FileChownAction,
@@ -449,7 +448,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
         if 'Dir' in name:
             args.append(('recursive', False))
 
-        assert str(act) == '{0}({1},context={2})'.format(
-            name,
-            ','.join(['{0}={1}'.format(k, v) for (k, v) in args]),
-            repr(self.file_context))
+        eq_(str(act), '{0}({1},context={2!r})'.format(
+            name, ','.join(['{0}={1}'.format(k, v) for (k, v) in args]),
+            self.file_context))
