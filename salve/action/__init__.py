@@ -1,7 +1,7 @@
 from .base import Action
 from .dynamic import DynamicAction
 
-from .list import ActionList
+from .list import ActionList, action_list_merge
 from .shell import ShellAction
 
 from .copy import CopyAction, FileCopyAction, DirCopyAction
@@ -18,6 +18,7 @@ __all__ = [
     'Action', 'DynamicAction',
 
     'ActionList', 'ShellAction',
+    'action_list_merge',
 
     'CopyAction', 'FileCopyAction', 'DirCopyAction',
 

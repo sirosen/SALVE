@@ -4,14 +4,16 @@ from tests.framework import ensure_except
 from salve import context
 
 
+basic_filectx1 = context.FileContext('/a/b/c', lineno=10)
+
+
 @istest
 def filectx_tostring():
     """
     Unit: FileContext to String
     Tests the conversion from a FileContext to a string.
     """
-    ctx = context.FileContext('/a/b/c', lineno=10)
-    assert str(ctx) == '/a/b/c, line 10', str(ctx)
+    assert str(basic_filectx1) == '/a/b/c, line 10'
 
 
 @istest
@@ -20,8 +22,7 @@ def filectx_repr():
     Unit: FileContext Invoke repr()
     Tests the conversion from a FileContext to a string using __repr__
     """
-    ctx = context.FileContext('/a/b/c', lineno=10)
-    assert repr(ctx) == 'FileContext(filename=/a/b/c,lineno=10)', repr(ctx)
+    assert repr(basic_filectx1) == 'FileContext(filename=/a/b/c,lineno=10)'
 
 
 @istest

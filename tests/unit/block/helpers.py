@@ -98,6 +98,12 @@ def check_dir_chmod_act(act, mode='755', target='/p/q/r'):
 
 
 def generic_check_action_list(actions, action_names, check_map, chmod_class):
+    # special handling for the one-action case, in which we might or might not
+    # see an ActionList
+    if len(action_names) is 1 and not isinstance(actions, action.ActionList):
+        check_map[action_names[0]](actions)
+        return
+
     check_list_act(actions, len(action_names))
     actions_with_names = zip(actions, action_names)
 

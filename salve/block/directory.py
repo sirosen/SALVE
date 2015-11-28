@@ -1,10 +1,8 @@
-#!/usr/bin/python
-
 import os
 
 import salve
-
-from salve.action import ActionList, backup, copy, create, modify
+from salve.action import (ActionList, backup, copy, create, modify,
+                          action_list_merge)
 from salve.api import Block
 
 from .base import CoreBlock
@@ -32,9 +30,9 @@ class DirBlock(CoreBlock):
 
     def _mkdir(self, dirname):
         """
-        Creates a shell action to create the specified directory with
+        Creates a dir action to create the specified directory with
         the block's mode if set. Useful throughout dir actions, as
-        handling subdirectories correctly often requires more of these.
+        handling subdirectories correctly often requires several of these.
 
         Args:
             @dirname
@@ -43,10 +41,9 @@ class DirBlock(CoreBlock):
         """
         act = create.DirCreateAction(dirname, self.file_context)
         if 'mode' in self:
-            act = ActionList([act], self.file_context)
-            act.append(modify.DirChmodAction(dirname,
-                                             self['mode'],
-                                             self.file_context))
+            chmod = modify.DirChmodAction(
+                dirname, self['mode'], self.file_context)
+            act = action_list_merge(act, chmod)
         return act
 
     def create_action(self):
@@ -54,9 +51,7 @@ class DirBlock(CoreBlock):
         Generate a directory creation action. This may be all or part of
         the action produced by the block upon action conversion.
         """
-        self.ensure_has_attrs('target')
-        # TODO: replace with exception
-        assert os.path.isabs(self['target'])
+        self.ensure_abspath_attrs('target')
         # create the target dir
         act = self._mkdir(self['target'])
 
@@ -64,12 +59,9 @@ class DirBlock(CoreBlock):
         # as well, to set the correct permissions for the directory
         # but not its children
         if 'user' in self and 'group' in self:
-            if not isinstance(act, ActionList):
-                act = ActionList([act], self.file_context)
-            act.append(modify.DirChownAction(self['target'],
-                                             self['user'],
-                                             self['group'],
-                                             self.file_context))
+            chown = modify.DirChownAction(
+                self['target'], self['user'], self['group'], self.file_context)
+            act = action_list_merge(act, chown)
 
         return act
 
@@ -78,16 +70,15 @@ class DirBlock(CoreBlock):
         Copy a directory. This may be all or part of the action produced
         by the block upon action conversion.
         """
-        self.ensure_has_attrs('source', 'target')
-        # TODO: replace with exception
-        assert os.path.isabs(self['target'])
-        assert os.path.isabs(self['source'])
+        self.ensure_abspath_attrs('source', 'target')
 
         # create the target directory; make the action an AL for
         # simplicity when adding actions to it
         act = self._mkdir(self['target'])
-        if not isinstance(act, ActionList):
-            act = ActionList([act], self.file_context)
+
+        def target_path(sourcepath):
+            return os.path.join(
+                self['target'], os.path.relpath(sourcepath, self['source']))
 
         # walk over all files and subdirs in the directory, creating
         # directories and copying files
@@ -95,35 +86,27 @@ class DirBlock(CoreBlock):
             # for every subdir, rewrite it to be prefixed with the
             # target and create that directory
             for sd in subdirs:
-                target_dir = os.path.join(
-                    self['target'],
-                    os.path.relpath(os.path.join(d, sd),
-                                    self['source'])
-                    )
-                act.append(self._mkdir(target_dir))
+                target_dir = target_path(os.path.join(d, sd))
+                act = action_list_merge(act, self._mkdir(target_dir))
             # for every file, first backup any file that is at the
             # destination, then copy from source to target tree
             for f in files:
                 fname = os.path.join(d, f)
-                target_dir = os.path.join(
-                    self['target'],
-                    os.path.relpath(d, self['source'])
-                    )
+                target_dir = target_path(d)
                 target_fname = os.path.join(target_dir, f)
-                backup_act = backup.FileBackupAction(target_fname,
-                                                     self.file_context)
-                copy_act = copy.FileCopyAction(fname,
-                                               target_fname,
-                                               self.file_context)
-                file_act = ActionList([backup_act, copy_act],
-                                      self.file_context)
-                act.append(file_act)
+                backup_act = backup.FileBackupAction(
+                    target_fname, self.file_context)
+                copy_act = copy.FileCopyAction(
+                    fname, target_fname, self.file_context)
+                file_act = ActionList(
+                    [backup_act, copy_act], self.file_context)
+                act = action_list_merge(act, file_act)
 
         if 'mode' in self:
-            act.append(modify.DirChmodAction(self['target'],
-                                             self['mode'],
-                                             self.file_context,
-                                             recursive=True))
+            chmod = modify.DirChmodAction(
+                self['target'], self['mode'], self.file_context,
+                recursive=True)
+            act = action_list_merge(act, chmod)
 
         # if 'user' and 'group' are set, recursively apply permissions
         # after the copy
@@ -131,12 +114,10 @@ class DirBlock(CoreBlock):
         # permissions for everything in the source tree, not the entire
         # dir)
         if 'user' in self and 'group' in self:
-            chown_dir = modify.DirChownAction(self['target'],
-                                              self['user'],
-                                              self['group'],
-                                              self.file_context,
-                                              recursive=True)
-            act.append(chown_dir)
+            chown_dir = modify.DirChownAction(
+                self['target'], self['user'], self['group'],
+                self.file_context, recursive=True)
+            act = action_list_merge(act, chown_dir)
 
         return act
 
@@ -150,11 +131,8 @@ class DirBlock(CoreBlock):
         directory copy that creates the target directories and backs up
         any files that are being overwritten.
         """
-        salve.logger.info(
-            '{0}: Converting DirBlock to DirAction'.format(
-                str(self.file_context)
-                )
-            )
+        salve.logger.info('{0}: Converting DirBlock to DirAction'
+                          .format(str(self.file_context)))
 
         # only certain actions should actually trigger a dir backup
         # remove does not exist yet, but when it is added, it will

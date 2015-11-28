@@ -1,11 +1,12 @@
 from nose.tools import istest
+from nose_parameterized import parameterized, param
+from tests.framework import (scratch, ensure_except, full_path,
+                             first_param_docfunc)
 
 from salve import paths
 from salve.block import FileBlock
 from salve.exceptions import ParsingException, TokenizationException
 from salve.parser import parse
-
-from tests.framework import scratch, ensure_except, full_path
 
 
 def parse_filename(filename):
@@ -50,48 +51,25 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         fblock = blocks[0]
         assert isinstance(fblock, FileBlock)
 
+    @parameterized.expand(
+        [param('Integration: Parse File With Single Attr Block',
+               'single_attr.manifest', source='/a/b/c'),
+         param('Integration: Parse File With Multiple Attr Block',
+               'two_attr.manifest', source='/a/b/c', target='/d/e'),
+         param('Integration: Parse File With Block Attr Containing Spaces',
+               'spaced_attr.manifest', source='/a/b/c', target='/d/e f/g')],
+        testcase_func_doc=first_param_docfunc)
     @istest
-    def single_attr_block(self):
-        """
-        Integration: Parse File With Single Attr Block
+    def parameterized_single_fileblock_parse_tests(self, description,
+                                                   manifest_name, **kwargs):
 
-        Checks that parsing a block with one attribute raises no errors.
-        """
-        blocks = parse_filename(full_path('single_attr.manifest'))
+        blocks = parse_filename(full_path(manifest_name))
         assert len(blocks) == 1
         fblock = blocks[0]
         assert isinstance(fblock, FileBlock)
-        assert fblock['source'] == '/a/b/c'
 
-    @istest
-    def multiple_attr_block(self):
-        """
-        Integration: Parse File With Multiple Attr Block
-
-        Checks that parsing a block with several attributes raises no
-        errors.
-        """
-        blocks = parse_filename(full_path('two_attr.manifest'))
-        assert len(blocks) == 1
-        fblock = blocks[0]
-        assert isinstance(fblock, FileBlock)
-        assert fblock['source'] == '/a/b/c'
-        assert fblock['target'] == '/d/e'
-
-    @istest
-    def spaced_attr_block(self):
-        """
-        Integration: Parse File With Block Attr Containing Spaces
-
-        Checks that parsing a block with several attributes raises no
-        errors.
-        """
-        blocks = parse_filename(full_path('spaced_attr.manifest'))
-        assert len(blocks) == 1
-        fblock = blocks[0]
-        assert isinstance(fblock, FileBlock)
-        assert fblock['source'] == '/a/b/c'
-        assert fblock['target'] == '/d/e f/g'
+        for k, v in kwargs.items():
+            assert fblock[k] == v
 
     @istest
     def unclosed_block_raises_TE(self):

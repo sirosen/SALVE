@@ -96,6 +96,25 @@ class CoreBlock(with_metaclass(abc.ABCMeta, Block)):
                 raise self.mk_except('Block(ty=' + self.block_type + ') ' +
                                      'missing attr "' + attr + '"')
 
+    def ensure_abspath_attrs(self, *args):
+        """
+        A helper method that wraps ensure_has_attrs()
+        It additionally ensures that the attribute values are
+        absolute paths.
+        Useful for blocks operating on path information.
+
+        Args:
+            @args
+            A variable length argument list of attribute identifiers
+            subject to inspection.
+        """
+        self.ensure_has_attrs(*args)
+        for attr in args:
+            if not os.path.isabs(self[attr]):
+                raise self.mk_except(
+                    'Block(ty={0}) attr {1} should be absolute path'
+                    .format(self.block_type, attr))
+
     def mk_except(self, msg):
         """
         Create a BlockException from the block. Used to easily pass the
