@@ -1,4 +1,4 @@
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
 from nose_parameterized import parameterized, param
 from tests.framework import (scratch, ensure_except, full_path,
                              first_param_docfunc)
@@ -22,8 +22,8 @@ def assert_parsing_fails(name, lineno=None,
                       path)
     sctx = e.file_context
     if lineno:
-        assert sctx.lineno == lineno
-    assert paths.clean_path(sctx.filename, absolute=True) == path
+        eq_(sctx.lineno, lineno)
+    eq_(paths.clean_path(sctx.filename, absolute=True), path)
 
     return e
 
@@ -37,7 +37,7 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Checks that parsing an empty file produces an empty list of blocks.
         """
         blocks = parse_filename(full_path('empty.manifest'))
-        assert len(blocks) == 0
+        eq_(len(blocks), 0)
 
     @istest
     def empty_block(self):
@@ -47,9 +47,9 @@ class TestWithScratchContainer(scratch.ScratchContainer):
         Checks that parsing an empty block raises no errors.
         """
         blocks = parse_filename(full_path('empty_block.manifest'))
-        assert len(blocks) == 1
+        eq_(len(blocks), 1)
         fblock = blocks[0]
-        assert isinstance(fblock, FileBlock)
+        ok_(isinstance(fblock, FileBlock))
 
     @parameterized.expand(
         [param('Integration: Parse File With Single Attr Block',
@@ -64,12 +64,12 @@ class TestWithScratchContainer(scratch.ScratchContainer):
                                                    manifest_name, **kwargs):
 
         blocks = parse_filename(full_path(manifest_name))
-        assert len(blocks) == 1
+        eq_(len(blocks), 1)
         fblock = blocks[0]
-        assert isinstance(fblock, FileBlock)
+        ok_(isinstance(fblock, FileBlock))
 
         for k, v in kwargs.items():
-            assert fblock[k] == v
+            eq_(fblock[k], v)
 
     @istest
     def unclosed_block_raises_TE(self):

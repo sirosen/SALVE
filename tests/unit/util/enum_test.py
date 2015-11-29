@@ -1,4 +1,4 @@
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
 
 from salve import Enum
 
@@ -12,8 +12,8 @@ def automapping():
     """
     x = Enum('A', 'B')
     y = x.B
-    assert(x.A == 'A')
-    assert(x.B is y)
+    eq_(x.A, 'A')
+    ok_(x.B is y)
 
 
 @istest
@@ -26,9 +26,9 @@ def explicit_mapping():
     def func():
         pass
     x = Enum(A=1, B='x.B', C=func)
-    assert(x.A == 1)
-    assert(x.B == 'x.B')
-    assert(x.C is func)
+    eq_(x.A, 1)
+    eq_(x.B, 'x.B')
+    ok_(x.C is func)
 
 
 @istest
@@ -41,9 +41,9 @@ def mixed_mapping():
     def func():
         pass
     x = Enum('A', B='x.B', C=func)
-    assert(x.A == 'A')
-    assert(x.B == 'x.B')
-    assert(x.C is func)
+    eq_(x.A, 'A')
+    eq_(x.B, 'x.B')
+    ok_(x.C is func)
 
 
 @istest
@@ -55,6 +55,6 @@ def elem_iter():
     """
     x = Enum(A=1, B=2, C=3)
     x_set = set(v for v in x)
-    assert 'A' in x_set
-    assert 'B' in x_set
-    assert 'C' in x_set
+    ok_('A' in x_set)
+    ok_('B' in x_set)
+    ok_('C' in x_set)

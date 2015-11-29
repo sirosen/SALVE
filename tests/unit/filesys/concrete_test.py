@@ -2,7 +2,7 @@ import os
 import hashlib
 
 import mock
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
 from nose_parameterized import parameterized
 from tests.framework import ensure_except, scratch, first_param_docfunc
 
@@ -19,7 +19,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         fs = ConcreteFilesys()
         ty = fs.lookup_type(self.get_fullname('a'))
-        assert ty is None
+        ok_(ty is None)
 
     @istest
     def file_lookup_type(self):
@@ -31,7 +31,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.write_file('a', 'abcdefg')
         fs = ConcreteFilesys()
         ty = fs.lookup_type(full_path)
-        assert ty is fs.element_types.FILE
+        ok_(ty is fs.element_types.FILE)
 
     @istest
     def dir_lookup_type(self):
@@ -43,7 +43,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         self.make_dir('a')
         fs = ConcreteFilesys()
         ty = fs.lookup_type(full_path)
-        assert ty is fs.element_types.DIR
+        ok_(ty is fs.element_types.DIR)
 
     @istest
     def link_lookup_type(self):
@@ -55,7 +55,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         os.symlink('nowhere', full_path)
         fs = ConcreteFilesys()
         ty = fs.lookup_type(full_path)
-        assert ty is fs.element_types.LINK
+        ok_(ty is fs.element_types.LINK)
 
     @istest
     def copy_file(self):
@@ -72,7 +72,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fs = ConcreteFilesys()
         fs.copy(src_path, dst_path)
 
-        assert content == self.read_file('b')
+        eq_(content, self.read_file('b'))
 
     @istest
     def copy_link(self):
@@ -91,8 +91,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fs = ConcreteFilesys()
         fs.copy(src_path, dst_path)
 
-        assert os.path.islink(dst_path)
-        assert os.readlink(dst_path) == link_target
+        ok_(os.path.islink(dst_path))
+        eq_(os.readlink(dst_path), link_target)
 
     @istest
     def copy_dir(self):
@@ -112,9 +112,9 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fs = ConcreteFilesys()
         fs.copy(src_path, dst_path)
 
-        assert os.path.isdir(dst_path)
-        assert os.path.isfile(self.get_fullname('z/a/b/f1'))
-        assert content == self.read_file('z/a/b/f1')
+        ok_(os.path.isdir(dst_path))
+        ok_(os.path.isfile(self.get_fullname('z/a/b/f1')))
+        eq_(content, self.read_file('z/a/b/f1'))
 
     @istest
     def create_file(self):
@@ -127,8 +127,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fs = ConcreteFilesys()
         fs.touch(full_path)
 
-        assert os.path.isfile(full_path)
-        assert '' == self.read_file('a')
+        ok_(os.path.isfile(full_path))
+        eq_('', self.read_file('a'))
 
     @istest
     def create_link(self):
@@ -142,18 +142,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fs = ConcreteFilesys()
         fs.symlink(link_target, full_path)
 
-        assert os.path.islink(full_path)
-        assert link_target == os.readlink(full_path)
+        ok_(os.path.islink(full_path))
+        eq_(link_target, os.readlink(full_path))
 
     def _check_create(self, dirname, recursive):
         full_path = self.get_fullname(dirname)
-        assert not os.path.isdir(full_path)
+        ok_(not os.path.isdir(full_path))
 
         fs = ConcreteFilesys()
         fs.mkdir(full_path, recursive=recursive)
 
-        assert os.path.isdir(full_path)
-        assert len(os.listdir(full_path)) == 0
+        ok_(os.path.isdir(full_path))
+        eq_(len(os.listdir(full_path)), 0)
 
     @parameterized.expand(
         [('Unit: Filesys Concrete Dir Create (Non-Recursive)', 'a', False),
@@ -162,13 +162,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
     @istest
     def create_dir_recursivity(self, description, dirname, recursive):
         full_path = self.get_fullname(dirname)
-        assert not os.path.isdir(full_path)
+        ok_(not os.path.isdir(full_path))
 
         fs = ConcreteFilesys()
         fs.mkdir(full_path, recursive=recursive)
 
-        assert os.path.isdir(full_path)
-        assert len(os.listdir(full_path)) == 0
+        ok_(os.path.isdir(full_path))
+        eq_(len(os.listdir(full_path)), 0)
 
     @istest
     def double_create_dir(self):
@@ -182,8 +182,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fs.mkdir(full_path, recursive=False)
         fs.mkdir(full_path, recursive=False)
 
-        assert os.path.isdir(full_path)
-        assert len(os.listdir(full_path)) == 0
+        ok_(os.path.isdir(full_path))
+        eq_(len(os.listdir(full_path)), 0)
 
     @istest
     def create_dir_nonrecursive_missing_parent(self):
@@ -197,8 +197,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         fs = ConcreteFilesys()
         e = ensure_except(OSError, fs.mkdir, full_path, recursive=False)
 
-        assert e.errno == 2
-        assert not os.path.isdir(full_path)
+        eq_(e.errno, 2)
+        ok_(not os.path.isdir(full_path))
 
     @istest
     def file_open_write_only(self):
@@ -215,8 +215,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
             fd.write('xyz')
             ensure_except(IOError, fd.read)
 
-        assert os.path.isfile(full_path)
-        assert 'xyz' == self.read_file('a')
+        ok_(os.path.isfile(full_path))
+        eq_('xyz', self.read_file('a'))
 
     @istest
     def file_open_read_only(self):
@@ -232,7 +232,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         with fs.open(full_path, 'r') as fd:
             ensure_except(IOError, fd.write, 'pqr')
-            assert fd.read() == 'xyz'
+            eq_(fd.read(), 'xyz')
 
     @istest
     def file_get_hash(self):
@@ -247,7 +247,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         hashval = fs.hash(full_path)
         expect = hashlib.sha512('xyz'.encode('utf-8')).hexdigest()
-        assert hashval == expect
+        eq_(hashval, expect)
 
     @istest
     def link_get_hash(self):
@@ -262,7 +262,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         hashval = fs.hash(full_path)
         expect = hashlib.sha256('xyz'.encode('utf-8')).hexdigest()
-        assert hashval == expect
+        eq_(hashval, expect)
 
     @istest
     def concrete_access_all_combinations(self):
@@ -307,7 +307,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
                 fs.touch(full_path)
                 fs.chmod(full_path, mode)
 
-            assert fs.access(full_path, flags) == expect
+            eq_(fs.access(full_path, flags), expect)
 
             if mode is not None:
                 os.remove(full_path)
@@ -321,24 +321,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_name = self.get_fullname('a')
         fs = ConcreteFilesys()
-        assert not fs.exists(full_name)
+        ok_(not fs.exists(full_name))
 
         fs.touch(full_name)
 
         st_result = fs.stat(full_name)
 
-        assert hasattr(st_result, 'st_mode')
-        assert hasattr(st_result, 'st_ino')
-        assert hasattr(st_result, 'st_nlink')
-        assert hasattr(st_result, 'st_uid')
-        assert hasattr(st_result, 'st_gid')
-        assert hasattr(st_result, 'st_size')
-        assert hasattr(st_result, 'st_atime')
-        assert hasattr(st_result, 'st_mtime')
-        assert hasattr(st_result, 'st_ctime')
+        for attr in ['st_mode', 'st_ino', 'st_nlink', 'st_uid', 'st_gid',
+                     'st_size', 'st_atime', 'st_mtime', 'st_ctime']:
+            ok_(hasattr(st_result, attr))
 
-        assert st_result.st_uid == os.geteuid()
-        assert st_result.st_gid == os.getegid()
+        eq_(st_result.st_uid, os.geteuid())
+        eq_(st_result.st_gid, os.getegid())
 
     @istest
     def link_stat(self):
@@ -348,24 +342,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_name = self.get_fullname('a')
         fs = ConcreteFilesys()
-        assert not fs.exists(full_name)
+        ok_(not fs.exists(full_name))
 
         fs.symlink('nowhere', full_name)
 
         st_result = fs.stat(full_name)
 
-        assert hasattr(st_result, 'st_mode')
-        assert hasattr(st_result, 'st_ino')
-        assert hasattr(st_result, 'st_nlink')
-        assert hasattr(st_result, 'st_uid')
-        assert hasattr(st_result, 'st_gid')
-        assert hasattr(st_result, 'st_size')
-        assert hasattr(st_result, 'st_atime')
-        assert hasattr(st_result, 'st_mtime')
-        assert hasattr(st_result, 'st_ctime')
+        for attr in ['st_mode', 'st_ino', 'st_nlink', 'st_uid', 'st_gid',
+                     'st_size', 'st_atime', 'st_mtime', 'st_ctime']:
+            ok_(hasattr(st_result, attr))
 
-        assert st_result.st_uid == os.geteuid()
-        assert st_result.st_gid == os.getegid()
+        eq_(st_result.st_uid, os.geteuid())
+        eq_(st_result.st_gid, os.getegid())
 
     @istest
     def file_chmod(self):
@@ -376,24 +364,24 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         full_name = self.get_fullname('a')
         fs = ConcreteFilesys()
-        assert not fs.exists(full_name)
+        ok_(not fs.exists(full_name))
 
         fs.touch(full_name)
         fs.chmod(full_name, 0o651)
 
         st_result = fs.stat(full_name)
-        assert hasattr(st_result, 'st_mode')
-        assert st_result.st_mode & 0o777 == 0o651, oct(st_result.st_mode)
+        ok_(hasattr(st_result, 'st_mode'))
+        eq_(st_result.st_mode & 0o777, 0o651)
 
         full_name = self.get_fullname('b')
-        assert not fs.exists(full_name)
+        ok_(not fs.exists(full_name))
 
         fs.touch(full_name)
         fs.chmod(full_name, 0o536)
 
         st_result = fs.stat(full_name)
-        assert hasattr(st_result, 'st_mode')
-        assert st_result.st_mode & 0o777 == 0o536, oct(st_result.st_mode)
+        ok_(hasattr(st_result, 'st_mode'))
+        eq_(st_result.st_mode & 0o777, 0o536)
 
     @istest
     def file_chown(self):
@@ -432,10 +420,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         for (d, sds, fs) in fs.walk(self.get_fullname('a')):
             results.append((d, sds, fs))
 
-        assert len(results) == 3
-        assert results[0] == (self.get_fullname('a'), ['b'], ['f1'])
-        assert results[1] == (self.get_fullname('a/b'), ['c'], ['l1'])
-        assert results[2] == (self.get_fullname('a/b/c'), ['l2'], [])
+        eq_(len(results), 3)
+        eq_(results[0], (self.get_fullname('a'), ['b'], ['f1']))
+        eq_(results[1], (self.get_fullname('a/b'), ['c'], ['l1']))
+        eq_(results[2], (self.get_fullname('a/b/c'), ['l2'], []))
 
     @istest
     def dir_create_bad_permissions_fails(self):
@@ -452,4 +440,4 @@ class TestWithScratchdir(scratch.ScratchContainer):
         full_name = self.get_fullname('a/b')
         e = ensure_except(OSError, fs.mkdir, full_name)
         # must be a permission denied error
-        assert e.errno == 13
+        eq_(e.errno, 13)

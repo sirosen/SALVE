@@ -1,8 +1,8 @@
 import os
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
 from nose_parameterized import parameterized
 
-from tests.framework import first_param_docfunc
+from tests.framework import first_param_docfunc, assert_substr
 from tests import system
 
 
@@ -20,10 +20,10 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
 
-        assert self.exists('b')
+        ok_(self.exists('b'))
         # make sure the original is unharmed
-        assert self.exists('a')
-        assert len(self.listdir('b')) == 0
+        ok_(self.exists('a'))
+        eq_(len(self.listdir('b')), 0)
 
     @istest
     def create_dir(self):
@@ -37,8 +37,8 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
 
-        assert self.exists('a')
-        assert len(self.listdir('a')) == 0
+        ok_(self.exists('a'))
+        eq_(len(self.listdir('a')), 0)
 
     @istest
     def set_dir_mode(self):
@@ -53,9 +53,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
 
-        assert self.exists('a')
-        assert len(self.listdir('a')) == 0
-        assert self.get_mode('a') == int('700', 8)
+        ok_(self.exists('a'))
+        eq_(len(self.listdir('a')), 0)
+        eq_(self.get_mode('a'), int('700', 8))
 
     @istest
     def copy_dir_with_file(self):
@@ -72,15 +72,15 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.write_file('p/alpha', 'string here!')
         self.run_on_manifest('1.man')
 
-        assert self.exists('q')
+        ok_(self.exists('q'))
         # make sure the original is unharmed
-        assert self.exists('p')
+        ok_(self.exists('p'))
 
         ls_result = self.listdir('q')
-        assert len(ls_result) == 1
-        assert ls_result[0] == 'alpha'
+        eq_(len(ls_result), 1)
+        eq_(ls_result[0], 'alpha')
         s = self.read_file('q/alpha').strip()
-        assert s == 'string here!'
+        eq_(s, 'string here!')
 
     @istest
     def copy_dir_containing_empty_dir(self):
@@ -96,16 +96,16 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.write_file('manifest', content)
         self.run_on_manifest('manifest')
 
-        assert self.exists('m_prime')
+        ok_(self.exists('m_prime'))
         # make sure the original is unharmed
-        assert self.exists('m')
-        assert self.exists('m/n')
+        ok_(self.exists('m'))
+        ok_(self.exists('m/n'))
 
         ls_result = self.listdir('m_prime')
-        assert len(ls_result) == 1
-        assert ls_result[0] == 'n'
+        eq_(len(ls_result), 1)
+        eq_(ls_result[0], 'n')
         ls_result = self.listdir('m_prime/n')
-        assert len(ls_result) == 0
+        eq_(len(ls_result), 0)
 
     @istest
     def copy_unwritable_target_parent(self):
@@ -126,12 +126,12 @@ class TestWithScratchdir(system.RunScratchContainer):
 
         self.run_on_manifest('1.man')
 
-        assert self.exists('2')
-        assert not self.exists('2/1')
-        assert len(self.listdir('2')) == 0
+        ok_(self.exists('2'))
+        ok_(not self.exists('2/1'))
+        eq_(len(self.listdir('2')), 0)
 
         err = self.stderr.getvalue()
         expected = ('VERIFICATION [WARNING] %s, line 1: DirCreate: ' +
                     'Non-Writable target dir "%s"\n'
                     ) % (self.get_fullname('1.man'), fullname_sub)
-        assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
+        assert_substr(err, expected)

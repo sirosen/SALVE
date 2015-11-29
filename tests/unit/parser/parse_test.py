@@ -1,11 +1,10 @@
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
+from tests.framework import ensure_except, full_path, MockedGlobals
 
 from salve import paths
 from salve.parser import parse, Token
 from salve.context import FileContext
 from salve.block import FileBlock, ManifestBlock
-
-from tests.framework import ensure_except, full_path, MockedGlobals
 
 dummy_context = FileContext('no such file')
 
@@ -17,21 +16,20 @@ def parse_filename(filename):
 
 def ensure_ParsingException(tokens=None, filename=None):
     if tokens and filename:
-        raise ValueError('Invalid test: uses both tokens list and ' +
+        raise ValueError('Invalid test: uses both tokens list and '
                          'filename in ensure_ParsingException()')
-    e = None
+    elif not tokens and not filename:
+        raise ValueError('Invalid test: uses neither tokens list nor '
+                         'filename in ensure_ParsingException()')
+
     if tokens:
-        e = ensure_except(parse.ParsingException,
-                          parse.parse_tokens,
-                          tokens)
-    elif filename:
-        e = ensure_except(parse.ParsingException,
-                          parse_filename,
-                          full_path(filename))
+        method, target = parse.parse_tokens, tokens
     else:
-        assert False
-    assert (filename is None or
-            paths.clean_path(e.file_context.filename) ==
+        method, target = parse_filename, full_path(filename)
+    e = ensure_except(parse.ParsingException, method, target)
+
+    if filename:
+        eq_(paths.clean_path(e.file_context.filename),
             paths.clean_path(full_path(filename)))
 
 
@@ -40,11 +38,11 @@ def _generate_tokens(*args):
 
 
 def _check_blocks(block_list, *args):
-    assert len(block_list) == len(args)
+    eq_(len(block_list), len(args))
 
     for (i, (ty, num_attrs)) in enumerate(args):
-        assert isinstance(block_list[i], ty)
-        assert len(block_list[i].attrs) == num_attrs
+        ok_(isinstance(block_list[i], ty))
+        eq_(len(block_list[i].attrs), num_attrs)
 
 
 class TestParsingMockedGlobals(MockedGlobals):
@@ -74,7 +72,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         Checks that parsing an empty token list produces an empty list of
         blocks.
         """
-        assert len(parse.parse_tokens([])) == 0
+        eq_(len(parse.parse_tokens([])), 0)
 
     @istest
     def unexpected_token(self):
@@ -141,7 +139,7 @@ class TestParsingMockedGlobals(MockedGlobals):
             ('/tmp/txt', Token.types.TEMPLATE), ('}', Token.types.BLOCK_END)
         ))
         _check_blocks(blocks, (FileBlock, 1))
-        assert blocks[0]['source'] == '/tmp/txt'
+        eq_(blocks[0]['source'], '/tmp/txt')
 
     @istest
     def multiple_attr_block(self):
@@ -159,8 +157,8 @@ class TestParsingMockedGlobals(MockedGlobals):
             ('}', Token.types.BLOCK_END)
         ))
         _check_blocks(blocks, (FileBlock, 2))
-        assert blocks[0]['source'] == '/tmp/txt'
-        assert blocks[0]['target'] == '/tmp/txt2'
+        eq_(blocks[0]['source'], '/tmp/txt')
+        eq_(blocks[0]['target'], '/tmp/txt2')
 
     @istest
     def empty_manifest(self):
@@ -199,7 +197,7 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(full_path('primary_attr.manifest'))
         _check_blocks(blocks, (FileBlock, 2))
-        assert blocks[0][blocks[0].primary_attr] == "/d/e/f/g"
+        eq_(blocks[0][blocks[0].primary_attr], "/d/e/f/g")
 
     @istest
     def primary_attr_followed_by_block(self):
@@ -210,9 +208,9 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(full_path('primary_attr2.manifest'))
         _check_blocks(blocks, (ManifestBlock, 1), (FileBlock, 2))
-        assert blocks[0][blocks[0].primary_attr] == "man man"
-        assert blocks[1]['source'] == "potato"
-        assert blocks[1]['target'] == "mango"
+        eq_(blocks[0][blocks[0].primary_attr], "man man")
+        eq_(blocks[1]['source'], "potato")
+        eq_(blocks[1]['target'], "mango")
 
     @istest
     def file_primary_attr_with_body(self):
@@ -223,5 +221,5 @@ class TestParsingMockedGlobals(MockedGlobals):
         """
         blocks = parse_filename(full_path('primary_attr5.manifest'))
         _check_blocks(blocks, (FileBlock, 2))
-        assert blocks[0][blocks[0].primary_attr] == "lobster"
-        assert blocks[0]['source'] == "salad"
+        eq_(blocks[0][blocks[0].primary_attr], "lobster")
+        eq_(blocks[0]['source'], "salad")

@@ -1,12 +1,11 @@
-from nose.tools import istest
+from nose.tools import istest, eq_
+from tests.framework import ensure_except, full_path, MockedGlobals
 
 from salve import paths
 from salve.exceptions import TokenizationException
 from salve.context import FileContext
 from salve.parser import tokenize
 from salve.parser.tokenize import Token
-
-from tests.framework import ensure_except, full_path, MockedGlobals
 
 
 def tokenize_filename(filename):
@@ -19,15 +18,14 @@ def ensure_TokenizationException(filename):
     e = ensure_except(TokenizationException,
                       tokenize_filename,
                       path)
-    assert (paths.clean_path(e.file_context.filename) ==
-            paths.clean_path(path))
+    eq_(paths.clean_path(e.file_context.filename), paths.clean_path(path))
 
 
 def assert_tokens_match_types(tokens, types):
-    assert len(tokens) == len(types)
+    eq_(len(tokens), len(types))
 
     for (tok, ty) in zip(tokens, types):
-        assert tok.ty == ty
+        eq_(tok.ty, ty)
 
 
 # useful lists for piecing together expected series of tokens
@@ -106,7 +104,7 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         Verifies that tokenizing an empty file produces an empty token list.
         """
         tokens = tokenize_filename(full_path('empty.manifest'))
-        assert len(tokens) == 0
+        eq_(len(tokens), 0)
 
     @istest
     def empty_block(self):
@@ -188,5 +186,5 @@ class TestTokenizeMockedGlobals(MockedGlobals):
         """
         ctx = FileContext('a/b/c', 2)
         file_tok = Token('file', Token.types.IDENTIFIER, ctx)
-        assert (str(file_tok) ==
-                'Token(value=file,ty=IDENTIFIER,lineno=2,filename=a/b/c)')
+        eq_(str(file_tok),
+            'Token(value=file,ty=IDENTIFIER,lineno=2,filename=a/b/c)')

@@ -1,11 +1,11 @@
 import os
+
 import mock
-from nose.tools import istest, with_setup
+from nose.tools import istest, with_setup, eq_, ok_
+from tests.framework import ensure_except, full_path
 
 from salve import config, paths
 from salve.exceptions import SALVEException
-
-from tests.framework import ensure_except, full_path
 
 _active_patches = set()
 
@@ -123,8 +123,8 @@ def sudo_user_replace():
     """
     orig_user = os.environ['USER']
     conf = config.SALVEConfig()
-    assert conf.env['USER'] == 'user1'
-    assert os.environ['USER'] == orig_user
+    eq_(conf.env['USER'], 'user1')
+    eq_(os.environ['USER'], orig_user)
 
 
 @istest
@@ -136,8 +136,8 @@ def sudo_homedir_resolution():
     """
     orig_home = os.environ['HOME']
     conf = config.SALVEConfig()
-    assert conf.env['HOME'] == full_path('user1_homedir')
-    assert os.environ['HOME'] == orig_home
+    eq_(conf.env['HOME'], full_path('user1_homedir'))
+    eq_(os.environ['HOME'], orig_home)
 
 
 @istest
@@ -149,7 +149,7 @@ def valid_config1():
     """
     conf = config.SALVEConfig(
         filename=full_path('single_section_single_attr.ini'))
-    assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
+    eq_(conf.attributes['metadata']['path'], '/etc/salve-config/meta/')
 
 
 @istest
@@ -160,7 +160,7 @@ def load_rc_file():
     Tests that, by default, the user's ~/.salverc is used for config.
     """
     conf = config.SALVEConfig()
-    assert conf.attributes['metadata']['path'] == '/etc/salve-config/meta/'
+    eq_(conf.attributes['metadata']['path'], '/etc/salve-config/meta/')
 
 
 @istest
@@ -173,7 +173,7 @@ def overload_from_env():
     """
     conf = config.SALVEConfig(
         filename=full_path('single_section_single_attr.ini'))
-    assert conf.attributes['metadata']['path'] == '/etc/meta/'
+    eq_(conf.attributes['metadata']['path'], '/etc/meta/')
 
 
 @istest
@@ -187,8 +187,8 @@ def multiple_env_overload():
     """
     conf = config.SALVEConfig(
         filename=full_path('two_sections.ini'))
-    assert conf.attributes['meta_data']['path'] == '/etc/meta/'
-    assert conf.attributes['meta']['data_path'] == '/etc/meta/'
+    eq_(conf.attributes['meta_data']['path'], '/etc/meta/')
+    eq_(conf.attributes['meta']['data_path'], '/etc/meta/')
 
 
 @istest
@@ -202,14 +202,14 @@ def missing_config():
     conf = config.SALVEConfig(
         filename=full_path('NONEXISTENT_FILE'))
 
-    assert conf.attributes['file']['action'] == 'copy'
-    assert conf.attributes['file']['mode'] == '644'
+    eq_(conf.attributes['file']['action'], 'copy')
+    eq_(conf.attributes['file']['mode'], '644')
 
-    assert conf.attributes['directory']['action'] == 'copy'
-    assert conf.attributes['directory']['mode'] == '755'
+    eq_(conf.attributes['directory']['action'], 'copy')
+    eq_(conf.attributes['directory']['mode'], '755')
 
-    assert conf.attributes['default']['user'] == '$USER'
-    assert conf.attributes['default']['group'] == '$SALVE_USER_PRIMARY_GROUP'
+    eq_(conf.attributes['default']['user'], '$USER')
+    eq_(conf.attributes['default']['group'], '$SALVE_USER_PRIMARY_GROUP')
 
 
 @istest
@@ -223,9 +223,9 @@ def invalid_file():
     try:
         config.SALVEConfig(filename=full_path('unassigned_val.ini'))
     except SALVEException as e:
-        assert isinstance(e, SALVEException)
-        assert ('Encountered an error while parsing' +
-                ' your configuration file(s).') in e.message
+        ok_(isinstance(e, SALVEException))
+        ok_(('Encountered an error while parsing'
+             ' your configuration file(s).') in e.message)
 
 
 @istest
@@ -248,7 +248,7 @@ def template_sub():
     Tests the normal functioning of variable substitution.
     """
     conf = config.SALVEConfig()
-    assert conf.template('$USER') == 'user1'
-    assert conf.template('$HOME') == full_path('user1_homedir')
-    assert (conf.template('$HOME/bin/program') ==
-            paths.pjoin(full_path('user1_homedir'), 'bin/program'))
+    eq_(conf.template('$USER'), 'user1')
+    eq_(conf.template('$HOME'), full_path('user1_homedir'))
+    eq_(conf.template('$HOME/bin/program'),
+        paths.pjoin(full_path('user1_homedir'), 'bin/program'))

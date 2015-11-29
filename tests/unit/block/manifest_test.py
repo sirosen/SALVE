@@ -1,15 +1,14 @@
 import mock
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
 from tests.framework import ensure_except, full_path
+
+from . import dummy_file_context, dummy_conf, ScratchWithExecCtx
+from .helpers import check_list_act
 
 from salve import paths
 from salve.context import ExecutionContext
 from salve.exceptions import BlockException
-
 from salve.block import ManifestBlock, FileBlock
-
-from tests.unit.block import dummy_file_context, dummy_conf, ScratchWithExecCtx
-from .helpers import check_list_act
 
 
 def _man_block_and_containing_dir(name):
@@ -51,7 +50,7 @@ class TestWithScratchdir(ScratchWithExecCtx):
         """
         b, d = _man_block_and_containing_dir('empty.manifest')
         b.expand_blocks('/', False)
-        assert len(b.sub_blocks) == 0
+        eq_(len(b.sub_blocks), 0)
 
     @istest
     def recursive_manifest_error(self):
@@ -71,14 +70,14 @@ class TestWithScratchdir(ScratchWithExecCtx):
         """
         b, d = _man_block_and_containing_dir('empty_and_file.manifest')
         b.expand_blocks(d, False)
-        assert len(b.sub_blocks) == 2
+        eq_(len(b.sub_blocks), 2)
         mblock = b.sub_blocks[0]
         fblock = b.sub_blocks[1]
-        assert isinstance(mblock, ManifestBlock)
-        assert isinstance(fblock, FileBlock)
-        assert mblock['source'] == full_path('empty.manifest')
-        assert fblock['source'] == full_path('empty.manifest')
-        assert fblock['target'] == paths.pjoin(d, 'a/b/c')
+        ok_(isinstance(mblock, ManifestBlock))
+        ok_(isinstance(fblock, FileBlock))
+        eq_(mblock['source'], full_path('empty.manifest'))
+        eq_(fblock['source'], full_path('empty.manifest'))
+        eq_(fblock['target'], paths.pjoin(d, 'a/b/c'))
 
     @istest
     @mock.patch('os.path.exists', lambda f: True)

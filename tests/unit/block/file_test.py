@@ -1,11 +1,9 @@
 import os
+
 import mock
-
-from nose.tools import istest
+from nose.tools import istest, eq_
 from nose_parameterized import parameterized, param
-
 from tests.framework import ensure_except, first_param_docfunc
-
 from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 from .helpers import (
     check_file_backup_act, check_file_create_act,
@@ -96,8 +94,8 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b = make_file_block(source=source_path, target=target_path)
         b.expand_file_paths(root_dir)
 
-        assert b['source'] == os.path.join(root_dir, source_path)
-        assert b['target'] == os.path.join(root_dir, target_path)
+        eq_(b['source'], os.path.join(root_dir, source_path))
+        eq_(b['target'], os.path.join(root_dir, target_path))
 
     @istest
     def file_path_expand_fail_notarget(self):

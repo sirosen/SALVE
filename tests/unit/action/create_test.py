@@ -28,7 +28,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         mock_open.assert_called_once_with(a_name, 'a')
         handle = mock_open()
-        assert len(handle.write.mock_calls) == 0
+        eq_(len(handle.write.mock_calls), 0)
 
     @istest
     @mock.patch('os.access', lambda x, y: True)

@@ -1,11 +1,12 @@
 import logging
 import os
 
+from nose.tools import eq_, ok_
+from tests.framework import testfile_dir, scratch, disambiguate_by_class
+
 from salve import action
 from salve.action import backup, create, modify, copy
 from salve.context import ExecutionContext
-
-from tests.framework import testfile_dir, scratch, disambiguate_by_class
 
 
 class ScratchWithExecCtx(scratch.ScratchContainer):
@@ -49,14 +50,14 @@ def assign_block_attrs(block, **kwargs):
 
 
 def _generic_check_act(act, klass, attrs):
-    assert isinstance(act, klass)
+    ok_(isinstance(act, klass))
     for k, v in attrs.items():
-        assert act.__getattribute__(k) == v, act.__getattribute__(k)
+        eq_(act.__getattribute__(k), v)
 
 
 def check_list_act(act, list_len):
     _generic_check_act(act, action.ActionList, {})
-    assert len(act.actions) == list_len
+    eq_(len(act.actions), list_len)
 
 
 def check_file_backup_act(act, src='/p/q/r', bak_dir='/m/n',
@@ -73,9 +74,13 @@ def check_file_copy_act(act, src='/a/b/c', dst='/p/q/r'):
     _generic_check_act(act, copy.FileCopyAction, {'src': src, 'dst': dst})
 
 
+def _check_act_mode(act, mode):
+    eq_('{0:o}'.format(act.mode), mode)
+
+
 def check_file_chmod_act(act, mode='600', target='/p/q/r'):
     _generic_check_act(act, modify.FileChmodAction, {'target': target})
-    assert '{0:o}'.format(act.mode) == mode, str(act.mode)
+    _check_act_mode(act, mode)
 
 
 def check_file_chown_act(act, user='user1', group='nogroup', target='/p/q/r'):
@@ -94,7 +99,7 @@ def check_dir_chown_act(act, user='user1', group='nogroup', target='/p/q/r'):
 
 def check_dir_chmod_act(act, mode='755', target='/p/q/r'):
     _generic_check_act(act, modify.DirChmodAction, {'target': target})
-    assert '{0:o}'.format(act.mode) == mode, str(act.mode)
+    _check_act_mode(act, mode)
 
 
 def generic_check_action_list(actions, action_names, check_map, chmod_class):
@@ -114,7 +119,7 @@ def generic_check_action_list(actions, action_names, check_map, chmod_class):
         check_map[name](act)
 
     if modify_acts:
-        assert len(modify_acts) is 2
+        eq_(len(modify_acts), 2)
         chmod, chown = disambiguate_by_class(
             chmod_class, modify_acts[0], modify_acts[1])
         check_map['chmod'](chmod)

@@ -1,8 +1,6 @@
-#!/usr/bin/python
-
 import os
 import shlex
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
 
 from tests import system
 
@@ -28,15 +26,15 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.run_on_manifest('1.man')
 
         s = self.read_file('f1')
-        assert s == content, '%s' % s
+        eq_(s, content)
         s = self.read_file(backup_log).strip()
         ss = shlex.split(s)
-        assert len(ss) == 4
-        assert ss[3] == self.get_fullname('f1')
+        eq_(len(ss), 4)
+        eq_(ss[3], self.get_fullname('f1'))
         backup_path = self.get_backup_path(backup_dir)
         backup_path = os.path.join(backup_path, ss[2])
         s = self.read_file(backup_path)
-        assert s == ''
+        eq_(s, '')
 
     @istest
     def copy_file_triggers_backup_implicit_dir(self):
@@ -56,15 +54,15 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.run_on_manifest('1.man')
 
         s = self.read_file('f1')
-        assert s == content, '%s' % s
+        eq_(s, content)
         s = self.read_file(backup_log).strip()
         ss = shlex.split(s)
-        assert len(ss) == 4
-        assert ss[3] == self.get_fullname('f1')
+        eq_(len(ss), 4)
+        eq_(ss[3], self.get_fullname('f1'))
         backup_path = self.get_backup_path(backup_dir)
         backup_path = os.path.join(backup_path, ss[2])
         s = self.read_file(backup_path)
-        assert s == ''
+        eq_(s, '')
 
     @istest
     def copy_dir_triggers_backup(self):
@@ -86,25 +84,25 @@ class TestWithScratchdir(system.RunScratchContainer):
 
         self.run_on_manifest('manifest')
 
-        assert self.exists('b')
-        assert self.exists('b/f1')
+        ok_(self.exists('b'))
+        ok_(self.exists('b/f1'))
         s = self.read_file('b/f1').strip()
-        assert s == 'new'
+        eq_(s, 'new')
         # make sure the original is unharmed
-        assert self.exists('a')
-        assert self.exists('a/f1')
+        ok_(self.exists('a'))
+        ok_(self.exists('a/f1'))
         s = self.read_file('a/f1').strip()
-        assert s == 'new'
+        eq_(s, 'new')
 
-        assert self.exists('home/user1/backup.log')
-        assert self.exists('home/user1/backups')
+        ok_(self.exists('home/user1/backup.log'))
+        ok_(self.exists('home/user1/backups'))
         backup = self.get_backup_path('home/user1/backups')
-        assert self.exists(backup)
+        ok_(self.exists(backup))
         backup_files = self.listdir(backup)
-        assert len(backup_files) == 1
+        eq_(len(backup_files), 1)
         backup_file = os.path.join(backup, backup_files[0])
         s = self.read_file(backup_file).strip()
-        assert s == 'old'
+        eq_(s, 'old')
 
     @istest
     def unwritable_backupdir_cancel(self):
@@ -129,10 +127,10 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.run_on_manifest('1.man')
 
         s = self.read_file('f1')
-        assert s == content, '%s' % s
+        eq_(s, content)
         s = self.read_file(backup_log).strip()
-        assert s == ''
-        assert len(os.listdir(backup_dir_full)) == 0
+        eq_(s, '')
+        eq_(len(os.listdir(backup_dir_full)), 0)
 
         os.chmod(backup_dir_full, int('700', 8))
 
@@ -162,8 +160,8 @@ class TestWithScratchdir(system.RunScratchContainer):
         os.chmod(fullname, int('700', 8))
 
         s = self.read_file('f1')
-        assert s == content, '%s' % s
+        eq_(s, content)
 
         s = self.read_file(backup_log).strip()
-        assert s == ''
-        assert len(os.listdir(backup_path)) == 0
+        eq_(s, '')
+        eq_(len(os.listdir(backup_path)), 0)

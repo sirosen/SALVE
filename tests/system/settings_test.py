@@ -1,7 +1,7 @@
 import os
 import textwrap
 import logging
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
 
 import salve
 from tests import system
@@ -44,11 +44,11 @@ class TestWithRunLog(system.RunScratchContainer):
         content = 'file { action copy source 1.man target 2.man }\n'
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
-        assert self.exists('2.man')
+        ok_(self.exists('2.man'))
         s = self.read_file('2.man')
-        assert s == content
+        eq_(s, content)
         s = self.read_file(os.path.join(self.userhome, 'run_log'))
-        assert len(s) > 0
+        ok_(len(s) > 0)
 
     @istest
     def command_line_log_level(self):
@@ -62,7 +62,7 @@ class TestWithRunLog(system.RunScratchContainer):
         self.write_file('1.man', content)
         self.run_on_args(['./salve.py', 'deploy', '-m', '1.man',
                           '-l', 'WARNING', '-d', self.scratch_dir])
-        assert self.exists('2.man')
+        ok_(self.exists('2.man'))
         s = self.read_file('2.man')
-        assert s == content
-        assert salve.logger.level == logging.WARNING
+        eq_(s, content)
+        eq_(salve.logger.level, logging.WARNING)

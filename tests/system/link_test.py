@@ -1,5 +1,5 @@
 import os
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
 
 from tests import system
 
@@ -22,8 +22,8 @@ class TestWithScratchdir(system.RunScratchContainer):
 
         self.run_on_manifest('1.man')
 
-        assert self.exists('2')
+        ok_(self.exists('2'))
         s = self.read_file('2')
-        assert s == content, '%s' % s
-        assert os.path.islink(fullname2)
-        assert os.readlink(fullname2) == man_fullname
+        eq_(s, content)
+        ok_(os.path.islink(fullname2))
+        eq_(os.readlink(fullname2), man_fullname)

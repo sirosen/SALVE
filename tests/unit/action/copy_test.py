@@ -41,7 +41,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             self.dummy_file_context)
         fcp(ConcreteFilesys())
 
-        assert self.read_file('rw_file_1') == self.read_file('rw_dir_1/c')
+        eq_(self.read_file('rw_file_1'), self.read_file('rw_dir_1/c'))
 
     @parameterized.expand(
         [('Unit: File Copy Action Verify Unwritable Target',

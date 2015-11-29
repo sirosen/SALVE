@@ -1,11 +1,12 @@
-import mock
-from nose.tools import istest
-
 import logging
-import salve
-from salve.cli import parser, deploy
+
+import mock
+from nose.tools import istest, eq_
 from tests.framework import (ensure_except, ensure_SystemExit_with_code,
                              MockedGlobals)
+
+import salve
+from salve.cli import parser, deploy
 
 
 class TestsWithMockedIO(MockedGlobals):
@@ -20,9 +21,9 @@ class TestsWithMockedIO(MockedGlobals):
         p = parser.get_parser()
 
         args = p.parse_args()
-        assert args.manifest == 'a/b/c'
-        assert args.directory is None
-        assert args.configfile is None
+        eq_(args.manifest, 'a/b/c')
+        eq_(args.directory, None)
+        eq_(args.configfile, None)
 
     @istest
     @mock.patch('sys.argv',
@@ -37,9 +38,9 @@ class TestsWithMockedIO(MockedGlobals):
         p = parser.get_parser()
 
         args = p.parse_args()
-        assert args.configfile == 'p/q'
-        assert args.directory is None
-        assert args.manifest == 'root.man'
+        eq_(args.configfile, 'p/q')
+        eq_(args.directory, None)
+        eq_(args.manifest, 'root.man')
 
     @istest
     @mock.patch('sys.argv',
@@ -54,9 +55,9 @@ class TestsWithMockedIO(MockedGlobals):
         p = parser.get_parser()
 
         args = p.parse_args()
-        assert args.configfile == 'p/q'
-        assert args.directory is None
-        assert args.manifest == 'root.man'
+        eq_(args.configfile, 'p/q')
+        eq_(args.directory, None)
+        eq_(args.manifest, 'root.man')
 
     @istest
     @mock.patch('sys.argv', ['./salve.py', 'deploy', '-c', 'p/q'])
@@ -78,12 +79,12 @@ class TestsWithMockedIO(MockedGlobals):
         Checks that the log level can be set by loading args
         """
         args = parser.load_args()
-        assert args.manifest == 'a/b/c'
-        assert args.directory is None
-        assert args.configfile is None
-        assert args.log_level == 'INFO'
+        eq_(args.manifest, 'a/b/c')
+        eq_(args.directory, None)
+        eq_(args.configfile, None)
+        eq_(args.log_level, 'INFO')
 
-        assert salve.logger.level == logging.INFO
+        eq_(salve.logger.level, logging.INFO)
 
     @istest
     @mock.patch('sys.argv',
@@ -97,11 +98,11 @@ class TestsWithMockedIO(MockedGlobals):
         p = parser.get_parser()
         args = p.parse_args()
 
-        assert args.configfile == 'p/q'
-        assert args.directory is None
-        assert args.manifest == 'root.man'
+        eq_(args.configfile, 'p/q')
+        eq_(args.directory, None)
+        eq_(args.manifest, 'root.man')
 
-        assert args.func is deploy.main
+        eq_(args.func, deploy.main)
 
     @istest
     @mock.patch('sys.argv', ['./salve.py', '-h'])

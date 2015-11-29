@@ -1,14 +1,14 @@
 import os
 import mock
-from nose.tools import istest
+
+from nose.tools import istest, eq_, ok_
+from tests.framework import ensure_except, scratch, full_path, assert_substr
+from tests.unit.action import dummy_file_context
 
 from salve import action
 from salve.action import backup
 from salve.filesys import ConcreteFilesys
 from salve.context import ExecutionContext
-
-from tests.framework import ensure_except, scratch, full_path
-from tests.unit.action import dummy_file_context
 
 
 def patch_filebackup_autoverify_nolog(function):
@@ -44,14 +44,14 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         mock_mkdir.assert_called_once_with('/etc/salve/backup/files')
 
-        assert os.path.basename(act.dst) == ('9bfabef5ffd7f5df84171393643' +
-                                             'e7ceeba916e64876ace612ca8d2' +
-                                             '0ad0ffd69e0ecd284ca7899f4ba' +
-                                             'b6805c06f881296d20f619e714b' +
-                                             'efb255e23fdf09ef0eed'), act.dst
+        eq_(os.path.basename(act.dst),
+            ('9bfabef5ffd7f5df84171393643e7ceeba916e64876ace612ca8d20ad0ff'
+             'd69e0ecd284ca7899f4bab6805c06f881296d20f619e714befb255e23fdf'
+             '09ef0eed'))
 
         cp_act = mock_cp.call_args[0][0]
-        assert (cp_act.src, cp_act.dst) == (filename, act.dst)
+        eq_(cp_act.src, filename)
+        eq_(cp_act.dst, act.dst)
 
     @istest
     @patch_filebackup_autoverify_nolog
@@ -70,12 +70,13 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act(ConcreteFilesys())
 
         mock_mkdir.assert_called_once_with('/etc/salve/backup/files')
-        assert os.path.basename(act.dst) == ('55ae75d991c770d8f3ef07cbfde' +
-                                             '124ffce9c420da5db6203afab70' +
-                                             '0b27e10cf9')
+        eq_(os.path.basename(act.dst),
+            ('55ae75d991c770d8f3ef07cbfde124ffce'
+             '9c420da5db6203afab700b27e10cf9'))
 
         cp_act = mock_cp.call_args[0][0]
-        assert (cp_act.src, cp_act.dst) == (linkname, act.dst)
+        eq_(cp_act.src, linkname)
+        eq_(cp_act.dst, act.dst)
 
     @istest
     def backupaction_is_abstract(self):
@@ -95,7 +96,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         filename = full_path('file1.txt')
         act = backup.FileBackupAction(filename, dummy_file_context)
-        assert act.dst == '/etc/salve/backup/files'
+        eq_(act.dst, '/etc/salve/backup/files')
 
     @istest
     def file_to_str(self):
@@ -106,10 +107,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         """
         filename = full_path('file1.txt')
         act = backup.FileBackupAction(filename, dummy_file_context)
-        assert str(act) == \
-            ('FileBackupAction(src=' + filename + ',backup_dir=' +
-             '/etc/salve/backup,backup_log=/etc/salve/backup.log' +
-             ',context=' + str(dummy_file_context) + ')')
+        eq_(str(act),
+            ('FileBackupAction(src={0},backup_dir=/etc/salve/backup,'
+             'backup_log=/etc/salve/backup.log,context={1})')
+            .format(filename, dummy_file_context))
 
     @istest
     @mock.patch('salve.action.backup.file.print', create=True)
@@ -128,7 +129,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
             act.write_log()
 
         mock_open.assert_called_once_with('/etc/salve/backup.log', 'a')
-        assert mock_print.call_args[0][0] == ('NOW abc ' + filename)
+        eq_(mock_print.call_args[0][0], ('NOW abc ' + filename))
 
     @istest
     @mock.patch('salve.action.ActionList.execute')
@@ -145,15 +146,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
         act(ConcreteFilesys())
 
         # must be a valid ActionList
-        assert isinstance(act, action.ActionList)
-        assert hasattr(act, 'actions')
+        ok_(isinstance(act, action.ActionList))
+        ok_(hasattr(act, 'actions'))
         seen_files = set()
         for subact in act.actions:
-            assert isinstance(subact, backup.FileBackupAction)
+            ok_(isinstance(subact, backup.FileBackupAction))
             seen_files.add(subact.src)
-        assert full_path('dir1/a') in seen_files
-        assert full_path('dir1/b') in seen_files
-        assert full_path('dir1/inner_dir1/.abc') in seen_files
+        ok_(full_path('dir1/a') in seen_files)
+        ok_(full_path('dir1/b') in seen_files)
+        ok_(full_path('dir1/inner_dir1/.abc') in seen_files)
 
     @istest
     @mock.patch('salve.action.backup.FileBackupAction.execute', autospec=True)
@@ -168,15 +169,15 @@ class TestWithScratchdir(scratch.ScratchContainer):
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
         for subact in act.actions:
-            assert isinstance(subact, backup.FileBackupAction)
+            ok_(isinstance(subact, backup.FileBackupAction))
 
         act(ConcreteFilesys())
 
         seen_files = [args[0][0].src for args in mock_execute.call_args_list]
 
-        assert full_path('dir1/a') in seen_files
-        assert full_path('dir1/b') in seen_files
-        assert full_path('dir1/inner_dir1/.abc') in seen_files
+        ok_(full_path('dir1/a') in seen_files)
+        ok_(full_path('dir1/b') in seen_files)
+        ok_(full_path('dir1/inner_dir1/.abc') in seen_files)
 
     @istest
     def dir_verify_no_source(self):
@@ -190,10 +191,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
         for subact in act.actions:
-            assert isinstance(subact, backup.FileBackupAction)
+            ok_(isinstance(subact, backup.FileBackupAction))
 
-        assert (act.verify_can_exec(ConcreteFilesys()) ==
-                backup.DirBackupAction.verification_codes.NONEXISTENT_SOURCE)
+        eq_(act.verify_can_exec(ConcreteFilesys()),
+            backup.DirBackupAction.verification_codes.NONEXISTENT_SOURCE)
 
     @istest
     def dir_execute_no_source(self):
@@ -210,7 +211,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         # check this here so that we abort the test if this condition is
         # unsatisfied, rather than starting to actually perform actions
         for subact in act.actions:
-            assert isinstance(subact, backup.FileBackupAction)
+            ok_(isinstance(subact, backup.FileBackupAction))
 
         act(ConcreteFilesys())
 
@@ -218,4 +219,4 @@ class TestWithScratchdir(scratch.ScratchContainer):
         expected = ("VERIFICATION [WARNING] " +
                     "no such file: DirBackup: Non-Existent source dir " +
                     '"%s"\n' % dirname)
-        assert expected in err, "{0} doesn't contain {1}".format(err, expected)
+        assert_substr(err, expected)

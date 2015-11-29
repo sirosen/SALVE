@@ -1,7 +1,5 @@
-#!/usr/bin/python
-
 import mock
-from nose.tools import istest
+from nose.tools import istest, eq_, ok_
 
 from salve import paths
 
@@ -15,8 +13,7 @@ def get_default_config():
     """
     with mock.patch('salve.paths.__file__',
                     '/tmp/salve/paths.py'):
-        assert (paths.get_default_config() ==
-                '/tmp/salve/default_settings.ini')
+        eq_(paths.get_default_config(), '/tmp/salve/default_settings.ini')
 
 
 @istest
@@ -26,13 +23,13 @@ def identify_abspath():
     Tests that the paths module can successfully identify an absolute
     path as such.
     """
-    assert paths.is_abs_or_var('/a')
-    assert paths.is_abs_or_var('/a/b/c')
-    assert paths.is_abs_or_var('/../a/b/c')
+    ok_(paths.is_abs_or_var('/a'))
+    ok_(paths.is_abs_or_var('/a/b/c'))
+    ok_(paths.is_abs_or_var('/../a/b/c'))
 
-    assert not paths.is_abs_or_var('a')
-    assert not paths.is_abs_or_var('a/b/c')
-    assert not paths.is_abs_or_var('../a/b/c')
+    ok_(not paths.is_abs_or_var('a'))
+    ok_(not paths.is_abs_or_var('a/b/c'))
+    ok_(not paths.is_abs_or_var('../a/b/c'))
 
 
 @istest
@@ -42,10 +39,11 @@ def identify_varpath():
     Tests that the paths module can successfully identify a path which
     starts with a variable.
     """
-    assert paths.is_abs_or_var('$a')
-    assert paths.is_abs_or_var('$USER/a/b/c')
-    assert paths.is_abs_or_var('$a/b/c')
+    ok_(paths.is_abs_or_var('$a'))
+    ok_(paths.is_abs_or_var('$USER/a/b/c'))
 
-    assert not paths.is_abs_or_var('$$a/b/c')
-    assert not paths.is_abs_or_var('$$$$a/b/c')
-    assert paths.is_abs_or_var('$$$a/b/c')
+    ok_(paths.is_abs_or_var('$a/b/c'))
+
+    ok_(not paths.is_abs_or_var('$$a/b/c'))
+    ok_(not paths.is_abs_or_var('$$$$a/b/c'))
+    ok_(paths.is_abs_or_var('$$$a/b/c'))

@@ -1,6 +1,6 @@
 import os
-from nose.tools import istest
-
+from nose.tools import istest, eq_, ok_
+from tests.framework import assert_substr
 from tests import system
 
 
@@ -16,9 +16,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         content = 'file { action copy source 1.man target 2.man }\n'
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
-        assert self.exists('2.man')
+        ok_(self.exists('2.man'))
         s = self.read_file('2.man')
-        assert s == content, '%s' % s
+        eq_(s, content)
 
     @istest
     def implicit_copy_single_file(self):
@@ -31,9 +31,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         content = 'file { source 1.man target 2.man }\n'
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
-        assert self.exists('2.man')
+        ok_(self.exists('2.man'))
         s = self.read_file('2.man')
-        assert s == content, '%s' % s
+        eq_(s, content)
 
     @istest
     def copy_two_files(self):
@@ -53,12 +53,12 @@ class TestWithScratchdir(system.RunScratchContainer):
 
         self.run_on_manifest('1.man')
 
-        assert self.exists('f1prime')
-        assert self.exists('f2prime')
+        ok_(self.exists('f1prime'))
+        ok_(self.exists('f2prime'))
         s = self.read_file('f1prime')
-        assert s == f1_content, '%s' % s
+        eq_(s, f1_content)
         s = self.read_file('f2prime')
-        assert s == f2_content, '%s' % s
+        eq_(s, f2_content)
 
     @istest
     def create_single_file(self):
@@ -71,9 +71,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         content = 'file { action create target f2 }\n'
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
-        assert self.exists('f2')
+        ok_(self.exists('f2'))
         s = self.read_file('f2')
-        assert s == '', '%s' % s
+        eq_(s, '')
 
     @istest
     def create_multiple_files(self):
@@ -87,12 +87,12 @@ class TestWithScratchdir(system.RunScratchContainer):
                    'file{action\ncreate target f3}')
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
-        assert self.exists('f2')
-        assert self.exists('f3')
+        ok_(self.exists('f2'))
+        ok_(self.exists('f3'))
         s = self.read_file('f2')
-        assert s == '', '%s' % s
+        eq_(s, '')
         s = self.read_file('f3')
-        assert s == '', '%s' % s
+        eq_(s, '')
 
     @istest
     def create_existing_file(self):
@@ -107,9 +107,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         f1_content = 'alpha beta\n'
         self.write_file('f1', f1_content)
         self.run_on_manifest('1.man')
-        assert self.exists('f1')
+        ok_(self.exists('f1'))
         s = self.read_file('f1')
-        assert s == f1_content, '%s' % s
+        eq_(s, f1_content)
 
     @istest
     def change_file_permissions(self):
@@ -122,10 +122,10 @@ class TestWithScratchdir(system.RunScratchContainer):
         content = 'file{action create target f1 mode 444}\n'
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
-        assert self.exists('f1')
+        ok_(self.exists('f1'))
         s = self.read_file('f1')
-        assert s == '', '%s' % s
-        assert self.get_mode('f1') == int('444', 8)
+        eq_(s, '')
+        eq_(self.get_mode('f1'), int('444', 8))
 
     @istest
     def change_own_permissions(self):
@@ -138,8 +138,8 @@ class TestWithScratchdir(system.RunScratchContainer):
         content = 'file{action create target 1.man mode 066}\n'
         self.write_file('1.man', content)
         self.run_on_manifest('1.man')
-        assert self.exists('1.man')
-        assert self.get_mode('1.man') == int('066', 8)
+        ok_(self.exists('1.man'))
+        eq_(self.get_mode('1.man'), int('066', 8))
 
     @istest
     def copy_unwritable_target(self):
@@ -157,9 +157,9 @@ class TestWithScratchdir(system.RunScratchContainer):
         os.chmod(fullname, 0o400)
 
         self.run_on_manifest('1.man')
-        assert self.exists('2')
+        ok_(self.exists('2'))
         s = self.read_file('2')
-        assert s == '', s
+        eq_(s, '')
 
         err = self.stderr.getvalue()
         expected1 = ('STARTUP [WARNING] ' +
@@ -169,8 +169,8 @@ class TestWithScratchdir(system.RunScratchContainer):
         expected2 = (('VERIFICATION [WARNING] %s, line 1: FileCopy: ' +
                       'Non-Writable target file "%s"') %
                      (self.get_fullname('1.man'), fullname))
-        assert expected1 in err, "%s doesn't contain %s" % (err, expected1)
-        assert expected2 in err, "%s doesn't contain %s" % (err, expected2)
+        assert_substr(err, expected1)
+        assert_substr(err, expected2)
 
     @istest
     def copy_unreadable_source(self):
@@ -188,13 +188,13 @@ class TestWithScratchdir(system.RunScratchContainer):
         os.chmod(fullname, 0o200)
 
         self.run_on_manifest('1.man')
-        assert not self.exists('2')
+        ok_(not self.exists('2'))
 
         err = self.stderr.getvalue()
         expected = (('VERIFICATION [WARNING] %s, line 1: FileCopy: ' +
                      'Non-Readable source file "%s"\n') %
                     (self.get_fullname('1.man'), fullname))
-        assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
+        assert_substr(err, expected)
 
     @istest
     def create_unwritable_target(self):
@@ -218,7 +218,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         expected = (('VERIFICATION [WARNING] %s, line 1: FileCreate: ' +
                      'Non-Writable target file "%s"\n') %
                     (self.get_fullname('1.man'), fullname))
-        assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
+        assert_substr(err, expected)
 
     @istest
     def create_unwritable_parent(self):
@@ -243,7 +243,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         expected = (('VERIFICATION [WARNING] %s, line 1: FileCreate: ' +
                      'Non-Writable target file "%s"\n') %
                     (self.get_fullname('1.man'), fullname_b))
-        assert expected in err, "%s\ndoesn't contain\n%s" % (err, expected)
+        assert_substr(err, expected)
 
     @istest
     def create_with_v3_path(self):
@@ -256,12 +256,12 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.make_dir('a')
         self.write_file('a/1.man', content)
         self.run_on_manifest('a/1.man')
-        assert self.exists('gamma')
+        ok_(self.exists('gamma'))
         s = self.read_file('gamma')
-        assert s == '', s
+        eq_(s, '')
 
-        assert not self.exists('a/gamma')
+        ok_(not self.exists('a/gamma'))
         self.run_on_manifest('a/1.man', argv=['--ver3'])
-        assert self.exists('a/gamma')
+        ok_(self.exists('a/gamma'))
         s = self.read_file('a/gamma')
-        assert s == '', s
+        eq_(s, '')

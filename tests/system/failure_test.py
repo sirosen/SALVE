@@ -1,7 +1,7 @@
 import os
 import mock
 
-from nose.tools import istest
+from nose.tools import istest, eq_
 from tests.framework import ensure_except, full_path, assert_substr
 from tests import system
 
@@ -22,7 +22,7 @@ def except_from_relpath(rpath):
 
 
 def assert_exit1(e):
-    assert e.code == 1, "incorrect error code: %d" % e.code
+    eq_(e.code, 1, msg="incorrect error code: %d" % e.code)
 
 
 class TestWithScratchdir(system.RunScratchContainer):

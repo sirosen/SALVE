@@ -1,14 +1,9 @@
 import os
+
 import mock
-from nose.tools import istest
+from nose.tools import istest, eq_
 from nose_parameterized import parameterized, param
-
 from tests.framework import ensure_except, first_param_docfunc
-
-from salve.action import modify
-from salve.exceptions import BlockException
-
-from salve.block import DirBlock
 
 from tests.unit.block import dummy_file_context, ScratchWithExecCtx
 from .helpers import (
@@ -19,6 +14,10 @@ from .helpers import (
     generic_check_action_list,
     assign_block_attrs
 )
+
+from salve.action import modify
+from salve.exceptions import BlockException
+from salve.block import DirBlock
 
 
 def check_action_list_against_defaults(actions, action_names):
@@ -63,6 +62,13 @@ dirblock_compilefail_params = [
           action=None),
     param('Unit: Directory Block Compilation Fails Unknown Action',
           action='UNDEFINED_ACTION'),
+]
+
+dirblock_pathexpand_fail_params = [
+    param('Unit: Directory Block (Create) Path Expand Fails Without Target',
+          action='create', target=None),
+    param('Unit: Directory Block (Copy) Path Expand Fails Without Target',
+          target=None),
 ]
 
 
@@ -136,22 +142,17 @@ class TestWithScratchdir(ScratchWithExecCtx):
         b = make_dir_block(source=src_path, target=dst_path)
         b.expand_file_paths(root_dir)
 
-        assert b['source'] == os.path.join(root_dir, src_path)
-        assert b['target'] == os.path.join(root_dir, dst_path)
+        eq_(b['source'], os.path.join(root_dir, src_path))
+        eq_(b['target'], os.path.join(root_dir, dst_path))
 
+    @parameterized.expand(dirblock_pathexpand_fail_params,
+                          testcase_func_doc=first_param_docfunc)
     @istest
-    def dir_path_expand_fail_notarget(self):
+    def dir_path_expand_fail_missingattr(self, description, **kwargs):
         """
-        Unit: Directory Block Path Expand Fails Without Target
-        Verifies that path expansion fails when there is no "target"
-        attribute.
+        Verifies that path expansion fails when there are missing required
+        attributes.
         """
-        # check that this is the case for a "create" action
-        root_dir = 'file/root/directory'
-        b1 = make_dir_block(action='create', target=None)
-        ensure_except(BlockException, b1.expand_file_paths, root_dir)
-
-        # check that it also holds for a "copy" action with source set
-        b2 = DirBlock(dummy_file_context)
-        b2 = make_dir_block(target=None)
-        ensure_except(BlockException, b2.expand_file_paths, root_dir)
+        ensure_except(BlockException,
+                      make_dir_block(**kwargs).expand_file_paths,
+                      'file/root/directory')

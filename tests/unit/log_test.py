@@ -1,8 +1,9 @@
 import logging
-from nose.tools import istest
+
+from nose.tools import istest, eq_, ok_
+from tests.framework import scratch, assert_substr, ensure_except
 
 import salve.log
-from tests.framework import scratch, assert_substr, ensure_except
 
 
 class TestWithScratchdir(scratch.ScratchContainer):
@@ -22,7 +23,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         assert_substr(err, expected)
 
-        assert 'no show log msg' not in err, err
+        ok_('no show log msg' not in err)
 
     @istest
     def str_to_loglevel(self):
@@ -31,10 +32,10 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Tests that various log levels map correctly to stdlib logging log
         levels
         """
-        assert salve.log.str_to_level('DEBUG') == logging.DEBUG
-        assert salve.log.str_to_level('INFO') == logging.INFO
-        assert salve.log.str_to_level('WARNING') == logging.WARNING
-        assert salve.log.str_to_level('ERROR') == logging.ERROR
+        eq_(salve.log.str_to_level('DEBUG'), logging.DEBUG)
+        eq_(salve.log.str_to_level('INFO'), logging.INFO)
+        eq_(salve.log.str_to_level('WARNING'), logging.WARNING)
+        eq_(salve.log.str_to_level('ERROR'), logging.ERROR)
 
     @istest
     def invalid_str_to_loglevel(self):
@@ -43,8 +44,8 @@ class TestWithScratchdir(scratch.ScratchContainer):
         Tests that a bad log levels string produces a ValueError, when mapped
         to a logging log level.
         """
-        assert salve.log.str_to_level('DEBUG') == logging.DEBUG
-        assert salve.log.str_to_level('INFO') == logging.INFO
-        assert salve.log.str_to_level('WARNING') == logging.WARNING
-        assert salve.log.str_to_level('ERROR') == logging.ERROR
+        eq_(salve.log.str_to_level('DEBUG'), logging.DEBUG)
+        eq_(salve.log.str_to_level('INFO'), logging.INFO)
+        eq_(salve.log.str_to_level('WARNING'), logging.WARNING)
+        eq_(salve.log.str_to_level('ERROR'), logging.ERROR)
         ensure_except(ValueError, salve.log.str_to_level, 'INVALID_LOG_LEVEL')

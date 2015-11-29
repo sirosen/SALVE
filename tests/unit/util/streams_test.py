@@ -1,5 +1,4 @@
-from nose.tools import istest
-
+from nose.tools import istest, eq_, ok_
 from tests.framework import full_path
 
 import salve.util
@@ -22,7 +21,7 @@ def stream_filename():
     for char in ['a', 'b', 'c']:
         name = full_path(char)
         with open(name) as f:
-            assert salve.util.stream_filename(f) == name
+            eq_(salve.util.stream_filename(f), name)
 
 
 @istest
@@ -31,7 +30,7 @@ def sha512_empty_match():
     Unit: Streams Util SHA512 Empty File Match
     Ensures that the sha512 hashes of two empty files match.
     """
-    assert compare_shas('a', 'b')
+    ok_(compare_shas('a', 'b'))
 
 
 @istest
@@ -40,7 +39,7 @@ def sha512_nonempty_match():
     Unit: Streams Util SHA512 Non-Empty File Match
     Ensures that the sha512 hashes of two nonempty files match.
     """
-    assert compare_shas('c', 'd')
+    ok_(compare_shas('c', 'd'))
 
 
 @istest
@@ -49,4 +48,4 @@ def sha512_mismatch():
     Unit: Streams Util SHA512 File Mismatch
     Ensures that the sha512 hashes of nonmatching files don't match.
     """
-    assert not compare_shas('a', 'c')
+    ok_(not compare_shas('a', 'c'))
