@@ -35,20 +35,6 @@ class FileChownAction(ChownAction):
 
         Change the owner and group of a single file.
         """
-        vcode = self.verify_can_exec(filesys)
-
-        if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            salve.logger.warn('FileChown: Non-Existent target file "{0}"'
-                              .format(self.target))
-            return
-        if vcode == self.verification_codes.NOT_ROOT:
-            salve.logger.warn("FileChown: Cannot Chown as Non-Root User")
-            return
-        # if verification says that we skip without performing any action
-        # then there should be no warning message
-        if vcode == self.verification_codes.SKIP_EXEC:
-            return
-
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 

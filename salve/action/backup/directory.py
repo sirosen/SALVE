@@ -12,8 +12,7 @@ class DirBackupAction(ActionList, BackupAction):
     A single dir Backupaction. This is a type of BackupAction, and
     therefore a CopyAction, but also an AL of file backups.
     """
-    verification_codes = \
-        BackupAction.verification_codes.extend('NONEXISTENT_SOURCE')
+    verification_codes = BackupAction.verification_codes
 
     def __init__(self, src, file_context):
         """
@@ -30,33 +29,12 @@ class DirBackupAction(ActionList, BackupAction):
         BackupAction.__init__(self, src, file_context)
         ActionList.__init__(self, [], file_context)
 
-    def verify_can_exec(self, filesys):
-        # transition to the action verification phase,
-        # confirming execution will work
-        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
-
-        salve.logger.info(
-            '{0}: DirBackup: Checking destination is writable, "{1}"'
-            .format(self.file_context, self.dst))
-
-        if not filesys.exists(self.src):
-            return self.verification_codes.NONEXISTENT_SOURCE
-
-        return self.verification_codes.OK
-
     def execute(self, filesys):
         """
         Execute the DirBackupAction.
 
         Consists of an AL execution of all file backups.
         """
-        vcode = self.verify_can_exec(filesys)
-
-        if vcode == self.verification_codes.NONEXISTENT_SOURCE:
-            salve.logger.warn('{0}: DirBackup: Non-Existent source dir "{1}"'
-                              .format(self.file_context, self.src))
-            return
-
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 

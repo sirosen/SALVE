@@ -166,8 +166,8 @@ class TestWithScratchdir(system.RunScratchContainer):
                      'Deprecation Warning: --directory will be removed in ' +
                      'version 3 as --version3-relative-paths becomes the ' +
                      'default.')
-        expected2 = (('VERIFICATION [WARNING] %s, line 1: FileCopy: ' +
-                      'Non-Writable target file "%s"') %
+        expected2 = (('VERIFICATION [WARNING] %s, line 1: FileCopyAction: ' +
+                      'Non-Writable target "%s"') %
                      (self.get_fullname('1.man'), fullname))
         assert_substr(err, expected1)
         assert_substr(err, expected2)
@@ -191,8 +191,8 @@ class TestWithScratchdir(system.RunScratchContainer):
         ok_(not self.exists('2'))
 
         err = self.stderr.getvalue()
-        expected = (('VERIFICATION [WARNING] %s, line 1: FileCopy: ' +
-                     'Non-Readable source file "%s"\n') %
+        expected = (('VERIFICATION [WARNING] %s, line 1: FileCopyAction: '
+                     'Non-Readable source "%s"\n') %
                     (self.get_fullname('1.man'), fullname))
         assert_substr(err, expected)
 
@@ -215,8 +215,8 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.run_on_manifest('1.man')
 
         err = self.stderr.getvalue()
-        expected = (('VERIFICATION [WARNING] %s, line 1: FileCreate: ' +
-                     'Non-Writable target file "%s"\n') %
+        expected = (('VERIFICATION [WARNING] %s, line 1: FileCreateAction: ' +
+                     'Non-Writable target "%s"\n') %
                     (self.get_fullname('1.man'), fullname))
         assert_substr(err, expected)
 
@@ -240,8 +240,8 @@ class TestWithScratchdir(system.RunScratchContainer):
         self.run_on_manifest('1.man')
 
         err = self.stderr.getvalue()
-        expected = (('VERIFICATION [WARNING] %s, line 1: FileCreate: ' +
-                     'Non-Writable target file "%s"\n') %
+        expected = (('VERIFICATION [WARNING] %s, line 1: FileCreateAction: ' +
+                     'Non-Writable target "%s"\n') %
                     (self.get_fullname('1.man'), fullname_b))
         assert_substr(err, expected)
 

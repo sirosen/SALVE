@@ -1,10 +1,9 @@
 import salve
-from salve import paths, ugo
+from salve import paths
 from salve.action.modify.chmod import ChmodAction
 from salve.action.modify.file_chmod import FileChmodAction
 from salve.action.modify.directory import DirModifyAction
 
-from salve.filesys import access_codes
 from salve.context import ExecutionContext
 
 
@@ -38,48 +37,12 @@ class DirChmodAction(ChmodAction, DirModifyAction):
             self.prettyname, self.target, self.mode, self.recursive,
             self.file_context)
 
-    def verify_can_exec(self, filesys):
-        # transition to the action verification phase,
-        # confirming execution will work
-        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
-
-        salve.logger.info('DirChmod: Checking if target exists, "{0}"'
-                          .format(self.target))
-
-        if not filesys.access(self.target, access_codes.F_OK):
-            return self.verification_codes.NONEXISTENT_TARGET
-
-        salve.logger.info('DirChmod: Checking if user is root')
-
-        if ugo.is_root():
-            return self.verification_codes.OK
-
-        salve.logger.info('DirChmod: Checking if user is target owner, "{0}"'
-                          .format(self.target))
-
-        if not ugo.is_owner(self.target):
-            return self.verification_codes.UNOWNED_TARGET
-
-        return self.verification_codes.OK
-
     def execute(self, filesys):
         """
         DirChmodAction execution.
 
         Change the umask of a directory or directory tree.
         """
-        vcode = self.verify_can_exec(filesys)
-
-        if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            salve.logger.warn('DirChmod: Non-Existent target dir "{0}"'
-                              .format(self.target))
-            return
-
-        if vcode == self.verification_codes.UNOWNED_TARGET:
-            salve.logger.warn('DirChmod: Unowned target dir "{0}"'
-                              .format(self.target))
-            return
-
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 

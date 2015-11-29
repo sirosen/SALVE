@@ -8,6 +8,6 @@ def verification_produces_code(act, code_name, filesys=None):
         filesys = ConcreteFilesys()
 
     code = act.verification_codes[code_name]
-    produced_code = act.verify_can_exec(filesys)
+    produced_code = act.get_verification_code(filesys)
 
     eq_(produced_code, code)

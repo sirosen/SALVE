@@ -98,19 +98,20 @@ class TestWithScratchdir(scratch.ScratchContainer):
         [('Unit: Directory Copy Action Execution, Unreadable Source',
           'UNREADABLE_SOURCE',
           ('EXECUTION [WARNING] no such file: ' +
-           'DirCopy: Non-Readable source directory "a"')),
+           'DirCopyAction: Non-Readable source "a"')),
          ('Unit: Directory Copy Action Execution, Unwritable Target',
           'UNWRITABLE_TARGET',
           ('EXECUTION [WARNING] no such file: ' +
-           'DirCopy: Non-Writable target directory "b/c"'))],
+           'DirCopyAction: Non-Writable target "b/c"'))],
         testcase_func_doc=first_param_docfunc)
     @istest
     def dircopy_execute_failure(self, description, code, expected_err):
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION,
                                       quiet=True)
 
-        with mock.patch('salve.action.copy.DirCopyAction.verify_can_exec',
-                        lambda self, fs: self.verification_codes[code]):
+        with mock.patch(
+                'salve.action.copy.DirCopyAction.get_verification_code',
+                lambda self, fs: self.verification_codes[code]):
             dcp = copy.DirCopyAction('a', 'b/c', self.dummy_file_context)
             dcp(ConcreteFilesys())
 

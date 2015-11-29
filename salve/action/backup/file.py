@@ -7,7 +7,6 @@ from salve import paths
 from salve.action.backup.base import BackupAction
 from salve.action.copy import FileCopyAction
 
-from salve.filesys import access_codes
 from salve.context import ExecutionContext
 from salve.util import hash_from_path
 
@@ -17,8 +16,7 @@ class FileBackupAction(BackupAction, FileCopyAction):
     A single file Backupaction. This is a type of BackupAction, and
     therefore a CopyAction, but more specifically a FileCopyAction.
     """
-    verification_codes = \
-        FileCopyAction.verification_codes.extend('NONEXISTENT_SOURCE')
+    verification_codes = BackupAction.verification_codes
 
     def __init__(self, src, file_context):
         """
@@ -36,35 +34,6 @@ class FileBackupAction(BackupAction, FileCopyAction):
         # the hash_val is the result of taking the sha hash of @src
         self.hash_val = None
 
-    def __str__(self):
-        return '{0}(src={1},backup_dir={2},backup_log={3},context={4})'.format(
-            self.prettyname, self.src, self.backup_dir, self.logfile,
-            self.file_context)
-
-    def verify_can_exec(self, filesys):
-        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
-
-        salve.logger.info('{0}: FileBackup: Checking source existence, "{1}"'
-                          .format(self.file_context, self.src))
-
-        if not filesys.exists(self.src):
-            return self.verification_codes.NONEXISTENT_SOURCE
-
-        salve.logger.info('{0}: FileBackup: Checking source is readable, "{1}"'
-                          .format(self.file_context, self.src))
-
-        if not filesys.access(self.src, access_codes.R_OK):
-            return self.verification_codes.UNREADABLE_SOURCE
-
-        salve.logger.info(
-            '{0}: FileBackup: Checking destination is writable, "{1}"'
-            .format(self.file_context, self.dst))
-
-        if not filesys.writable_path_or_ancestor(self.dst):
-            return self.verification_codes.UNWRITABLE_TARGET
-
-        return self.verification_codes.OK
-
     def execute(self, filesys):
         """
         Perform the FileBackupAction.
@@ -72,21 +41,6 @@ class FileBackupAction(BackupAction, FileCopyAction):
         Rewrites dst based on the value of the @src, does a file copy,
         then writes to the logfile.
         """
-        vcode = self.verify_can_exec(filesys)
-
-        if vcode == self.verification_codes.UNREADABLE_SOURCE:
-            salve.logger.warn('{0}: FileBackup: Non-Readable source file "{1}"'
-                              .format(self.file_context, self.src))
-            return
-        if vcode == self.verification_codes.NONEXISTENT_SOURCE:
-            salve.logger.warn('{0}: FileBackup: Non-Existent source file "{1}"'
-                              .format(self.file_context, self.src))
-            return
-        if vcode == self.verification_codes.UNWRITABLE_TARGET:
-            salve.logger.warn('{0}: FileBackup: Non-Writable target dir "{1}"'
-                              .format(self.file_context, self.dst))
-            return
-
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 

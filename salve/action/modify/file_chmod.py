@@ -31,17 +31,6 @@ class FileChmodAction(ChmodAction):
 
         Change the umask of a single file.
         """
-        vcode = self.verify_can_exec(filesys)
-
-        if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            salve.logger.warn('FileChmod: Non-Existent target file "{0}"'
-                              .format(self.target))
-            return
-        if vcode == self.verification_codes.UNOWNED_TARGET:
-            salve.logger.warn('FileChmod: Unowned target file "{0}"'
-                              .format(self.target))
-            return
-
         # transition to the execution phase
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 

@@ -3,7 +3,6 @@ from salve import paths, ugo
 from salve.action.modify.chown import ChownAction
 from salve.action.modify.file_chown import FileChownAction
 from salve.action.modify.directory import DirModifyAction
-from salve.filesys import access_codes
 from salve.context import ExecutionContext
 
 
@@ -41,32 +40,6 @@ class DirChownAction(ChownAction, DirModifyAction):
                 .format(self.prettyname, self.target, self.user, self.group,
                         self.recursive, self.file_context))
 
-    def verify_can_exec(self, filesys):
-        # transition to the action verification phase,
-        # confirming execution will work
-        ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
-
-        salve.logger.info('DirChown: Checking target exists, "{0}"'
-                          .format(self.target))
-
-        if not filesys.access(self.target, access_codes.F_OK):
-            return self.verification_codes.NONEXISTENT_TARGET
-
-        salve.logger.info(
-            'DirChown: Checking if execution can be skipped, "{0}"'
-            .format(self.target))
-
-        if filesys.stat(self.target).st_uid == ugo.name_to_uid(self.user) and \
-           filesys.stat(self.target).st_gid == ugo.name_to_gid(self.group):
-            return self.verification_codes.SKIP_EXEC
-
-        salve.logger.info('DirChown: Checking if user is root')
-
-        if not ugo.is_root():
-            return self.verification_codes.NOT_ROOT
-
-        return self.verification_codes.OK
-
     def _execute_on_contents(self, filesys):
         """
         Recursive execution on directory contents.
@@ -91,18 +64,6 @@ class DirChownAction(ChownAction, DirModifyAction):
 
         Change the owner and group of a directory or directory tree.
         """
-        vcode = self.verify_can_exec(filesys)
-
-        if vcode == self.verification_codes.NONEXISTENT_TARGET:
-            salve.logger.warn('DirChown: Non-Existent target dir "{0}"'
-                              .format(self.target))
-            return
-        if vcode == self.verification_codes.NOT_ROOT:
-            salve.logger.warn("DirChown: Cannot Chown as Non-Root User")
-            return
-        if vcode == self.verification_codes.SKIP_EXEC:
-            return
-
         ExecutionContext().transition(ExecutionContext.phases.EXECUTION)
 
         salve.logger.info('Performing DirChown of "{0}" to {1}:{2}'

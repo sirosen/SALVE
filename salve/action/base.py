@@ -43,6 +43,23 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
 
     def verify_can_exec(self, filesys):
         """
+        A handler for verification codes which decides which warnings to print,
+        and whether or not execution should continue.
+        If it returns True, execute() will be invoked, but if it returns False,
+        it will not (and None will be returned).
+        May raise an exception to cause a hard abort.
+        """
+        code = self.get_verification_code(filesys)
+        if code is self.verification_codes.OK:
+            return True
+        elif code not in self.verification_codes:  # pragma: no cover
+            raise NotImplementedError(
+                'Bad Verification Code: {0}. Should be one of {1}.'
+                .format(code, self.verification_codes))
+        return self.canexec_non_ok_code(code)
+
+    def get_verification_code(self, filesys):
+        """
         Verifies that the action can be executed. Returns a verification code
         from self.verification_codes.
         'OK' indicates that execution can proceed. Anything else is an error
@@ -56,6 +73,21 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
         # confirming execution will work
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
         return self.verification_codes.OK
+
+    def canexec_non_ok_code(self, code):
+        """
+        Do verification on a non-OK verification code.
+        Essentially acts as a generic handler for all of the common conditions
+        like UNREADABLE_SOURCE or UNWRITABLE_TARGET, which may want to generate
+        warnings or error messages.
+
+        Args:
+            @code
+            The verification code returned by the get_verification_code check.
+        """
+        # for the default implementation, always silently "fail" the action and
+        # skip execution
+        return False
 
     @abc.abstractmethod
     def execute(self, filesys):  # pragma: no cover
@@ -74,9 +106,9 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
 
     def __call__(self, *args, **kwargs):
         """
-        Executes the Action.
-
-        In a sense, this is a better description of what the "execute"
-        attribute is. Calling an Action and executing it are identical.
+        Verifies that the action can be performed, then executes it.
         """
-        return self.execute(*args, **kwargs)
+        if self.verify_can_exec(*args, **kwargs):
+            return self.execute(*args, **kwargs)
+        else:
+            return None

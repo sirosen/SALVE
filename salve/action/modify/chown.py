@@ -33,26 +33,40 @@ class ChownAction(with_metaclass(abc.ABCMeta, ModifyAction)):
         self.user = user
         self.group = group
 
-    def verify_can_exec(self, filesys):
+    def canexec_non_ok_code(self, code):
+        if code is self.verification_codes.NONEXISTENT_TARGET:
+            salve.logger.warn('{0}: Non-Existent target "{1}"'
+                              .format(self.prettyname, self.target))
+            return False
+        elif code == self.verification_codes.NOT_ROOT:
+            salve.logger.warn("{0}: Cannot Chown as Non-Root User"
+                              .format(self.prettyname))
+            return False
+        # if verification says that we skip without performing any action
+        # then there should be no warning message
+        elif code == self.verification_codes.SKIP_EXEC:
+            return False
+
+    def get_verification_code(self, filesys):
         # transition to the action verification phase,
         # confirming execution will work
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
 
-        salve.logger.info('Chown: Checking target exists, "{0}"'
-                          .format(self.target))
+        salve.logger.debug('{0}: Checking target exists, "{1}"'
+                           .format(self.prettyname, self.target))
 
         if not filesys.exists(self.target):
             return self.verification_codes.NONEXISTENT_TARGET
 
-        salve.logger.info('Chown: Checking if execution can be skipped, "{0}"'
-                          .format(self.target))
+        salve.logger.debug('{0}: Checking if execution can be skipped, "{1}"'
+                           .format(self.prettyname, self.target))
 
         # if the chown would do nothing, give skip exec
         if ugo.name_to_uid(self.user) == filesys.stat(self.target).st_uid and \
            ugo.name_to_gid(self.group) == filesys.stat(self.target).st_gid:
             return self.verification_codes.SKIP_EXEC
 
-        salve.logger.info('Chown: Checking user is root')
+        salve.logger.info('{0}: Checking user is root'.format(self.prettyname))
 
         if not ugo.is_root():
             return self.verification_codes.NOT_ROOT

@@ -1,5 +1,5 @@
 import mock
-from nose.tools import istest, eq_
+from nose.tools import istest, eq_, ok_
 from nose_parameterized import parameterized
 
 from tests.framework import ensure_except, scratch, first_param_docfunc
@@ -42,13 +42,14 @@ class TestWithScratchdir(scratch.ScratchContainer):
         rewrites execution.
         """
         mock_exec = mock.Mock()
+        mock_fs = mock.Mock()
 
         class DummyAction(DynamicAction):
             def generate(self):
                 self.execute = mock_exec
-        DummyAction(dummy_file_context)()
+        DummyAction(dummy_file_context)(mock_fs)
 
-        mock_exec.assert_called_once_with()
+        mock_exec.assert_called_once_with(mock_fs)
 
     @istest
     def empty_action_list(self):
@@ -105,5 +106,4 @@ class TestWithScratchdir(scratch.ScratchContainer):
             def execute(self):
                 raise NotImplementedError()
 
-        eq_(DummyAction(dummy_file_context).verify_can_exec(ConcreteFilesys()),
-            DummyAction.verification_codes.OK)
+        ok_(DummyAction(dummy_file_context).verify_can_exec(ConcreteFilesys()))

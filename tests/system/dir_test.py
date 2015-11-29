@@ -131,7 +131,7 @@ class TestWithScratchdir(system.RunScratchContainer):
         eq_(len(self.listdir('2')), 0)
 
         err = self.stderr.getvalue()
-        expected = ('VERIFICATION [WARNING] %s, line 1: DirCreate: ' +
-                    'Non-Writable target dir "%s"\n'
+        expected = ('VERIFICATION [WARNING] %s, line 1: DirCreateAction: ' +
+                    'Non-Writable target "%s"\n'
                     ) % (self.get_fullname('1.man'), fullname_sub)
         assert_substr(err, expected)

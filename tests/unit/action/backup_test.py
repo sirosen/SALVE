@@ -132,16 +132,18 @@ class TestWithScratchdir(scratch.ScratchContainer):
         eq_(mock_print.call_args[0][0], ('NOW abc ' + filename))
 
     @istest
-    @mock.patch('salve.action.ActionList.execute')
-    def dir_expand(self, mock_execute):
+    @mock.patch('salve.action.list.ActionList.execute')
+    @mock.patch('salve.action.backup.DirBackupAction.verify_can_exec')
+    def dir_expand(self, mock_verify, mock_execute):
         """
         Unit: Directory Backup Action Expand Dir
         Checks the expansion of a directory into its constituent files for
         directory backups.
         """
+        mock_verify.return_value = True
+
         dirname = full_path('dir1')
-        act = backup.DirBackupAction(dirname,
-                                     dummy_file_context)
+        act = backup.DirBackupAction(dirname, dummy_file_context)
 
         act(ConcreteFilesys())
 
@@ -158,12 +160,16 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
     @istest
     @mock.patch('salve.action.backup.FileBackupAction.execute', autospec=True)
-    def dir_execute(self, mock_execute):
+    @mock.patch('salve.action.backup.DirBackupAction.verify_can_exec')
+    @mock.patch('salve.action.backup.FileBackupAction.verify_can_exec')
+    def dir_execute(self, mock_verify1, mock_verify2, mock_execute):
         """
         Unit: Directory Backup Action Execute
         Verifies that executing a DirBackupAction runs a FileBackupAction on
         each of the files in the directory.
         """
+        mock_verify1.return_value = mock_verify2.return_value = True
+
         dirname = full_path('dir1')
         act = backup.DirBackupAction(dirname, dummy_file_context)
         # check this here so that we abort the test if this condition is
@@ -193,7 +199,7 @@ class TestWithScratchdir(scratch.ScratchContainer):
         for subact in act.actions:
             ok_(isinstance(subact, backup.FileBackupAction))
 
-        eq_(act.verify_can_exec(ConcreteFilesys()),
+        eq_(act.get_verification_code(ConcreteFilesys()),
             backup.DirBackupAction.verification_codes.NONEXISTENT_SOURCE)
 
     @istest
@@ -217,6 +223,6 @@ class TestWithScratchdir(scratch.ScratchContainer):
 
         err = self.stderr.getvalue()
         expected = ("VERIFICATION [WARNING] " +
-                    "no such file: DirBackup: Non-Existent source dir " +
+                    "no such file: DirBackupAction: Non-Existent source " +
                     '"%s"\n' % dirname)
         assert_substr(err, expected)
