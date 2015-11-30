@@ -74,7 +74,7 @@ class Action(with_metaclass(abc.ABCMeta, CompiledBlock)):
         ExecutionContext().transition(ExecutionContext.phases.VERIFICATION)
         return self.verification_codes.OK
 
-    def canexec_non_ok_code(self, code):
+    def canexec_non_ok_code(self, code):  # pragma: no cover
         """
         Do verification on a non-OK verification code.
         Essentially acts as a generic handler for all of the common conditions

@@ -32,29 +32,30 @@ def make_file_block(mode='600', **kwargs):
     return assign_block_attrs(FileBlock(dummy_file_context),
                               mode=mode, **kwargs)
 
+fileblock_compilation_params = [
+    param('Unit: File Block Copy Compile',
+          ['backup', 'copy', 'chown_or_chmod', 'chown_or_chmod'], True, True),
+    param('Unit: File Block Create Compile',
+          ['create', 'chown_or_chmod', 'chown_or_chmod'],
+          False, True, action='create'),
+    param('Unit: File Block Copy Without User Skips Chown',
+          ['backup', 'copy', 'chmod'], True, True, user=None),
+    param('Unit: File Block Create Without User Skips Chown',
+          ['create', 'chmod'], True, False, action='create', user=None),
+    param('Unit: File Block Copy Without Group Skips Chown',
+          ['backup', 'copy', 'chmod'], True, False, group=None),
+    param('Unit: File Block Create Without Group Skips Chown',
+          ['create', 'chmod'], True, False, action='create', group=None),
+    param('Unit: File Block Copy Without Mode Skips Chmod',
+          ['backup', 'copy', 'chown'], False, False, mode=None),
+    param('Unit: File Block Create Without Mode Skips Chmod',
+          ['create', 'chown'], False, False, action='create', mode=None),
+]
+
 
 class TestWithScratchdir(ScratchWithExecCtx):
-    @parameterized.expand(
-        [param('Unit: File Block Copy Compile',
-               ['backup', 'copy', 'chown_or_chmod', 'chown_or_chmod'],
-               True, True),
-         param('Unit: File Block Create Compile',
-               ['create', 'chown_or_chmod', 'chown_or_chmod'],
-               False, True, action='create'),
-         param('Unit: File Block Copy Without User Skips Chown',
-               ['backup', 'copy', 'chmod'], True, True, user=None),
-         param('Unit: File Block Create Without User Skips Chown',
-               ['create', 'chmod'], True, False, action='create', user=None),
-         param('Unit: File Block Copy Without Group Skips Chown',
-               ['backup', 'copy', 'chmod'], True, False, group=None),
-         param('Unit: File Block Create Without Group Skips Chown',
-               ['create', 'chmod'], True, False, action='create', group=None),
-         param('Unit: File Block Copy Without Mode Skips Chmod',
-               ['backup', 'copy', 'chown'], False, False, mode=None),
-         param('Unit: File Block Create Without Mode Skips Chmod',
-               ['create', 'chown'], False, False, action='create', mode=None),
-         ],
-        testcase_func_doc=first_param_docfunc)
+    @parameterized.expand(fileblock_compilation_params,
+                          testcase_func_doc=first_param_docfunc)
     @istest
     def check_against_defaults(self, description, expected_al,
                                isroot, fexists, **kwargs):

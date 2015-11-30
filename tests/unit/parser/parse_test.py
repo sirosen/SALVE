@@ -1,5 +1,7 @@
 from nose.tools import istest, eq_, ok_
-from tests.framework import ensure_except, full_path, MockedGlobals
+from nose_parameterized import parameterized, param
+from tests.framework import (ensure_except, full_path, MockedGlobals,
+                             first_param_docfunc)
 
 from salve import paths
 from salve.parser import parse, Token
@@ -45,25 +47,47 @@ def _check_blocks(block_list, *args):
         eq_(len(block_list[i].attrs), num_attrs)
 
 
-class TestParsingMockedGlobals(MockedGlobals):
-    @istest
-    def invalid_block_id(self):
-        """
-        Unit: Parser Invalid Block Identifier
-        Verifies that attempting to parse a token stream containing an
-        unknown block identifier raises a ParsingException.
-        """
-        ensure_ParsingException(tokens=_generate_tokens(
-            ('invalid_block_id', Token.types.IDENTIFIER)))
+basic_filecheck_params = [
+    param('Unit: Parser Empty File', 'empty.manifest'),
+    param('Unit: Parser Empty Block In File', 'empty_block.manifest',
+          (FileBlock, 0)),
+    param('Unit: Parser Attribute With Spaces', 'spaced_attr.manifest',
+          (FileBlock, 2)),
+]
 
+
+parse_exception_token_params = [
+    param('Unit: Parser Invalid Block Identifier From File',
+          ('invalid_block_id', Token.types.IDENTIFIER)),
+    param('Unit: Parser Unexpected Token', ('{', Token.types.BLOCK_START)),
+    param('Unit: Parser Partial Block Fails (No Open)',
+          ('file', Token.types.IDENTIFIER)),
+    param('Unit: Parser Partial Block Fails (No Close)',
+          ('file', Token.types.IDENTIFIER), ('{', Token.types.BLOCK_START)),
+    param('Unit: Parser Unassigned Attribute Fails',
+          ('file', Token.types.IDENTIFIER), ('{', Token.types.BLOCK_START),
+          ('source', Token.types.IDENTIFIER), ('}', Token.types.BLOCK_END)),
+]
+
+
+parse_exception_file_params = [
+    param('Unit: Parser Invalid Block Identifier',
+          'invalid_block_id.manifest'),
+]
+
+
+class TestParsingMockedGlobals(MockedGlobals):
+    @parameterized.expand(parse_exception_token_params,
+                          testcase_func_doc=first_param_docfunc)
     @istest
-    def invalid_block_id_from_file(self):
-        """
-        Unit: Parser Invalid Block Identifier From File
-        Verifies that attempting to parse a file containing an unknown
-        block identifier raises a ParsingException.
-        """
-        ensure_ParsingException(filename='invalid_block_id.manifest')
+    def invalid_token_set(self, description, *args):
+        ensure_ParsingException(tokens=_generate_tokens(*args))
+
+    @parameterized.expand(parse_exception_file_params,
+                          testcase_func_doc=first_param_docfunc)
+    @istest
+    def invalid_file(self, description, filename):
+        ensure_ParsingException(filename=filename)
 
     @istest
     def empty_token_list(self):
@@ -73,48 +97,6 @@ class TestParsingMockedGlobals(MockedGlobals):
         blocks.
         """
         eq_(len(parse.parse_tokens([])), 0)
-
-    @istest
-    def unexpected_token(self):
-        """
-        Unit: Parser Unexpected Token
-        Checks that parsing a token list with a token that violates the
-        SALVE grammar raises a ParsingException.
-        """
-        ensure_ParsingException(tokens=_generate_tokens(
-            ('{', Token.types.BLOCK_START)))
-
-    @istest
-    def unclosed_block1(self):
-        """
-        Unit: Parser Partial Block Fails (No Open)
-        Checks that parsing a token list with an unclosed block raises a
-        ParsingException.
-        """
-        ensure_ParsingException(tokens=_generate_tokens(
-            ('file', Token.types.IDENTIFIER)))
-
-    @istest
-    def unclosed_block2(self):
-        """
-        Unit: Parser Partial Block Fails (No Close)
-        Checks that parsing a token list with an unclosed block raises a
-        ParsingException.
-        """
-        ensure_ParsingException(tokens=_generate_tokens(
-            ('file', Token.types.IDENTIFIER), ('{', Token.types.BLOCK_START)))
-
-    @istest
-    def unassigned_attr(self):
-        """
-        Unit: Parser Unassigned Attribute Fails
-        Checks that parsing a block with an attribute that is declared but
-        is followed by a block close raises a ParsingException.
-        """
-        ensure_ParsingException(tokens=_generate_tokens(
-            ('file', Token.types.IDENTIFIER), ('{', Token.types.BLOCK_START),
-            ('source', Token.types.IDENTIFIER), ('}', Token.types.BLOCK_END)
-        ))
 
     @istest
     def empty_block(self):
@@ -160,33 +142,11 @@ class TestParsingMockedGlobals(MockedGlobals):
         eq_(blocks[0]['source'], '/tmp/txt')
         eq_(blocks[0]['target'], '/tmp/txt2')
 
+    @parameterized.expand(basic_filecheck_params,
+                          testcase_func_doc=first_param_docfunc)
     @istest
-    def empty_manifest(self):
-        """
-        Unit: Parser Empty File
-        Checks that parsing an empty file produces an empty block list.
-        """
-        blocks = parse_filename(full_path('empty.manifest'))
-        _check_blocks(blocks)
-
-    @istest
-    def empty_block_in_file(self):
-        """
-        Unit: Parser Empty Block In File
-        Checks that parsing a file with an empty block is valid.
-        """
-        blocks = parse_filename(full_path('empty_block.manifest'))
-        _check_blocks(blocks, (FileBlock, 0))
-
-    @istest
-    def attribute_with_spaces(self):
-        """
-        Unit: Parser Attribute With Spaces
-        Checks that parsing an attribute that contains spaces in quotes
-        does not raise an error and correctly assigns to the attribute.
-        """
-        blocks = parse_filename(full_path('spaced_attr.manifest'))
-        _check_blocks(blocks, (FileBlock, 2))
+    def basic_fileparse_checks(self, description, filename, *args):
+        _check_blocks(parse_filename(full_path(filename)), *args)
 
     @istest
     def file_primary_attr_assigned(self):

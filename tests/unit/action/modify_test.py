@@ -41,6 +41,14 @@ def arglist_from_mock(mock_func):
     return [args[0] for args in mock_func.call_args_list]
 
 
+stringification_params = [
+    ('Unit: FileChownAction String Conversion', modify.FileChownAction),
+    ('Unit: FileChmodAction String Conversion', modify.FileChmodAction),
+    ('Unit: DirChownAction String Conversion', modify.DirChownAction),
+    ('Unit: DirChmodAction String Conversion', modify.DirChmodAction),
+]
+
+
 class TestWithScratchdir(scratch.ScratchContainer):
     def __init__(self):
         scratch.ScratchContainer.__init__(self)
@@ -415,33 +423,25 @@ class TestWithScratchdir(scratch.ScratchContainer):
         chmod_args = arglist_from_mock(mock_chmod)
         eq_(chmod_args, [('a', int('755', 8))])
 
-    @parameterized.expand(
-        [('Unit: FileChownAction String Conversion', modify.FileChownAction,
-          'FileChownAction'),
-         ('Unit: FileChmodAction String Conversion', modify.FileChmodAction,
-          'FileChmodAction'),
-         ('Unit: DirChownAction String Conversion', modify.DirChownAction,
-          'DirChownAction'),
-         ('Unit: DirChmodAction String Conversion', modify.DirChmodAction,
-          'DirChmodAction'),
-         ],
-        testcase_func_doc=first_param_docfunc)
+    @parameterized.expand(stringification_params,
+                          testcase_func_doc=first_param_docfunc)
     @istest
-    def modify_action_stringification(self, description, klass, name):
+    def modify_action_stringification(self, description, klass):
         args = [('target', 'a')]
-        if 'Chmod' in name:
+        if 'Chmod' in klass.__name__:
             args.append(('mode', '600'))
             act = klass('a', '600', self.file_context)
-        elif 'Chown' in name:
+        elif 'Chown' in klass.__name__:
             args.append(('user', 'user1'))
             args.append(('group', 'nogroup'))
             act = klass('a', 'user1', 'nogroup', self.file_context)
         else:
             assert False
 
-        if 'Dir' in name:
+        if 'Dir' in klass.__name__:
             args.append(('recursive', False))
 
         eq_(str(act), '{0}({1},context={2!r})'.format(
-            name, ','.join(['{0}={1}'.format(k, v) for (k, v) in args]),
+            klass.__name__,
+            ','.join(['{0}={1}'.format(k, v) for (k, v) in args]),
             self.file_context))

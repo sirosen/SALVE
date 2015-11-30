@@ -44,8 +44,6 @@ class CopyAction(with_metaclass(abc.ABCMeta, Action)):
                 '{0}: {1}: Non-Readable source "{2}"'
                 .format(self.file_context, self.prettyname, self.src))
             return False
-        else:
-            assert False
 
     def __str__(self):
         return ("{0}(src={1},dst={2},context={3!r})".format(
